@@ -2,9 +2,9 @@
 
 ANTLR_JAR="/home/pablo03/compilator_java_resources/antlr-4.13.2-complete.jar"
 
-GRAMMAR_PARSER="CodexLatinusParser.g4"
+GRAMMAR_PARSER="CodexPitonParser.g4"
 
-GRAMMAR_LEXER="CodexLatinusLexer.g4"
+GRAMMAR_LEXER="CodexPitonLexer.g4"
 
 PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.piton"
 

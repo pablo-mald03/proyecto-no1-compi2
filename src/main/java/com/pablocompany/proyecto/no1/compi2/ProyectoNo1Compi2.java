@@ -1,8 +1,9 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  */
-
 package com.pablocompany.proyecto.no1.compi2;
+
+import com.pablocompany.proyecto.no1.compi2.ui.frame.MainFrame;
 
 /**
  *
@@ -12,6 +13,7 @@ package com.pablocompany.proyecto.no1.compi2;
 public class ProyectoNo1Compi2 {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        MainFrame mainFrame = new MainFrame();
+        mainFrame.setVisible(true);
     }
 }
