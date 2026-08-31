@@ -136,12 +136,18 @@ public class TopPanel extends JPanel {
         fileMenu.add(createMenuItem("Salir", KeyEvent.VK_X, e -> onExit()));
         menuBar.add(fileMenu);
 
-        // Edit Menu
+        // Edit Menu - Now with compiled code actions
         JMenu editMenu = createMenu("Editar", KeyEvent.VK_E);
-        editMenu.add(createMenuItem("Deshacer", KeyEvent.VK_Z, null, KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK)));
-        editMenu.add(createMenuItem("Rehacer", KeyEvent.VK_Y, null, KeyStroke.getKeyStroke(KeyEvent.VK_Y, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.add(createMenuItem("Descargar Compilado", KeyEvent.VK_D,
+                e -> notifier.notifyDownloadCompiledCode(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.add(createMenuItem("Ejecutar Compilado", KeyEvent.VK_R,
+                e -> notifier.notifyExecuteCompiledCode(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
         editMenu.addSeparator();
-        editMenu.add(createMenuItem("Seleccionar Todo", KeyEvent.VK_T, null, KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.add(createMenuItem("Seleccionar Todo", KeyEvent.VK_T,
+                null,
+                KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)));
         menuBar.add(editMenu);
 
         // View Menu
@@ -157,8 +163,6 @@ public class TopPanel extends JPanel {
         toolsMenu.add(createMenuItem("Compilar", KeyEvent.VK_C, e -> onCompile(), KeyStroke.getKeyStroke(KeyEvent.VK_B, KeyEvent.CTRL_DOWN_MASK)));
         toolsMenu.add(createMenuItem("Ejecutar", KeyEvent.VK_E, e -> onExecute(), KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)));
         toolsMenu.addSeparator();
-        toolsMenu.add(createMenuItem("Pila de Procesos", 0, e -> notifier.focusStackVisualizer()));
-        toolsMenu.add(createMenuItem("Traducción a PigLatin", 0, e -> notifier.focusPigLatin()));
         toolsMenu.add(createMenuItem("Gráfica del AST", 0, e -> notifier.focusAstVisualizer()));
         menuBar.add(toolsMenu);
 
@@ -169,6 +173,7 @@ public class TopPanel extends JPanel {
 
         return menuBar;
     }
+
 
     /**
      * Create a styled menu

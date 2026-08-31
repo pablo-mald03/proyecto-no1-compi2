@@ -393,6 +393,38 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         // Implementation
     }
 
+    
+    @Override
+    public void notifyDownloadCompiledCode() {
+        if (managementScreen != null) {
+            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
+            if (editor != null) {
+                // TODO: Implement download compiled code logic
+                logInfo("Descargando código compilado...");
+            } else {
+                alertToast("No hay ningún archivo abierto para descargar", true);
+            }
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
+        }
+    }
+
+    @Override
+    public void notifyExecuteCompiledCode() {
+        if (managementScreen != null) {
+            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
+            if (editor != null) {
+                // TODO: Implement execute compiled code logic
+                logInfo("Ejecutando código compilado...");
+            } else {
+                alertToast("No hay ningún archivo abierto para ejecutar", true);
+            }
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
+        }
+    }
+
+
     // ==========================================
     // CONFIRMATION NOTIFIER IMPLEMENTATION
     // ==========================================

@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ui.application.mediator;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
+
 import java.util.List;
 
 /**
@@ -13,12 +14,7 @@ public interface WorkspaceNotifier {
     /*SECTION OF SIGNALS*/
 
     void notifyErrorsUpdated(List<CompilerError> compilerErrors);
-    
-    //Signal to change the symbols table
-    //void notifySymbolUpdated(List<Symbol> symbols);
 
-    //Signal to change the Types table
-    //void notifyTypesUpdated(List<TypeInfo> types);
     
     void notifyCompiledCode(String compiledCode);
     
@@ -57,4 +53,14 @@ public interface WorkspaceNotifier {
     /*SECTION OF CLEAR METHODS OR RESET DATA*/
 
     void clearLogs();
+
+    /**
+     * Notify that the compiled code needs to be downloaded/exported
+     */
+    void notifyDownloadCompiledCode();
+
+    /**
+     * Notify that the compiled code needs to be executed/run
+     */
+    void notifyExecuteCompiledCode();
 }
