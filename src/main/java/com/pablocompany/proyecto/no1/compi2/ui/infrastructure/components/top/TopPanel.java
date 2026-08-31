@@ -117,6 +117,9 @@ public class TopPanel extends JPanel {
     /**
      * Create the menu bar with all menus
      */
+    /**
+     * Create the menu bar with all menus
+     */
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(Theme.BORDER_LIGHT.getColorSet());

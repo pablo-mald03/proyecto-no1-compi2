@@ -8,6 +8,7 @@ import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerEr
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ProgressCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationContainer;
@@ -17,10 +18,13 @@ import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.layers.RootLayer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens.ManagementScreen;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens.WelcomeScreen;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.ProjectImporterExporterService;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.ProjectService;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -43,11 +47,21 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     // Root layer
     private RootLayer rootPanel;
 
+    //Project I/O services
+    private final ProjectService projectService;
+    private final ProjectImporterExporterService projectImporterExporter;
+    private File currentProjectDir;
+
     public MainFrame() {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setTitle("Codex Compiler");
         setMinimumSize(new Dimension(1200, 800));
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        // ==========================
+        // Export services Project Setup
+        // ==========================
+        this.projectService = new ProjectService();
+        this.projectImporterExporter = new ProjectImporterExporterService();
 
         // ==========================
         // Confirmation System Setup
@@ -78,24 +92,50 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     private void onProjectCreated(String projectName) {
         this.currentProjectName = projectName;
 
-        // Create management screen with callbacks
-        managementScreen = createManagementScreen(projectName);
-        contentPanel.remove(managementScreen);
-        contentPanel.add(managementScreen, "MANAGEMENT");
+        // Create project directory in user home (cross-platform)
+        String userHome = System.getProperty("user.home");
+        File projectsDir = new File(userHome, "CodexProjects");
+        if (!projectsDir.exists()) {
+            projectsDir.mkdirs();
+        }
 
-        // Show management screen
-        cardLayout.show(contentPanel, "MANAGEMENT");
+        File projectDir = new File(projectsDir, projectName);
+        try {
+            projectService.createProject(projectName, projectsDir);
+            this.currentProjectDir = projectDir;
 
-        // Add default project structure
-        addDefaultProjectStructure();
+            // Create management screen with callbacks
+            managementScreen = createManagementScreen(projectName);
+            contentPanel.remove(managementScreen);
+            contentPanel.add(managementScreen, "MANAGEMENT");
 
+            // Show management screen
+            cardLayout.show(contentPanel, "MANAGEMENT");
+
+            // Load project structure
+            projectService.loadProjectFromDirectory(projectDir,
+                    managementScreen.getWorkspacePanel().getFileTreePanel(),
+                    projectName);
+
+            alertToast("Proyecto '" + projectName + "' creado exitosamente", false);
+        } catch (IOException e) {
+            logError("Error al crear el proyecto: " + e.getMessage());
+            alertToast("Error al crear el proyecto: " + e.getMessage(), true);
+        }
     }
 
     /**
      * Called when a project is opened
      */
     private void onProjectOpened(File projectDir) {
+        // Validate that it's a valid project
+        if (!projectService.isValidProject(projectDir)) {
+            alertToast("El directorio seleccionado no es un proyecto Codex válido", true);
+            return;
+        }
+
         this.currentProjectName = projectDir.getName();
+        this.currentProjectDir = projectDir;
 
         // Create management screen with callbacks
         managementScreen = createManagementScreen(currentProjectName);
@@ -103,11 +143,14 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         contentPanel.add(managementScreen, "MANAGEMENT");
 
         // Load project structure
-        loadProjectFromDirectory(projectDir);
+        projectService.loadProjectFromDirectory(projectDir,
+                managementScreen.getWorkspacePanel().getFileTreePanel(),
+                currentProjectName);
 
         // Show management screen
         cardLayout.show(contentPanel, "MANAGEMENT");
 
+        alertToast("Proyecto '" + currentProjectName + "' abierto exitosamente", false);
     }
 
     // ==========================================
@@ -393,19 +436,84 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         // Implementation
     }
 
-    
+    @Override
+    public void notifyImportProject() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Importar proyecto desde ZIP");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("ZIP files", "zip"));
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File zipFile = fileChooser.getSelectedFile();
+
+            // Select target directory
+            JFileChooser dirChooser = new JFileChooser();
+            dirChooser.setDialogTitle("Seleccionar directorio de destino");
+            dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            dirChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+
+            int dirResult = dirChooser.showSaveDialog(this);
+            if (dirResult == JFileChooser.APPROVE_OPTION) {
+                File targetDir = dirChooser.getSelectedFile();
+
+                try {
+                    // Show progress in console
+                    logInfo("Importando proyecto desde: " + zipFile.getName());
+
+                    projectImporterExporter.importFromZip(zipFile, targetDir,
+                            new ProgressCallback() {
+                                @Override
+                                public void onProgress(int current, int total, String fileName) {
+                                    if (current % 10 == 0 || current == total) {
+                                        logInfo("Progreso: " + current + "/" + total + " archivos");
+                                    }
+                                }
+
+                                @Override
+                                public void onComplete() {
+                                    logSuccess("Importación completada");
+                                }
+                            });
+
+                    // Open the imported project
+                    onProjectOpened(targetDir);
+
+                } catch (IOException e) {
+                    logError("Error al importar el proyecto: " + e.getMessage());
+                    alertToast("Error al importar el proyecto: " + e.getMessage(), true);
+                }
+            }
+        }
+    }
+
+
     @Override
     public void notifyDownloadCompiledCode() {
-        if (managementScreen != null) {
-            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
-            if (editor != null) {
-                // TODO: Implement download compiled code logic
-                logInfo("Descargando código compilado...");
-            } else {
-                alertToast("No hay ningún archivo abierto para descargar", true);
+        if (managementScreen != null && currentProjectDir != null) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Exportar proyecto");
+            fileChooser.setSelectedFile(new File(currentProjectName + ".zip"));
+
+            int result = fileChooser.showSaveDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File zipFile = fileChooser.getSelectedFile();
+                // Ensure .zip extension
+                if (!zipFile.getName().toLowerCase().endsWith(".zip")) {
+                    zipFile = new File(zipFile.getParentFile(), zipFile.getName() + ".zip");
+                }
+
+                try {
+                    projectImporterExporter.exportToZip(currentProjectDir, zipFile);
+                    logSuccess("Proyecto exportado exitosamente a: " + zipFile.getPath());
+                    alertToast("Proyecto exportado exitosamente", false);
+                } catch (IOException e) {
+                    logError("Error al exportar el proyecto: " + e.getMessage());
+                    alertToast("Error al exportar el proyecto: " + e.getMessage(), true);
+                }
             }
         } else {
-            alertToast("No hay ningún proyecto abierto", true);
+            alertToast("No hay ningún proyecto abierto para exportar", true);
         }
     }
 
