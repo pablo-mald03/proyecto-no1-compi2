@@ -49,15 +49,7 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
 
     private void createExampleProject() {
         // Create folder structure
-        workspace.createNewFile("src", true);
-        workspace.createNewFile("main", true, "src");
-        workspace.createNewFile("Main.z", false, "src/main");
-        workspace.createNewFile("utils", true, "src");
-        workspace.createNewFile("Helper.z", false, "src/utils");
-        workspace.createNewFile("config.y", false, "");
-        workspace.createNewFile("translations", true, "");
-        workspace.createNewFile("spanish.pig", false, "translations");
-        workspace.createNewFile("english.pig", false, "translations");
+
     }
 
     private void attachComponents() {

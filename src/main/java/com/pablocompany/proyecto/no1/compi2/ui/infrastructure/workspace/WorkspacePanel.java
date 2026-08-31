@@ -19,235 +19,263 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
 /**
- * Principal class to define the workspace with the files tree
+ * Main workspace panel containing file tree and tabbed editor
  * @author pablo03
  */
 @Getter
 public class WorkspacePanel extends JPanel {
 
     private final WorkspaceNotifier notifier;
-    private final JSplitPane splitPane;
-    private final JTree fileTree;
-    private final DefaultTreeModel treeModel;
-    private final DefaultMutableTreeNode rootNode;
+    private final FileTreePanel fileTreePanel;
     private final JTabbedPane tabbedPane;
     private final Map<String, CodeEditorPanel> openEditors;
-    private final Map<String, DefaultMutableTreeNode> fileNodes;
-    private String currentProjectPath;
+    private final JSplitPane splitPane;
 
     public WorkspacePanel(WorkspaceNotifier notifier) {
         this.notifier = notifier;
         this.openEditors = new HashMap<>();
-        this.fileNodes = new HashMap<>();
 
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
 
-        // Create root node for the tree
-        rootNode = new DefaultMutableTreeNode("Project");
-        treeModel = new DefaultTreeModel(rootNode);
-        fileTree = new JTree(treeModel);
-
-        // Configure the tree
-        configureTree();
-
-        // Create tree panel with scroll
-        JScrollPane treeScroll = new JScrollPane(fileTree);
-        treeScroll.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        treeScroll.setBackground(Theme.BACKGROUND_DARK.getColorSet());
-        treeScroll.getViewport().setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        // Create file tree panel
+        fileTreePanel = new FileTreePanel(notifier, this);
 
         // Create tabbed pane
         tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
         tabbedPane.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         tabbedPane.setUI(new CustomTabbedPaneUI());
-
-        // Configure rounded tabs
         tabbedPane.putClientProperty("JTabbedPane.tabType", "rounded");
 
         // Create split pane
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScroll, tabbedPane);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileTreePanel, tabbedPane);
         splitPane.setDividerLocation(250);
         splitPane.setDividerSize(4);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
         splitPane.setBackground(Theme.BACKGROUND_DARK.getColorSet());
 
         add(splitPane, BorderLayout.CENTER);
-
-        setupTreeListeners();
     }
 
     /**
-     * Principal method to configure the tree
+     * Create a new file with the specified extension
      */
-    private void configureTree() {
-        // Set our custom renderer
-        fileTree.setCellRenderer(new CustomTreeCellRenderer());
+    public void createNewFileWithExtension(String extension) {
+        String parentPath = fileTreePanel.getSelectedParentPath();
+        DefaultMutableTreeNode parentNode = fileTreePanel.getSelectedParentNode();
 
-        // IMPORTANT: Set our model explicitly
-        fileTree.setModel(treeModel);
+        String baseName = JOptionPane.showInputDialog(this,
+                "Ingresa el nombre del archivo (sin extension):",
+                "Crear nuevo archivo",
+                JOptionPane.PLAIN_MESSAGE);
 
-        // Configure selection
-        fileTree.setSelectionRow(0);
-        fileTree.setRootVisible(true);
-        fileTree.setShowsRootHandles(true);
-
-        // Configure background
-        fileTree.setBackground(Theme.BACKGROUND_DARK.getColorSet());
-        fileTree.setForeground(Theme.FOREGROUND_DARK.getColorSet());
-        fileTree.setOpaque(true);
-
-        // Configure selection colors
-       // fileTree.setSelectionBackground(Theme.SURFACE_DARK.getColorSet());
-      //  fileTree.setSelectionForeground(Theme.FOREGROUND_DARK.getColorSet());
-
-        // Support for name editing
-        fileTree.setEditable(true);
-
-        // Set row height for better visibility
-        fileTree.setRowHeight(20);
-
-        // CRITICAL FIX: Disable tooltips completely
-        fileTree.setToolTipText(null);
-        ToolTipManager.sharedInstance().unregisterComponent(fileTree);
-
-        // Remove any default renderer tooltips
-        fileTree.setCellRenderer(new CustomTreeCellRenderer());
-
-        // Use a simple UI without extra decorations
-        fileTree.setUI(new javax.swing.plaf.metal.MetalTreeUI());
-    }
-
-    /**
-     * Setup mouse listeners for the tree
-     */
-    private void setupTreeListeners() {
-        fileTree.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    TreePath path = fileTree.getPathForLocation(e.getX(), e.getY());
-                    if (path != null) {
-                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        Object userObject = node.getUserObject();
-
-                        if (userObject instanceof FileNode) {
-                            FileNode fileNode = (FileNode) userObject;
-                            if (!fileNode.isDirectory()) {
-                                openFileInTab(fileNode);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Add keyboard listener for enter key to open files
-        fileTree.addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyPressed(java.awt.event.KeyEvent e) {
-                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
-                    TreePath path = fileTree.getSelectionPath();
-                    if (path != null) {
-                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        Object userObject = node.getUserObject();
-
-                        if (userObject instanceof FileNode) {
-                            FileNode fileNode = (FileNode) userObject;
-                            if (!fileNode.isDirectory()) {
-                                openFileInTab(fileNode);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // CRITICAL FIX: Prevent tooltips from showing on mouse movement
-        fileTree.addMouseMotionListener(new MouseAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                // Do nothing - prevents default tooltip behavior
-            }
-        });
-    }
-
-    /**
-     * Method to manage the file creation
-     */
-    public void createNewFile(String fileName, boolean isDirectory) {
-        createNewFile(fileName, isDirectory, null);
-    }
-
-    /**
-     * Method to manage the file creation with parent path
-     */
-    public void createNewFile(String fileName, boolean isDirectory, String parentPath) {
-        FileNode newNode = new FileNode(fileName, isDirectory);
-        String fullPath = parentPath != null ? parentPath + "/" + fileName : fileName;
-        newNode.setFilePath(fullPath);
-
-        DefaultMutableTreeNode parentNode;
-        if (parentPath == null || parentPath.isEmpty()) {
-            parentNode = rootNode;
-        } else {
-            parentNode = findNodeByPath(parentPath);
-            if (parentNode == null) {
-                parentNode = rootNode;
-            }
+        if (baseName == null || baseName.trim().isEmpty()) {
+            return;
         }
 
-        DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(newNode);
-        parentNode.add(treeNode);
-        treeModel.reload(parentNode);
+        baseName = baseName.trim();
 
-        expandNode(parentNode);
-
-        fileNodes.put(fullPath, treeNode);
-
-        if (!isDirectory) {
-            FileNode fileNode = (FileNode) treeNode.getUserObject();
-            openFileInTab(fileNode);
+        if (baseName.contains(".")) {
+            notifier.alertToast("Porfavor no escribas la extension. Esta se coloca automatica.", true);
+            return;
         }
+
+        String fullName = baseName + extension;
+        String finalPath = parentPath.isEmpty() ? fullName : parentPath + "/" + fullName;
+
+        int counter = 1;
+        String originalName = baseName;
+        while (fileTreePanel.getFileNodes().containsKey(finalPath)) {
+            fullName = originalName + counter + extension;
+            finalPath = parentPath.isEmpty() ? fullName : parentPath + "/" + fullName;
+            counter++;
+
+            if (counter > 100) break;
+        }
+
+        fileTreePanel.createNewFile(fullName, false, parentPath.isEmpty() ? null : parentPath);
+
+        FileNode fileNode = new FileNode(fullName, false);
+        fileNode.setFilePath(finalPath);
+        openFileInTab(fileNode);
     }
 
     /**
-     * Find a node by its path
+     * Create a new folder
      */
-    private DefaultMutableTreeNode findNodeByPath(String path) {
-        return findNodeByPath(rootNode, path);
+    public void createNewFolder() {
+        String parentPath = fileTreePanel.getSelectedParentPath();
+        DefaultMutableTreeNode parentNode = fileTreePanel.getSelectedParentNode();
+
+        String folderName = JOptionPane.showInputDialog(this,
+                "Ingresa el nombre del folder:",
+                "Crear Nuevo Folder",
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (folderName == null || folderName.trim().isEmpty()) {
+            return;
+        }
+
+        folderName = folderName.trim();
+
+        if (folderName.contains(".")) {
+            notifier.alertToast("Los nombre de los folders no deberian tener extension.", true);
+            return;
+        }
+
+        String finalPath = parentPath.isEmpty() ? folderName : parentPath + "/" + folderName;
+
+        // Check if folder exists
+        int counter = 1;
+        String originalName = folderName;
+        while (fileTreePanel.getFileNodes().containsKey(finalPath)) {
+            folderName = originalName + counter;
+            finalPath = parentPath.isEmpty() ? folderName : parentPath + "/" + folderName;
+            counter++;
+
+            if (counter > 100) break;
+        }
+
+        fileTreePanel.createNewFile(folderName, true, parentPath.isEmpty() ? null : parentPath);
     }
 
     /**
-     * Find a node by its path recursively
+     * Rename the selected node
      */
-    private DefaultMutableTreeNode findNodeByPath(DefaultMutableTreeNode node, String path) {
+    public void renameSelectedNode() {
+        DefaultMutableTreeNode node = fileTreePanel.getSelectedNode();
+        if (node == null) {
+            return;
+        }
+
         Object userObj = node.getUserObject();
-        if (userObj instanceof FileNode) {
-            FileNode fileNode = (FileNode) userObj;
-            if (path.equals(fileNode.getFilePath())) {
-                return node;
+        if (!(userObj instanceof FileNode)) {
+            return;
+        }
+
+        FileNode fileNode = (FileNode) userObj;
+        String currentName = fileNode.getName();
+        String oldPath = fileNode.getFilePath();
+
+        String newName = JOptionPane.showInputDialog(this,
+                "Ingresar nuevo nombre:",
+                "Rename",
+                JOptionPane.PLAIN_MESSAGE);
+
+        if (newName == null || newName.trim().isEmpty()) {
+            return;
+        }
+
+        newName = newName.trim();
+
+        if (!fileNode.isDirectory()) {
+            String currentExtension = "";
+            int dotIndex = currentName.lastIndexOf('.');
+            if (dotIndex != -1) {
+                currentExtension = currentName.substring(dotIndex);
+            }
+
+            if (!newName.contains(".") && !currentExtension.isEmpty()) {
+                newName = newName + currentExtension;
+            } else if (newName.contains(".") && !newName.endsWith(currentExtension)) {
+                // User changed extension
+                if (!currentExtension.isEmpty()) {
+                    // Check if new extension matches old one
+                    String newExtension = newName.substring(newName.lastIndexOf('.'));
+                    if (!newExtension.equals(currentExtension)) {
+                        notifier.alertToast("No se puede cambiar la extension del archivo.", true);
+                        return;
+                    }
+                }
+            }
+        } else {
+            if (newName.contains(".")) {
+                notifier.alertToast("Los folder no deberian tener extension.", true);
+                return;
             }
         }
 
-        for (int i = 0; i < node.getChildCount(); i++) {
-            DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
-            DefaultMutableTreeNode result = findNodeByPath(child, path);
-            if (result != null) {
-                return result;
+        // Update the node
+        String newPath = oldPath.substring(0, oldPath.lastIndexOf('/') + 1) + newName;
+        if (oldPath.equals(newPath)) {
+            return;
+        }
+
+        // Check if new name already exists in same directory
+        if (fileTreePanel.getFileNodes().containsKey(newPath)) {
+            notifier.alertToast("Ya existe un archivo con este nombre.", true);
+            return;
+        }
+
+        // Update the file node
+        FileNode newFileNode = new FileNode(newName, fileNode.isDirectory());
+        newFileNode.setFilePath(newPath);
+        node.setUserObject(newFileNode);
+
+        // Update maps
+        fileTreePanel.getFileNodes().remove(oldPath);
+        fileTreePanel.getFileNodes().put(newPath, node);
+
+        // Update tabs if file is open
+        if (openEditors.containsKey(oldPath)) {
+            CodeEditorPanel editor = openEditors.remove(oldPath);
+            openEditors.put(newPath, editor);
+
+            // Update tab title
+            int index = tabbedPane.indexOfComponent(editor);
+            if (index != -1) {
+                tabbedPane.setTabComponentAt(index, createTabComponent(newName, newPath));
             }
         }
-        return null;
+
+        fileTreePanel.reloadTree();
     }
 
     /**
-     * Expand a node in the tree
+     * Delete the selected node
      */
-    private void expandNode(DefaultMutableTreeNode node) {
-        TreePath path = new TreePath(node.getPath());
-        fileTree.expandPath(path);
-        fileTree.scrollPathToVisible(path);
+    public void deleteSelectedNode() {
+        DefaultMutableTreeNode node = fileTreePanel.getSelectedNode();
+        if (node == null) {
+            return;
+        }
+
+        Object userObj = node.getUserObject();
+        if (!(userObj instanceof FileNode)) {
+            return;
+        }
+
+        FileNode fileNode = (FileNode) userObj;
+
+        if (node == fileTreePanel.getRootNode()) {
+            notifier.logError("No se puede eliminar la raiz del proyecto");
+            return;
+        }
+
+        String type = fileNode.isDirectory() ? "folder" : "archivo";
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Estas segurio que quieres eliminar el " + type + ": " + fileNode.getName() + "?",
+                "Confirmar eliminacion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            String filePath = fileNode.getFilePath();
+
+            if (!fileNode.isDirectory() && openEditors.containsKey(filePath)) {
+                closeTab(filePath);
+            }
+
+            DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+            if (parent != null) {
+                parent.remove(node);
+                fileTreePanel.getFileNodes().remove(filePath);
+                fileTreePanel.reloadTree();
+            }
+        }
     }
 
     /**
@@ -267,30 +295,13 @@ public class WorkspacePanel extends JPanel {
         }
 
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
-
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);
 
         int index = tabbedPane.indexOfComponent(editor);
         tabbedPane.setSelectedIndex(index);
-
         tabbedPane.setTabComponentAt(index, createTabComponent(fileName, filePath));
 
-    }
-
-    /**
-     * Find tab index by file path
-     */
-    private int findTabIndexByPath(String filePath) {
-        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
-            Component comp = tabbedPane.getComponentAt(i);
-            if (comp instanceof CodeEditorPanel) {
-                if (openEditors.containsKey(filePath) && openEditors.get(filePath) == comp) {
-                    return i;
-                }
-            }
-        }
-        return -1;
     }
 
     /**
@@ -314,7 +325,6 @@ public class WorkspacePanel extends JPanel {
         closeButton.setContentAreaFilled(false);
         closeButton.setOpaque(true);
 
-        // Hover effect for close button
         closeButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -336,6 +346,21 @@ public class WorkspacePanel extends JPanel {
     }
 
     /**
+     * Find tab index by file path
+     */
+    private int findTabIndexByPath(String filePath) {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            Component comp = tabbedPane.getComponentAt(i);
+            if (comp instanceof CodeEditorPanel) {
+                if (openEditors.containsKey(filePath) && openEditors.get(filePath) == comp) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Close a tab by file path
      */
     public void closeTab(String filePath) {
@@ -345,7 +370,6 @@ public class WorkspacePanel extends JPanel {
             if (index != -1) {
                 tabbedPane.remove(index);
                 openEditors.remove(filePath);
-                notifier.logInfo("File closed: " + filePath);
             }
         }
     }
