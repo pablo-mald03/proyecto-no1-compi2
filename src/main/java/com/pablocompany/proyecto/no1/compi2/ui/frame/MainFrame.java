@@ -9,6 +9,7 @@ import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationContainer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationManager;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.toast.ToastNotification;
@@ -77,19 +78,18 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     private void onProjectCreated(String projectName) {
         this.currentProjectName = projectName;
 
-        // Create management screen with the project name
-        managementScreen = new ManagementScreen(this, this, projectName);
+        // Create management screen with callbacks
+        managementScreen = createManagementScreen(projectName);
         contentPanel.remove(managementScreen);
         contentPanel.add(managementScreen, "MANAGEMENT");
 
         // Show management screen
         cardLayout.show(contentPanel, "MANAGEMENT");
 
-        // Add a default project structure
+        // Add default project structure
         addDefaultProjectStructure();
 
     }
-
 
     /**
      * Called when a project is opened
@@ -97,18 +97,140 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     private void onProjectOpened(File projectDir) {
         this.currentProjectName = projectDir.getName();
 
-        // Create management screen with the project name
-        managementScreen = new ManagementScreen(this, this, currentProjectName);
+        // Create management screen with callbacks
+        managementScreen = createManagementScreen(currentProjectName);
         contentPanel.remove(managementScreen);
         contentPanel.add(managementScreen, "MANAGEMENT");
 
-        // Load project structure from directory
+        // Load project structure
         loadProjectFromDirectory(projectDir);
 
         // Show management screen
         cardLayout.show(contentPanel, "MANAGEMENT");
 
-        logInfo("Proyecto '" + currentProjectName + "' abierto exitosamente");
+    }
+
+    // ==========================================
+    // CALLBACK METHODS FOR TOP PANEL
+    // ==========================================
+
+    private void onNewProject() {
+        // Show welcome screen to create new project
+        cardLayout.show(contentPanel, "WELCOME");
+        if (welcomeScreen != null) {
+            welcomeScreen.requestFocus();
+        }
+    }
+
+    private void onOpenProject() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Seleccionar proyecto");
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File projectDir = fileChooser.getSelectedFile();
+            onProjectOpened(projectDir);
+        }
+    }
+
+    private void onCloseProject() {
+        if (managementScreen != null) {
+            // Confirm before closing
+            confirm(ModalType.WARNING, "Cerrar Proyecto",
+                    "¿Estás seguro que quieres cerrar el proyecto '" + currentProjectName + "'?\n" +
+                            "Los cambios no guardados se perderán.",
+                    confirmed -> {
+                        if (confirmed) {
+                            String projectName = currentProjectName;
+                            managementScreen = null;
+                            currentProjectName = "Project";
+                            cardLayout.show(contentPanel, "WELCOME");
+                            if (managementScreen != null) {
+                                logInfo("Proyecto '" + projectName + "' cerrado");
+                            }
+                        }
+                    }
+            );
+        }
+    }
+
+    private void onSave() {
+        if (managementScreen != null) {
+            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
+            if (editor != null) {
+                logInfo("Archivo guardado");
+            } else {
+                alertToast("No hay ningún archivo abierto para guardar", true);
+            }
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
+        }
+    }
+
+    private void onSaveAs() {
+        if (managementScreen != null) {
+            logInfo("Guardar como...");
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
+        }
+    }
+
+    private void onCompile() {
+        if (managementScreen != null) {
+            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
+            if (editor != null) {
+                logInfo("Compilando...");
+            } else {
+                alertToast("No hay ningún archivo abierto para compilar", true);
+            }
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
+        }
+    }
+
+    private void onExecute() {
+        if (managementScreen != null) {
+            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
+            if (editor != null) {
+                logInfo("Ejecutando...");
+            } else {
+                alertToast("No hay ningún archivo abierto para ejecutar", true);
+            }
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
+        }
+    }
+
+    private void onExit() {
+        confirm(ModalType.WARNING, "Salir",
+                "¿Estás seguro que quieres salir de Codex Compiler?",
+                confirmed -> {
+                    if (confirmed) {
+                        System.exit(0);
+                    }
+                }
+        );
+    }
+
+    /**
+     * Create a new management screen with all callbacks
+     */
+    private ManagementScreen createManagementScreen(String projectName) {
+        return new ManagementScreen(
+                this,
+                this,
+                projectName,
+                this::onNewProject,
+                this::onOpenProject,
+                this::onCloseProject,
+                this::onSave,
+                this::onSaveAs,
+                this::onCompile,
+                this::onExecute,
+                this::onExit
+        );
     }
 
     /**
@@ -116,7 +238,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
      */
     private void loadProjectFromDirectory(File projectDir) {
         // TODO: Implement loading of project structure
-        // This will traverse the directory and create the tree structure
     }
 
     /**
@@ -130,7 +251,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         );
 
         // Management Screen (initially empty, will be recreated with project)
-        managementScreen = createManagementScreen();
+        managementScreen = createManagementScreen(currentProjectName);
 
         contentPanel.add(welcomeScreen, "WELCOME");
         contentPanel.add(managementScreen, "MANAGEMENT");
@@ -138,13 +259,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
         // Show welcome screen by default
         cardLayout.show(contentPanel, "WELCOME");
-    }
-
-    /**
-     * Create a new management screen
-     */
-    private ManagementScreen createManagementScreen() {
-        return new ManagementScreen(this, this);
     }
 
     /**
@@ -162,39 +276,52 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         rootPanel.repaint();
     }
 
-
-
     /**
      * Add a default project structure for new projects
      */
     private void addDefaultProjectStructure() {
-        var fileTree = managementScreen.getWorkspacePanel().getFileTreePanel();
+        if (managementScreen != null) {
+            var fileTree = managementScreen.getWorkspacePanel().getFileTreePanel();
 
-        // Create default folders
-        fileTree.createNewFile("src", true);
-        fileTree.createNewFile("main", true, "src");
-        fileTree.createNewFile("Main.z", false, "src/main");
-        fileTree.createNewFile("utils", true, "src");
-        fileTree.createNewFile("Helper.z", false, "src/utils");
-        fileTree.createNewFile("config.y", false, "");
+            // Create default folders
+            fileTree.createNewFile("src", true);
+            fileTree.createNewFile("main", true, "src");
+            fileTree.createNewFile("Main.z", false, "src/main");
+            fileTree.createNewFile("utils", true, "src");
+            fileTree.createNewFile("Helper.z", false, "src/utils");
+            fileTree.createNewFile("config.y", false, "");
+        }
     }
 
     // ==========================================
-    // WORKSPACENOTIFIER OBSERVER PATTERN IMPLEMENTATION
+    // WORKSPACENOTIFIER IMPLEMENTATION
     // ==========================================
     @Override
     public void logInfo(String message) {
-        managementScreen.getBottomPanel().getConsole().appendInfo(message);
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().getConsole().appendInfo(message);
+        } else {
+            // Fallback cuando no hay managementScreen
+            System.out.println("[INFO] " + message);
+        }
     }
 
     @Override
     public void logSuccess(String message) {
-        managementScreen.getBottomPanel().getConsole().appendSuccess(message);
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().getConsole().appendSuccess(message);
+        } else {
+            System.out.println("[SUCCESS] " + message);
+        }
     }
 
     @Override
     public void logError(String message) {
-        managementScreen.getBottomPanel().getConsole().appendError(message);
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().getConsole().appendError(message);
+        } else {
+            System.out.println("[ERROR] " + message);
+        }
     }
 
     @Override
@@ -204,17 +331,23 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     @Override
     public void focusConsole() {
-        managementScreen.getBottomPanel().showConsole();
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().showConsole();
+        }
     }
 
     @Override
     public void focusErrors() {
-        managementScreen.getBottomPanel().showErrors();
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().showErrors();
+        }
     }
 
     @Override
     public void focusSymbolsTable() {
-        managementScreen.getBottomPanel().showSymbolsTable();
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().showSymbolsTable();
+        }
     }
 
     @Override
@@ -224,7 +357,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     @Override
     public void focusAstVisualizer() {
-        // side.focusAst();
+        // Implementation
     }
 
     @Override
@@ -239,58 +372,34 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     @Override
     public void clearLogs() {
-        managementScreen.getBottomPanel().getConsole().clear();
-        managementScreen.getBottomPanel().getErrors().clear();
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().getConsole().clear();
+            managementScreen.getBottomPanel().getErrors().clear();
+        }
     }
-    
+
     @Override
     public void notifyErrorsUpdated(List<CompilerError> compilerErrors) {
-        
+        // Implementation
     }
 
     @Override
     public void notifyCompiledCode(String compiledCode) {
-        
-    }
-    
-
-   /* @Override
-    public void notifyErrorsUpdated(List<CompilerError> compilerErrors) {
-        bottom.setCompilerErrors(compilerErrors);
+        // Implementation
     }
 
-    @Override
-    public void notifySymbolUpdated(List<Symbol> symbols) {
-        bottom.setSymbols(symbols);
-    }
-
-    @Override
-    public void notifyTypesUpdated(List<TypeInfo> symbols) {
-        bottom.setTypes(symbols);
-    }
-
-    @Override
-    public void notifyCompiledCode(String compiledCode) {
-        this.side.setPiglatinCode(compiledCode);
-    }
-
-    @Override
-    public void notifyStackView(List<ParseStep> steps) {
-        this.side.setStackView(steps);
-    }
-*/
     @Override
     public void notifyAstRepresentation(String ast) {
-       
+        // Implementation
     }
 
-
-    //Principal notification manager to confirm any action
+    // ==========================================
+    // CONFIRMATION NOTIFIER IMPLEMENTATION
+    // ==========================================
     @Override
     public void confirm(ModalType type, String title, String message, ConfirmationCallback callback) {
         confirmationManager.confirm(type, title, message, callback);
     }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -301,24 +410,11 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     private void initComponents() {
 
         mainPanel = new javax.swing.JPanel();
-        headerPanel = new javax.swing.JPanel();
         mainContainer = new javax.swing.JPanel();
         verticalSplit = new javax.swing.JSplitPane();
         topPanel = new javax.swing.JPanel();
         bottomPanel = new javax.swing.JPanel();
         editorPanel = new javax.swing.JPanel();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        fileMenuOption = new javax.swing.JMenu();
-        fileMenu1 = new javax.swing.JMenuItem();
-        fileMenu2 = new javax.swing.JMenuItem();
-        fileMenu3 = new javax.swing.JMenuItem();
-        toolsMenuOption = new javax.swing.JMenu();
-        toolsMenu1 = new javax.swing.JMenuItem();
-        toolsMenu2 = new javax.swing.JMenuItem();
-        toolsMenu3 = new javax.swing.JMenuItem();
-        reportMenuOption = new javax.swing.JMenu();
-        reportMenu1 = new javax.swing.JMenuItem();
-        reportMenu2 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Codex Compiler");
@@ -328,12 +424,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         mainPanel.setBackground(new java.awt.Color(225, 221, 166));
         mainPanel.setBorder(javax.swing.BorderFactory.createMatteBorder(2, 2, 2, 2, new java.awt.Color(0, 0, 0)));
         mainPanel.setLayout(new java.awt.BorderLayout());
-
-        headerPanel.setBackground(new java.awt.Color(175, 123, 128));
-        headerPanel.setBorder(javax.swing.BorderFactory.createMatteBorder(1, 1, 2, 1, new java.awt.Color(0, 0, 0)));
-        headerPanel.setPreferredSize(new java.awt.Dimension(1300, 40));
-        headerPanel.setLayout(new java.awt.BorderLayout());
-        mainPanel.add(headerPanel, java.awt.BorderLayout.NORTH);
 
         mainContainer.setBorder(new javax.swing.border.MatteBorder(null));
         mainContainer.setRequestFocusEnabled(false);
@@ -392,93 +482,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
         getContentPane().add(mainPanel, java.awt.BorderLayout.CENTER);
 
-        jMenuBar1.setBackground(new java.awt.Color(218, 188, 158));
-        jMenuBar1.setBorder(new javax.swing.border.MatteBorder(null));
-        jMenuBar1.setForeground(new java.awt.Color(0, 0, 0));
-        jMenuBar1.setToolTipText("");
-        jMenuBar1.setMinimumSize(new java.awt.Dimension(229, 35));
-        jMenuBar1.setPreferredSize(new java.awt.Dimension(229, 35));
-
-        fileMenuOption.setBackground(new java.awt.Color(175, 123, 128));
-        fileMenuOption.setText("Archivo");
-        fileMenuOption.setFont(new java.awt.Font("Liberation Mono", 1, 13)); // NOI18N
-
-        fileMenu1.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        fileMenu1.setText("Abrir Archivo");
-        fileMenu1.addActionListener(this::fileMenu1ActionPerformed);
-        fileMenuOption.add(fileMenu1);
-
-        fileMenu2.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        fileMenu2.setText("Guardar Archivo");
-        fileMenu2.addActionListener(this::fileMenu2ActionPerformed);
-        fileMenuOption.add(fileMenu2);
-
-        fileMenu3.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        fileMenu3.setText("Descargar Codigo");
-        fileMenu3.addActionListener(this::fileMenu3ActionPerformed);
-        fileMenuOption.add(fileMenu3);
-
-        jMenuBar1.add(fileMenuOption);
-
-        toolsMenuOption.setBackground(new java.awt.Color(175, 123, 128));
-        toolsMenuOption.setText("Herramientas");
-        toolsMenuOption.setFont(new java.awt.Font("Liberation Mono", 1, 13)); // NOI18N
-
-        toolsMenu1.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        toolsMenu1.setText("Pila de procesos");
-        toolsMenu1.addActionListener(this::toolsMenu1ActionPerformed);
-        toolsMenuOption.add(toolsMenu1);
-
-        toolsMenu2.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        toolsMenu2.setText("Traduccion a PigLatin");
-        toolsMenu2.addActionListener(this::toolsMenu2ActionPerformed);
-        toolsMenuOption.add(toolsMenu2);
-
-        toolsMenu3.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        toolsMenu3.setText("Grafica del AST");
-        toolsMenu3.addActionListener(this::toolsMenu3ActionPerformed);
-        toolsMenuOption.add(toolsMenu3);
-
-        jMenuBar1.add(toolsMenuOption);
-
-        reportMenuOption.setBackground(new java.awt.Color(175, 123, 128));
-        reportMenuOption.setText("Reportes");
-        reportMenuOption.setFont(new java.awt.Font("Liberation Mono", 1, 13)); // NOI18N
-
-        reportMenu1.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        reportMenu1.setText("Tabla de Simbolos");
-        reportMenu1.addActionListener(this::reportMenu1ActionPerformed);
-        reportMenuOption.add(reportMenu1);
-
-        reportMenu2.setFont(new java.awt.Font("Liberation Mono", 0, 13)); // NOI18N
-        reportMenu2.setText("Reporte de errores");
-        reportMenu2.addActionListener(this::reportMenu2ActionPerformed);
-        reportMenuOption.add(reportMenu2);
-
-        jMenuBar1.add(reportMenuOption);
-
-        setJMenuBar(jMenuBar1);
-
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    //Method to open a file
-    private void fileMenu1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileMenu1ActionPerformed
-        /*fileController.handleOpen(this, editor.getEditor().getEditorContext(), () -> {
-           // editor.getEditor().setText(editor.getEditor().getEditorContext().getSourceCode());
-        });*/
-    }//GEN-LAST:event_fileMenu1ActionPerformed
-
-    //Method to save a file
-    private void fileMenu2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileMenu2ActionPerformed
-      //  editor.getEditor().getEditorContext().setSourceCode(editor.getEditor().getText());
-       // fileController.handleSave(this, editor.getEditor().getEditorContext());
-    }//GEN-LAST:event_fileMenu2ActionPerformed
-
-    //Method to save the compiled code
-    private void fileMenu3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileMenu3ActionPerformed
-       //fileController.handleExport(this, editor.getEditor().getEditorContext());
-    }//GEN-LAST:event_fileMenu3ActionPerformed
 
     //This method redirect to the errors
     private void reportMenu2ActionPerformed(java.awt.event.ActionEvent evt) {                                            
@@ -489,49 +494,14 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         focusSymbolsTable();
     }
 
-    private void toolsMenu2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toolsMenu2ActionPerformed
-
-        //String code = this.editor.getCompiledCode();
-        String code = "";
-
-        if (code.isBlank()) {
-            alertToast("No hay codigo compilado. \nPresiona el boton \"Compilar\"", true);
-        }
-
-        focusPigLatin();
-    }//GEN-LAST:event_toolsMenu2ActionPerformed
-
-    private void toolsMenu3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toolsMenu3ActionPerformed
-        focusAstVisualizer();
-    }//GEN-LAST:event_toolsMenu3ActionPerformed
-
-    private void toolsMenu1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toolsMenu1ActionPerformed
-        focusStackVisualizer();
-    }//GEN-LAST:event_toolsMenu1ActionPerformed
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel bottomPanel;
     private javax.swing.JPanel editorPanel;
-    private javax.swing.JMenuItem fileMenu1;
-    private javax.swing.JMenuItem fileMenu2;
-    private javax.swing.JMenuItem fileMenu3;
-    private javax.swing.JMenu fileMenuOption;
-    private javax.swing.JPanel headerPanel;
-    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel mainContainer;
     private javax.swing.JPanel mainPanel;
-    private javax.swing.JMenuItem reportMenu1;
-    private javax.swing.JMenuItem reportMenu2;
-    private javax.swing.JMenu reportMenuOption;
-    private javax.swing.JMenuItem toolsMenu1;
-    private javax.swing.JMenuItem toolsMenu2;
-    private javax.swing.JMenuItem toolsMenu3;
-    private javax.swing.JMenu toolsMenuOption;
     private javax.swing.JPanel topPanel;
     private javax.swing.JSplitPane verticalSplit;
-
-
     // End of variables declaration//GEN-END:variables
 
 

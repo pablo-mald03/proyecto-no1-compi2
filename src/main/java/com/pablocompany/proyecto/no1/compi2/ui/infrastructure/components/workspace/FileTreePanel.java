@@ -70,7 +70,7 @@ public class FileTreePanel extends JPanel {
         // Create scroll pane
         JScrollPane treeScroll = new JScrollPane(fileTree);
         treeScroll.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        treeScroll.setBackground(Theme.AUXILIARY_BACKGROUND_DARK.getColorSet());
+        treeScroll.setBackground(Theme.SIDEBAR_DARKT.getColorSet());
         treeScroll.getViewport().setBackground(Theme.AUXILIARY_BACKGROUND_DARK.getColorSet());
 
         add(treeScroll, BorderLayout.CENTER);
@@ -96,10 +96,10 @@ public class FileTreePanel extends JPanel {
         fileTree.setSelectionRow(0);
         fileTree.setRootVisible(true);
         fileTree.setShowsRootHandles(true);
-        fileTree.setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        fileTree.setBackground(Theme.SIDEBAR_DARKT.getColorSet());
         fileTree.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         fileTree.setOpaque(true);
-        fileTree.setEditable(false); // Disabled for manual rename
+        fileTree.setEditable(false);
         fileTree.setRowHeight(24);
 
         // Disable tooltips
