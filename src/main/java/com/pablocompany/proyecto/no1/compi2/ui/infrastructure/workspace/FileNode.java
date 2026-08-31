@@ -4,10 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- *
+ * Principal class to represents a file node with the necessary attributes path
  * @author pablo03
  */
-// Principal class to represents a file node with the necessary attribuites path
 @Getter
 @Setter
 public class FileNode {

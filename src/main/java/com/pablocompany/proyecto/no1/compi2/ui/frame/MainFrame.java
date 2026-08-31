@@ -6,6 +6,7 @@ package com.pablocompany.proyecto.no1.compi2.ui.frame;
 
 import com.pablocompany.practica.no1.compi2.infrastructure.controller.ProjectFileController;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.BottomTabbedPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.sideview.SidePanel;
@@ -31,32 +32,39 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
         initializeCustomComponents();
         attachComponents();
         this.fileController = new ProjectFileController();
+
+        // Set dark theme for the frame
+        setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        getContentPane().setBackground(Theme.BACKGROUND_DARK.getColorSet());
     }
 
     private void initializeCustomComponents() {
         workspace = new WorkspacePanel(this);
         side = new SidePanel();
         bottom = new BottomTabbedPanel();
-        
-        //TODO: REMOVE MOCKS
-        createExampleMode();
+
+        // Create example project structure
+        createExampleProject();
     }
 
-    private void createExampleMode() {
-        // Crear estructura de carpetas y archivos de ejemplo
+    private void createExampleProject() {
+        // Create folder structure
         workspace.createNewFile("src", true);
         workspace.createNewFile("main", true, "src");
-        workspace.createNewFile("Main.y", false, "src/main");
+        workspace.createNewFile("Main.z", false, "src/main");
         workspace.createNewFile("utils", true, "src");
         workspace.createNewFile("Helper.z", false, "src/utils");
-        workspace.createNewFile("config.pig", false, "");
+        workspace.createNewFile("config.y", false, "");
+        workspace.createNewFile("translations", true, "");
+        workspace.createNewFile("spanish.pig", false, "translations");
+        workspace.createNewFile("english.pig", false, "translations");
     }
 
     private void attachComponents() {
         editorPanel.setLayout(new BorderLayout());
         bottomPanel.setLayout(new BorderLayout());
-        
-        editorPanel.add(workspace, BorderLayout.CENTER); 
+
+        editorPanel.add(workspace, BorderLayout.CENTER);
         bottomPanel.add(bottom, BorderLayout.CENTER);
     }
 
@@ -105,7 +113,7 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
 
     @Override
     public void focusAstVisualizer() {
-        //side.focusAst();
+        // side.focusAst();
     }
 
     @Override
@@ -181,8 +189,6 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
         topPanel = new javax.swing.JPanel();
         bottomPanel = new javax.swing.JPanel();
         editorPanel = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTree1 = new javax.swing.JTree();
         jMenuBar1 = new javax.swing.JMenuBar();
         fileMenuOption = new javax.swing.JMenu();
         fileMenu1 = new javax.swing.JMenuItem();
@@ -249,23 +255,15 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
         editorPanel.setBackground(new java.awt.Color(153, 255, 255));
         editorPanel.setPreferredSize(new java.awt.Dimension(800, 599));
 
-        jScrollPane1.setViewportView(jTree1);
-
         javax.swing.GroupLayout editorPanelLayout = new javax.swing.GroupLayout(editorPanel);
         editorPanel.setLayout(editorPanelLayout);
         editorPanelLayout.setHorizontalGroup(
             editorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(editorPanelLayout.createSequentialGroup()
-                .addGap(31, 31, 31)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(1308, Short.MAX_VALUE))
+            .addGap(0, 1406, Short.MAX_VALUE)
         );
         editorPanelLayout.setVerticalGroup(
             editorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(editorPanelLayout.createSequentialGroup()
-                .addGap(17, 17, 17)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(200, Short.MAX_VALUE))
+            .addGap(0, 599, Short.MAX_VALUE)
         );
 
         verticalSplit.setLeftComponent(editorPanel);
@@ -365,13 +363,13 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
     }//GEN-LAST:event_fileMenu3ActionPerformed
 
     //This method redirect to the errors
-    private void reportMenu2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportMenu2ActionPerformed
+    private void reportMenu2ActionPerformed(java.awt.event.ActionEvent evt) {                                            
         focusErrors();
-    }//GEN-LAST:event_reportMenu2ActionPerformed
+    }
 
-    private void reportMenu1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportMenu1ActionPerformed
+    private void reportMenu1ActionPerformed(java.awt.event.ActionEvent evt) {
         focusSymbolsTable();
-    }//GEN-LAST:event_reportMenu1ActionPerformed
+    }
 
     private void toolsMenu2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_toolsMenu2ActionPerformed
 
@@ -403,8 +401,6 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
     private javax.swing.JMenu fileMenuOption;
     private javax.swing.JPanel headerPanel;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTree jTree1;
     private javax.swing.JPanel mainContainer;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuItem reportMenu1;

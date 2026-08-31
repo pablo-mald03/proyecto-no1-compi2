@@ -12,27 +12,19 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTree;
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 
 /**
- *
+ * Principal class to define the workspace with the files tree
  * @author pablo03
  */
-//Principal class to define the workspace with the files tree
 @Getter
 public class WorkspacePanel extends JPanel {
-    
+
     private final WorkspaceNotifier notifier;
     private final JSplitPane splitPane;
     private final JTree fileTree;
@@ -42,64 +34,94 @@ public class WorkspacePanel extends JPanel {
     private final Map<String, CodeEditorPanel> openEditors;
     private final Map<String, DefaultMutableTreeNode> fileNodes;
     private String currentProjectPath;
-    
+
     public WorkspacePanel(WorkspaceNotifier notifier) {
         this.notifier = notifier;
         this.openEditors = new HashMap<>();
         this.fileNodes = new HashMap<>();
-        
+
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
-        
-        // Crear nodo raíz del árbol
-        rootNode = new DefaultMutableTreeNode("Proyecto");
+
+        // Create root node for the tree
+        rootNode = new DefaultMutableTreeNode("Project");
         treeModel = new DefaultTreeModel(rootNode);
         fileTree = new JTree(treeModel);
-        
-        // Configurar el árbol
+
+        // Configure the tree
         configureTree();
-        
-        // Crear panel de árbol con scroll
+
+        // Create tree panel with scroll
         JScrollPane treeScroll = new JScrollPane(fileTree);
-        treeScroll.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        treeScroll.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         treeScroll.setBackground(Theme.BACKGROUND_DARK.getColorSet());
-        
-        // Crear panel de pestañas
+        treeScroll.getViewport().setBackground(Theme.BACKGROUND_DARK.getColorSet());
+
+        // Create tabbed pane
         tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
-        tabbedPane.setForeground(Theme.FOREGROUND_LIGHT.getColorSet());
-        
-        // Configurar comportamiento de cierre de pestañas
+        tabbedPane.setForeground(Theme.FOREGROUND_DARK.getColorSet());
+        tabbedPane.setUI(new CustomTabbedPaneUI());
+
+        // Configure rounded tabs
         tabbedPane.putClientProperty("JTabbedPane.tabType", "rounded");
-        
-        // Crear split pane
+
+        // Create split pane
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScroll, tabbedPane);
         splitPane.setDividerLocation(250);
         splitPane.setDividerSize(4);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
-        
+        splitPane.setBackground(Theme.BACKGROUND_DARK.getColorSet());
+
         add(splitPane, BorderLayout.CENTER);
-        
+
         setupTreeListeners();
     }
 
-    //Principal method to configure the tree
+    /**
+     * Principal method to configure the tree
+     */
     private void configureTree() {
+        // Set our custom renderer
         fileTree.setCellRenderer(new CustomTreeCellRenderer());
-        
-        // Configurar selección
+
+        // IMPORTANT: Set our model explicitly
+        fileTree.setModel(treeModel);
+
+        // Configure selection
         fileTree.setSelectionRow(0);
         fileTree.setRootVisible(true);
         fileTree.setShowsRootHandles(true);
-        
-        // Configurar el background
+
+        // Configure background
         fileTree.setBackground(Theme.BACKGROUND_DARK.getColorSet());
         fileTree.setForeground(Theme.FOREGROUND_DARK.getColorSet());
-        
-        // Soporte para edición de nombres
+        fileTree.setOpaque(true);
+
+        // Configure selection colors
+       // fileTree.setSelectionBackground(Theme.SURFACE_DARK.getColorSet());
+      //  fileTree.setSelectionForeground(Theme.FOREGROUND_DARK.getColorSet());
+
+        // Support for name editing
         fileTree.setEditable(true);
+
+        // Set row height for better visibility
+        fileTree.setRowHeight(20);
+
+        // CRITICAL FIX: Disable tooltips completely
+        fileTree.setToolTipText(null);
+        ToolTipManager.sharedInstance().unregisterComponent(fileTree);
+
+        // Remove any default renderer tooltips
+        fileTree.setCellRenderer(new CustomTreeCellRenderer());
+
+        // Use a simple UI without extra decorations
+        fileTree.setUI(new javax.swing.plaf.metal.MetalTreeUI());
     }
-    
+
+    /**
+     * Setup mouse listeners for the tree
+     */
     private void setupTreeListeners() {
         fileTree.addMouseListener(new MouseAdapter() {
             @Override
@@ -109,8 +131,9 @@ public class WorkspacePanel extends JPanel {
                     if (path != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                         Object userObject = node.getUserObject();
-                        
-                        if (userObject instanceof FileNode fileNode) {
+
+                        if (userObject instanceof FileNode) {
+                            FileNode fileNode = (FileNode) userObject;
                             if (!fileNode.isDirectory()) {
                                 openFileInTab(fileNode);
                             }
@@ -119,18 +142,52 @@ public class WorkspacePanel extends JPanel {
                 }
             }
         });
+
+        // Add keyboard listener for enter key to open files
+        fileTree.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+                    TreePath path = fileTree.getSelectionPath();
+                    if (path != null) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                        Object userObject = node.getUserObject();
+
+                        if (userObject instanceof FileNode) {
+                            FileNode fileNode = (FileNode) userObject;
+                            if (!fileNode.isDirectory()) {
+                                openFileInTab(fileNode);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // CRITICAL FIX: Prevent tooltips from showing on mouse movement
+        fileTree.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                // Do nothing - prevents default tooltip behavior
+            }
+        });
     }
-    
-    //Method to manage the file
+
+    /**
+     * Method to manage the file creation
+     */
     public void createNewFile(String fileName, boolean isDirectory) {
         createNewFile(fileName, isDirectory, null);
     }
-    
+
+    /**
+     * Method to manage the file creation with parent path
+     */
     public void createNewFile(String fileName, boolean isDirectory, String parentPath) {
         FileNode newNode = new FileNode(fileName, isDirectory);
         String fullPath = parentPath != null ? parentPath + "/" + fileName : fileName;
         newNode.setFilePath(fullPath);
-        
+
         DefaultMutableTreeNode parentNode;
         if (parentPath == null || parentPath.isEmpty()) {
             parentNode = rootNode;
@@ -140,34 +197,40 @@ public class WorkspacePanel extends JPanel {
                 parentNode = rootNode;
             }
         }
-        
+
         DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(newNode);
         parentNode.add(treeNode);
         treeModel.reload(parentNode);
-        
+
         expandNode(parentNode);
-        
+
         fileNodes.put(fullPath, treeNode);
-        
+
         if (!isDirectory) {
             FileNode fileNode = (FileNode) treeNode.getUserObject();
             openFileInTab(fileNode);
         }
-        
     }
-    
+
+    /**
+     * Find a node by its path
+     */
     private DefaultMutableTreeNode findNodeByPath(String path) {
         return findNodeByPath(rootNode, path);
     }
-    
+
+    /**
+     * Find a node by its path recursively
+     */
     private DefaultMutableTreeNode findNodeByPath(DefaultMutableTreeNode node, String path) {
         Object userObj = node.getUserObject();
-        if (userObj instanceof FileNode fileNode) {
+        if (userObj instanceof FileNode) {
+            FileNode fileNode = (FileNode) userObj;
             if (path.equals(fileNode.getFilePath())) {
                 return node;
             }
         }
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
             DefaultMutableTreeNode result = findNodeByPath(child, path);
@@ -177,18 +240,24 @@ public class WorkspacePanel extends JPanel {
         }
         return null;
     }
-    
+
+    /**
+     * Expand a node in the tree
+     */
     private void expandNode(DefaultMutableTreeNode node) {
         TreePath path = new TreePath(node.getPath());
         fileTree.expandPath(path);
         fileTree.scrollPathToVisible(path);
     }
-    
+
+    /**
+     * Open a file in a new tab
+     */
     public void openFileInTab(FileNode fileNode) {
         String filePath = fileNode.getFilePath();
         String fileName = fileNode.getName();
-        
-        // Si ya está abierto, solo enfocar la pestaña
+
+        // If already open, just focus the tab
         if (openEditors.containsKey(filePath)) {
             int index = findTabIndexByPath(filePath);
             if (index != -1) {
@@ -196,23 +265,23 @@ public class WorkspacePanel extends JPanel {
             }
             return;
         }
-        
+
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
 
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);
-        
+
         int index = tabbedPane.indexOfComponent(editor);
         tabbedPane.setSelectedIndex(index);
-        
+
         tabbedPane.setTabComponentAt(index, createTabComponent(fileName, filePath));
-        
-        notifier.logInfo("Archivo abierto: " + fileName);
+
     }
-    
+
+    /**
+     * Find tab index by file path
+     */
     private int findTabIndexByPath(String filePath) {
-        // Asumiendo que guardamos el path en algún lugar
-        // Por ahora, buscar por el nombre del componente
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
             Component comp = tabbedPane.getComponentAt(i);
             if (comp instanceof CodeEditorPanel) {
@@ -223,31 +292,52 @@ public class WorkspacePanel extends JPanel {
         }
         return -1;
     }
-    
+
+    /**
+     * Create a custom tab component with close button
+     */
     private Component createTabComponent(String title, String filePath) {
-        JPanel tabComponent = new JPanel(new BorderLayout());
+        JPanel tabComponent = new JPanel(new BorderLayout(5, 0));
         tabComponent.setOpaque(false);
-        
+        tabComponent.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
+
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Liberation Mono", Font.PLAIN, 12));
         titleLabel.setForeground(Theme.FOREGROUND_DARK.getColorSet());
-        
+
         JButton closeButton = new JButton("✕");
         closeButton.setFont(new Font("Liberation Mono", Font.BOLD, 10));
         closeButton.setForeground(Theme.FOREGROUND_DARK.getColorSet());
-        closeButton.setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        closeButton.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
         closeButton.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
         closeButton.setFocusable(false);
         closeButton.setContentAreaFilled(false);
-        
+        closeButton.setOpaque(true);
+
+        // Hover effect for close button
+        closeButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                closeButton.setBackground(Theme.SURFACE_DARK.getColorSet());
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                closeButton.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
+            }
+        });
+
         closeButton.addActionListener(e -> closeTab(filePath));
-        
+
         tabComponent.add(titleLabel, BorderLayout.WEST);
         tabComponent.add(closeButton, BorderLayout.EAST);
-        
+
         return tabComponent;
     }
-    
+
+    /**
+     * Close a tab by file path
+     */
     public void closeTab(String filePath) {
         if (openEditors.containsKey(filePath)) {
             CodeEditorPanel editor = openEditors.get(filePath);
@@ -255,18 +345,23 @@ public class WorkspacePanel extends JPanel {
             if (index != -1) {
                 tabbedPane.remove(index);
                 openEditors.remove(filePath);
-                notifier.logInfo("Archivo cerrado: " + filePath);
+                notifier.logInfo("File closed: " + filePath);
             }
         }
     }
-    
+
+    /**
+     * Close all tabs
+     */
     public void closeAllTabs() {
         tabbedPane.removeAll();
         openEditors.clear();
-        notifier.logInfo("Todos los archivos cerrados");
+        notifier.logInfo("All files closed");
     }
-    
-    // Getters
+
+    /**
+     * Get the current active editor
+     */
     public CodeEditorPanel getCurrentEditor() {
         Component comp = tabbedPane.getSelectedComponent();
         if (comp instanceof CodeEditorPanel) {
@@ -275,8 +370,9 @@ public class WorkspacePanel extends JPanel {
         return null;
     }
 
-    
-    // Método para obtener el contenido de todos los archivos (para exportar)
+    /**
+     * Get all file contents for export
+     */
     public Map<String, String> getAllFileContents() {
         Map<String, String> contents = new HashMap<>();
         for (Map.Entry<String, CodeEditorPanel> entry : openEditors.entrySet()) {
@@ -288,7 +384,4 @@ public class WorkspacePanel extends JPanel {
         }
         return contents;
     }
-    
-
-
 }
