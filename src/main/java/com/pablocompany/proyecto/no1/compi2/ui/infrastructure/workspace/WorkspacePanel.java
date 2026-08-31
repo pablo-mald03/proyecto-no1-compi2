@@ -1,8 +1,12 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs.CustomConfirmDialog;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs.CustomInputDialog;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import lombok.Getter;
 
 import java.awt.BorderLayout;
@@ -26,13 +30,15 @@ import javax.swing.tree.TreePath;
 public class WorkspacePanel extends JPanel {
 
     private final WorkspaceNotifier notifier;
+    private final ConfirmationNotifier confirmationNotifier;
     private final FileTreePanel fileTreePanel;
     private final JTabbedPane tabbedPane;
     private final Map<String, CodeEditorPanel> openEditors;
     private final JSplitPane splitPane;
 
-    public WorkspacePanel(WorkspaceNotifier notifier) {
+    public WorkspacePanel(WorkspaceNotifier notifier, ConfirmationNotifier confirmationNotifier) {
         this.notifier = notifier;
+        this.confirmationNotifier = confirmationNotifier;
         this.openEditors = new HashMap<>();
 
         setLayout(new BorderLayout());
@@ -65,10 +71,11 @@ public class WorkspacePanel extends JPanel {
         String parentPath = fileTreePanel.getSelectedParentPath();
         DefaultMutableTreeNode parentNode = fileTreePanel.getSelectedParentNode();
 
-        String baseName = JOptionPane.showInputDialog(this,
-                "Ingresa el nombre del archivo (sin extension):",
-                "Crear nuevo archivo",
-                JOptionPane.PLAIN_MESSAGE);
+        String baseName = CustomInputDialog.showInputDialog(
+                this,
+                "Crear Nuevo Archivo",
+                "Ingresa el nombre del archivo (sin extension):"
+        );
 
         if (baseName == null || baseName.trim().isEmpty()) {
             return;
@@ -76,6 +83,7 @@ public class WorkspacePanel extends JPanel {
 
         baseName = baseName.trim();
 
+        // Check if user tried to add extension manually
         if (baseName.contains(".")) {
             notifier.alertToast("Porfavor no escribas la extension. Esta se coloca automatica.", true);
             return;
@@ -84,6 +92,7 @@ public class WorkspacePanel extends JPanel {
         String fullName = baseName + extension;
         String finalPath = parentPath.isEmpty() ? fullName : parentPath + "/" + fullName;
 
+        // Check if file exists and generate unique name
         int counter = 1;
         String originalName = baseName;
         while (fileTreePanel.getFileNodes().containsKey(finalPath)) {
@@ -94,8 +103,10 @@ public class WorkspacePanel extends JPanel {
             if (counter > 100) break;
         }
 
+        // Create the file
         fileTreePanel.createNewFile(fullName, false, parentPath.isEmpty() ? null : parentPath);
 
+        // Open the new file
         FileNode fileNode = new FileNode(fullName, false);
         fileNode.setFilePath(finalPath);
         openFileInTab(fileNode);
@@ -108,10 +119,11 @@ public class WorkspacePanel extends JPanel {
         String parentPath = fileTreePanel.getSelectedParentPath();
         DefaultMutableTreeNode parentNode = fileTreePanel.getSelectedParentNode();
 
-        String folderName = JOptionPane.showInputDialog(this,
-                "Ingresa el nombre del folder:",
-                "Crear Nuevo Folder",
-                JOptionPane.PLAIN_MESSAGE);
+        String folderName = CustomInputDialog.showInputDialog(
+                this,
+                "Crear nuevo Folder",
+                "Ingresa el nombre del folder:"
+        );
 
         if (folderName == null || folderName.trim().isEmpty()) {
             return;
@@ -126,7 +138,6 @@ public class WorkspacePanel extends JPanel {
 
         String finalPath = parentPath.isEmpty() ? folderName : parentPath + "/" + folderName;
 
-        // Check if folder exists
         int counter = 1;
         String originalName = folderName;
         while (fileTreePanel.getFileNodes().containsKey(finalPath)) {
@@ -158,10 +169,12 @@ public class WorkspacePanel extends JPanel {
         String currentName = fileNode.getName();
         String oldPath = fileNode.getFilePath();
 
-        String newName = JOptionPane.showInputDialog(this,
-                "Ingresar nuevo nombre:",
-                "Rename",
-                JOptionPane.PLAIN_MESSAGE);
+        String newName = CustomInputDialog.showInputDialog(
+                this,
+                "Renombrar",
+                "Ingresa el nombre:",
+                currentName
+        );
 
         if (newName == null || newName.trim().isEmpty()) {
             return;
@@ -169,6 +182,7 @@ public class WorkspacePanel extends JPanel {
 
         newName = newName.trim();
 
+        // For files, check if extension is included
         if (!fileNode.isDirectory()) {
             String currentExtension = "";
             int dotIndex = currentName.lastIndexOf('.');
@@ -179,9 +193,7 @@ public class WorkspacePanel extends JPanel {
             if (!newName.contains(".") && !currentExtension.isEmpty()) {
                 newName = newName + currentExtension;
             } else if (newName.contains(".") && !newName.endsWith(currentExtension)) {
-                // User changed extension
                 if (!currentExtension.isEmpty()) {
-                    // Check if new extension matches old one
                     String newExtension = newName.substring(newName.lastIndexOf('.'));
                     if (!newExtension.equals(currentExtension)) {
                         notifier.alertToast("No se puede cambiar la extension del archivo.", true);
@@ -196,13 +208,11 @@ public class WorkspacePanel extends JPanel {
             }
         }
 
-        // Update the node
         String newPath = oldPath.substring(0, oldPath.lastIndexOf('/') + 1) + newName;
         if (oldPath.equals(newPath)) {
             return;
         }
 
-        // Check if new name already exists in same directory
         if (fileTreePanel.getFileNodes().containsKey(newPath)) {
             notifier.alertToast("Ya existe un archivo con este nombre.", true);
             return;
@@ -222,7 +232,6 @@ public class WorkspacePanel extends JPanel {
             CodeEditorPanel editor = openEditors.remove(oldPath);
             openEditors.put(newPath, editor);
 
-            // Update tab title
             int index = tabbedPane.indexOfComponent(editor);
             if (index != -1) {
                 tabbedPane.setTabComponentAt(index, createTabComponent(newName, newPath));
@@ -233,7 +242,7 @@ public class WorkspacePanel extends JPanel {
     }
 
     /**
-     * Delete the selected node
+     * Delete the selected node using the ConfirmationNotifier system
      */
     public void deleteSelectedNode() {
         DefaultMutableTreeNode node = fileTreePanel.getSelectedNode();
@@ -249,33 +258,34 @@ public class WorkspacePanel extends JPanel {
         FileNode fileNode = (FileNode) userObj;
 
         if (node == fileTreePanel.getRootNode()) {
-            notifier.logError("No se puede eliminar la raiz del proyecto");
+            notifier.logError("No se puede eliminar el proyecto raiz");
             return;
         }
 
         String type = fileNode.isDirectory() ? "folder" : "archivo";
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Estas segurio que quieres eliminar el " + type + ": " + fileNode.getName() + "?",
-                "Confirmar eliminacion",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
+
+        // Use the ConfirmationNotifier system with callback
+        confirmationNotifier.confirm(
+                ModalType.WARNING,
+                "Confirma eliminacion",
+                "Estas seguro que quieres eliminar el " + type + ": " + fileNode.getName() + " ?",
+                confirmed -> {
+                    if (confirmed) {
+                        String filePath = fileNode.getFilePath();
+
+                        if (!fileNode.isDirectory() && openEditors.containsKey(filePath)) {
+                            closeTab(filePath);
+                        }
+
+                        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+                        if (parent != null) {
+                            parent.remove(node);
+                            fileTreePanel.getFileNodes().remove(filePath);
+                            fileTreePanel.reloadTree();
+                        }
+                    }
+                }
         );
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            String filePath = fileNode.getFilePath();
-
-            if (!fileNode.isDirectory() && openEditors.containsKey(filePath)) {
-                closeTab(filePath);
-            }
-
-            DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-            if (parent != null) {
-                parent.remove(node);
-                fileTreePanel.getFileNodes().remove(filePath);
-                fileTreePanel.reloadTree();
-            }
-        }
     }
 
     /**
@@ -380,7 +390,6 @@ public class WorkspacePanel extends JPanel {
     public void closeAllTabs() {
         tabbedPane.removeAll();
         openEditors.clear();
-        notifier.logInfo("All files closed");
     }
 
     /**

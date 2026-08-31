@@ -35,19 +35,15 @@ public class CustomTabbedPaneUI extends BasicTabbedPaneUI {
                                       int x, int y, int w, int h, boolean isSelected) {
         Graphics2D g2d = (Graphics2D) g.create();
 
-        // Enable anti-aliasing
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         if (isSelected) {
-            // Selected tab - darker background
             g2d.setColor(Theme.SURFACE_DARK.getColorSet());
         } else {
-            // Unselected tab - slightly lighter
             Color bgColor = Theme.STATUS_BAR_DARK.getColorSet();
             g2d.setColor(bgColor);
         }
 
-        // Draw rounded tab
         g2d.fillRoundRect(x, y + 2, w, h - 2, 8, 8);
         g2d.dispose();
     }
@@ -55,15 +51,12 @@ public class CustomTabbedPaneUI extends BasicTabbedPaneUI {
     @Override
     protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex,
                                   int x, int y, int w, int h, boolean isSelected) {
-        // No border for cleaner look
-        // We rely on the background color to define the tab
     }
 
     @Override
     protected void paintFocusIndicator(Graphics g, int tabPlacement, Rectangle[] rects,
                                        int tabIndex, Rectangle iconRect, Rectangle textRect,
                                        boolean isSelected) {
-        // No focus indicator for cleaner look
     }
 
     @Override
@@ -71,18 +64,14 @@ public class CustomTabbedPaneUI extends BasicTabbedPaneUI {
                              int tabIndex, String title, Rectangle textRect, boolean isSelected) {
         Graphics2D g2d = (Graphics2D) g.create();
 
-        // Enable anti-aliasing
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        // Set text color
         if (isSelected) {
             g2d.setColor(Theme.FOREGROUND_DARK.getColorSet());
         } else {
-            // Unselected text - slightly dimmer
             g2d.setColor(new Color(180, 185, 195));
         }
 
-        // Draw text
         g2d.setFont(font);
         g2d.drawString(title, textRect.x, textRect.y + metrics.getAscent());
         g2d.dispose();

@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -19,6 +20,7 @@ import java.util.Map;
  * Panel that contains the file tree with all its functionality
  * @author pablo03
  */
+@Getter
 public class FileTreePanel extends JPanel {
 
     private final WorkspaceNotifier notifier;
@@ -41,8 +43,10 @@ public class FileTreePanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
 
-        // Create root node
-        rootNode = new DefaultMutableTreeNode("Project");
+        // Create root node - set as directory type for icon
+        FileNode rootFileNode = new FileNode("Project", true);
+        rootFileNode.setFilePath("");
+        rootNode = new DefaultMutableTreeNode(rootFileNode);
         treeModel = new DefaultTreeModel(rootNode);
         fileTree = new JTree(treeModel);
 
@@ -162,7 +166,7 @@ public class FileTreePanel extends JPanel {
             fileTree.clearSelection();
             // Show menu with root context
             selectedNode = rootNode;
-            selectedFileNode = new FileNode("Project", true);
+            selectedFileNode = (FileNode) rootNode.getUserObject();
             showPopupMenu(e);
         }
     }
@@ -336,19 +340,5 @@ public class FileTreePanel extends JPanel {
         treeModel.reload(rootNode);
     }
 
-    public DefaultMutableTreeNode getRootNode() {
-        return rootNode;
-    }
 
-    public JTree getFileTree() {
-        return fileTree;
-    }
-
-    public Map<String, DefaultMutableTreeNode> getFileNodes() {
-        return fileNodes;
-    }
-
-    public DefaultTreeModel getTreeModel() {
-        return treeModel;
-    }
 }

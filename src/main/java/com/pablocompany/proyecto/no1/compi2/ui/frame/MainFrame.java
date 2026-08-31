@@ -7,39 +7,85 @@ package com.pablocompany.proyecto.no1.compi2.ui.frame;
 import com.pablocompany.practica.no1.compi2.infrastructure.controller.ProjectFileController;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
+import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.BottomTabbedPanel;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationContainer;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationManager;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.sideview.SidePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.toast.ToastNotification;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.layers.RootLayer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace.WorkspacePanel;
 import java.awt.BorderLayout;
 import java.util.List;
 
 /**
- *
+ * Main frame of the application with RootLayer support
  * @author pablo03
  */
-//This class is the main frame from de UI
-public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
+public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier, ConfirmationNotifier {
 
     private WorkspacePanel workspace;
     private SidePanel side;
     private BottomTabbedPanel bottom;
     private final ProjectFileController fileController;
 
+    // Confirmation system
+    private final ConfirmationContainer confirmationContainer;
+    private final ConfirmationManager confirmationManager;
+
+    // Root layer
+    private RootLayer rootPanel;
+
     public MainFrame() {
         initComponents();
+
+        // ==========================
+        // Confirmation System Setup
+        // ==========================
+        this.confirmationContainer = new ConfirmationContainer();
+        this.confirmationManager = new ConfirmationManager(confirmationContainer);
+
+        // ==========================
+        // Initialize Components
+        // ==========================
         initializeCustomComponents();
         attachComponents();
         this.fileController = new ProjectFileController();
+
+        // ==========================
+        // Root Layer Setup
+        // ==========================
+        setupRootLayer();
 
         // Set dark theme for the frame
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
         getContentPane().setBackground(Theme.BACKGROUND_DARK.getColorSet());
     }
 
+    /**
+     * Setup the root layer with all components
+     */
+    private void setupRootLayer() {
+        // Create root panel with mainPanel and overlays
+        rootPanel = new RootLayer(
+                mainPanel,
+                confirmationContainer
+        );
+
+        // Set root panel as content pane
+        setContentPane(rootPanel);
+
+        // Ensure root panel is visible
+        rootPanel.setVisible(true);
+        rootPanel.revalidate();
+        rootPanel.repaint();
+    }
+
     private void initializeCustomComponents() {
-        workspace = new WorkspacePanel(this);
+        workspace = new WorkspacePanel(this, this);
         side = new SidePanel();
         bottom = new BottomTabbedPanel();
 
@@ -48,16 +94,31 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
     }
 
     private void createExampleProject() {
-        // Create folder structure
-
+        // Create folder structure example
+        workspace.getFileTreePanel().createNewFile("src", true);
+        workspace.getFileTreePanel().createNewFile("main", true, "src");
+        workspace.getFileTreePanel().createNewFile("Main.z", false, "src/main");
+        workspace.getFileTreePanel().createNewFile("utils", true, "src");
+        workspace.getFileTreePanel().createNewFile("Helper.z", false, "src/utils");
+        workspace.getFileTreePanel().createNewFile("config.y", false, "");
     }
 
     private void attachComponents() {
+        // Remove existing components from editorPanel and bottomPanel
+        editorPanel.removeAll();
+        bottomPanel.removeAll();
+
         editorPanel.setLayout(new BorderLayout());
         bottomPanel.setLayout(new BorderLayout());
 
         editorPanel.add(workspace, BorderLayout.CENTER);
         bottomPanel.add(bottom, BorderLayout.CENTER);
+
+        // Revalidate and repaint
+        editorPanel.revalidate();
+        editorPanel.repaint();
+        bottomPanel.revalidate();
+        bottomPanel.repaint();
     }
 
     // ==========================================
@@ -163,6 +224,13 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
     @Override
     public void notifyAstRepresentation(String ast) {
        
+    }
+
+
+    //Principal notification manager to confirm any action
+    @Override
+    public void confirm(ModalType type, String title, String message, ConfirmationCallback callback) {
+        confirmationManager.confirm(type, title, message, callback);
     }
 
     /**
@@ -404,6 +472,8 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier {
     private javax.swing.JMenu toolsMenuOption;
     private javax.swing.JPanel topPanel;
     private javax.swing.JSplitPane verticalSplit;
+
+
     // End of variables declaration//GEN-END:variables
 
 

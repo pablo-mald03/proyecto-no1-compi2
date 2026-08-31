@@ -41,11 +41,13 @@ public class FileTreePopupMenu extends JPopupMenu {
         setForeground(Theme.FOREGROUND_DARK.getColorSet());
         setBorder(BorderFactory.createLineBorder(Theme.BORDER_DARK.getColorSet()));
 
+        // Initialize menu items
         newFileMenu = createNewFileMenu();
-        newFolderMenuItem = createMenuItem("Nuevo Folder", e -> workspacePanel.createNewFolder());
-        renameMenuItem = createMenuItem("Renombrar (F2)", e -> workspacePanel.renameSelectedNode());
-        deleteMenuItem = createMenuItem("Eliminar", e -> workspacePanel.deleteSelectedNode());
+        newFolderMenuItem = createMenuItem("New Folder", e -> workspacePanel.createNewFolder());
+        renameMenuItem = createMenuItem("Rename (F2)", e -> workspacePanel.renameSelectedNode());
+        deleteMenuItem = createMenuItem("Delete", e -> workspacePanel.deleteSelectedNode());
 
+        // Add to popup
         add(newFileMenu);
         add(newFolderMenuItem);
         addSeparator();
@@ -86,6 +88,7 @@ public class FileTreePopupMenu extends JPopupMenu {
         item.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
         item.addActionListener(action);
 
+        // Hover effect
         item.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -109,14 +112,18 @@ public class FileTreePopupMenu extends JPopupMenu {
         this.isDirectorySelected = isDirectory;
         this.isFileSelected = isFile;
 
+        // Root and directories can create files and folders
         boolean canCreate = isRoot || isDirectory;
         newFileMenu.setEnabled(canCreate);
         newFolderMenuItem.setEnabled(canCreate);
 
-        renameMenuItem.setEnabled(!isRoot);
+        // Can rename everyone (including root)
+        renameMenuItem.setEnabled(true);
 
+        // Can delete only if not root
         deleteMenuItem.setEnabled(!isRoot);
 
+        // Files can't create new items
         if (isFile) {
             newFileMenu.setEnabled(false);
             newFolderMenuItem.setEnabled(false);
