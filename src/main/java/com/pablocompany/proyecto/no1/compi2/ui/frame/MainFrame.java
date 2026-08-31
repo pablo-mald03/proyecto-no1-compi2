@@ -4,43 +4,49 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.frame;
 
-import com.pablocompany.practica.no1.compi2.infrastructure.controller.ProjectFileController;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.BottomTabbedPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationContainer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationManager;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.sideview.SidePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.toast.ToastNotification;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.layers.RootLayer;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace.WorkspacePanel;
-import java.awt.BorderLayout;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens.ManagementScreen;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens.WelcomeScreen;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
 import java.util.List;
 
 /**
- * Main frame of the application with RootLayer support
+ * Main frame with navigation between welcome and management screens
  * @author pablo03
  */
-public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier, ConfirmationNotifier {
+public class MainFrame extends JFrame implements WorkspaceNotifier, ConfirmationNotifier {
 
-    private WorkspacePanel workspace;
-    private SidePanel side;
-    private BottomTabbedPanel bottom;
-    private final ProjectFileController fileController;
+    private final CardLayout cardLayout = new CardLayout();
+    private final JPanel contentPanel = new JPanel(cardLayout);
+
+    private WelcomeScreen welcomeScreen;
+    private ManagementScreen managementScreen;
 
     // Confirmation system
     private final ConfirmationContainer confirmationContainer;
     private final ConfirmationManager confirmationManager;
+    private String currentProjectName = "Project";
 
     // Root layer
     private RootLayer rootPanel;
 
     public MainFrame() {
-        initComponents();
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setTitle("Codex Compiler");
+        setMinimumSize(new Dimension(1200, 800));
+        setBackground(Theme.BACKGROUND_DARK.getColorSet());
 
         // ==========================
         // Confirmation System Setup
@@ -49,76 +55,128 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier, 
         this.confirmationManager = new ConfirmationManager(confirmationContainer);
 
         // ==========================
-        // Initialize Components
+        // Initialize Screens
         // ==========================
-        initializeCustomComponents();
-        attachComponents();
-        this.fileController = new ProjectFileController();
+        initializeScreens();
 
         // ==========================
         // Root Layer Setup
         // ==========================
         setupRootLayer();
 
-        // Set dark theme for the frame
-        setBackground(Theme.BACKGROUND_DARK.getColorSet());
-        getContentPane().setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        // ==========================
+        // Final Setup
+        // ==========================
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    /**
+     * Called when a project is created
+     */
+    private void onProjectCreated(String projectName) {
+        this.currentProjectName = projectName;
+
+        // Create management screen with the project name
+        managementScreen = new ManagementScreen(this, this, projectName);
+        contentPanel.remove(managementScreen);
+        contentPanel.add(managementScreen, "MANAGEMENT");
+
+        // Show management screen
+        cardLayout.show(contentPanel, "MANAGEMENT");
+
+        // Add a default project structure
+        addDefaultProjectStructure();
+
+    }
+
+
+    /**
+     * Called when a project is opened
+     */
+    private void onProjectOpened(File projectDir) {
+        this.currentProjectName = projectDir.getName();
+
+        // Create management screen with the project name
+        managementScreen = new ManagementScreen(this, this, currentProjectName);
+        contentPanel.remove(managementScreen);
+        contentPanel.add(managementScreen, "MANAGEMENT");
+
+        // Load project structure from directory
+        loadProjectFromDirectory(projectDir);
+
+        // Show management screen
+        cardLayout.show(contentPanel, "MANAGEMENT");
+
+        logInfo("Proyecto '" + currentProjectName + "' abierto exitosamente");
+    }
+
+    /**
+     * Load project structure from directory
+     */
+    private void loadProjectFromDirectory(File projectDir) {
+        // TODO: Implement loading of project structure
+        // This will traverse the directory and create the tree structure
+    }
+
+    /**
+     * Initialize the screens
+     */
+    private void initializeScreens() {
+        // Welcome Screen
+        welcomeScreen = new WelcomeScreen(
+                this::onProjectCreated,
+                this::onProjectOpened
+        );
+
+        // Management Screen (initially empty, will be recreated with project)
+        managementScreen = createManagementScreen();
+
+        contentPanel.add(welcomeScreen, "WELCOME");
+        contentPanel.add(managementScreen, "MANAGEMENT");
+        contentPanel.setBackground(Theme.BACKGROUND_DARK.getColorSet());
+
+        // Show welcome screen by default
+        cardLayout.show(contentPanel, "WELCOME");
+    }
+
+    /**
+     * Create a new management screen
+     */
+    private ManagementScreen createManagementScreen() {
+        return new ManagementScreen(this, this);
     }
 
     /**
      * Setup the root layer with all components
      */
     private void setupRootLayer() {
-        // Create root panel with mainPanel and overlays
         rootPanel = new RootLayer(
-                mainPanel,
+                contentPanel,
                 confirmationContainer
         );
 
-        // Set root panel as content pane
         setContentPane(rootPanel);
-
-        // Ensure root panel is visible
         rootPanel.setVisible(true);
         rootPanel.revalidate();
         rootPanel.repaint();
     }
 
-    private void initializeCustomComponents() {
-        workspace = new WorkspacePanel(this, this);
-        side = new SidePanel();
-        bottom = new BottomTabbedPanel();
 
-        // Create example project structure
-        createExampleProject();
-    }
 
-    private void createExampleProject() {
-        // Create folder structure example
-        workspace.getFileTreePanel().createNewFile("src", true);
-        workspace.getFileTreePanel().createNewFile("main", true, "src");
-        workspace.getFileTreePanel().createNewFile("Main.z", false, "src/main");
-        workspace.getFileTreePanel().createNewFile("utils", true, "src");
-        workspace.getFileTreePanel().createNewFile("Helper.z", false, "src/utils");
-        workspace.getFileTreePanel().createNewFile("config.y", false, "");
-    }
+    /**
+     * Add a default project structure for new projects
+     */
+    private void addDefaultProjectStructure() {
+        var fileTree = managementScreen.getWorkspacePanel().getFileTreePanel();
 
-    private void attachComponents() {
-        // Remove existing components from editorPanel and bottomPanel
-        editorPanel.removeAll();
-        bottomPanel.removeAll();
-
-        editorPanel.setLayout(new BorderLayout());
-        bottomPanel.setLayout(new BorderLayout());
-
-        editorPanel.add(workspace, BorderLayout.CENTER);
-        bottomPanel.add(bottom, BorderLayout.CENTER);
-
-        // Revalidate and repaint
-        editorPanel.revalidate();
-        editorPanel.repaint();
-        bottomPanel.revalidate();
-        bottomPanel.repaint();
+        // Create default folders
+        fileTree.createNewFile("src", true);
+        fileTree.createNewFile("main", true, "src");
+        fileTree.createNewFile("Main.z", false, "src/main");
+        fileTree.createNewFile("utils", true, "src");
+        fileTree.createNewFile("Helper.z", false, "src/utils");
+        fileTree.createNewFile("config.y", false, "");
     }
 
     // ==========================================
@@ -126,17 +184,17 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier, 
     // ==========================================
     @Override
     public void logInfo(String message) {
-        bottom.getConsole().appendInfo(message);
+        managementScreen.getBottomPanel().getConsole().appendInfo(message);
     }
 
     @Override
     public void logSuccess(String message) {
-        bottom.getConsole().appendSuccess(message);
+        managementScreen.getBottomPanel().getConsole().appendSuccess(message);
     }
 
     @Override
     public void logError(String message) {
-        bottom.getConsole().appendError(message);
+        managementScreen.getBottomPanel().getConsole().appendError(message);
     }
 
     @Override
@@ -146,22 +204,22 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier, 
 
     @Override
     public void focusConsole() {
-        bottom.showConsole();
+        managementScreen.getBottomPanel().showConsole();
     }
 
     @Override
     public void focusErrors() {
-        bottom.showErrors();
+        managementScreen.getBottomPanel().showErrors();
     }
 
     @Override
     public void focusSymbolsTable() {
-        bottom.showSymbolsTable();
+        managementScreen.getBottomPanel().showSymbolsTable();
     }
 
     @Override
     public void focusPigLatin() {
-        side.focusPigLatin();
+
     }
 
     @Override
@@ -171,18 +229,18 @@ public class MainFrame extends javax.swing.JFrame implements WorkspaceNotifier, 
 
     @Override
     public void focusStackVisualizer() {
-        side.focusParseStack();
+
     }
 
     @Override
     public void focusStackVisualizerByStep() {
-        side.focusParseStackByStep();
+
     }
 
     @Override
     public void clearLogs() {
-        bottom.getConsole().clear();
-        bottom.getErrors().clear();
+        managementScreen.getBottomPanel().getConsole().clear();
+        managementScreen.getBottomPanel().getErrors().clear();
     }
     
     @Override

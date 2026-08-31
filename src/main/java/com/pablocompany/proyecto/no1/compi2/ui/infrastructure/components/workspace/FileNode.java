@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace;
+package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,8 +11,8 @@ import lombok.Setter;
 @Setter
 public class FileNode {
 
-    private final String name;
-    private final boolean isDirectory;
+    private String name;
+    private boolean isDirectory;
     private String filePath;
 
     public FileNode(String name, boolean isDirectory) {

@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace;
+package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
@@ -35,16 +35,26 @@ public class FileTreePanel extends JPanel {
     private DefaultMutableTreeNode selectedNode;
     private FileNode selectedFileNode;
 
+    /**
+     * Constructor with default project name
+     */
     public FileTreePanel(WorkspaceNotifier notifier, WorkspacePanel workspacePanel) {
+        this(notifier, workspacePanel, "Project");
+    }
+
+    /**
+     * Constructor with custom project name
+     */
+    public FileTreePanel(WorkspaceNotifier notifier, WorkspacePanel workspacePanel, String projectName) {
         this.notifier = notifier;
         this.workspacePanel = workspacePanel;
         this.fileNodes = new HashMap<>();
 
         setLayout(new BorderLayout());
-        setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        setBackground(Theme.SIDEBAR_DARKT.getColorSet());
 
-        // Create root node - set as directory type for icon
-        FileNode rootFileNode = new FileNode("Project", true);
+        // Create root node with custom project name
+        FileNode rootFileNode = new FileNode(projectName, true);
         rootFileNode.setFilePath("");
         rootNode = new DefaultMutableTreeNode(rootFileNode);
         treeModel = new DefaultTreeModel(rootNode);
@@ -60,10 +70,21 @@ public class FileTreePanel extends JPanel {
         // Create scroll pane
         JScrollPane treeScroll = new JScrollPane(fileTree);
         treeScroll.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        treeScroll.setBackground(Theme.BACKGROUND_DARK.getColorSet());
-        treeScroll.getViewport().setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        treeScroll.setBackground(Theme.AUXILIARY_BACKGROUND_DARK.getColorSet());
+        treeScroll.getViewport().setBackground(Theme.AUXILIARY_BACKGROUND_DARK.getColorSet());
 
         add(treeScroll, BorderLayout.CENTER);
+    }
+
+    /**
+     * Update the project name (for rename operations)
+     */
+    public void updateProjectName(String newName) {
+        if (rootNode != null && rootNode.getUserObject() instanceof FileNode rootFileNode) {
+            rootFileNode.setName(newName);
+            treeModel.reload(rootNode);
+            notifier.logInfo("Project renamed to: " + newName);
+        }
     }
 
     /**

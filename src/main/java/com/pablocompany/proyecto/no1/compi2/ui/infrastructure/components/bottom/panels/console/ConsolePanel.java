@@ -1,16 +1,13 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.console;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
+
+import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import java.awt.*;
 
 /**
  *
@@ -38,7 +35,7 @@ public class ConsolePanel extends JPanel {
         console.setEditable(false);
         console.setFont(new Font("Liberation Mono", Font.PLAIN, 13));
 
-        Color bgDark = Theme.BACKGROUND_DARK.getColorSet();
+        Color bgDark = Theme.SIDEBAR_DARKT.getColorSet();
         console.setBackground(bgDark);
         console.setCaretColor(COLOR_DEFAULT);
 

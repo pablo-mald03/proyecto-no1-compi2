@@ -1,24 +1,20 @@
-package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace;
+package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs.CustomConfirmDialog;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs.CustomInputDialog;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import lombok.Getter;
 
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeCellRenderer;
-import javax.swing.tree.TreePath;
 
 /**
  * Main workspace panel containing file tree and tabbed editor
@@ -34,17 +30,33 @@ public class WorkspacePanel extends JPanel {
     private final JTabbedPane tabbedPane;
     private final Map<String, CodeEditorPanel> openEditors;
     private final JSplitPane splitPane;
+    private final JPanel welcomePanel;
+    private String projectName;
 
+    /**
+     * Constructor with default project name
+     */
     public WorkspacePanel(WorkspaceNotifier notifier, ConfirmationNotifier confirmationNotifier) {
+        this(notifier, confirmationNotifier, "Project");
+    }
+
+    /**
+     * Constructor with custom project name
+     */
+    public WorkspacePanel(WorkspaceNotifier notifier, ConfirmationNotifier confirmationNotifier, String projectName) {
         this.notifier = notifier;
         this.confirmationNotifier = confirmationNotifier;
+        this.projectName = projectName;
         this.openEditors = new HashMap<>();
 
         setLayout(new BorderLayout());
-        setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        setBackground(Theme.SIDEBAR_DARKT.getColorSet());
 
-        // Create file tree panel
-        fileTreePanel = new FileTreePanel(notifier, this);
+        // Create file tree panel with project name
+        fileTreePanel = new FileTreePanel(notifier, this, projectName);
+
+        // Create welcome panel
+        welcomePanel = createWelcomePanel();
 
         // Create tabbed pane
         tabbedPane = new JTabbedPane();
@@ -52,6 +64,10 @@ public class WorkspacePanel extends JPanel {
         tabbedPane.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         tabbedPane.setUI(new CustomTabbedPaneUI());
         tabbedPane.putClientProperty("JTabbedPane.tabType", "rounded");
+
+        // Add welcome panel as default content
+        tabbedPane.addTab("Welcome", welcomePanel);
+        tabbedPane.setEnabledAt(0, false);
 
         // Create split pane
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileTreePanel, tabbedPane);
@@ -61,6 +77,102 @@ public class WorkspacePanel extends JPanel {
         splitPane.setBackground(Theme.BACKGROUND_DARK.getColorSet());
 
         add(splitPane, BorderLayout.CENTER);
+    }
+
+    /**
+     * Update the project name
+     */
+    public void updateProjectName(String newName) {
+        this.projectName = newName;
+        fileTreePanel.updateProjectName(newName);
+    }
+
+    /**
+     * Create the welcome panel with a nice message
+     */
+    private JPanel createWelcomePanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Theme.BACKGROUND_DARK.getColorSet());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(10, 10, 10, 10);
+
+        // Title
+        JLabel titleLabel = new JLabel("Bienvenido a 3xtrat3rr3str3D Compiler");
+        titleLabel.setFont(new Font("Liberation Mono", Font.BOLD, 24));
+        titleLabel.setForeground(Theme.FOREGROUND_DARK.getColorSet());
+        panel.add(titleLabel, gbc);
+
+        // Subtitle
+        JLabel subtitleLabel = new JLabel("Abre un archivo desde el explorador para comenzar a editar");
+        subtitleLabel.setFont(new Font("Liberation Mono", Font.PLAIN, 14));
+        subtitleLabel.setForeground(new Color(180, 185, 195));
+        panel.add(subtitleLabel, gbc);
+
+        // Tips panel
+        JPanel tipsPanel = new JPanel(new GridBagLayout());
+        tipsPanel.setOpaque(false);
+
+        String[] tips = {
+                "Haz doble clic en un archivo para abrirlo",
+                "Usa F2 para renombrar archivos y carpetas",
+                "Click derecho para crear nuevos archivos o carpetas",
+                "Arrastra el divisor para ajustar el tamaño del panel"
+        };
+
+        GridBagConstraints tipsGbc = new GridBagConstraints();
+        tipsGbc.gridwidth = GridBagConstraints.REMAINDER;
+        tipsGbc.anchor = GridBagConstraints.WEST;
+        tipsGbc.insets = new Insets(4, 0, 4, 0);
+
+        for (String tip : tips) {
+            JLabel tipLabel = new JLabel("• " + tip);
+            tipLabel.setFont(new Font("Liberation Mono", Font.PLAIN, 12));
+            tipLabel.setForeground(new Color(160, 165, 175));
+            tipsPanel.add(tipLabel, tipsGbc);
+        }
+
+        gbc.insets = new Insets(20, 10, 10, 10);
+        panel.add(tipsPanel, gbc);
+
+        return panel;
+    }
+
+    /**
+     * Remove welcome tab if it exists
+     */
+    private void removeWelcomeTabIfExists() {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            if (tabbedPane.getTitleAt(i).equals("Welcome")) {
+                tabbedPane.removeTabAt(i);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Check if welcome tab exists
+     */
+    private boolean welcomeTabExists() {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            if (tabbedPane.getTitleAt(i).equals("Welcome")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Add welcome tab if no tabs are open
+     */
+    private void addWelcomeTabIfNeeded() {
+        if (openEditors.isEmpty() && !welcomeTabExists()) {
+            tabbedPane.addTab("Welcome", welcomePanel);
+            tabbedPane.setEnabledAt(tabbedPane.indexOfComponent(welcomePanel), false);
+            tabbedPane.setSelectedComponent(welcomePanel);
+        }
     }
 
     /**
@@ -304,14 +416,18 @@ public class WorkspacePanel extends JPanel {
             return;
         }
 
+        // Remove welcome tab before adding real content
+        removeWelcomeTabIfExists();
+
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);
 
         int index = tabbedPane.indexOfComponent(editor);
         tabbedPane.setSelectedIndex(index);
-        tabbedPane.setTabComponentAt(index, createTabComponent(fileName, filePath));
 
+        // Set tab component with close button
+        tabbedPane.setTabComponentAt(index, createTabComponent(fileName, filePath));
     }
 
     /**
@@ -384,6 +500,11 @@ public class WorkspacePanel extends JPanel {
             if (index != -1) {
                 tabbedPane.remove(index);
                 openEditors.remove(filePath);
+
+                // Show welcome panel if no tabs are open
+                if (openEditors.isEmpty()) {
+                    addWelcomeTabIfNeeded();
+                }
             }
         }
     }
@@ -394,6 +515,7 @@ public class WorkspacePanel extends JPanel {
     public void closeAllTabs() {
         tabbedPane.removeAll();
         openEditors.clear();
+        addWelcomeTabIfNeeded();
     }
 
     /**

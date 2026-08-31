@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  *
@@ -18,9 +18,10 @@ public enum Theme {
     BORDER_LIGHT(new Color(190, 160, 130)),
     
     /*Dark Theme related to the code editor */
-    BACKGROUND_DARK(new Color(10, 22, 38)),
+    BACKGROUND_DARK(new Color(8, 18, 32)),
     SURFACE_DARK(new Color(18, 14, 60)),
     SIDEBAR_DARKT(new Color(8, 20, 22)),
+    AUXILIARY_BACKGROUND_DARK(new Color(20, 14, 41)),
     STATUS_BAR_DARK(new Color(50, 25, 65)),
     FOREGROUND_DARK(new Color(230, 235, 245)),
     BORDER_DARK(new Color(85, 30, 75));

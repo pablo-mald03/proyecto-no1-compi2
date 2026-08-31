@@ -5,15 +5,15 @@ import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.SyntaxHighlight
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.lexical.TokenStyleResolver;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
-import java.awt.Color;
-import javax.swing.JTextPane;
-import javax.swing.Timer;
+
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
+import java.awt.*;
 
 /**
  *
@@ -45,7 +45,7 @@ public class CodeTextPane extends JTextPane {
 
         resolver = new TokenStyleResolver();
 
-        setBackground(Theme.BACKGROUND_DARK.getColorSet());
+        setBackground(Theme.AUXILIARY_BACKGROUND_DARK.getColorSet());
         setForeground(Theme.FOREGROUND_DARK.getColorSet());
 
         syntaxTimer = new Timer(SYNTAX_DELAY, e -> {
