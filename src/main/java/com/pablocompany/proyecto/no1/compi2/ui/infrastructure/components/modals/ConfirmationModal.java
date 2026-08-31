@@ -131,7 +131,7 @@ public class ConfirmationModal extends JPanel {
                 new Font(
                         "Liberation Mono",
                         Font.BOLD,
-                        TextConstants.EMPHASIS_TEXT.getSize()
+                        TextConstants.SMALL_EMPHASIS_TEXT.getSize()
                 )
         );
 
@@ -143,7 +143,7 @@ public class ConfirmationModal extends JPanel {
                 new Font(
                         "Liberation Mono",
                         Font.PLAIN,
-                        TextConstants.NORMAL_TEXT.getSize()
+                        TextConstants.SMALL_NORMAL_TEXT.getSize()
                 )
         );
 

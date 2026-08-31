@@ -14,7 +14,7 @@ public enum Theme {
     SURFACE_LIGHT(new Color(230, 210, 215)),
     SIDEBAR_LIGHT(new Color(238, 235, 205)),
     STATUS_BAR_LIGHT(new Color(205, 170, 160)),
-    FOREGROUND_LIGHT(new Color(30, 30, 30)),
+    FOREGROUND_LIGHT(new Color(14, 14, 14)),
     BORDER_LIGHT(new Color(190, 160, 130)),
     
     /*Dark Theme related to the code editor */

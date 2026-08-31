@@ -11,8 +11,8 @@ public enum TextConstants {
     EMPHASIS_TEXT(18),
     NORMAL_TEXT(16),
 
-    SMALL_EMPHASIS_TEXT(14),
-    SMALL_NORMAL_TEXT(12),
+    SMALL_EMPHASIS_TEXT(15),
+    SMALL_NORMAL_TEXT(13),
 
     ADVISE_TEXT(14);
 

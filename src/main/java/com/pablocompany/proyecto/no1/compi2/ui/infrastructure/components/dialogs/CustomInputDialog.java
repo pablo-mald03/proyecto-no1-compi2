@@ -1,6 +1,8 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.ui.domain.TextConstants;
+import com.pablocompany.proyecto.no1.compi2.ui.domain.UIColors;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,18 +34,31 @@ public class CustomInputDialog extends JDialog {
         // Message label
         messageLabel = new JLabel(message);
         messageLabel.setForeground(Theme.FOREGROUND_DARK.getColorSet());
-        messageLabel.setFont(new Font("Liberation Mono", Font.PLAIN, 13));
+        messageLabel.setFont(new Font("Liberation Mono", Font.PLAIN, TextConstants.SMALL_NORMAL_TEXT.getSize()));
 
-        // Text field
+        // ==========================================
+        // Text field with guaranteed visibility
+        // ==========================================
         textField = new JTextField(initialValue != null ? initialValue : "");
-        textField.setBackground(Theme.BACKGROUND_DARK.getColorSet());
-        textField.setForeground(Theme.FOREGROUND_DARK.getColorSet());
-        textField.setCaretColor(Theme.FOREGROUND_DARK.getColorSet());
-        textField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.BORDER_DARK.getColorSet()),
-                BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
-        textField.setFont(new Font("Liberation Mono", Font.PLAIN, 13));
+
+        // Set preferred size to ensure visibility
+        textField.setPreferredSize(new Dimension(380, 50));
+        textField.setMinimumSize(new Dimension(300, 35));
+        textField.setMaximumSize(new Dimension(500, 45));
+
+        // High contrast colors
+        textField.setBackground(Theme.SURFACE_LIGHT.getColorSet());
+        textField.setForeground(Theme.FOREGROUND_LIGHT.getColorSet());
+        textField.setCaretColor(Theme.FOREGROUND_LIGHT.getColorSet());
+        textField.setSelectedTextColor(Theme.FOREGROUND_LIGHT.getColorSet());
+        textField.setSelectionColor(UIColors.BACKGROUND_HOVER.getColorSet());
+
+        textField.setBorder(
+                BorderFactory.createLineBorder(Theme.BORDER_DARK.getColorSet())
+        );
+
+
+        textField.setFont(new Font("Liberation Mono", Font.PLAIN, TextConstants.SMALL_NORMAL_TEXT.getSize()));
         textField.selectAll();
 
         // Key listener for Enter key
@@ -62,8 +77,8 @@ public class CustomInputDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
         buttonPanel.setBackground(Theme.SURFACE_DARK.getColorSet());
 
-        confirmButton = createStyledButton("Confirm", true);
-        cancelButton = createStyledButton("Cancel", false);
+        confirmButton = createStyledButton("Confirmar", true);
+        cancelButton = createStyledButton("Cancelar", false);
 
         confirmButton.addActionListener(e -> confirmAction());
         cancelButton.addActionListener(e -> cancelAction());
@@ -71,19 +86,25 @@ public class CustomInputDialog extends JDialog {
         buttonPanel.add(confirmButton);
         buttonPanel.add(cancelButton);
 
-        // Assemble dialog
+        // Assemble dialog with proper layout
         JPanel inputPanel = new JPanel(new BorderLayout(0, 10));
         inputPanel.setBackground(Theme.SURFACE_DARK.getColorSet());
         inputPanel.add(messageLabel, BorderLayout.NORTH);
-        inputPanel.add(textField, BorderLayout.CENTER);
+
+        // Wrap text field in a panel to ensure it gets space
+        JPanel textFieldWrapper = new JPanel(new BorderLayout());
+        textFieldWrapper.setBackground(Theme.SURFACE_DARK.getColorSet());
+        textFieldWrapper.add(textField, BorderLayout.CENTER);
+        inputPanel.add(textFieldWrapper, BorderLayout.CENTER);
 
         mainPanel.add(inputPanel, BorderLayout.CENTER);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(mainPanel);
 
-        setSize(450, 150);
+        setSize(450, 170);
         setLocationRelativeTo(parent);
+        setResizable(false);
 
         // Request focus to text field
         textField.requestFocusInWindow();
@@ -94,7 +115,7 @@ public class CustomInputDialog extends JDialog {
      */
     private JButton createStyledButton(String text, boolean isConfirm) {
         JButton button = new JButton(text);
-        button.setBackground(isConfirm ? Theme.STATUS_BAR_DARK.getColorSet() : Theme.BACKGROUND_DARK.getColorSet());
+        button.setBackground(isConfirm ? UIColors.ACCEPT_ACCENT_BUTTON.getColorSet() : UIColors.DECLINE_ACCENT_BUTTON.getColorSet());
         button.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         button.setFont(new Font("Liberation Mono", Font.PLAIN, 12));
         button.setBorder(BorderFactory.createCompoundBorder(
@@ -108,16 +129,26 @@ public class CustomInputDialog extends JDialog {
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(isConfirm ? Theme.SURFACE_DARK.getColorSet() : Theme.SURFACE_DARK.getColorSet());
+                button.setBackground(isConfirm ? UIColors.ACCEPT_ACCENT_HOVER_BUTTON.getColorSet() : UIColors.DECLINE_ACCENT_HOVER_BUTTON.getColorSet());
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(isConfirm ? Theme.STATUS_BAR_DARK.getColorSet() : Theme.BACKGROUND_DARK.getColorSet());
+                button.setBackground(isConfirm ? UIColors.ACCEPT_ACCENT_BUTTON.getColorSet() : UIColors.DECLINE_ACCENT_BUTTON.getColorSet());
             }
         });
 
         return button;
+    }
+
+    /**
+     * Sanitize input text - replace spaces with underscores
+     */
+    private String sanitizeText(String input) {
+        if (input == null) {
+            return null;
+        }
+        return input.trim().replaceAll("\\s+", "_");
     }
 
     /**
@@ -126,14 +157,13 @@ public class CustomInputDialog extends JDialog {
     private void confirmAction() {
         String input = textField.getText();
         if (input == null || input.trim().isEmpty()) {
-            // Highlight empty field
-            textField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(Color.RED),
-                    BorderFactory.createEmptyBorder(8, 10, 8, 10)
-            ));
+            textField.setBorder(
+                    BorderFactory.createLineBorder(Color.RED)
+                   );
             return;
         }
-        result = input.trim();
+
+        result = sanitizeText(input);
         confirmed = true;
         dispose();
     }

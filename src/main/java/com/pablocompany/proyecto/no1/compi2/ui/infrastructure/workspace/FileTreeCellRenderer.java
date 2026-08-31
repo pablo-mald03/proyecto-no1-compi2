@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.workspace;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.ui.domain.UIColors;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -35,10 +36,10 @@ public class FileTreeCellRenderer extends DefaultTreeCellRenderer {
 
         // Configure selection colors for dark theme
         setBackgroundNonSelectionColor(Theme.BACKGROUND_DARK.getColorSet());
-        setBackgroundSelectionColor(Theme.SURFACE_DARK.getColorSet());
+        setBackgroundSelectionColor(UIColors.ACCEPT_MODULE_SELECTED_BUTTON.getColorSet());
         setTextNonSelectionColor(Theme.FOREGROUND_DARK.getColorSet());
         setTextSelectionColor(Theme.FOREGROUND_DARK.getColorSet());
-        setBorderSelectionColor(Theme.BORDER_DARK.getColorSet());
+        setBorderSelectionColor(UIColors.ACCEPT_MODULE_SELECTED_BUTTON.getColorSet());
 
         setOpaque(true);
         setToolTipText(null);

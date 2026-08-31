@@ -9,9 +9,7 @@ import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import lombok.Getter;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
@@ -24,6 +22,7 @@ import javax.swing.tree.TreePath;
 
 /**
  * Main workspace panel containing file tree and tabbed editor
+ *
  * @author pablo03
  */
 @Getter
@@ -167,12 +166,13 @@ public class WorkspacePanel extends JPanel {
 
         FileNode fileNode = (FileNode) userObj;
         String currentName = fileNode.getName();
+
         String oldPath = fileNode.getFilePath();
 
         String newName = CustomInputDialog.showInputDialog(
                 this,
                 "Renombrar",
-                "Ingresa el nombre:",
+                "Ingresa el nuevo nombre:",
                 currentName
         );
 
@@ -267,7 +267,7 @@ public class WorkspacePanel extends JPanel {
         // Use the ConfirmationNotifier system with callback
         confirmationNotifier.confirm(
                 ModalType.WARNING,
-                "Confirma eliminacion",
+                "Confirmar eliminacion",
                 "Estas seguro que quieres eliminar el " + type + ": " + fileNode.getName() + " ?",
                 confirmed -> {
                     if (confirmed) {
@@ -315,7 +315,7 @@ public class WorkspacePanel extends JPanel {
     }
 
     /**
-     * Create a custom tab component with close button
+     * Create a custom tab component with close button (X)
      */
     private Component createTabComponent(String title, String filePath) {
         JPanel tabComponent = new JPanel(new BorderLayout(5, 0));
@@ -326,24 +326,28 @@ public class WorkspacePanel extends JPanel {
         titleLabel.setFont(new Font("Liberation Mono", Font.PLAIN, 12));
         titleLabel.setForeground(Theme.FOREGROUND_DARK.getColorSet());
 
-        JButton closeButton = new JButton("✕");
-        closeButton.setFont(new Font("Liberation Mono", Font.BOLD, 10));
+        JButton closeButton = new JButton("×");
+        closeButton.setFont(new Font("Liberation Mono", Font.BOLD, 14));
         closeButton.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         closeButton.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
         closeButton.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
         closeButton.setFocusable(false);
         closeButton.setContentAreaFilled(false);
         closeButton.setOpaque(true);
+        closeButton.setPreferredSize(new Dimension(20, 20));
 
+        // Hover effect with better visibility
         closeButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                closeButton.setBackground(Theme.SURFACE_DARK.getColorSet());
+                closeButton.setBackground(new Color(200, 50, 50));
+                closeButton.setForeground(Color.WHITE);
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 closeButton.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
+                closeButton.setForeground(Theme.FOREGROUND_DARK.getColorSet());
             }
         });
 

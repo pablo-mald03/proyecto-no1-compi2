@@ -55,7 +55,7 @@ public class FormButton extends JButton {
 
         setForeground(foreColor.getColorSet());
 
-        setFont(new Font("Liberation Mono", Font.BOLD, TextConstants.EMPHASIS_TEXT.getSize()));
+        setFont(new Font("Liberation Mono", Font.BOLD, TextConstants.SMALL_EMPHASIS_TEXT.getSize()));
 
         setPreferredSize(new Dimension(140, 38));
 
