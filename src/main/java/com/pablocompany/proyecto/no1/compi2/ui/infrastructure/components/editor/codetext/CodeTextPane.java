@@ -101,7 +101,7 @@ public class CodeTextPane extends JTextPane {
 
     }
 
-    //This method reestart the debounce
+    //This method restart to debounce
     private void scheduleHighlight() {
 
         syntaxTimer.restart();

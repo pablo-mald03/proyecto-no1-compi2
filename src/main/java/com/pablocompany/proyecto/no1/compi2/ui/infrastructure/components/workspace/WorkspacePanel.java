@@ -401,7 +401,7 @@ public class WorkspacePanel extends JPanel {
     }
 
     /**
-     * Open a file in a new tab WITH CONTENT
+     * Open a file in a new tab WITH CONTENT AND SYNTAX HIGHLIGHTING
      */
     public void openFileInTab(FileNode fileNode) {
         String filePath = fileNode.getFilePath();
@@ -423,6 +423,9 @@ public class WorkspacePanel extends JPanel {
 
         String content = fileNode.getContent() != null ? fileNode.getContent() : "";
         editor.setCode(content);
+
+        String extension = fileNode.getExtension();
+        notifier.notifyFileOpened(filePath, content, extension);
 
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);
@@ -463,12 +466,33 @@ public class WorkspacePanel extends JPanel {
             FileNode fileNode = (FileNode) node.getUserObject();
             fileNode.setContent(content);
             fileNode.setModified(false);
+            notifier.notifySaveFile(filePath, content);
+        }
+    }
 
-            try {
-                notifier.notifySaveFile(filePath, content);
-                notifier.logInfo("Archivo guardado: " + fileNode.getName());
-            } catch (Exception e) {
-                notifier.logError("Error al guardar: " + e.getMessage());
+
+    /**
+     * Save all open files
+     */
+    public void saveAllFiles() {
+        int savedCount = 0;
+        for (Map.Entry<String, CodeEditorPanel> entry : openEditors.entrySet()) {
+            String filePath = entry.getKey();
+            CodeEditorPanel editor = entry.getValue();
+            String content = editor.getCode();
+
+            DefaultMutableTreeNode node = fileTreePanel.getFileNodes().get(filePath);
+            if (node != null && node.getUserObject() instanceof FileNode) {
+                FileNode fileNode = (FileNode) node.getUserObject();
+                String oldContent = fileNode.getContent();
+
+                // Only save if content changed
+                if (!content.equals(oldContent)) {
+                    fileNode.setContent(content);
+                    fileNode.setModified(false);
+                    notifier.notifySaveFile(filePath, content);
+                    savedCount++;
+                }
             }
         }
     }

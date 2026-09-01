@@ -22,17 +22,13 @@ public class TopPanel extends JPanel {
     private final Runnable onOpenProject;
     private final Runnable onCloseProject;
     private final Runnable onSave;
-    private final Runnable onSaveAs;
     private final Runnable onCompile;
     private final Runnable onExecute;
     private final Runnable onExit;
+    private final Runnable onSaveAll;
 
     private final JMenuBar menuBar;
     private final JToolBar toolBar;
-
-    public TopPanel(WorkspaceNotifier notifier) {
-        this(notifier, null, null, null, null, null, null, null, null);
-    }
 
     public TopPanel(
             WorkspaceNotifier notifier,
@@ -40,17 +36,17 @@ public class TopPanel extends JPanel {
             Runnable onOpenProject,
             Runnable onCloseProject,
             Runnable onSave,
-            Runnable onSaveAs,
             Runnable onCompile,
             Runnable onExecute,
-            Runnable onExit
+            Runnable onExit,
+            Runnable onSaveAll
     ) {
+        this.onSaveAll = onSaveAll;
         this.notifier = notifier;
         this.onNewProject = onNewProject;
         this.onOpenProject = onOpenProject;
         this.onCloseProject = onCloseProject;
         this.onSave = onSave;
-        this.onSaveAs = onSaveAs;
         this.onCompile = onCompile;
         this.onExecute = onExecute;
         this.onExit = onExit;
@@ -133,8 +129,13 @@ public class TopPanel extends JPanel {
         fileMenu.addSeparator();
         fileMenu.add(createMenuItem("Cerrar Proyecto", KeyEvent.VK_C, e -> onCloseProject()));
         fileMenu.addSeparator();
-        fileMenu.add(createMenuItem("Guardar", KeyEvent.VK_S, e -> onSave(), KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK)));
-        fileMenu.add(createMenuItem("Guardar Como...", 0, e -> onSaveAs()));
+        fileMenu.add(createMenuItem("Guardar", KeyEvent.VK_S,
+                e -> onSave(), KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK)));
+        fileMenu.add(createMenuItem("Guardar Todo", KeyEvent.VK_T,
+                e -> {
+                    if (onSaveAll != null) onSaveAll.run();
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)));
         fileMenu.addSeparator();
         fileMenu.add(createMenuItem("Salir", KeyEvent.VK_X, e -> onExit()));
         menuBar.add(fileMenu);
@@ -144,13 +145,11 @@ public class TopPanel extends JPanel {
         editMenu.add(createMenuItem("Descargar Compilado", KeyEvent.VK_D,
                 e -> notifier.notifyDownloadCompiledCode(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.addSeparator();
         editMenu.add(createMenuItem("Ejecutar Compilado", KeyEvent.VK_R,
                 e -> notifier.notifyExecuteCompiledCode(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
-        editMenu.addSeparator();
-        editMenu.add(createMenuItem("Seleccionar Todo", KeyEvent.VK_T,
-                null,
-                KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)));
+
         menuBar.add(editMenu);
 
         // View Menu
@@ -165,8 +164,6 @@ public class TopPanel extends JPanel {
         JMenu toolsMenu = createMenu("Herramientas", KeyEvent.VK_H);
         toolsMenu.add(createMenuItem("Compilar", KeyEvent.VK_C, e -> onCompile(), KeyStroke.getKeyStroke(KeyEvent.VK_B, KeyEvent.CTRL_DOWN_MASK)));
         toolsMenu.add(createMenuItem("Ejecutar", KeyEvent.VK_E, e -> onExecute(), KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)));
-        toolsMenu.addSeparator();
-        toolsMenu.add(createMenuItem("Gráfica del AST", 0, e -> notifier.focusAstVisualizer()));
         menuBar.add(toolsMenu);
 
         // Help Menu
@@ -304,10 +301,6 @@ public class TopPanel extends JPanel {
 
     private void onSave() {
         if (onSave != null) onSave.run();
-    }
-
-    private void onSaveAs() {
-        if (onSaveAs != null) onSaveAs.run();
     }
 
     private void onCompile() {

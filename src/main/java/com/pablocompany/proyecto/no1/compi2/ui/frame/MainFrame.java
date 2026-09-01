@@ -201,6 +201,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             if (editor == null) {
                 alertToast("No hay ningún archivo abierto para guardar", true);
             }
+
+            managementScreen.getWorkspacePanel().saveCurrentFile();
         } else {
             alertToast("No hay ningún proyecto abierto", true);
         }
@@ -251,6 +253,14 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         );
     }
 
+    private void onSaveAll() {
+        if (managementScreen != null) {
+            managementScreen.getWorkspacePanel().saveAllFiles();
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
+        }
+    }
+
     /**
      * Create a new management screen with all callbacks
      */
@@ -266,7 +276,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
                 this::onSaveAs,
                 this::onCompile,
                 this::onExecute,
-                this::onExit
+                this::onExit,
+                this::onSaveAll
         );
     }
 
@@ -387,25 +398,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         }
     }
 
-    @Override
-    public void focusPigLatin() {
-
-    }
-
-    @Override
-    public void focusAstVisualizer() {
-        // Implementation
-    }
-
-    @Override
-    public void focusStackVisualizer() {
-
-    }
-
-    @Override
-    public void focusStackVisualizerByStep() {
-
-    }
 
     @Override
     public void clearLogs() {
@@ -422,11 +414,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     @Override
     public void notifyCompiledCode(String compiledCode) {
-        // Implementation
-    }
-
-    @Override
-    public void notifyAstRepresentation(String ast) {
         // Implementation
     }
 
@@ -536,6 +523,18 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             }
         } else {
             alertToast("No hay ningún proyecto abierto para guardar", true);
+        }
+    }
+
+    /**
+     * Save all files
+     *
+     */
+    public void notifySaveAllFiles() {
+        if (managementScreen != null) {
+            managementScreen.getWorkspacePanel().saveAllFiles();
+        } else {
+            alertToast("No hay ningún proyecto abierto", true);
         }
     }
 

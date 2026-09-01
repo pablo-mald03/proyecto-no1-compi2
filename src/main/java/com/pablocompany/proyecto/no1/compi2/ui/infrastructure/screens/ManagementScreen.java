@@ -34,7 +34,8 @@ public class ManagementScreen extends JPanel {
             Runnable onSaveAs,
             Runnable onCompile,
             Runnable onExecute,
-            Runnable onExit
+            Runnable onExit,
+            Runnable onSaveAll
     ) {
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
@@ -46,10 +47,10 @@ public class ManagementScreen extends JPanel {
                 onOpenProject,
                 onCloseProject,
                 onSave,
-                onSaveAs,
                 onCompile,
                 onExecute,
-                onExit
+                onExit,
+                onSaveAll
         );
 
         // Create components

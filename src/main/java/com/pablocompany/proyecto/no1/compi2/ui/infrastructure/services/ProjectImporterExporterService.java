@@ -48,46 +48,6 @@ public class ProjectImporterExporterService {
     }
 
     /**
-     * Import a project from ZIP file
-     */
-    public void importFromZip(File zipFile, File targetDir) throws IOException {
-        if (!targetDir.exists()) {
-            if (!targetDir.mkdirs()) {
-                throw new IOException("Failed to create target directory: " + targetDir.getPath());
-            }
-        }
-
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                // Create file with proper path for current OS
-                String entryName = entry.getName().replace('/', File.separatorChar);
-                File file = new File(targetDir, entryName);
-
-                if (entry.isDirectory()) {
-                    file.mkdirs();
-                } else {
-                    // Ensure parent directories exist
-                    File parentDir = file.getParentFile();
-                    if (parentDir != null && !parentDir.exists()) {
-                        parentDir.mkdirs();
-                    }
-
-                    // Write file
-                    try (FileOutputStream fos = new FileOutputStream(file)) {
-                        byte[] buffer = new byte[8192];
-                        int length;
-                        while ((length = zis.read(buffer)) > 0) {
-                            fos.write(buffer, 0, length);
-                        }
-                    }
-                }
-                zis.closeEntry();
-            }
-        }
-    }
-
-    /**
      * Import a project from ZIP file with progress callback
      */
     public void importFromZip(File zipFile, File targetDir, ProgressCallback callback) throws IOException {

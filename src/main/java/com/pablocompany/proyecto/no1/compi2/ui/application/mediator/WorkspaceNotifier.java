@@ -17,11 +17,7 @@ public interface WorkspaceNotifier {
 
     
     void notifyCompiledCode(String compiledCode);
-    
-    //void notifyStackView(List<ParseStep> steps);
-    
-    void notifyAstRepresentation(String ast);
-    
+
     /*SECTION OF LOGS*/
     void logInfo(String message);
 
@@ -41,15 +37,7 @@ public interface WorkspaceNotifier {
     void focusErrors();
     
     void focusSymbolsTable();
-    
-    void focusPigLatin();
-    
-    void focusAstVisualizer();
-    
-    void focusStackVisualizer();
-    
-    void focusStackVisualizerByStep();
-    
+
     /*SECTION OF CLEAR METHODS OR RESET DATA*/
 
     void clearLogs();
@@ -79,4 +67,10 @@ public interface WorkspaceNotifier {
      *
      */
     void notifyFileOpened(String filePath, String content, String extension);
+
+    /**
+     * Save all files
+     *
+     */
+    void notifySaveAllFiles();
 }
