@@ -1,14 +1,12 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor;
 
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.codetext.CodeTextPane;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.codetext.CodeTextPane;
 import lombok.Getter;
 
-import java.awt.BorderLayout;
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  *
@@ -91,17 +89,22 @@ public class CodeEditorPanel extends JPanel {
 
     }
 
-    /*This method returns the code from the editor*/
-    public String getCode() {
 
-        return editor.getText();
-
-    }
-
+    /**
+     * Set the code content in the editor
+     */
     public void setCode(String code) {
-        editor.setText(code);
-
+        editor.setText(code != null ? code : "");
+        updateCaretPosition();
     }
+
+    /**
+     * Get the code content from the editor
+     */
+    public String getCode() {
+        return editor.getText();
+    }
+
 
     //This method is the principal to compile the code
    /* public boolean compile(WorkspaceNotifier notifier) {

@@ -14,10 +14,43 @@ public class FileNode {
     private String name;
     private boolean isDirectory;
     private String filePath;
+    private String content;
+    private boolean isModified;
 
     public FileNode(String name, boolean isDirectory) {
         this.name = name;
         this.isDirectory = isDirectory;
+        this.content = "";
+        this.isModified = false;
+    }
+
+    /**
+     * Check if this node represents a file (not a directory)
+     */
+    public boolean isFile() {
+        return !isDirectory;
+    }
+
+    /**
+     * Get the file extension (if any)
+     */
+    public String getExtension() {
+        if (isDirectory) {
+            return "";
+        }
+        int lastDot = name.lastIndexOf('.');
+        return lastDot > 0 ? name.substring(lastDot) : "";
+    }
+
+    /**
+     * Get the file name without extension
+     */
+    public String getNameWithoutExtension() {
+        if (isDirectory) {
+            return name;
+        }
+        int lastDot = name.lastIndexOf('.');
+        return lastDot > 0 ? name.substring(0, lastDot) : name;
     }
 
     @Override

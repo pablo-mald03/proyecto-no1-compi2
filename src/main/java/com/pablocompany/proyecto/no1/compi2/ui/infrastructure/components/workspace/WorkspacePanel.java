@@ -401,7 +401,7 @@ public class WorkspacePanel extends JPanel {
     }
 
     /**
-     * Open a file in a new tab
+     * Open a file in a new tab WITH CONTENT
      */
     public void openFileInTab(FileNode fileNode) {
         String filePath = fileNode.getFilePath();
@@ -420,14 +420,57 @@ public class WorkspacePanel extends JPanel {
         removeWelcomeTabIfExists();
 
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
+
+        String content = fileNode.getContent() != null ? fileNode.getContent() : "";
+        editor.setCode(content);
+
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);
 
         int index = tabbedPane.indexOfComponent(editor);
         tabbedPane.setSelectedIndex(index);
-
-        // Set tab component with close button
         tabbedPane.setTabComponentAt(index, createTabComponent(fileName, filePath));
+    }
+
+
+    /**
+     * Save the current editor content to the file
+     */
+    public void saveCurrentFile() {
+        CodeEditorPanel editor = getCurrentEditor();
+        if (editor == null) {
+            notifier.alertToast("No hay ningún archivo abierto para guardar", true);
+            return;
+        }
+
+        String filePath = null;
+        for (Map.Entry<String, CodeEditorPanel> entry : openEditors.entrySet()) {
+            if (entry.getValue() == editor) {
+                filePath = entry.getKey();
+                break;
+            }
+        }
+
+        if (filePath == null) {
+            notifier.alertToast("Error: No se pudo identificar el archivo", true);
+            return;
+        }
+
+        String content = editor.getCode();
+
+        DefaultMutableTreeNode node = fileTreePanel.getFileNodes().get(filePath);
+        if (node != null && node.getUserObject() instanceof FileNode) {
+            FileNode fileNode = (FileNode) node.getUserObject();
+            fileNode.setContent(content);
+            fileNode.setModified(false);
+
+            try {
+                notifier.notifySaveFile(filePath, content);
+                notifier.logInfo("Archivo guardado: " + fileNode.getName());
+            } catch (Exception e) {
+                notifier.logError("Error al guardar: " + e.getMessage());
+            }
+        }
     }
 
     /**

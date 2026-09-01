@@ -8,9 +8,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Service for managing projects (create, open, save, import, export)
@@ -95,7 +93,7 @@ public class ProjectService {
     }
 
     /**
-     * Load a project from directory into the file tree
+     * Load a project from directory into the file tree WITH CONTENT
      */
     public void loadProjectFromDirectory(File projectDir, FileTreePanel fileTreePanel, String projectName) {
         // Clear existing tree
@@ -103,23 +101,21 @@ public class ProjectService {
         rootNode.removeAllChildren();
         fileTreePanel.getFileNodes().clear();
 
-        // Update root node name
         if (rootNode.getUserObject() instanceof FileNode) {
             FileNode rootFileNode = (FileNode) rootNode.getUserObject();
             rootFileNode.setName(projectName);
         }
 
-        // Load all files and folders from project directory
-        loadDirectory(projectDir, rootNode, "", fileTreePanel);
+        loadDirectoryWithContent(projectDir, rootNode, "", fileTreePanel);
 
         fileTreePanel.reloadTree();
     }
 
     /**
-     * Recursively load a directory into the tree
+     * Recursively load a directory into the tree WITH FILE CONTENT
      */
-    private void loadDirectory(File dir, DefaultMutableTreeNode parentNode, String parentPath,
-                               FileTreePanel fileTreePanel) {
+    private void loadDirectoryWithContent(File dir, DefaultMutableTreeNode parentNode, String parentPath,
+                                          FileTreePanel fileTreePanel) {
         File[] files = dir.listFiles();
         if (files == null) return;
 
@@ -137,19 +133,27 @@ public class ProjectService {
             String filePath = parentPath.isEmpty() ? fileName : parentPath + "/" + fileName;
 
             if (file.isDirectory()) {
-                // Create folder node
                 FileNode folderNode = new FileNode(fileName, true);
                 folderNode.setFilePath(filePath);
                 DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(folderNode);
                 parentNode.add(treeNode);
                 fileTreePanel.getFileNodes().put(filePath, treeNode);
 
-                // Recursively load subdirectories
-                loadDirectory(file, treeNode, filePath, fileTreePanel);
+                loadDirectoryWithContent(file, treeNode, filePath, fileTreePanel);
             } else {
-                // Create file node
+                // Create file node WITH CONTENT
                 FileNode fileNode = new FileNode(fileName, false);
                 fileNode.setFilePath(filePath);
+
+                try {
+                    String content = readFileContent(file);
+                    fileNode.setContent(content);
+                    fileNode.setModified(false);
+                } catch (IOException e) {
+                    fileNode.setContent("");
+                    fileNode.setModified(false);
+                }
+
                 DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(fileNode);
                 parentNode.add(treeNode);
                 fileTreePanel.getFileNodes().put(filePath, treeNode);
@@ -158,7 +162,53 @@ public class ProjectService {
     }
 
     /**
+     * Read file content from filesystem
+     */
+    private String readFileContent(File file) throws IOException {
+        if (!file.exists()) {
+            return "";
+        }
+        return new String(Files.readAllBytes(file.toPath()));
+    }
+
+    /**
+     * Get the content of a specific file node
+     */
+    public String getFileContent(FileNode fileNode, File projectDir) throws IOException {
+        if (fileNode.isDirectory()) {
+            return "";
+        }
+        File file = new File(projectDir, fileNode.getFilePath());
+        if (!file.exists()) {
+            return fileNode.getContent();
+        }
+
+        String content = readFileContent(file);
+        fileNode.setContent(content);
+        return content;
+    }
+
+    /**
      * Save file content to the filesystem
+     */
+    public void saveFileContent(FileNode fileNode, String content, File projectDir) throws IOException {
+        if (fileNode.isDirectory()) {
+            return;
+        }
+
+        File file = new File(projectDir, fileNode.getFilePath());
+        file.getParentFile().mkdirs();
+
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(content);
+        }
+
+        fileNode.setContent(content);
+        fileNode.setModified(false);
+    }
+
+    /**
+     * Save file content to the filesystem with path
      */
     public void saveFileContent(String filePath, String content, File projectDir) throws IOException {
         File file = new File(projectDir, filePath);
@@ -169,28 +219,6 @@ public class ProjectService {
     }
 
     /**
-     * Read file content from the filesystem
-     */
-    public String readFileContent(String filePath, File projectDir) throws IOException {
-        File file = new File(projectDir, filePath);
-        if (!file.exists()) {
-            return "";
-        }
-        return new String(Files.readAllBytes(file.toPath()));
-    }
-
-    /**
-     * Get all files in a directory recursively
-     */
-    public List<File> getAllFiles(File dir) throws IOException {
-        List<File> files = new ArrayList<>();
-        Files.walk(dir.toPath())
-                .filter(Files::isRegularFile)
-                .forEach(path -> files.add(path.toFile()));
-        return files;
-    }
-
-    /**
      * Check if a directory is a valid Codex project
      */
     public boolean isValidProject(File dir) {
@@ -198,19 +226,6 @@ public class ProjectService {
             return false;
         }
 
-        // Check for src folder
-        File srcDir = new File(dir, SOURCE_FOLDER);
-        if (!srcDir.exists() || !srcDir.isDirectory()) {
-            return false;
-        }
-
-        // Check for compiled folder
-        File compiledDir = new File(dir, COMPILED_FOLDER);
-        if (!compiledDir.exists() || !compiledDir.isDirectory()) {
-            return false;
-        }
-
-        // Check for at least one .pig file
         File[] pigFiles = dir.listFiles((d, name) -> name.endsWith(PIG_EXTENSION));
         return pigFiles != null && pigFiles.length > 0;
     }

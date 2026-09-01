@@ -182,17 +182,13 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         if (managementScreen != null) {
             // Confirm before closing
             confirm(ModalType.WARNING, "Cerrar Proyecto",
-                    "¿Estás seguro que quieres cerrar el proyecto '" + currentProjectName + "'?\n" +
+                    "¿Estas seguro que quieres cerrar el proyecto '" + currentProjectName + "'?\n" +
                             "Los cambios no guardados se perderán.",
                     confirmed -> {
                         if (confirmed) {
-                            String projectName = currentProjectName;
                             managementScreen = null;
                             currentProjectName = "Project";
                             cardLayout.show(contentPanel, "WELCOME");
-                            if (managementScreen != null) {
-                                logInfo("Proyecto '" + projectName + "' cerrado");
-                            }
                         }
                     }
             );
@@ -202,9 +198,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     private void onSave() {
         if (managementScreen != null) {
             CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
-            if (editor != null) {
-                logInfo("Archivo guardado");
-            } else {
+            if (editor == null) {
                 alertToast("No hay ningún archivo abierto para guardar", true);
             }
         } else {
@@ -530,6 +524,24 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         } else {
             alertToast("No hay ningún proyecto abierto", true);
         }
+    }
+
+    @Override
+    public void notifySaveFile(String filePath, String content) {
+        if (currentProjectDir != null) {
+            try {
+                projectService.saveFileContent(filePath, content, currentProjectDir);
+            } catch (IOException e) {
+                alertToast("Error al guardar el archivo: " + e.getMessage(), true);
+            }
+        } else {
+            alertToast("No hay ningún proyecto abierto para guardar", true);
+        }
+    }
+
+    @Override
+    public void notifyFileOpened(String filePath, String content, String extension) {
+
     }
 
 

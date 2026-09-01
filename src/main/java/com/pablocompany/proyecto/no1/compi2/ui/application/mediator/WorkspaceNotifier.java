@@ -68,4 +68,15 @@ public interface WorkspaceNotifier {
      * Notify the action to import any project
      */
     void notifyImportProject();
+
+    /**
+     * Save file notification
+     */
+    void notifySaveFile(String filePath, String content);
+
+    /**
+     * Notify when a file is opened to update syntax highlighting
+     *
+     */
+    void notifyFileOpened(String filePath, String content, String extension);
 }
