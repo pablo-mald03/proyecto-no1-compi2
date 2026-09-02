@@ -19,5 +19,8 @@ public class CompilerError {
     private int column;
     private ErrorType errorType;
     private String description;
+
+    private String filePath;
+    private String fileName;
     
 }

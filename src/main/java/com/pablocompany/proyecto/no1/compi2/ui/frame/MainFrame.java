@@ -14,6 +14,7 @@ import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationContainer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationManager;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.toast.ToastNotification;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.WorkspacePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.layers.RootLayer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens.ManagementScreen;
@@ -218,14 +219,17 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     private void onCompile() {
         if (managementScreen != null) {
-            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
-            if (editor != null) {
-                logInfo("Compilando...");
+            WorkspacePanel workspace = managementScreen.getWorkspacePanel();
+            workspace.saveAllFiles();
+            boolean success = workspace.compileAllFiles();
+            if (success) {
+                logSuccess("Compilacion completada");
             } else {
-                alertToast("No hay ningún archivo abierto para compilar", true);
+                logError("Compilacion fallida. Revisa los errores.");
+                focusErrors();
             }
         } else {
-            alertToast("No hay ningún proyecto abierto", true);
+            alertToast("No hay ningun proyecto abierto", true);
         }
     }
 

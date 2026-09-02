@@ -8,14 +8,10 @@ import lombok.Getter;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- *
- * @author pablo03
- */
 
 /**
  * Class used to represents an editor panel
- *
+ * @author pablo03
  */
 @Getter
 public class CodeEditorPanel extends JPanel {

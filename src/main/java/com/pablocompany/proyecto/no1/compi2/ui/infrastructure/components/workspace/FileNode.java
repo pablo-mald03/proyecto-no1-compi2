@@ -1,7 +1,11 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
+import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 /**
  * Principal class to represents a file node with the necessary attributes path
@@ -17,23 +21,21 @@ public class FileNode {
     private String content;
     private boolean isModified;
 
+    //Context per node
+    private EditorContext editorContext;
+
     public FileNode(String name, boolean isDirectory) {
         this.name = name;
         this.isDirectory = isDirectory;
         this.content = "";
         this.isModified = false;
+        this.editorContext = new EditorContext();
     }
 
-    /**
-     * Check if this node represents a file (not a directory)
-     */
     public boolean isFile() {
         return !isDirectory;
     }
 
-    /**
-     * Get the file extension (if any)
-     */
     public String getExtension() {
         if (isDirectory) {
             return "";
@@ -42,15 +44,32 @@ public class FileNode {
         return lastDot > 0 ? name.substring(lastDot) : "";
     }
 
-    /**
-     * Get the file name without extension
-     */
     public String getNameWithoutExtension() {
         if (isDirectory) {
             return name;
         }
         int lastDot = name.lastIndexOf('.');
         return lastDot > 0 ? name.substring(0, lastDot) : name;
+    }
+
+    // ==========================================
+    // Context management
+    // ==========================================
+
+    public void updateContextFromContent() {
+        if (!isDirectory && content != null) {
+            editorContext.setSourceCode(content);
+        }
+    }
+
+    public void clearCompilationData() {
+        this.editorContext.clearAll();
+        this.editorContext.clearParsingErrors();
+    }
+
+
+    public void addAllCompilationErrors(List<CompilerError> errors) {
+        this.editorContext.getAllCompilerErrors();
     }
 
     @Override

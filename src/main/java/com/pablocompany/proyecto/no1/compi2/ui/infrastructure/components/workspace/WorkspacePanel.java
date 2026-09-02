@@ -1,8 +1,12 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
+import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.SyntaxHighlightListener;
+import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHighlightListenerFactory;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs.CustomInputDialog;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
@@ -13,7 +17,10 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,6 +40,9 @@ public class WorkspacePanel extends JPanel {
     private final JPanel welcomePanel;
     private String projectName;
 
+    //Principal reference for the file Contexts
+    private final Map<String, EditorContext> fileContexts;
+
     /**
      * Constructor with default project name
      */
@@ -48,28 +58,23 @@ public class WorkspacePanel extends JPanel {
         this.confirmationNotifier = confirmationNotifier;
         this.projectName = projectName;
         this.openEditors = new HashMap<>();
+        this.fileContexts = new HashMap<>();
 
         setLayout(new BorderLayout());
         setBackground(Theme.SIDEBAR_DARKT.getColorSet());
 
-        // Create file tree panel with project name
         fileTreePanel = new FileTreePanel(notifier, this, projectName);
-
-        // Create welcome panel
         welcomePanel = createWelcomePanel();
 
-        // Create tabbed pane
         tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
         tabbedPane.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         tabbedPane.setUI(new CustomTabbedPaneUI());
         tabbedPane.putClientProperty("JTabbedPane.tabType", "rounded");
 
-        // Add welcome panel as default content
         tabbedPane.addTab("Welcome", welcomePanel);
         tabbedPane.setEnabledAt(0, false);
 
-        // Create split pane
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileTreePanel, tabbedPane);
         splitPane.setDividerLocation(250);
         splitPane.setDividerSize(4);
@@ -78,6 +83,193 @@ public class WorkspacePanel extends JPanel {
 
         add(splitPane, BorderLayout.CENTER);
     }
+
+
+    /**
+     * Get or create EditorContext for a file
+     */
+    public EditorContext getContextForFile(String filePath) {
+        return fileContexts.computeIfAbsent(filePath, k -> {
+            EditorContext context = new EditorContext();
+
+            DefaultMutableTreeNode node = fileTreePanel.getFileNodes().get(filePath);
+            if (node != null && node.getUserObject() instanceof FileNode fileNode) {
+                if (fileNode.getContent() != null) {
+                    context.setSourceCode(fileNode.getContent());
+                }
+            }
+            return context;
+        });
+    }
+
+    /**
+     * Update context for a file with new content
+     */
+    public void updateContextForFile(String filePath, String content) {
+        EditorContext context = getContextForFile(filePath);
+        context.setSourceCode(content);
+
+        DefaultMutableTreeNode node = fileTreePanel.getFileNodes().get(filePath);
+        if (node != null && node.getUserObject() instanceof FileNode fileNode) {
+            fileNode.setContent(content);
+            fileNode.updateContextFromContent();
+        }
+    }
+
+    /**
+     * Get all compilation errors from all files
+     */
+    public List<CompilerError> getAllCompilationErrors() {
+        List<CompilerError> allErrors = new ArrayList<>();
+        for (Map.Entry<String, EditorContext> entry : fileContexts.entrySet()) {
+            String filePath = entry.getKey();
+            EditorContext context = entry.getValue();
+
+            List<CompilerError> fileErrors = context.getAllCompilerErrors();
+            if (fileErrors != null) {
+                for (CompilerError error : fileErrors) {
+                    error.setFilePath(filePath);
+                    error.setFileName(new File(filePath).getName());
+                }
+                allErrors.addAll(fileErrors);
+            }
+        }
+        return allErrors;
+    }
+
+    /**
+     * Clear all compilation data from all files
+     */
+    public void clearAllCompilationData() {
+        for (Map.Entry<String, EditorContext> entry : fileContexts.entrySet()) {
+            entry.getValue().clearParsingErrors();
+        }
+
+        for (DefaultMutableTreeNode node : fileTreePanel.getFileNodes().values()) {
+            if (node.getUserObject() instanceof FileNode fileNode) {
+                fileNode.clearCompilationData();
+            }
+        }
+    }
+
+    // ==========================================
+    // COMPILATION ORCHESTRATION
+    // ==========================================
+
+    /**
+     * Compile all files in the project (DEFINITIVE PRINCIPAL METHOD)
+     */
+    public boolean compileAllFiles() {
+        clearAllCompilationData();
+
+        // Get all file nodes
+        List<FileNode> allFiles = new ArrayList<>();
+        collectAllFiles(fileTreePanel.getRootNode(), allFiles);
+
+        List<FileNode> pigLatinFiles = new ArrayList<>();
+        List<FileNode> zettaradianFiles = new ArrayList<>();
+        List<FileNode> yFiles = new ArrayList<>();
+
+        for (FileNode file : allFiles) {
+            if (file.isDirectory()) continue;
+            String ext = file.getExtension();
+            switch (ext) {
+                case ".pig":
+                    pigLatinFiles.add(file);
+                    break;
+                case ".z":
+                    zettaradianFiles.add(file);
+                    break;
+                case ".y":
+                    yFiles.add(file);
+                    break;
+            }
+        }
+
+        // Phase 1: Compile all .y files
+        for (FileNode file : yFiles) {
+            compileFile(file);
+        }
+
+        // Phase 2: Compile all Zettaradian files
+        for (FileNode file : zettaradianFiles) {
+            compileFile(file);
+        }
+
+        // Phase 3: Compile all PigLatin files
+        for (FileNode file : pigLatinFiles) {
+            compileFile(file);
+        }
+
+        // Collect all errors
+        List<CompilerError> allErrors = getAllCompilationErrors();
+
+        notifier.notifyErrorsUpdated(allErrors);
+
+        if (!allErrors.isEmpty()) {
+            notifier.logError("Compilacion completada con " + allErrors.size() + " errores");
+            return false;
+        }
+
+        notifier.logSuccess("Compilacion exitosa de " + allFiles.size() + " archivos");
+        return true;
+    }
+
+    /**
+     * Compile a single file
+     */
+    private void compileFile(FileNode fileNode) {
+        if (fileNode.isDirectory()) return;
+
+        String filePath = fileNode.getFilePath();
+        String extension = fileNode.getExtension();
+        String content = fileNode.getContent();
+
+        if (content == null || content.isEmpty()) {
+            return;
+        }
+
+        EditorContext context = getContextForFile(filePath);
+        context.setSourceCode(content);
+
+        SyntaxHighlightListener listener = SyntaxHighlightListenerFactory.createListener(extension, notifier);
+        if (listener != null) {
+
+            listener.highlight(context);
+
+            fileNode.getEditorContext().setParsed(true);
+
+            // Store errors
+            List<CompilerError> errors = context.getAllCompilerErrors();
+            if (errors != null && !errors.isEmpty()) {
+                for (CompilerError error : errors) {
+                    error.setFilePath(filePath);
+                    error.setFileName(fileNode.getName());
+                }
+                fileNode.addAllCompilationErrors(errors);
+            }
+
+        }
+
+    }
+
+    /**
+     * Collect all file nodes recursively
+     */
+    private void collectAllFiles(DefaultMutableTreeNode node, List<FileNode> files) {
+        Object userObj = node.getUserObject();
+        if (userObj instanceof FileNode fileNode) {
+            if (!fileNode.isDirectory()) {
+                files.add(fileNode);
+            }
+        }
+
+        for (int i = 0; i < node.getChildCount(); i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
+            collectAllFiles(child, files);
+        }
+    }
+
 
     /**
      * Update the project name
@@ -417,13 +609,21 @@ public class WorkspacePanel extends JPanel {
 
         removeWelcomeTabIfExists();
 
+        // Ensure context exists for this file
+        EditorContext context = getContextForFile(filePath);
+        if (fileNode.getContent() != null) {
+            context.setSourceCode(fileNode.getContent());
+        }
+
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
+        editor.setCode(fileNode.getContent() != null ? fileNode.getContent() : "");
+        editor.setFileExtension(fileNode.getExtension());
 
-        String content = fileNode.getContent() != null ? fileNode.getContent() : "";
-        editor.setCode(content);
-
-        String extension = fileNode.getExtension();
-        editor.setFileExtension(extension);
+        // Pass the context to the editor's CodeTextPane
+        editor.getEditor().setEditorContext(context);
+        editor.getEditor().setSyntaxHighlightListener(
+                SyntaxHighlightListenerFactory.createListener(fileNode.getExtension(), notifier)
+        );
 
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);
@@ -460,10 +660,13 @@ public class WorkspacePanel extends JPanel {
         String content = editor.getCode();
 
         DefaultMutableTreeNode node = fileTreePanel.getFileNodes().get(filePath);
-        if (node != null && node.getUserObject() instanceof FileNode) {
-            FileNode fileNode = (FileNode) node.getUserObject();
+        if (node != null && node.getUserObject() instanceof FileNode fileNode) {
             fileNode.setContent(content);
             fileNode.setModified(false);
+            fileNode.updateContextFromContent();
+
+            updateContextForFile(filePath, content);
+
             notifier.notifySaveFile(filePath, content);
         }
     }
@@ -480,14 +683,14 @@ public class WorkspacePanel extends JPanel {
             String content = editor.getCode();
 
             DefaultMutableTreeNode node = fileTreePanel.getFileNodes().get(filePath);
-            if (node != null && node.getUserObject() instanceof FileNode) {
-                FileNode fileNode = (FileNode) node.getUserObject();
+            if (node != null && node.getUserObject() instanceof FileNode fileNode) {
                 String oldContent = fileNode.getContent();
 
-                // Only save if content changed
                 if (!content.equals(oldContent)) {
                     fileNode.setContent(content);
                     fileNode.setModified(false);
+                    fileNode.updateContextFromContent();
+                    updateContextForFile(filePath, content);
                     notifier.notifySaveFile(filePath, content);
                     savedCount++;
                 }
@@ -574,14 +777,6 @@ public class WorkspacePanel extends JPanel {
         }
     }
 
-    /**
-     * Close all tabs
-     */
-    public void closeAllTabs() {
-        tabbedPane.removeAll();
-        openEditors.clear();
-        addWelcomeTabIfNeeded();
-    }
 
     /**
      * Get the current active editor

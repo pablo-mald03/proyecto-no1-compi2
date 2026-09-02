@@ -2,12 +2,15 @@ package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor
 
 import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.SyntaxHighlightListener;
+import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyle;
 import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyleProvider;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHighlightListenerFactory;
 import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.stylers.TokenStyleResolverFactory;
 import lombok.Getter;
+import lombok.Setter;
+import org.antlr.v4.runtime.Token;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -26,10 +29,11 @@ public class CodeTextPane extends JTextPane {
     private static final int SYNTAX_DELAY = 250;
     private Timer syntaxTimer;
     private SyntaxHighlightListener syntaxListener;
-    private final EditorContext context;
+    private EditorContext context;
     private final SimpleAttributeSet style;
     private WorkspaceNotifier notifierReference;
     @Getter
+    @Setter
     private String currentExtension = "";
 
     public CodeTextPane(WorkspaceNotifier notifierReference) {
@@ -44,7 +48,8 @@ public class CodeTextPane extends JTextPane {
         });
         syntaxTimer.setRepeats(false);
 
-        context = new EditorContext();
+        this.context = new EditorContext();
+        this.notifierReference = notifierReference;
 
         style = new SimpleAttributeSet();
         StyleConstants.setForeground(style, Theme.FOREGROUND_DARK.getColorSet());
@@ -71,17 +76,41 @@ public class CodeTextPane extends JTextPane {
                 }
             }
         });
-
-        this.notifierReference = notifierReference;
     }
 
+
     // ==========================================
-    // EXTENSION MANAGEMENT
+    // CONTEXT MANAGEMENT (EXTERNAL)
     // ==========================================
 
     /**
-     * Set the file extension and update the syntax listener
+     * Set the EditorContext from outside (WorkspacePanel)
      */
+    public void setEditorContext(EditorContext context) {
+        this.context = context != null ? context : new EditorContext();
+        // Update context with current text
+        String text = getText();
+        if (text != null && !text.isEmpty()) {
+            this.context.setSourceCode(text);
+        }
+        // Trigger re-highlight
+        if (syntaxListener != null) {
+            scheduleHighlight();
+        }
+    }
+
+    /**
+     * Get the current EditorContext
+     */
+    public EditorContext getEditorContext() {
+        return this.context;
+    }
+
+
+    // ==========================================
+    // EXTENSION AND LISTENER MANAGEMENT
+    // ==========================================
+
     public void setCurrentExtension(String extension) {
         this.currentExtension = extension;
         updateSyntaxListener();
@@ -91,22 +120,25 @@ public class CodeTextPane extends JTextPane {
      * Update the syntax listener based on current extension
      */
     private void updateSyntaxListener() {
-        // Clear old listener
         this.syntaxListener = null;
-
-        // Create new listener based on extension
         if (currentExtension != null && !currentExtension.isEmpty()) {
             this.syntaxListener = SyntaxHighlightListenerFactory.createListener(
                     currentExtension,
                     notifierReference
             );
         }
-
-        // Trigger re-highlight if there's content
         if (getText() != null && !getText().isEmpty()) {
             scheduleHighlight();
         }
     }
+
+    public void setSyntaxHighlightListener(SyntaxHighlightListener listener) {
+        this.syntaxListener = listener;
+        if (getText() != null && !getText().isEmpty()) {
+            scheduleHighlight();
+        }
+    }
+
 
     // ==========================================
     // HIGHLIGHT METHODS
@@ -118,25 +150,27 @@ public class CodeTextPane extends JTextPane {
 
     protected void onSyntaxHighlight() {
         String text = getText();
-        if (text == null || text.isEmpty()) {
+        if (text == null || text.isEmpty() || context == null) {
             return;
         }
 
-        // Set source code in context
-        // context.setSourceCode(text);
+        context.setSourceCode(text);
 
-        // Use the appropriate listener
         if (syntaxListener != null) {
             syntaxListener.highlight(context);
         }
 
         applyHighlight();
 
-      /*  if (notifierReference != null) {
-            notifierReference.notifyErrorsUpdated(context.getCompilerErrors());
-        }*/
+        if (notifierReference != null && context.getAllCompilerErrors() != null) {
+            notifierReference.notifyErrorsUpdated(context.getAllCompilerErrors());
+        }
     }
 
+
+    /**
+     * Principal method to apply the highlighting code
+     */
     private void applyHighlight() {
         isApplyingHighlight = true;
         try {
@@ -145,13 +179,13 @@ public class CodeTextPane extends JTextPane {
 
             document.setCharacterAttributes(0, docLength, this.style, true);
 
-           /* if (context.getTokens() == null) {
+            if (context.getTokens() == null || context.getTokens().isEmpty()) {
                 return;
-            }*/
+            }
 
             TokenStyleProvider tokenResolver = TokenStyleResolverFactory.createProvider(currentExtension);
 
-           /* for (Token token : context.getTokens()) {
+            for (Token token : context.getTokens()) {
                 if (token.getType() == Token.EOF) {
                     continue;
                 }
@@ -178,51 +212,33 @@ public class CodeTextPane extends JTextPane {
                         length,
                         attributeSet,
                         true);
-            }*/
+            }
         } finally {
             isApplyingHighlight = false;
         }
     }
 
-    // ==========================================
-    // SETTERS & GETTERS
-    // ==========================================
-
-    public void setSyntaxHighlightListener(SyntaxHighlightListener listener) {
-        this.syntaxListener = listener;
-    }
-
-    public EditorContext getEditorContext() {
-        return this.context;
-    }
-
+    /**
+     * Principal method to create the color attribute set
+     *
+     */
     private AttributeSet createColorAttribute(Color color) {
         SimpleAttributeSet attr = new SimpleAttributeSet();
         StyleConstants.setForeground(attr, color);
         return attr;
     }
 
+    /**
+     * This method is the principal to set the code text
+     * */
     @Override
     public void setText(String text) {
         super.setText(text != null ? text : "");
+        if (context != null && text != null) {
+            context.setSourceCode(text);
+        }
         if (syntaxListener != null && text != null && !text.isEmpty()) {
             scheduleHighlight();
         }
     }
-
-  /*  public void clearCompiledCode() {
-        this.context.clearCompilatedCode();
-    }
-
-    public void clearStackView() {
-        this.context.clearStacklists();
-    }
-
-    public void clearAll() {
-        this.context.clearAll();
-    }
-
-    public List<Symbol> getAstView() {
-        return this.context.getGlobalEnvironment().getAllSymbolsForUI();
-    }*/
 }
