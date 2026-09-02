@@ -33,7 +33,7 @@ public enum UIColors {
     // Deactivate text field constants
     // ==========================
 
-    VIEW_MODE_BACKGROUND(new Color(193, 181, 165)),
+    VIEW_MODE_BACKGROUND(new Color(43, 40, 35)),
     VIEW_MODE_FOREGROUND(new Color(87, 86, 86)),
     VIEW_MODE_BORDER(new Color(175, 156, 140, 255)),
 

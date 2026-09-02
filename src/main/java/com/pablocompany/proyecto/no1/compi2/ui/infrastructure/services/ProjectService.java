@@ -44,12 +44,6 @@ public class ProjectService {
             throw new IOException("Failed to create src directory: " + srcFolder.getPath());
         }
 
-        // Create compiled folder (will store .c files)
-        File compiledFolder = new File(projectFolder, COMPILED_FOLDER);
-        if (!compiledFolder.exists() && !compiledFolder.mkdirs()) {
-            throw new IOException("Failed to create compiled directory: " + compiledFolder.getPath());
-        }
-
         // Create default files
         createDefaultFiles(projectFolder, srcFolder, projectName);
     }
@@ -61,35 +55,42 @@ public class ProjectService {
         // Main.pig in root (Pig Latin file)
         File mainPigFile = new File(projectFolder, "main" + PIG_EXTENSION);
         try (FileWriter writer = new FileWriter(mainPigFile)) {
-            writer.write("// Main Pig Latin file\n");
-            writer.write("function main() {\n");
-            writer.write("    print(\"Hello World from PigLatin!\");\n");
-            writer.write("}\n");
-            writer.write("\n");
-            writer.write("// Call main function\n");
-            writer.write("main();\n");
+            writer.write("import src.config.y\n\n");
+            writer.write("// Main de Pig Latin del proyecto: " + projectName + "\n");
+            writer.write("MAIOR>\n");
+            writer.write("    >> \"Hola mundo!\" ;\n\n");
+            writer.write(">> \"Tu poder estado de animo es: >> \" calcularEstado(10); ");
+            writer.write("\n\n");
+            writer.write("FINIS;\n");
         }
 
         // config.y in src folder
         File configFile = new File(srcFolder, "config" + Y_EXTENSION);
         try (FileWriter writer = new FileWriter(configFile)) {
-            writer.write("// Configuration file\n");
-            writer.write("version = \"1.0.0\"\n");
-            writer.write("author = \"" + projectName + " Developer\"\n");
-            writer.write("language = \"Codex\"\n");
+            writer.write("// Archivo de configuracion principal: " + projectName + "\n\n");
+            writer.write("definir calcularEstado(entero miEntero) -> entero :\n");
+            writer.write("  miEntero = 10 + 10\n");
+            writer.write("  retornar miEntero\n");
         }
 
-        // Example compiled file (will be generated when compiling)
-        File compiledFile = new File(projectFolder, COMPILED_FOLDER + "/main" + C_EXTENSION);
-        try (FileWriter writer = new FileWriter(compiledFile)) {
-            writer.write("// Compiled C code\n");
-            writer.write("#include <stdio.h>\n");
-            writer.write("\n");
-            writer.write("int main() {\n");
-            writer.write("    printf(\"Hello World from Compiled C!\\n\");\n");
-            writer.write("    return 0;\n");
-            writer.write("}\n");
+        // Persona.z in src folder
+        File classFile = new File(srcFolder, "Persona" + Z_EXTENSION);
+
+        try (FileWriter writer = new FileWriter(classFile)) {
+            writer.write("// Clase principal\"Persona\" del proyecto: " + projectName + "\n\n");
+            writer.write("public class Persona {\n\n");
+            writer.write("  String nombre;\n");
+            writer.write("  int edad;\n\n");
+            writer.write("  public Persona(String nombreParametro, int edadParametro) {\n");
+            writer.write("      nombre = nombreParametro;\n");
+            writer.write("      edad = edadParametro;\n");
+            writer.write("  }\n\n");
+            writer.write("  public void saludar() {\n");
+            writer.write("      println(\"¡Hola! Me llamo \" + nombre + \" y tengo \" + edad + \" años.\");\n");
+            writer.write("  }\n\n");
+            writer.write("}");
         }
+
     }
 
     /**

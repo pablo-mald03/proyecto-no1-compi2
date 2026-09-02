@@ -40,6 +40,8 @@ public class EditorContext {
 
     private boolean isParsed;
 
+    private boolean isCompiled;
+
  /*   private Environment globalEnvironment;
 
     //Pointer to the current enviroment in runtime
@@ -53,6 +55,7 @@ public class EditorContext {
         this.tokens = new ArrayList<>();
         this.compiledCode = "";
         this.isParsed = false;
+        this.isCompiled = false;
         this.lexicalErrors = new ArrayList<>();
         this.parserErrors = new ArrayList<>();
         this.semanticErrors = new ArrayList<>();

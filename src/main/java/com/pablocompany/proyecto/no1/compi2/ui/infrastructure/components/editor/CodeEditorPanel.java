@@ -23,12 +23,15 @@ public class CodeEditorPanel extends JPanel {
     private WorkspaceNotifier notifierReference;
     private String currentExtension = "";
 
+    private boolean editable;
+
     public CodeEditorPanel(WorkspaceNotifier notifierReference) {
         setLayout(new BorderLayout());
         setBackground(Theme.SIDEBAR_LIGHT.getColorSet());
 
         this.notifierReference = notifierReference;
 
+        this.editable = true;
         editor = new CodeTextPane(this.notifierReference);
         editor.setBackground(Theme.BACKGROUND_DARK.getColorSet());
         editor.setForeground(Theme.FOREGROUND_DARK.getColorSet());
@@ -64,6 +67,22 @@ public class CodeEditorPanel extends JPanel {
      */
     public String getFileExtension() {
         return currentExtension;
+    }
+
+    /**
+     * Set whether the editor is editable
+     */
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+        editor.setEditable(editable);
+
+        if (!editable) {
+            editor.setBackground(Theme.SIDEBAR_DARKT.getColorSet());
+            editor.setToolTipText("Archivo en modo de solo lectura (ByteCode)");
+        } else {
+            editor.setBackground(Theme.BACKGROUND_DARK.getColorSet());
+            editor.setToolTipText(null);
+        }
     }
 
 

@@ -224,8 +224,9 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             boolean success = workspace.compileAllFiles();
             if (success) {
                 logSuccess("Compilacion completada");
+                this.alertToast("Compilacion realizada exitosamente.", false);
             } else {
-                logError("Compilacion fallida. Revisa los errores.");
+                this.alertToast("Compilacion fallida. Revisa los errores.", true);
                 focusErrors();
             }
         } else {
@@ -235,8 +236,9 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     private void onExecute() {
         if (managementScreen != null) {
-            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
-            if (editor != null) {
+            String output = managementScreen.getWorkspacePanel().getCompiledOutput();
+            if (output != null) {
+                //TODO: Call the compilation service console
                 logInfo("Ejecutando...");
             } else {
                 alertToast("No hay ningún archivo abierto para ejecutar", true);

@@ -40,15 +40,13 @@ public class WorkspacePanel extends JPanel {
     private final JPanel welcomePanel;
     private String projectName;
 
+
+    //Compiled code
+    private String compiledOutput;
+    private boolean isCompiled;
+
     //Principal reference for the file Contexts
     private final Map<String, EditorContext> fileContexts;
-
-    /**
-     * Constructor with default project name
-     */
-    public WorkspacePanel(WorkspaceNotifier notifier, ConfirmationNotifier confirmationNotifier) {
-        this(notifier, confirmationNotifier, "Project");
-    }
 
     /**
      * Constructor with custom project name
@@ -59,6 +57,9 @@ public class WorkspacePanel extends JPanel {
         this.projectName = projectName;
         this.openEditors = new HashMap<>();
         this.fileContexts = new HashMap<>();
+
+        this.compiledOutput = "";
+        this.isCompiled = false;
 
         setLayout(new BorderLayout());
         setBackground(Theme.SIDEBAR_DARKT.getColorSet());
@@ -157,10 +158,12 @@ public class WorkspacePanel extends JPanel {
     // ==========================================
 
     /**
-     * Compile all files in the project (DEFINITIVE PRINCIPAL METHOD)
+     * Compile all files in the project (MOST IMPORTANT METHOD)
      */
     public boolean compileAllFiles() {
-        clearAllCompilationData();
+        this.clearAllCompilationData();
+        compiledOutput = "";
+        isCompiled = false;
 
         // Get all file nodes
         List<FileNode> allFiles = new ArrayList<>();
@@ -186,22 +189,29 @@ public class WorkspacePanel extends JPanel {
             }
         }
 
-        // Phase 1: Compile all .y files
+        // Phase 1: Parse all .y files (configurations)
         for (FileNode file : yFiles) {
-            compileFile(file);
+            parseFile(file);
         }
 
-        // Phase 2: Compile all Zettaradian files
+        // Phase 2: Parse all Zettaradian files (.z)
         for (FileNode file : zettaradianFiles) {
-            compileFile(file);
+            parseFile(file);
         }
 
-        // Phase 3: Compile all PigLatin files
+        // Phase 3: Parse all PigLatin files (.pig)
+        String finalCompiledCode = "";
         for (FileNode file : pigLatinFiles) {
-            compileFile(file);
+            parseFile(file);
+
+            String compiled = file.getEditorContext().getCompiledCode();
+            if (compiled != null && !compiled.isEmpty()) {
+                finalCompiledCode = compiled;
+                break;
+            }
         }
 
-        // Collect all errors
+        // Collect all error
         List<CompilerError> allErrors = getAllCompilationErrors();
 
         notifier.notifyErrorsUpdated(allErrors);
@@ -211,14 +221,28 @@ public class WorkspacePanel extends JPanel {
             return false;
         }
 
-        notifier.logSuccess("Compilacion exitosa de " + allFiles.size() + " archivos");
+        finalCompiledCode = "int main (){\n\n}\n";
+
+
+        if (!finalCompiledCode.isEmpty()) {
+            this.compiledOutput = finalCompiledCode;
+            this.isCompiled = true;
+
+            generateCompiledFile(finalCompiledCode);
+        } else {
+            notifier.logError("No se genero codigo compilado");
+
+            return false;
+        }
+
+        notifier.logSuccess("Compilacion exitosa");
         return true;
     }
 
     /**
-     * Compile a single file
+     * Parse a single file
      */
-    private void compileFile(FileNode fileNode) {
+    private void parseFile(FileNode fileNode) {
         if (fileNode.isDirectory()) return;
 
         String filePath = fileNode.getFilePath();
@@ -234,12 +258,15 @@ public class WorkspacePanel extends JPanel {
 
         SyntaxHighlightListener listener = SyntaxHighlightListenerFactory.createListener(extension, notifier);
         if (listener != null) {
-
             listener.highlight(context);
-
             fileNode.getEditorContext().setParsed(true);
 
-            // Store errors
+            String compiledCode = context.getCompiledCode();
+            if (compiledCode != null && !compiledCode.isEmpty()) {
+                fileNode.getEditorContext().setCompiledCode(compiledCode);
+                fileNode.getEditorContext().setParsed(true);
+            }
+
             List<CompilerError> errors = context.getAllCompilerErrors();
             if (errors != null && !errors.isEmpty()) {
                 for (CompilerError error : errors) {
@@ -248,9 +275,7 @@ public class WorkspacePanel extends JPanel {
                 }
                 fileNode.addAllCompilationErrors(errors);
             }
-
         }
-
     }
 
     /**
@@ -267,6 +292,66 @@ public class WorkspacePanel extends JPanel {
         for (int i = 0; i < node.getChildCount(); i++) {
             DefaultMutableTreeNode child = (DefaultMutableTreeNode) node.getChildAt(i);
             collectAllFiles(child, files);
+        }
+    }
+
+    /**
+     * Generate the final .c compiled file in the compiled folder
+     */
+    private void generateCompiledFile(String compiledCode) {
+        try {
+            String compiledPath = "compiled/main.c";
+
+            DefaultMutableTreeNode compiledFolderNode = fileTreePanel.findNodeByPath("compiled");
+            if (compiledFolderNode == null) {
+                fileTreePanel.createNewFile("compiled", true);
+            }
+
+            DefaultMutableTreeNode compiledFileNode = fileTreePanel.getFileNodes().get(compiledPath);
+            if (compiledFileNode != null && compiledFileNode.getUserObject() instanceof FileNode existingFile) {
+                existingFile.setContent(compiledCode);
+                existingFile.getEditorContext().setCompiledCode(compiledCode);
+                existingFile.getEditorContext().setCompiled(true);
+                existingFile.setModified(false);
+
+                updateContextForFile(compiledPath, compiledCode);
+
+                notifier.notifySaveFile(compiledPath, compiledCode);
+
+                if (openEditors.containsKey(compiledPath)) {
+                    CodeEditorPanel editor = openEditors.get(compiledPath);
+                    if (editor != null) {
+                        editor.setCode(compiledCode);
+                        editor.setEditable(false);
+                    }
+                }
+            } else {
+                FileNode newCompiledFile = new FileNode("main.c", false);
+                newCompiledFile.setFilePath(compiledPath);
+                newCompiledFile.setContent(compiledCode);
+                newCompiledFile.getEditorContext().setCompiledCode(compiledCode);
+                newCompiledFile.getEditorContext().setCompiled(true);
+                newCompiledFile.setModified(false);
+
+                fileTreePanel.createNewFile("main.c", false, "compiled");
+
+                DefaultMutableTreeNode newNode = fileTreePanel.getFileNodes().get(compiledPath);
+                if (newNode != null && newNode.getUserObject() instanceof FileNode node) {
+                    node.setContent(compiledCode);
+                    node.getEditorContext().setCompiledCode(compiledCode);
+                    node.getEditorContext().setCompiled(true);
+                    node.setModified(false);
+
+                    updateContextForFile(compiledPath, compiledCode);
+                    notifier.notifySaveFile(compiledPath, compiledCode);
+                }
+            }
+
+            fileTreePanel.reloadTree();
+            notifier.logInfo("Codigo compilado generado en: " + compiledPath);
+
+        } catch (Exception e) {
+            notifier.logError("Error al generar el archivo compilado: " + e.getMessage());
         }
     }
 
@@ -609,7 +694,9 @@ public class WorkspacePanel extends JPanel {
 
         removeWelcomeTabIfExists();
 
-        // Ensure context exists for this file
+        // Check if it's a compiled file (.c in compiled folder)
+        boolean isCompiledFile = filePath.endsWith(".c") && filePath.contains("compiled");
+
         EditorContext context = getContextForFile(filePath);
         if (fileNode.getContent() != null) {
             context.setSourceCode(fileNode.getContent());
@@ -619,7 +706,8 @@ public class WorkspacePanel extends JPanel {
         editor.setCode(fileNode.getContent() != null ? fileNode.getContent() : "");
         editor.setFileExtension(fileNode.getExtension());
 
-        // Pass the context to the editor's CodeTextPane
+        editor.setEditable(!isCompiledFile);
+
         editor.getEditor().setEditorContext(context);
         editor.getEditor().setSyntaxHighlightListener(
                 SyntaxHighlightListenerFactory.createListener(fileNode.getExtension(), notifier)
