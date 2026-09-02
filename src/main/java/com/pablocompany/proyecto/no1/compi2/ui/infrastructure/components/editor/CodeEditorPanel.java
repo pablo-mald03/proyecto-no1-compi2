@@ -12,83 +12,86 @@ import java.awt.*;
  *
  * @author pablo03
  */
-/*Class used to represents an editor panel*/
+
+/**
+ * Class used to represents an editor panel
+ *
+ */
 @Getter
 public class CodeEditorPanel extends JPanel {
 
     private final CodeTextPane editor;
     private final LineNumberView lineNumbers;
-
     private final JScrollPane scroll;
-
     private final EditorStatusBar statusBar;
-
-    /*Reference to the parent*/
     private WorkspaceNotifier notifierReference;
+    private String currentExtension = "";
 
     public CodeEditorPanel(WorkspaceNotifier notifierReference) {
-
         setLayout(new BorderLayout());
-
         setBackground(Theme.SIDEBAR_LIGHT.getColorSet());
 
         this.notifierReference = notifierReference;
 
         editor = new CodeTextPane(this.notifierReference);
-
         editor.setBackground(Theme.BACKGROUND_DARK.getColorSet());
         editor.setForeground(Theme.FOREGROUND_DARK.getColorSet());
 
         scroll = new JScrollPane(editor);
-
         lineNumbers = new LineNumberView(editor);
-
         scroll.setRowHeaderView(lineNumbers);
 
         statusBar = new EditorStatusBar();
 
         add(scroll, BorderLayout.CENTER);
-
         add(statusBar, BorderLayout.SOUTH);
-
         setBorder(BorderFactory.createEmptyBorder());
 
         editor.setCaretColor(Theme.FOREGROUND_DARK.getColorSet());
-
         editor.addCaretListener(e -> updateCaretPosition());
-
-       // editor.setSyntaxHighlightListener(new AntlrAnalyzer());
-
     }
 
-    //This method updates the caret position to the sidebar
+    // ==========================================
+    // EXTENSION MANAGEMENT
+    // ==========================================
+
+    /**
+     * Set the file extension and update the editor
+     */
+    public void setFileExtension(String extension) {
+        this.currentExtension = extension;
+        editor.setCurrentExtension(extension);
+    }
+
+    /**
+     * Get the current file extension
+     */
+    public String getFileExtension() {
+        return currentExtension;
+    }
+
+
+    /**
+     * This method updates the caret position to the sidebar
+     *
+     */
     private void updateCaretPosition() {
-
         try {
-
             int caret = editor.getCaretPosition();
-
             int line = editor.getDocument()
                     .getDefaultRootElement()
                     .getElementIndex(caret);
-
             int lineStart = editor.getDocument()
                     .getDefaultRootElement()
                     .getElement(line)
                     .getStartOffset();
-
             int column = caret - lineStart;
-
             statusBar.updateCursor(line + 1, column + 1);
-
             lineNumbers.repaint();
-
         } catch (Exception ignored) {
-            System.out.println("exception with caret");
+            /* Do nothing*/
         }
-
     }
-
 
     /**
      * Set the code content in the editor

@@ -407,7 +407,6 @@ public class WorkspacePanel extends JPanel {
         String filePath = fileNode.getFilePath();
         String fileName = fileNode.getName();
 
-        // If already open, just focus the tab
         if (openEditors.containsKey(filePath)) {
             int index = findTabIndexByPath(filePath);
             if (index != -1) {
@@ -416,7 +415,6 @@ public class WorkspacePanel extends JPanel {
             return;
         }
 
-        // Remove welcome tab before adding real content
         removeWelcomeTabIfExists();
 
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
@@ -425,7 +423,7 @@ public class WorkspacePanel extends JPanel {
         editor.setCode(content);
 
         String extension = fileNode.getExtension();
-        notifier.notifyFileOpened(filePath, content, extension);
+        editor.setFileExtension(extension);
 
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);

@@ -2,17 +2,17 @@ package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor
 
 import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.SyntaxHighlightListener;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.lexical.TokenStyleResolver;
+import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyleProvider;
 import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHighlightListenerFactory;
+import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.stylers.TokenStyleResolverFactory;
+import lombok.Getter;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
+import javax.swing.text.*;
 import java.awt.*;
 
 /**
@@ -23,122 +23,135 @@ import java.awt.*;
 public class CodeTextPane extends JTextPane {
 
     private boolean isApplyingHighlight = false;
-
     private static final int SYNTAX_DELAY = 250;
-
     private Timer syntaxTimer;
-
     private SyntaxHighlightListener syntaxListener;
-
     private final EditorContext context;
-
-    private final TokenStyleResolver resolver;
-
-    //Defult text style
     private final SimpleAttributeSet style;
-
-    /*Reference to the parent*/
     private WorkspaceNotifier notifierReference;
+    @Getter
+    private String currentExtension = "";
 
     public CodeTextPane(WorkspaceNotifier notifierReference) {
         super(new DefaultStyledDocument());
-
-        resolver = new TokenStyleResolver();
 
         setBackground(Theme.AUXILIARY_BACKGROUND_DARK.getColorSet());
         setForeground(Theme.FOREGROUND_DARK.getColorSet());
 
         syntaxTimer = new Timer(SYNTAX_DELAY, e -> {
-
             syntaxTimer.stop();
-
             onSyntaxHighlight();
-
         });
-
         syntaxTimer.setRepeats(false);
 
         context = new EditorContext();
 
         style = new SimpleAttributeSet();
-
-        StyleConstants.setForeground(
-                style,
-                Theme.FOREGROUND_DARK.getColorSet());
+        StyleConstants.setForeground(style, Theme.FOREGROUND_DARK.getColorSet());
 
         getDocument().addDocumentListener(new DocumentListener() {
-
             @Override
             public void insertUpdate(DocumentEvent e) {
-
                 if (!isApplyingHighlight) {
                     scheduleHighlight();
                 }
-
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-
                 if (!isApplyingHighlight) {
                     scheduleHighlight();
                 }
-
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-
                 if (!isApplyingHighlight) {
                     scheduleHighlight();
                 }
-
             }
-
         });
 
         this.notifierReference = notifierReference;
-
     }
 
-    //This method restart to debounce
+    // ==========================================
+    // EXTENSION MANAGEMENT
+    // ==========================================
+
+    /**
+     * Set the file extension and update the syntax listener
+     */
+    public void setCurrentExtension(String extension) {
+        this.currentExtension = extension;
+        updateSyntaxListener();
+    }
+
+    /**
+     * Update the syntax listener based on current extension
+     */
+    private void updateSyntaxListener() {
+        // Clear old listener
+        this.syntaxListener = null;
+
+        // Create new listener based on extension
+        if (currentExtension != null && !currentExtension.isEmpty()) {
+            this.syntaxListener = SyntaxHighlightListenerFactory.createListener(
+                    currentExtension,
+                    notifierReference
+            );
+        }
+
+        // Trigger re-highlight if there's content
+        if (getText() != null && !getText().isEmpty()) {
+            scheduleHighlight();
+        }
+    }
+
+    // ==========================================
+    // HIGHLIGHT METHODS
+    // ==========================================
+
     private void scheduleHighlight() {
-
         syntaxTimer.restart();
-
     }
 
-    //This method hihghlight the code when the key is pressed
     protected void onSyntaxHighlight() {
+        String text = getText();
+        if (text == null || text.isEmpty()) {
+            return;
+        }
 
-        /*context.setSourceCode(getText());
+        // Set source code in context
+        // context.setSourceCode(text);
 
+        // Use the appropriate listener
         if (syntaxListener != null) {
             syntaxListener.highlight(context);
         }
 
         applyHighlight();
 
-        if (notifierReference != null) {
+      /*  if (notifierReference != null) {
             notifierReference.notifyErrorsUpdated(context.getCompilerErrors());
         }*/
-
     }
 
-    //This method implements the highlight to the component
     private void applyHighlight() {
-      /*  isApplyingHighlight = true;
+        isApplyingHighlight = true;
         try {
             StyledDocument document = getStyledDocument();
             int docLength = document.getLength();
 
             document.setCharacterAttributes(0, docLength, this.style, true);
 
-            if (context.getTokens() == null) {
+           /* if (context.getTokens() == null) {
                 return;
-            }
+            }*/
 
-            for (Token token : context.getTokens()) {
+            TokenStyleProvider tokenResolver = TokenStyleResolverFactory.createProvider(currentExtension);
+
+           /* for (Token token : context.getTokens()) {
                 if (token.getType() == Token.EOF) {
                     continue;
                 }
@@ -150,7 +163,7 @@ public class CodeTextPane extends JTextPane {
                     continue;
                 }
 
-                TokenStyle tokenStyle = resolver.style(token);
+                TokenStyle tokenStyle = tokenResolver.style(token);
                 if (tokenStyle == null) {
                     continue;
                 }
@@ -165,47 +178,50 @@ public class CodeTextPane extends JTextPane {
                         length,
                         attributeSet,
                         true);
-            }
+            }*/
         } finally {
             isApplyingHighlight = false;
-        }*/
+        }
     }
+
+    // ==========================================
+    // SETTERS & GETTERS
+    // ==========================================
 
     public void setSyntaxHighlightListener(SyntaxHighlightListener listener) {
-
         this.syntaxListener = listener;
-
     }
-    
-    //This method returns the reference to codetext
-    public EditorContext getEditorContext(){
+
+    public EditorContext getEditorContext() {
         return this.context;
     }
 
-    // Auxiliar methog to convert the color to attributeSet
     private AttributeSet createColorAttribute(Color color) {
         SimpleAttributeSet attr = new SimpleAttributeSet();
         StyleConstants.setForeground(attr, color);
         return attr;
     }
-    
-    /*
-    //This method clean the editor context
-    public void clearCompiledCode(){
+
+    @Override
+    public void setText(String text) {
+        super.setText(text != null ? text : "");
+        if (syntaxListener != null && text != null && !text.isEmpty()) {
+            scheduleHighlight();
+        }
+    }
+
+  /*  public void clearCompiledCode() {
         this.context.clearCompilatedCode();
     }
-    
-    //This method clear stack view 
+
     public void clearStackView() {
         this.context.clearStacklists();
     }
 
-    //This method clear all required clearable data
-    public void clearAll(){
+    public void clearAll() {
         this.context.clearAll();
     }
-    
-    //This method clear AST view 
+
     public List<Symbol> getAstView() {
         return this.context.getGlobalEnvironment().getAllSymbolsForUI();
     }*/

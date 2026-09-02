@@ -1,15 +1,16 @@
-package com.pablocompany.proyecto.no1.compi2.app.infrastructure.lexical;
+package com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.stylers;
 
 import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyle;
 import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyleProvider;
 import org.antlr.v4.runtime.Token;
 
 /**
+ * This class provides the color for the tokens
  *
  * @author pablo03
  */
 //This class provides the color for the tokens
-public class TokenStyleResolver implements TokenStyleProvider {
+public class TokenZettaradianStyleResolver implements TokenStyleProvider {
 
     @Override
     public TokenStyle style(Token token) {
