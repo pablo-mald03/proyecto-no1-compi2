@@ -1,6 +1,6 @@
-package com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme;
+package com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  *

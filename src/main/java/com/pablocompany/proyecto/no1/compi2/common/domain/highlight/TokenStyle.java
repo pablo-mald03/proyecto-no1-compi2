@@ -1,6 +1,6 @@
-package com.pablocompany.proyecto.no1.compi2.app.domain.highlight;
+package com.pablocompany.proyecto.no1.compi2.common.domain.highlight;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  *

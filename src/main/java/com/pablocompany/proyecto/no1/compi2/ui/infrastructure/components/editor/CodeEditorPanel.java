@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.codetext.CodeTextPane;
 import lombok.Getter;
@@ -57,9 +57,9 @@ public class CodeEditorPanel extends JPanel {
     /**
      * Set the file extension and update the editor
      */
-    public void setFileExtension(String extension) {
+    public void setFileExtension(String extension, String filePath, String fileName) {
         this.currentExtension = extension;
-        editor.setCurrentExtension(extension);
+        editor.setCurrentExtension(extension, filePath, fileName);
     }
 
     /**
@@ -182,16 +182,6 @@ public class CodeEditorPanel extends JPanel {
     //This method indicate if the code is compiled
     /*public String getCompiledCode() {
         return this.editor.getEditorContext().getCompiledCode();
-    }
-
-    //This method return the stack list
-    public List<ParseStep> getStackList() {
-        return this.editor.getEditorContext().getStackSteps();
-    }
-
-    //This method return the ast string
-    public String getAst() {
-        return this.editor.getEditorContext().getGraphvizCode();
     }*/
 
 }

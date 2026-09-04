@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
-import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import lombok.Getter;
 import lombok.Setter;
 

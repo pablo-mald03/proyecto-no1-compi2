@@ -1,15 +1,14 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.codetext;
 
-import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.SyntaxHighlightListener;
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyle;
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyleProvider;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.SyntaxHighlightListener;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.TokenStyle;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.TokenStyleProvider;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHighlightListenerFactory;
 import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.stylers.TokenStyleResolverFactory;
 import lombok.Getter;
-import lombok.Setter;
 import org.antlr.v4.runtime.Token;
 
 import javax.swing.*;
@@ -33,7 +32,6 @@ public class CodeTextPane extends JTextPane {
     private final SimpleAttributeSet style;
     private WorkspaceNotifier notifierReference;
     @Getter
-    @Setter
     private String currentExtension = "";
 
     public CodeTextPane(WorkspaceNotifier notifierReference) {
@@ -88,12 +86,12 @@ public class CodeTextPane extends JTextPane {
      */
     public void setEditorContext(EditorContext context) {
         this.context = context != null ? context : new EditorContext();
-        // Update context with current text
+
         String text = getText();
         if (text != null && !text.isEmpty()) {
             this.context.setSourceCode(text);
         }
-        // Trigger re-highlight
+
         if (syntaxListener != null) {
             scheduleHighlight();
         }
@@ -111,20 +109,21 @@ public class CodeTextPane extends JTextPane {
     // EXTENSION AND LISTENER MANAGEMENT
     // ==========================================
 
-    public void setCurrentExtension(String extension) {
+    public void setCurrentExtension(String extension, String filePath, String fileName) {
         this.currentExtension = extension;
-        updateSyntaxListener();
+        updateSyntaxListener(filePath, fileName);
     }
 
     /**
      * Update the syntax listener based on current extension
      */
-    private void updateSyntaxListener() {
+    private void updateSyntaxListener(String filePath, String fileName) {
         this.syntaxListener = null;
         if (currentExtension != null && !currentExtension.isEmpty()) {
             this.syntaxListener = SyntaxHighlightListenerFactory.createListener(
                     currentExtension,
-                    notifierReference
+                    filePath,
+                    fileName
             );
         }
         if (getText() != null && !getText().isEmpty()) {

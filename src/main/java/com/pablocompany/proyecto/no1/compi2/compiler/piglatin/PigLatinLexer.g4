@@ -1,4 +1,4 @@
-lexer grammar CodexLatinusLexer;
+lexer grammar PigLatinLexer;
 
 //======================================
 // LEXICAL PART OF THE DOCUMENT

@@ -1,10 +1,9 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.symbols;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
-import java.awt.BorderLayout;
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  *

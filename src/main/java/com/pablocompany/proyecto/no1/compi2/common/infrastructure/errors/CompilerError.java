@@ -1,6 +1,6 @@
-package com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors;
+package com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors;
 
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.ErrorType;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

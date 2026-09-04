@@ -4,12 +4,13 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.frame;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ProgressCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors.ErrorsPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationContainer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationManager;
@@ -415,7 +416,13 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     @Override
     public void notifyErrorsUpdated(List<CompilerError> compilerErrors) {
-        // Implementation
+        if (managementScreen != null) {
+            List<CompilerError> allCompilationErrors = this.managementScreen.getWorkspacePanel().getAllCompilationErrors();
+
+            ErrorsPanel errors = this.managementScreen.getBottomPanel().getErrors();
+
+            errors.loadErrors(allCompilationErrors);
+        }
     }
 
     @Override

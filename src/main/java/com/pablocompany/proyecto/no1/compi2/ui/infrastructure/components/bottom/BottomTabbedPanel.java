@@ -1,17 +1,15 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.console.ConsolePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors.ErrorsPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.symbols.SymbolTablePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.types.TypesTablePanel;
 
-import java.awt.BorderLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.UIManager;
 
 /**
  *

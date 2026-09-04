@@ -6,7 +6,7 @@ GRAMMAR_PARSER="CodexZetarianoParser.g4"
 
 GRAMMAR_LEXER="CodexZetarianoLexer.g4"
 
-PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.zetariano"
+PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.zetariano.logic"
 
 OUTPUT_DIR="logic"
 

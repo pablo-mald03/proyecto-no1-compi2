@@ -2,10 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.pablocompany.proyecto.no1.compi2.app.domain.contex;
+package com.pablocompany.proyecto.no1.compi2.common.domain.contex;
 
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.ErrorType;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import lombok.Data;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;

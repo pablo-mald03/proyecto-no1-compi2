@@ -1,7 +1,7 @@
-parser grammar CodexLatinusParser;
+parser grammar PigLatinParser;
 
 options {
-    tokenVocab=CodexLatinusLexer;
+    tokenVocab=PigLatinLexer;
 }
 
 program

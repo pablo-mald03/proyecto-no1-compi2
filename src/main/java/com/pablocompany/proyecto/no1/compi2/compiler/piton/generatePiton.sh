@@ -6,7 +6,7 @@ GRAMMAR_PARSER="CodexPitonParser.g4"
 
 GRAMMAR_LEXER="CodexPitonLexer.g4"
 
-PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.piton"
+PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.piton.logic"
 
 OUTPUT_DIR="logic"
 

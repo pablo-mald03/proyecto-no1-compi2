@@ -1,9 +1,9 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
-import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.SyntaxHighlightListener;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.SyntaxHighlightListener;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHighlightListenerFactory;
@@ -240,7 +240,7 @@ public class WorkspacePanel extends JPanel {
     }
 
     /**
-     * Parse a single file
+     * Parse a single file TODO
      */
     private void parseFile(FileNode fileNode) {
         if (fileNode.isDirectory()) return;
@@ -248,6 +248,7 @@ public class WorkspacePanel extends JPanel {
         String filePath = fileNode.getFilePath();
         String extension = fileNode.getExtension();
         String content = fileNode.getContent();
+        String fileName = fileNode.getName();
 
         if (content == null || content.isEmpty()) {
             return;
@@ -256,7 +257,7 @@ public class WorkspacePanel extends JPanel {
         EditorContext context = getContextForFile(filePath);
         context.setSourceCode(content);
 
-        SyntaxHighlightListener listener = SyntaxHighlightListenerFactory.createListener(extension, notifier);
+        SyntaxHighlightListener listener = SyntaxHighlightListenerFactory.createListener(extension, filePath, fileName);
         if (listener != null) {
             listener.highlight(context);
             fileNode.getEditorContext().setParsed(true);
@@ -704,13 +705,14 @@ public class WorkspacePanel extends JPanel {
 
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
         editor.setCode(fileNode.getContent() != null ? fileNode.getContent() : "");
-        editor.setFileExtension(fileNode.getExtension());
+
+        editor.setFileExtension(fileNode.getExtension(), filePath, fileName);
 
         editor.setEditable(!isCompiledFile);
 
         editor.getEditor().setEditorContext(context);
         editor.getEditor().setSyntaxHighlightListener(
-                SyntaxHighlightListenerFactory.createListener(fileNode.getExtension(), notifier)
+                SyntaxHighlightListenerFactory.createListener(fileNode.getExtension(), filePath, fileName)
         );
 
         tabbedPane.addTab(fileName, editor);

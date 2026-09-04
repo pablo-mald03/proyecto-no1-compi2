@@ -1,19 +1,13 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.toast;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.PrincipalColors;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.PrincipalColors;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.BorderFactory;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.Timer;
-import javax.swing.border.CompoundBorder;
 
 /**
  *

@@ -1,11 +1,12 @@
 
 package com.pablocompany.practica.no1.compi2.infrastructure.controller;
 
-import com.pablocompany.proyecto.no1.compi2.app.domain.service.FileExportService;
-import com.pablocompany.proyecto.no1.compi2.app.domain.service.FileOpenService;
-import com.pablocompany.proyecto.no1.compi2.app.domain.service.FileSaveService;
-import com.pablocompany.proyecto.no1.compi2.app.domain.contex.EditorContext;
-import java.awt.Component;
+import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.service.FileExportService;
+import com.pablocompany.proyecto.no1.compi2.common.domain.service.FileOpenService;
+import com.pablocompany.proyecto.no1.compi2.common.domain.service.FileSaveService;
+
+import java.awt.*;
 
 /**
  *

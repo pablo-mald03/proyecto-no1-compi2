@@ -1,7 +1,8 @@
 package com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.stylers;
 
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyle;
-import com.pablocompany.proyecto.no1.compi2.app.domain.highlight.TokenStyleProvider;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.TokenStyle;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.TokenStyleProvider;
+import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinLexer;
 import org.antlr.v4.runtime.Token;
 
 /**
@@ -14,38 +15,38 @@ public class TokenPigLatinStyleResolver implements TokenStyleProvider {
     public TokenStyle style(Token token) {
 
         return switch (token.getType()) {
-            /*case CodexLatinusLexer.BLOCK_COMMENT, CodexLatinusLexer.COMMENT -> TokenStyle.COMMENT;
-            case CodexLatinusLexer.INT, CodexLatinusLexer.DECIMAL -> TokenStyle.NUMBER;
+            case PigLatinLexer.BLOCK_COMMENT, PigLatinLexer.COMMENT -> TokenStyle.COMMENT;
+            case PigLatinLexer.INT, PigLatinLexer.DECIMAL -> TokenStyle.NUMBER;
             case Token.INVALID_TYPE -> TokenStyle.ERROR;
-            case CodexLatinusLexer.ID -> TokenStyle.IDENTIFIER;
-            case CodexLatinusLexer.ABREV_MINUS, CodexLatinusLexer.ABREV_PLUS, CodexLatinusLexer.PLUS,
-                 CodexLatinusLexer.MINUS, CodexLatinusLexer.DIVIDE, CodexLatinusLexer.MULTIPLICATION,
-                 CodexLatinusLexer.EQUALS, CodexLatinusLexer.GREATER_EQUALS, CodexLatinusLexer.LESS_EQUALS,
-                 CodexLatinusLexer.DIFERENCE,
-                 CodexLatinusLexer.LESS, CodexLatinusLexer.GREATER, CodexLatinusLexer.AND, CodexLatinusLexer.OR,
-                 CodexLatinusLexer.NOT, CodexLatinusLexer.EQUAL,
-                 CodexLatinusLexer.MUNERA, CodexLatinusLexer.MAIOR, CodexLatinusLexer.VARIABILES,
-                 CodexLatinusLexer.FINIS_SEPARATOR,
-                 CodexLatinusLexer.VERUM, CodexLatinusLexer.FALSUS -> TokenStyle.OPERATOR;
-            case CodexLatinusLexer.NUMERUS, CodexLatinusLexer.LITTERA,
-                 CodexLatinusLexer.DECIMALIS, CodexLatinusLexer.TEXTUM, CodexLatinusLexer.ESTO,
-                 CodexLatinusLexer.BOOLEAN,
-                 CodexLatinusLexer.SERIES, CodexLatinusLexer.STRUCTURE, CodexLatinusLexer.FINIS,
-                 CodexLatinusLexer.DUM, CodexLatinusLexer.PER, CodexLatinusLexer.FACERE, CodexLatinusLexer.SI,
-                 CodexLatinusLexer.ALITER, CodexLatinusLexer.ACTIO,
-                 CodexLatinusLexer.REDDERE, CodexLatinusLexer.RATIO, CodexLatinusLexer.READ, CodexLatinusLexer.PRINT,
-                 CodexLatinusLexer.INTERRUMPE, CodexLatinusLexer.PERGE->
+            case PigLatinLexer.ID -> TokenStyle.IDENTIFIER;
+            case PigLatinLexer.ABREV_MINUS, PigLatinLexer.ABREV_PLUS, PigLatinLexer.PLUS,
+                 PigLatinLexer.MINUS, PigLatinLexer.DIVIDE, PigLatinLexer.MULTIPLICATION,
+                 PigLatinLexer.EQUALS, PigLatinLexer.GREATER_EQUALS, PigLatinLexer.LESS_EQUALS,
+                 PigLatinLexer.DIFERENCE,
+                 PigLatinLexer.LESS, PigLatinLexer.GREATER, PigLatinLexer.AND, PigLatinLexer.OR,
+                 PigLatinLexer.NOT, PigLatinLexer.EQUAL,
+                 PigLatinLexer.MUNERA, PigLatinLexer.MAIOR, PigLatinLexer.VARIABILES,
+                 PigLatinLexer.FINIS_SEPARATOR,
+                 PigLatinLexer.VERUM, PigLatinLexer.FALSUS -> TokenStyle.OPERATOR;
+            case PigLatinLexer.NUMERUS, PigLatinLexer.LITTERA,
+                 PigLatinLexer.DECIMALIS, PigLatinLexer.TEXTUM, PigLatinLexer.ESTO,
+                 PigLatinLexer.BOOLEAN,
+                 PigLatinLexer.SERIES, PigLatinLexer.STRUCTURE, PigLatinLexer.FINIS,
+                 PigLatinLexer.DUM, PigLatinLexer.PER, PigLatinLexer.FACERE, PigLatinLexer.SI,
+                 PigLatinLexer.ALITER, PigLatinLexer.ACTIO,
+                 PigLatinLexer.REDDERE, PigLatinLexer.RATIO, PigLatinLexer.READ, PigLatinLexer.PRINT,
+                 PigLatinLexer.INTERRUMPE, PigLatinLexer.PERGE ->
                     TokenStyle.KEYWORD;
 
-            case CodexLatinusLexer.STRING, CodexLatinusLexer.CHAR -> TokenStyle.STRING;
+            case PigLatinLexer.STRING, PigLatinLexer.CHAR -> TokenStyle.STRING;
 
-            case CodexLatinusLexer.INIT_BRACE, CodexLatinusLexer.FINAL_BRACE, CodexLatinusLexer.INIT_PARENT,
-                 CodexLatinusLexer.FINAL_PARENT,
-                 CodexLatinusLexer.INIT_BRACKET, CodexLatinusLexer.FINAL_BRACKET -> TokenStyle.PUNCTUATION;
+            case PigLatinLexer.INIT_BRACE, PigLatinLexer.FINAL_BRACE, PigLatinLexer.INIT_PARENT,
+                 PigLatinLexer.FINAL_PARENT,
+                 PigLatinLexer.INIT_BRACKET, PigLatinLexer.FINAL_BRACKET -> TokenStyle.PUNCTUATION;
 
-            case CodexLatinusLexer.COMMA, CodexLatinusLexer.DOT_COMMA, CodexLatinusLexer.TWO_POINTS,
-                 CodexLatinusLexer.DOT -> TokenStyle.SEPARATOR;
-            case CodexLatinusLexer.ERROR_TOKEN -> TokenStyle.ERROR;*/
+            case PigLatinLexer.COMMA, PigLatinLexer.DOT_COMMA, PigLatinLexer.TWO_POINTS,
+                 PigLatinLexer.DOT -> TokenStyle.SEPARATOR;
+            case PigLatinLexer.ERROR_TOKEN -> TokenStyle.ERROR;
 
             default -> TokenStyle.DEFAULT;
         };
