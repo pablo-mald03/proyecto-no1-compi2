@@ -23,12 +23,12 @@ public enum TokenStyle {
 
     //Y COLORS
     Y_DEFAULT(new Color(230, 235, 245)),
-    Y_NUMBER(new Color(181, 206, 168)),
+    Y_NUMBER(new Color(30, 228, 205)),
     Y_IDENTIFIER(new Color(251, 250, 207)),
     Y_COMMENT(new Color(150, 148, 150)),
     Y_STRING(new Color(117, 171, 93)),
     Y_KEYWORD(new Color(240, 150, 100)),
-    Y_OPERATOR(new Color(78, 201, 176)),
+    Y_OPERATOR(new Color(121, 73, 241)),
     Y_PUNCTUATION(new Color(243, 117, 241)),
     Y_SEPARATOR(new Color(160, 230, 255)),
 

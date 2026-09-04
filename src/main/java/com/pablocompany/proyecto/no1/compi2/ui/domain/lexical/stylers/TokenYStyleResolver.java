@@ -18,7 +18,8 @@ public class TokenYStyleResolver implements TokenStyleProvider {
         return switch (token.getType()) {
             case YLexer.BLOCK_COMMENT, YLexer.COMMENT -> TokenStyle.Y_COMMENT;
 
-            case YLexer.INT, YLexer.DECIMAL -> TokenStyle.Y_NUMBER;
+            case YLexer.INT, YLexer.DECIMAL,
+                 YLexer.STRUCTURES_REGION, YLexer.FUNCTION_REGION -> TokenStyle.Y_NUMBER;
 
             case YLexer.ID -> TokenStyle.Y_IDENTIFIER;
 
@@ -27,9 +28,7 @@ public class TokenYStyleResolver implements TokenStyleProvider {
                  YLexer.EQUALS, YLexer.GREATER_EQUALS, YLexer.LESS_EQUALS,
                  YLexer.DIFERENCE,
                  YLexer.LESS, YLexer.GREATER, YLexer.AND, YLexer.OR,
-                 YLexer.NOT, YLexer.EQUAL,
-                 YLexer.STRUCTURES_REGION, YLexer.FUNCTION_REGION,
-                 YLexer.LAMBDA -> TokenStyle.Y_OPERATOR;
+                 YLexer.NOT, YLexer.EQUAL -> TokenStyle.Y_OPERATOR;
 
             case YLexer.INTEGER, YLexer.STRING,
                  YLexer.FLOAT, YLexer.CHARACTER, YLexer.BOOLEAN,
@@ -45,7 +44,8 @@ public class TokenYStyleResolver implements TokenStyleProvider {
 
             case YLexer.INIT_BRACE, YLexer.FINAL_BRACE, YLexer.INIT_PARENT,
                  YLexer.FINAL_PARENT,
-                 YLexer.INIT_BRACKET, YLexer.FINAL_BRACKET -> TokenStyle.Y_PUNCTUATION;
+                 YLexer.INIT_BRACKET, YLexer.FINAL_BRACKET,
+                 YLexer.LAMBDA -> TokenStyle.Y_PUNCTUATION;
 
             case YLexer.COMMA, YLexer.DOT_COMMA, YLexer.TWO_POINTS,
                  YLexer.DOT -> TokenStyle.Y_SEPARATOR;
