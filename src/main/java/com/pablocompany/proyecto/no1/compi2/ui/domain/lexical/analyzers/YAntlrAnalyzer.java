@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.SyntaxHighlightListener;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinLexer;
+import com.pablocompany.proyecto.no1.compi2.compiler.y.logic.YLexer;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -35,7 +36,7 @@ public class YAntlrAnalyzer implements SyntaxHighlightListener {
         }
 
         CharStream stream = CharStreams.fromString(context.getSourceCode());
-        PigLatinLexer lexer = new PigLatinLexer(stream);
+        YLexer lexer = new YLexer(stream);
 
         List<Token> allTokens = new ArrayList<>();
         Token token = lexer.nextToken();

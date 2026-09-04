@@ -190,25 +190,6 @@ public class ProjectService {
     }
 
     /**
-     * Save file content to the filesystem
-     */
-    public void saveFileContent(FileNode fileNode, String content, File projectDir) throws IOException {
-        if (fileNode.isDirectory()) {
-            return;
-        }
-
-        File file = new File(projectDir, fileNode.getFilePath());
-        file.getParentFile().mkdirs();
-
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write(content);
-        }
-
-        fileNode.setContent(content);
-        fileNode.setModified(false);
-    }
-
-    /**
      * Save file content to the filesystem with path
      */
     public void saveFileContent(String filePath, String content, File projectDir) throws IOException {

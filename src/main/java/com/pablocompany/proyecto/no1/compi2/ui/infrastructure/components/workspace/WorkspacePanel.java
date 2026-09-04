@@ -695,19 +695,19 @@ public class WorkspacePanel extends JPanel {
 
         removeWelcomeTabIfExists();
 
-        // Check if it's a compiled file (.c in compiled folder)
         boolean isCompiledFile = filePath.endsWith(".c") && filePath.contains("compiled");
 
         EditorContext context = getContextForFile(filePath);
-        if (fileNode.getContent() != null) {
-            context.setSourceCode(fileNode.getContent());
+
+        String content = fileNode.getContent() != null ? fileNode.getContent() : "";
+
+        if (context != null) {
+            context.setSourceCode(content);
         }
 
         CodeEditorPanel editor = new CodeEditorPanel(notifier);
-        editor.setCode(fileNode.getContent() != null ? fileNode.getContent() : "");
-
+        editor.setCode(content);
         editor.setFileExtension(fileNode.getExtension(), filePath, fileName);
-
         editor.setEditable(!isCompiledFile);
 
         editor.getEditor().setEditorContext(context);
@@ -722,7 +722,6 @@ public class WorkspacePanel extends JPanel {
         tabbedPane.setSelectedIndex(index);
         tabbedPane.setTabComponentAt(index, createTabComponent(fileName, filePath));
     }
-
 
     /**
      * Save the current editor content to the file

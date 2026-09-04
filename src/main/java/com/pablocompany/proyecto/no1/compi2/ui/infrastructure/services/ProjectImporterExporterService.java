@@ -23,7 +23,6 @@ public class ProjectImporterExporterService {
      * Export a project to ZIP file
      */
     public void exportToZip(File sourceDir, File zipFile) throws IOException {
-        // Normalize paths for cross-platform compatibility
         Path sourcePath = sourceDir.toPath().normalize();
 
         try (FileOutputStream fos = new FileOutputStream(zipFile);

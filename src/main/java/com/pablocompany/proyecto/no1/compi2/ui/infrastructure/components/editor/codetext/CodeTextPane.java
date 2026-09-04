@@ -16,16 +16,19 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 /**
- *
+ * This class is the Text Pane editor
  * @author pablo03
  */
-/*This class is the Text Pane editor*/
 public class CodeTextPane extends JTextPane {
 
     private boolean isApplyingHighlight = false;
     private static final int SYNTAX_DELAY = 250;
+    private static final int TAB_SIZE = 4;
+
     private Timer syntaxTimer;
     private SyntaxHighlightListener syntaxListener;
     private EditorContext context;
@@ -39,6 +42,7 @@ public class CodeTextPane extends JTextPane {
 
         setBackground(Theme.AUXILIARY_BACKGROUND_DARK.getColorSet());
         setForeground(Theme.FOREGROUND_DARK.getColorSet());
+        setupCustomTabHandling();
 
         syntaxTimer = new Timer(SYNTAX_DELAY, e -> {
             syntaxTimer.stop();
@@ -76,6 +80,152 @@ public class CodeTextPane extends JTextPane {
         });
     }
 
+    /**
+     * Setup custom tab key handling (4 spaces instead of tab character)
+     */
+    private void setupCustomTabHandling() {
+
+        //Ident
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0), "insert-tab");
+        getActionMap().put("insert-tab", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                insertTabSpaces();
+            }
+        });
+
+        //indent
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, KeyEvent.SHIFT_DOWN_MASK), "unindent");
+        getActionMap().put("unindent", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                unindentSelection();
+            }
+        });
+    }
+
+    /**
+     * Insert 4 spaces at the current caret position
+     */
+    private void insertTabSpaces() {
+        int caretPosition = getCaretPosition();
+        String spaces = " ".repeat(TAB_SIZE);
+
+        try {
+            getDocument().insertString(caretPosition, spaces, null);
+        } catch (BadLocationException ex) {
+            replaceSelection(spaces);
+        }
+    }
+
+    /**
+     * Unindent selected lines (remove 4 spaces from start of each selected line)
+     */
+    private void unindentSelection() {
+        try {
+            int start = getSelectionStart();
+            int end = getSelectionEnd();
+
+            if (start == end) {
+                int lineStart = getLineStartOffset(start);
+                removeIndentFromLine(lineStart);
+            } else {
+                String text = getText(start, end - start);
+                String[] lines = text.split("\n", -1);
+
+                int currentPos = start;
+                for (String line : lines) {
+                    int lineStart = currentPos;
+                    String lineContent = line;
+
+                    if (lineContent.startsWith(" ".repeat(TAB_SIZE))) {
+                        getDocument().remove(lineStart, TAB_SIZE);
+                        currentPos += lineContent.length() - TAB_SIZE + 1;
+                    } else {
+                        currentPos += lineContent.length() + 1;
+                    }
+                }
+            }
+        } catch (BadLocationException ex) {
+            // Ignore
+        }
+    }
+
+    /**
+     * Remove indent from a single line
+     */
+    private void removeIndentFromLine(int lineStart) throws BadLocationException {
+        String line = getText(lineStart, getLineLength(lineStart));
+        if (line.startsWith(" ".repeat(TAB_SIZE))) {
+            getDocument().remove(lineStart, TAB_SIZE);
+        }
+    }
+
+    /**
+     * Get the start offset of a line
+     */
+    private int getLineStartOffset(int offset) throws BadLocationException {
+        return getDocument().getDefaultRootElement().getElement(
+                getDocument().getDefaultRootElement().getElementIndex(offset)
+        ).getStartOffset();
+    }
+
+    /**
+     * Get the length of a line
+     */
+    private int getLineLength(int lineStart) throws BadLocationException {
+        int lineEnd = getDocument().getDefaultRootElement().getElement(
+                getDocument().getDefaultRootElement().getElementIndex(lineStart) + 1
+        ).getStartOffset();
+        return lineEnd - lineStart - 1;
+    }
+
+    // ==========================================
+    // TEXT PROCESSING
+    // ==========================================
+
+    /**
+     * Convert tabs to spaces in a text string
+     */
+    private String convertTabsToSpaces(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        // Replace each tab character with 4 spaces
+        return text.replace("\t", " ".repeat(TAB_SIZE));
+    }
+
+    /**
+     * Override setText to convert tabs to spaces when loading content
+     */
+    @Override
+    public void setText(String text) {
+        String processedText = convertTabsToSpaces(text);
+        super.setText(processedText != null ? processedText : "");
+
+        if (context != null && processedText != null) {
+            context.setSourceCode(processedText);
+        }
+        if (syntaxListener != null && processedText != null && !processedText.isEmpty()) {
+            scheduleHighlight();
+        }
+    }
+
+    /**
+     * Get text with tabs preserved (for saving)
+     * Note: We keep spaces, no conversion back to tabs
+     */
+    @Override
+    public String getText() {
+        return super.getText();
+    }
+
+    /**
+     * Get text with tabs converted (for display consistency)
+     */
+    public String getTextWithSpaces() {
+        return convertTabsToSpaces(super.getText());
+    }
 
     // ==========================================
     // CONTEXT MANAGEMENT (EXTERNAL)
@@ -103,7 +253,6 @@ public class CodeTextPane extends JTextPane {
     public EditorContext getEditorContext() {
         return this.context;
     }
-
 
     // ==========================================
     // EXTENSION AND LISTENER MANAGEMENT
@@ -138,7 +287,6 @@ public class CodeTextPane extends JTextPane {
         }
     }
 
-
     // ==========================================
     // HIGHLIGHT METHODS
     // ==========================================
@@ -165,7 +313,6 @@ public class CodeTextPane extends JTextPane {
             notifierReference.notifyErrorsUpdated(context.getAllCompilerErrors());
         }
     }
-
 
     /**
      * Principal method to apply the highlighting code
@@ -219,25 +366,10 @@ public class CodeTextPane extends JTextPane {
 
     /**
      * Principal method to create the color attribute set
-     *
      */
     private AttributeSet createColorAttribute(Color color) {
         SimpleAttributeSet attr = new SimpleAttributeSet();
         StyleConstants.setForeground(attr, color);
         return attr;
-    }
-
-    /**
-     * This method is the principal to set the code text
-     * */
-    @Override
-    public void setText(String text) {
-        super.setText(text != null ? text : "");
-        if (context != null && text != null) {
-            context.setSourceCode(text);
-        }
-        if (syntaxListener != null && text != null && !text.isEmpty()) {
-            scheduleHighlight();
-        }
     }
 }

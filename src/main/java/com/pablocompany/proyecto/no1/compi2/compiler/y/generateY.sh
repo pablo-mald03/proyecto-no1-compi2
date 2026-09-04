@@ -2,11 +2,11 @@
 
 ANTLR_JAR="/home/pablo03/compilator_java_resources/antlr-4.13.2-complete.jar"
 
-GRAMMAR_PARSER="CodexPitonParser.g4"
+GRAMMAR_PARSER="YParser.g4"
 
-GRAMMAR_LEXER="CodexPitonLexer.g4"
+GRAMMAR_LEXER="YLexer.g4"
 
-PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.piton.logic"
+PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.y.logic"
 
 OUTPUT_DIR="logic"
 
