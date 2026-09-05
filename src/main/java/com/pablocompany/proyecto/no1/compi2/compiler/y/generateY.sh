@@ -11,7 +11,7 @@ PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.y.logic"
 OUTPUT_DIR="logic"
 
 echo "======================================"
-echo " Generando parser de Pig Latin con ANTLR4"
+echo " Generando parser de Y con ANTLR4"
 echo "======================================"
 
 java -jar "$ANTLR_JAR" \
@@ -25,4 +25,4 @@ java -jar "$ANTLR_JAR" \
 
 
 echo ""
-echo "Generación de Pig Latin finalizada."
+echo "Generación de Y finalizada."

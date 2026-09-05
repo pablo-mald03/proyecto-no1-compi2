@@ -1,8 +1,8 @@
-package com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers;
+package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.lexical.analyzer;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.SyntaxHighlightListener;
-import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinLexer;
+import com.pablocompany.proyecto.no1.compi2.compiler.y.logic.YLexer;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -12,15 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Principal class to do the analysis for the Zettariano language
+ * Principal class to do the analysis for the Y language
  *
  */
 @AllArgsConstructor
-public class ZettaradianAntlrAnalyzer implements SyntaxHighlightListener {
+public class YAntlrAnalyzer implements SyntaxHighlightListener {
 
     private final String filePath;
     private final String fileName;
-
 
     /**
      * Principal method to highlight the code
@@ -36,7 +35,7 @@ public class ZettaradianAntlrAnalyzer implements SyntaxHighlightListener {
         }
 
         CharStream stream = CharStreams.fromString(context.getSourceCode());
-        PigLatinLexer lexer = new PigLatinLexer(stream);
+        YLexer lexer = new YLexer(stream);
 
         List<Token> allTokens = new ArrayList<>();
         Token token = lexer.nextToken();
@@ -44,7 +43,7 @@ public class ZettaradianAntlrAnalyzer implements SyntaxHighlightListener {
         while (token.getType() != Token.EOF) {
             allTokens.add(token);
 
-            if (token.getType() == PigLatinLexer.ERROR_TOKEN) {
+            if (token.getType() == YLexer.ERROR_TOKEN) {
                 String lexeme = token.getText();
                 int line = token.getLine();
                 int column = token.getCharPositionInLine() + 1;

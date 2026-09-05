@@ -1,11 +1,4 @@
-lexer grammar YLexer;
-
-//VIRTUAL TOKENS
-tokens {
-    INDENT,
-    DEDENT
-}
-
+lexer grammar ZLexer;
 
 // IGNORED CHARACTERS
 COMMENT
@@ -18,84 +11,80 @@ BLOCK_COMMENT
       -> channel(HIDDEN)
     ;
 
-// El NEWLINE solo consume the first enter.
-// This is the principal flag to init the stack analysis.
-NEWLINE
-    : ( '\r'? '\n' | '\r' )
-    ;
-
-WS
-    : [ \t]+
-      -> channel(HIDDEN)
+WS: [ \t\r\n]+
+    -> channel(HIDDEN)
     ;
 
 
-//SECTION OF CODE BLOCK
-STRUCTURES_REGION:'%estructuras';
-FUNCTION_REGION: '%funciones';
+//SPECIAL POINTER OPERATORS
+NEW:'new';
+NULL: 'null';
 
-
-//SECTION OF SPECIAL OPERATORS
-LAMBDA: '->';
+//ACCESS MODIFIERS
+PUBLIC: 'public';
 
 
 //SECTION OF FUNCTION ACTIONS
-PRINT: 'imprimir';
-READ: 'leer';
 
+//---Print action:
+READ: 'readln';
+PRINTLN: 'println';
+PRINT: 'print';
 
 
 //SECTION OF KEYWORDS
 
 //--- IF-ELSE
-DEFINE: 'definir';
-IF: 'si';
-ELSE_IF: 'sino';
-ELSE: 'contrario';
-SO: 'entonces';
+IF: 'if';
+ELSE: 'else';
 
 //--- SWITCH-CASE
-SWITCH:'elegir';
-CASE:'caso';
-BREAK:'romper';
-ALWAYS:'siempre';
+SWITCH:'switch';
+CASE:'case';
+BREAK:'break';
+DEFAULT:'default';
 
 //--- FOR-LOOP
-FOR: 'para';
+FOR: 'for';
 
 //--- WHILE-LOOP
-WHILE: 'mientras';
+WHILE: 'while';
 
 //--- DO-WHILE-LOOP
-DO: 'hacer';
+DO: 'do';
 
 //--- BREAK FLOW ACTIONS
-RETURN: 'retornar';
-CONTINUE: 'continuar';
+RETURN: 'return';
+CONTINUE: 'continue';
 
-
+//--- CLASSES
+CLASS: 'class';
 
 //SECTION OF VARIABLE TYPES
-INTEGER: 'entero';
-STRING: 'cadena';
-FLOAT: 'flotante';
-CHARACTER: 'caracter';
-BOOLEAN: 'bool';
+INTEGER: 'int';
+DOUBLE: 'double';
+CHARACTER: 'char';
+BOOLEAN: 'boolean';
+VOID: 'void';
 
 
 //BOOLEAN VALUES
-TRUE: 'verdadero';
-FALSE: 'falso';
+TRUE: 'true';
+FALSE: 'false';
 
 
 //SECTION OF SPECIAL OPERATORS OR PUNCTUATION
+
 EQUAL: '=';
 COMMA: ',';
 DOT_COMMA: ';';
 TWO_POINTS: ':';
+QUESTION: '?';
 DOT: '.';
 
+
 //SECTION OF THE GROUPING SYMBOLS
+
 INIT_BRACE: '{';
 FINAL_BRACE: '}';
 
@@ -113,6 +102,7 @@ BY_ONE_MINUS: '-=';
 BY_ONE_MULTIPLICATION: '*=';
 BY_ONE_DIVISION: '/=';
 BY_ONE_PERCENT: '%=';
+
 
 //SECTION TO THE ABREVIATION OPERATORS
 

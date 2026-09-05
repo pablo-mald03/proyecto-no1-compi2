@@ -1,6 +1,9 @@
 package com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.stylers;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.TokenStyleProvider;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.lexical.style.TokenPigLatinStyleResolver;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.lexical.style.TokenYStyleResolver;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.lexical.style.TokenZettaradianStyleResolver;
 
 /**
  *

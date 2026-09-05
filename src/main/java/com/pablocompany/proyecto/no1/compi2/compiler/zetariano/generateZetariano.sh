@@ -2,16 +2,16 @@
 
 ANTLR_JAR="/home/pablo03/compilator_java_resources/antlr-4.13.2-complete.jar"
 
-GRAMMAR_PARSER="CodexZetarianoParser.g4"
+GRAMMAR_PARSER="ZParser.g4"
 
-GRAMMAR_LEXER="CodexZetarianoLexer.g4"
+GRAMMAR_LEXER="ZLexer.g4"
 
 PACKAGE="com.pablocompany.proyecto.no1.compi2.compiler.zetariano.logic"
 
 OUTPUT_DIR="logic"
 
 echo "======================================"
-echo " Generando parser de Pig Latin con ANTLR4"
+echo " Generando parser de Zetariano con ANTLR4"
 echo "======================================"
 
 java -jar "$ANTLR_JAR" \
@@ -25,4 +25,4 @@ java -jar "$ANTLR_JAR" \
 
 
 echo ""
-echo "Generación de Pig Latin finalizada."
+echo "Generación de Zetariano finalizada."

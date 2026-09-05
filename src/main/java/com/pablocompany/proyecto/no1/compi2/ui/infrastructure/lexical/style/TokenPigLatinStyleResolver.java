@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.stylers;
+package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.lexical.style;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.TokenStyle;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.TokenStyleProvider;
