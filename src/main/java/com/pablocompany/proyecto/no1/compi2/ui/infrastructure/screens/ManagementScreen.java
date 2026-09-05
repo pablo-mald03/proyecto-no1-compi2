@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.BottomTabbedPanel;
@@ -34,7 +34,8 @@ public class ManagementScreen extends JPanel {
             Runnable onSaveAs,
             Runnable onCompile,
             Runnable onExecute,
-            Runnable onExit
+            Runnable onExit,
+            Runnable onSaveAll
     ) {
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
@@ -46,10 +47,10 @@ public class ManagementScreen extends JPanel {
                 onOpenProject,
                 onCloseProject,
                 onSave,
-                onSaveAs,
                 onCompile,
                 onExecute,
-                onExit
+                onExit,
+                onSaveAll
         );
 
         // Create components

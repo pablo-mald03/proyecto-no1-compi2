@@ -1,6 +1,8 @@
 package com.pablocompany.proyecto.no1.compi2.ui.application.mediator;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.excecution.ExecutionResult;
+
 import java.util.List;
 
 /**
@@ -13,19 +15,10 @@ public interface WorkspaceNotifier {
     /*SECTION OF SIGNALS*/
 
     void notifyErrorsUpdated(List<CompilerError> compilerErrors);
-    
-    //Signal to change the symbols table
-    //void notifySymbolUpdated(List<Symbol> symbols);
 
-    //Signal to change the Types table
-    //void notifyTypesUpdated(List<TypeInfo> types);
-    
-    void notifyCompiledCode(String compiledCode);
-    
-    //void notifyStackView(List<ParseStep> steps);
-    
-    void notifyAstRepresentation(String ast);
-    
+
+    void notifyShowExecutionResult(ExecutionResult result);
+
     /*SECTION OF LOGS*/
     void logInfo(String message);
 
@@ -45,16 +38,40 @@ public interface WorkspaceNotifier {
     void focusErrors();
     
     void focusSymbolsTable();
-    
-    void focusPigLatin();
-    
-    void focusAstVisualizer();
-    
-    void focusStackVisualizer();
-    
-    void focusStackVisualizerByStep();
-    
+
     /*SECTION OF CLEAR METHODS OR RESET DATA*/
 
     void clearLogs();
+
+    /**
+     * Notify that the compiled code needs to be downloaded/exported
+     */
+    void notifyDownloadCompiledCode();
+
+    /**
+     * Notify that the compiled code needs to be executed/run
+     */
+    void notifyExecuteCompiledCode();
+
+    /**
+     * Notify the action to import any project
+     */
+    void notifyImportProject();
+
+    /**
+     * Save file notification
+     */
+    void notifySaveFile(String filePath, String content);
+
+    /**
+     * Notify when a file is opened to update syntax highlighting
+     *
+     */
+    void notifyFileOpened(String filePath, String content, String extension);
+
+    /**
+     * Save all files
+     *
+     */
+    void notifySaveAllFiles();
 }

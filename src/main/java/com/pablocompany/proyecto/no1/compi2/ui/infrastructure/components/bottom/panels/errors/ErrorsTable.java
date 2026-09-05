@@ -4,20 +4,16 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.PrincipalColors;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.util.List;
-import javax.swing.BorderFactory;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.PrincipalColors;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
+
+import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import java.awt.*;
+import java.util.List;
 
 /**
  *
@@ -29,7 +25,7 @@ public class ErrorsTable extends JTable {
     private final DefaultTableModel tableModel;
 
     public ErrorsTable() {
-        String[] columnNames = {"Lexema", "Línea", "Columna", "Tipo", "Descripción"};
+        String[] columnNames = {"Lexema", "Archivo", "Directorio", "Línea", "Columna", "Tipo", "Descripción"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -130,20 +126,28 @@ public class ErrorsTable extends JTable {
         }
     }
 
-    //Setup the columns width
+    /**
+     * Set up the columns width
+     *
+     */
     private void setupColumnWidths() {
-        getColumnModel().getColumn(0).setPreferredWidth(130);
 
-        getColumnModel().getColumn(1).setPreferredWidth(90);
-        getColumnModel().getColumn(1).setMaxWidth(120);
+        getColumnModel().getColumn(0).setPreferredWidth(120);
 
-        getColumnModel().getColumn(2).setPreferredWidth(90);
-        getColumnModel().getColumn(2).setMaxWidth(120);
+        getColumnModel().getColumn(1).setPreferredWidth(120);
 
-        getColumnModel().getColumn(3).setPreferredWidth(120);
-        getColumnModel().getColumn(3).setMaxWidth(180);
+        getColumnModel().getColumn(2).setPreferredWidth(120);
 
-        getColumnModel().getColumn(4).setPreferredWidth(400);
+        getColumnModel().getColumn(3).setPreferredWidth(90);
+        getColumnModel().getColumn(3).setMaxWidth(110);
+
+        getColumnModel().getColumn(4).setPreferredWidth(90);
+        getColumnModel().getColumn(4).setMaxWidth(110);
+
+        getColumnModel().getColumn(5).setPreferredWidth(100);
+        getColumnModel().getColumn(5).setMaxWidth(120);
+
+        getColumnModel().getColumn(6).setPreferredWidth(350);
     }
 
     //Method to fill the table with the errors
@@ -161,11 +165,13 @@ public class ErrorsTable extends JTable {
 
         for (CompilerError error : errors) {
             tableModel.addRow(new Object[]{
-                error.getLexeme(),
-                error.getLine(),
-                error.getColumn(),
-                error.getErrorType().getContext(),
-                error.getDescription()
+                    error.getLexeme(),
+                    error.getFileName(),
+                    error.getFilePath(),
+                    error.getLine(),
+                    error.getColumn(),
+                    error.getErrorType().getContext(),
+                    error.getDescription()
             });
         }
     }

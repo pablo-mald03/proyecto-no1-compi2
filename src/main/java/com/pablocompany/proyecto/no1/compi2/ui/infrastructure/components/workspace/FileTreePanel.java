@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import lombok.Getter;
 

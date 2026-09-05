@@ -4,7 +4,7 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.types;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;

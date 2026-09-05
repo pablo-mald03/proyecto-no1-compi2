@@ -1,13 +1,11 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.errors.CompilerError;
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors.ErrorsTable;
-import java.awt.BorderLayout;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
+
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 /**
  *
  * @author pablo03

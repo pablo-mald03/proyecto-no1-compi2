@@ -1,107 +1,128 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor;
 
-import com.pablocompany.proyecto.no1.compi2.app.infrastructure.theme.Theme;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.codetext.CodeTextPane;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.codetext.CodeTextPane;
 import lombok.Getter;
 
-import java.awt.BorderLayout;
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
+import java.awt.*;
+
 
 /**
- *
+ * Class used to represents an editor panel
  * @author pablo03
  */
-/*Class used to represents an editor panel*/
 @Getter
 public class CodeEditorPanel extends JPanel {
 
     private final CodeTextPane editor;
     private final LineNumberView lineNumbers;
-
     private final JScrollPane scroll;
-
     private final EditorStatusBar statusBar;
-
-    /*Reference to the parent*/
     private WorkspaceNotifier notifierReference;
+    private String currentExtension = "";
+
+    private boolean editable;
 
     public CodeEditorPanel(WorkspaceNotifier notifierReference) {
-
         setLayout(new BorderLayout());
-
         setBackground(Theme.SIDEBAR_LIGHT.getColorSet());
 
         this.notifierReference = notifierReference;
 
+        this.editable = true;
         editor = new CodeTextPane(this.notifierReference);
-
         editor.setBackground(Theme.BACKGROUND_DARK.getColorSet());
         editor.setForeground(Theme.FOREGROUND_DARK.getColorSet());
 
         scroll = new JScrollPane(editor);
-
         lineNumbers = new LineNumberView(editor);
-
         scroll.setRowHeaderView(lineNumbers);
 
         statusBar = new EditorStatusBar();
 
         add(scroll, BorderLayout.CENTER);
-
         add(statusBar, BorderLayout.SOUTH);
-
         setBorder(BorderFactory.createEmptyBorder());
 
         editor.setCaretColor(Theme.FOREGROUND_DARK.getColorSet());
-
         editor.addCaretListener(e -> updateCaretPosition());
-
-       // editor.setSyntaxHighlightListener(new AntlrAnalyzer());
-
     }
 
-    //This method updates the caret position to the sidebar
+    // ==========================================
+    // EXTENSION MANAGEMENT
+    // ==========================================
+
+    /**
+     * Set the file extension and update the editor
+     */
+    public void setFileExtension(String extension, String filePath, String fileName) {
+        this.currentExtension = extension;
+        editor.setCurrentExtension(extension, filePath, fileName);
+    }
+
+    /**
+     * Get the current file extension
+     */
+    public String getFileExtension() {
+        return currentExtension;
+    }
+
+    /**
+     * Set whether the editor is editable
+     */
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+        editor.setEditable(editable);
+
+        if (!editable) {
+            editor.setBackground(Theme.SIDEBAR_DARKT.getColorSet());
+            editor.setToolTipText("Archivo en modo de solo lectura (ByteCode)");
+        } else {
+            editor.setBackground(Theme.BACKGROUND_DARK.getColorSet());
+            editor.setToolTipText(null);
+        }
+    }
+
+
+    /**
+     * This method updates the caret position to the sidebar
+     *
+     */
     private void updateCaretPosition() {
-
         try {
-
             int caret = editor.getCaretPosition();
-
             int line = editor.getDocument()
                     .getDefaultRootElement()
                     .getElementIndex(caret);
-
             int lineStart = editor.getDocument()
                     .getDefaultRootElement()
                     .getElement(line)
                     .getStartOffset();
-
             int column = caret - lineStart;
-
             statusBar.updateCursor(line + 1, column + 1);
-
             lineNumbers.repaint();
-
         } catch (Exception ignored) {
-            System.out.println("exception with caret");
+            /* Do nothing*/
         }
-
     }
 
-    /*This method returns the code from the editor*/
-    public String getCode() {
-
-        return editor.getText();
-
-    }
-
+    /**
+     * Set the code content in the editor
+     */
     public void setCode(String code) {
-        editor.setText(code);
-
+        editor.setText(code != null ? code : "");
+        updateCaretPosition();
     }
+
+    /**
+     * Get the code content from the editor
+     */
+    public String getCode() {
+        return editor.getText();
+    }
+
 
     //This method is the principal to compile the code
    /* public boolean compile(WorkspaceNotifier notifier) {
@@ -161,16 +182,6 @@ public class CodeEditorPanel extends JPanel {
     //This method indicate if the code is compiled
     /*public String getCompiledCode() {
         return this.editor.getEditorContext().getCompiledCode();
-    }
-
-    //This method return the stack list
-    public List<ParseStep> getStackList() {
-        return this.editor.getEditorContext().getStackSteps();
-    }
-
-    //This method return the ast string
-    public String getAst() {
-        return this.editor.getEditorContext().getGraphvizCode();
     }*/
 
 }
