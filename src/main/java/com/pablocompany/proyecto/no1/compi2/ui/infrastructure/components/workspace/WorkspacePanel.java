@@ -221,7 +221,15 @@ public class WorkspacePanel extends JPanel {
             return false;
         }
 
-        finalCompiledCode = "int main (){\n\n}\n";
+        finalCompiledCode =
+                "#include <stdio.h>\n\n" +
+                        "int main() {\n" +
+                        "    int numero;\n" +
+                        "    printf(\"Ingrese un numero: \");\n" +
+                        "    scanf(\"%d\", &numero);\n" +
+                        "    printf(\"El numero ingresado fue: %d\\n\", numero);\n" +
+                        "    return 0;\n" +
+                        "}";
 
 
         if (!finalCompiledCode.isEmpty()) {

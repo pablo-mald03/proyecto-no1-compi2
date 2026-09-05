@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ui.application.mediator;
 
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.excecution.ExecutionResult;
 
 import java.util.List;
 
@@ -15,8 +16,8 @@ public interface WorkspaceNotifier {
 
     void notifyErrorsUpdated(List<CompilerError> compilerErrors);
 
-    
-    void notifyCompiledCode(String compiledCode);
+
+    void notifyShowExecutionResult(ExecutionResult result);
 
     /*SECTION OF LOGS*/
     void logInfo(String message);

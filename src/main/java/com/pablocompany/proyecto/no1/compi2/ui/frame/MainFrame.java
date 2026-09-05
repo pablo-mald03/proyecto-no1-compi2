@@ -20,8 +20,10 @@ import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.layers.RootLayer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens.ManagementScreen;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.screens.WelcomeScreen;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.ProjectImporterExporterService;
-import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.ProjectService;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.excecution.ExecutionResult;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.excecution.ExecutionService;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.io.ProjectImporterExporterService;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.io.ProjectService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -54,6 +56,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     private final ProjectImporterExporterService projectImporterExporter;
     private File currentProjectDir;
 
+    private final ExecutionService executionService;
+
     public MainFrame() {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setTitle("Codex Compiler");
@@ -65,6 +69,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         this.projectService = new ProjectService();
         this.projectImporterExporter = new ProjectImporterExporterService();
 
+        this.executionService = new ExecutionService();
         // ==========================
         // Confirmation System Setup
         // ==========================
@@ -86,6 +91,10 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         // ==========================
         setLocationRelativeTo(null);
         setVisible(true);
+
+        if (!executionService.isGCCAvailable()) {
+            alertToast("GCC no encontrado. Instala GCC para ejecutar el codigo compilado.", true);
+        }
     }
 
     /**
@@ -235,19 +244,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         }
     }
 
-    private void onExecute() {
-        if (managementScreen != null) {
-            String output = managementScreen.getWorkspacePanel().getCompiledOutput();
-            if (output != null) {
-                //TODO: Call the compilation service console
-                logInfo("Ejecutando...");
-            } else {
-                alertToast("No hay ningún archivo abierto para ejecutar", true);
-            }
-        } else {
-            alertToast("No hay ningún proyecto abierto", true);
-        }
-    }
 
     private void onExit() {
         confirm(ModalType.WARNING, "Salir",
@@ -349,14 +345,13 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     // ==========================================
-    // WORKSPACENOTIFIER IMPLEMENTATION
+    // WORKSPACE NOTIFIER IMPLEMENTATION
     // ==========================================
     @Override
     public void logInfo(String message) {
         if (managementScreen != null) {
             managementScreen.getBottomPanel().getConsole().appendInfo(message);
         } else {
-            // Fallback cuando no hay managementScreen
             System.out.println("[INFO] " + message);
         }
     }
@@ -426,8 +421,54 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     @Override
-    public void notifyCompiledCode(String compiledCode) {
-        // Implementation
+    public void notifyShowExecutionResult(ExecutionResult result) {
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().showConsole();
+            this.logInfo(result.getFormattedOutput());
+
+            if (result.isSuccess()) {
+                logSuccess("Programa compilado. Ejecutando en terminal...");
+            } else {
+                logError("Error en la ejecución");
+            }
+        }
+    }
+
+    /**
+     * Principal method to execute the program
+     *
+     */
+    private void onExecute() {
+        if (managementScreen != null) {
+            WorkspacePanel workspace = managementScreen.getWorkspacePanel();
+            String compiledCode = workspace.getCompiledOutput();
+
+            if (compiledCode == null || compiledCode.isEmpty()) {
+                alertToast("No hay codigo compilado. Presiona 'Compilar' primero.", true);
+                return;
+            }
+
+            if (!executionService.isGCCAvailable()) {
+                alertToast("GCC no esta instalado en el sistema. Por favor instala GCC para ejecutar el codigo.", true);
+                return;
+            }
+
+            logInfo("Compilando. Generando ejecutable...");
+
+            new Thread(() -> {
+                ExecutionResult result = executionService.compileAndExecute(
+                        currentProjectDir,
+                        compiledCode
+                );
+
+                SwingUtilities.invokeLater(() -> {
+                    notifyShowExecutionResult(result);
+                });
+            }).start();
+
+        } else {
+            alertToast("No hay ningun proyecto abierto", true);
+        }
     }
 
     @Override
@@ -441,7 +482,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         if (result == JFileChooser.APPROVE_OPTION) {
             File zipFile = fileChooser.getSelectedFile();
 
-            // Select target directory
             JFileChooser dirChooser = new JFileChooser();
             dirChooser.setDialogTitle("Seleccionar directorio de destino");
             dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -452,7 +492,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
                 File targetDir = dirChooser.getSelectedFile();
 
                 try {
-                    // Show progress in console
                     logInfo("Importando proyecto desde: " + zipFile.getName());
 
                     projectImporterExporter.importFromZip(zipFile, targetDir,
@@ -470,7 +509,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
                                 }
                             });
 
-                    // Open the imported project
                     onProjectOpened(targetDir);
 
                 } catch (IOException e) {
@@ -492,7 +530,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             int result = fileChooser.showSaveDialog(this);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File zipFile = fileChooser.getSelectedFile();
-                // Ensure .zip extension
                 if (!zipFile.getName().toLowerCase().endsWith(".zip")) {
                     zipFile = new File(zipFile.getParentFile(), zipFile.getName() + ".zip");
                 }
@@ -513,17 +550,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
     @Override
     public void notifyExecuteCompiledCode() {
-        if (managementScreen != null) {
-            CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
-            if (editor != null) {
-                // TODO: Implement execute compiled code logic
-                logInfo("Ejecutando código compilado...");
-            } else {
-                alertToast("No hay ningún archivo abierto para ejecutar", true);
-            }
-        } else {
-            alertToast("No hay ningún proyecto abierto", true);
-        }
+        this.onExecute();
     }
 
     @Override

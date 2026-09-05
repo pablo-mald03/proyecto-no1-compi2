@@ -142,7 +142,7 @@ public class TopPanel extends JPanel {
 
         // Edit Menu - Now with compiled code actions
         JMenu editMenu = createMenu("Editar", KeyEvent.VK_E);
-        editMenu.add(createMenuItem("Descargar Compilado", KeyEvent.VK_D,
+        editMenu.add(createMenuItem("Exportar Proyecto", KeyEvent.VK_D,
                 e -> notifier.notifyDownloadCompiledCode(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK)));
         editMenu.addSeparator();
