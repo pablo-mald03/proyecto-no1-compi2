@@ -17,50 +17,51 @@ public class PigLatinParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		COMMENT=1, BLOCK_COMMENT=2, WS=3, VARIABILES=4, MUNERA=5, MAIOR=6, FINIS_SEPARATOR=7, 
-		PRINT=8, READ=9, NUMERUS=10, TEXTUM=11, DECIMALIS=12, LITTERA=13, BOOLEAN=14, 
-		VERUM=15, FALSUS=16, ESTO=17, SERIES=18, STRUCTURE=19, FINIS=20, DUM=21, 
-		FACERE=22, PER=23, SI=24, ALITER=25, ACTIO=26, RATIO=27, REDDERE=28, PERGE=29, 
-		INTERRUMPE=30, EQUAL=31, COMMA=32, DOT_COMMA=33, TWO_POINTS=34, DOT=35, 
-		INIT_BRACE=36, FINAL_BRACE=37, INIT_BRACKET=38, FINAL_BRACKET=39, INIT_PARENT=40, 
-		FINAL_PARENT=41, ABREV_PLUS=42, ABREV_MINUS=43, PLUS=44, MINUS=45, MULTIPLICATION=46, 
-		DIVIDE=47, EQUALS=48, GREATER_EQUALS=49, LESS_EQUALS=50, DIFERENCE=51, 
-		LESS=52, GREATER=53, AND=54, OR=55, NOT=56, ID=57, INT=58, DECIMAL=59, 
-		STRING=60, CHAR=61, ERROR_TOKEN=62;
+		COMMENT=1, BLOCK_COMMENT=2, WS=3, VARIABILES=4, MAIOR=5, FINIS_SEPARATOR=6, 
+		PRINT=7, READ=8, NUMERUS=9, TEXTUM=10, DECIMALIS=11, LITTERA=12, BOOLEAN=13, 
+		VERUM=14, FALSUS=15, IMPORT=16, NOVUS=17, ESTO=18, SERIES=19, STRUCTURE=20, 
+		FINIS=21, DUM=22, FACERE=23, PER=24, SI=25, ALITER=26, ACTIO=27, RATIO=28, 
+		REDDERE=29, PERGE=30, INTERRUMPE=31, EQUAL=32, COMMA=33, DOT_COMMA=34, 
+		TWO_POINTS=35, DOT=36, INIT_BRACE=37, FINAL_BRACE=38, INIT_BRACKET=39, 
+		FINAL_BRACKET=40, INIT_PARENT=41, FINAL_PARENT=42, BY_ONE_ADD=43, BY_ONE_MINUS=44, 
+		BY_ONE_MULTIPLICATION=45, BY_ONE_DIVISION=46, BY_ONE_PERCENT=47, ABREV_PLUS=48, 
+		ABREV_MINUS=49, PLUS=50, MINUS=51, MULTIPLICATION=52, DIVIDE=53, PERCENT=54, 
+		EQUALS=55, GREATER_EQUALS=56, LESS_EQUALS=57, DIFERENCE=58, LESS=59, GREATER=60, 
+		AND=61, OR=62, NOT=63, ID=64, INT=65, DECIMAL=66, STRING=67, CHAR=68, 
+		ERROR_TOKEN=69;
 	public static final int
-		RULE_program = 0, RULE_body = 1, RULE_munera_section = 2, RULE_munera_body = 3, 
-		RULE_functions_block = 4, RULE_function_declaration = 5, RULE_variable_function_type = 6, 
-		RULE_procedure_declaration = 7, RULE_function_body = 8, RULE_procedure_body = 9, 
-		RULE_local_variable_list = 10, RULE_local_variable = 11, RULE_function_arguments = 12, 
-		RULE_argument = 13, RULE_argument_variable_type = 14, RULE_argument_series_type = 15, 
-		RULE_maior_section = 16, RULE_code_body = 17, RULE_control_block = 18, 
-		RULE_return_control = 19, RULE_loop_control = 20, RULE_console_actions = 21, 
-		RULE_print_function = 22, RULE_block_code = 23, RULE_if_statement = 24, 
-		RULE_else_if_list = 25, RULE_else_if_clause = 26, RULE_else_statement = 27, 
-		RULE_while_statement = 28, RULE_do_while_statement = 29, RULE_for_statement = 30, 
-		RULE_for_init = 31, RULE_for_update = 32, RULE_variable_section = 33, 
-		RULE_variabiles_body = 34, RULE_declarations = 35, RULE_array_redefined_ussage = 36, 
-		RULE_variable_ussage = 37, RULE_nested_variables_usage = 38, RULE_struct_instance = 39, 
-		RULE_variable_declaration = 40, RULE_normal_array_declaration = 41, RULE_array_initialization = 42, 
-		RULE_values_array_list = 43, RULE_array_value = 44, RULE_struct_values = 45, 
-		RULE_struct_declaration = 46, RULE_struct_body = 47, RULE_struct_normal_body = 48, 
-		RULE_struct_comma_body = 49, RULE_struct_attribute = 50, RULE_variable_without_value = 51, 
-		RULE_array_variable_struct = 52, RULE_struct_literal = 53, RULE_struct_data_list = 54, 
-		RULE_struct_data_value = 55, RULE_expression = 56, RULE_variable_type = 57, 
-		RULE_array_call = 58, RULE_function_call = 59, RULE_arguments_list = 60, 
-		RULE_nest_variable = 61, RULE_normal_values = 62, RULE_boolean_values = 63, 
-		RULE_abbreviated_operation = 64;
+		RULE_program = 0, RULE_body = 1, RULE_munera_body = 2, RULE_functions_block = 3, 
+		RULE_function_declaration = 4, RULE_variable_function_type = 5, RULE_procedure_declaration = 6, 
+		RULE_function_body = 7, RULE_procedure_body = 8, RULE_local_variable_list = 9, 
+		RULE_local_variable = 10, RULE_function_arguments = 11, RULE_argument = 12, 
+		RULE_argument_variable_type = 13, RULE_argument_series_type = 14, RULE_maior_section = 15, 
+		RULE_code_body = 16, RULE_control_block = 17, RULE_return_control = 18, 
+		RULE_loop_control = 19, RULE_console_actions = 20, RULE_print_function = 21, 
+		RULE_block_code = 22, RULE_if_statement = 23, RULE_else_if_list = 24, 
+		RULE_else_if_clause = 25, RULE_else_statement = 26, RULE_while_statement = 27, 
+		RULE_do_while_statement = 28, RULE_for_statement = 29, RULE_for_init = 30, 
+		RULE_for_update = 31, RULE_variable_section = 32, RULE_variabiles_body = 33, 
+		RULE_declarations = 34, RULE_array_redefined_ussage = 35, RULE_variable_ussage = 36, 
+		RULE_nested_variables_usage = 37, RULE_struct_instance = 38, RULE_variable_declaration = 39, 
+		RULE_normal_array_declaration = 40, RULE_array_initialization = 41, RULE_values_array_list = 42, 
+		RULE_array_value = 43, RULE_struct_values = 44, RULE_struct_declaration = 45, 
+		RULE_struct_body = 46, RULE_struct_normal_body = 47, RULE_struct_comma_body = 48, 
+		RULE_struct_attribute = 49, RULE_variable_without_value = 50, RULE_array_variable_struct = 51, 
+		RULE_struct_literal = 52, RULE_struct_data_list = 53, RULE_struct_data_value = 54, 
+		RULE_expression = 55, RULE_variable_type = 56, RULE_array_call = 57, RULE_function_call = 58, 
+		RULE_arguments_list = 59, RULE_nest_variable = 60, RULE_normal_values = 61, 
+		RULE_boolean_values = 62, RULE_abbreviated_operation = 63;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"program", "body", "munera_section", "munera_body", "functions_block", 
-			"function_declaration", "variable_function_type", "procedure_declaration", 
-			"function_body", "procedure_body", "local_variable_list", "local_variable", 
-			"function_arguments", "argument", "argument_variable_type", "argument_series_type", 
-			"maior_section", "code_body", "control_block", "return_control", "loop_control", 
-			"console_actions", "print_function", "block_code", "if_statement", "else_if_list", 
-			"else_if_clause", "else_statement", "while_statement", "do_while_statement", 
-			"for_statement", "for_init", "for_update", "variable_section", "variabiles_body", 
-			"declarations", "array_redefined_ussage", "variable_ussage", "nested_variables_usage", 
+			"program", "body", "munera_body", "functions_block", "function_declaration", 
+			"variable_function_type", "procedure_declaration", "function_body", "procedure_body", 
+			"local_variable_list", "local_variable", "function_arguments", "argument", 
+			"argument_variable_type", "argument_series_type", "maior_section", "code_body", 
+			"control_block", "return_control", "loop_control", "console_actions", 
+			"print_function", "block_code", "if_statement", "else_if_list", "else_if_clause", 
+			"else_statement", "while_statement", "do_while_statement", "for_statement", 
+			"for_init", "for_update", "variable_section", "variabiles_body", "declarations", 
+			"array_redefined_ussage", "variable_ussage", "nested_variables_usage", 
 			"struct_instance", "variable_declaration", "normal_array_declaration", 
 			"array_initialization", "values_array_list", "array_value", "struct_values", 
 			"struct_declaration", "struct_body", "struct_normal_body", "struct_comma_body", 
@@ -74,29 +75,30 @@ public class PigLatinParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, null, null, null, "'VARIABILES'", "'MUNERA'", "'MAIOR'", "'FINIS'", 
-			"'>>'", "'<<'", "'numerus'", "'textum'", "'decimalis'", "'littera'", 
-			"'bool'", "'verum'", "'falsus'", "'esto'", "'series'", "'structura'", 
+			null, null, null, null, "'VARIABILES'", "'MAIOR'", "'FINIS'", "'>>'", 
+			"'<<'", "'numerus'", "'textum'", "'decimalis'", "'littera'", "'bool'", 
+			"'verum'", "'falsus'", "'import'", "'novus'", "'esto'", "'series'", "'structura'", 
 			"'finis'", "'dum'", "'facere'", "'per'", "'si'", "'aliter'", "'actio'", 
 			"'ratio'", "'reddere'", "'perge'", "'interrumpe'", "'='", "','", "';'", 
-			"':'", "'.'", "'{'", "'}'", "'['", "']'", "'('", "')'", "'++'", "'--'", 
-			"'+'", "'-'", "'*'", "'/'", "'=='", "'>='", "'<='", "'!='", "'<'", "'>'", 
-			"'&&'", "'||'", "'non'"
+			"':'", "'.'", "'{'", "'}'", "'['", "']'", "'('", "')'", "'+='", "'-='", 
+			"'*='", "'/='", "'%='", "'++'", "'--'", "'+'", "'-'", "'*'", "'/'", "'%'", 
+			"'=='", "'>='", "'<='", "'!='", "'<'", "'>'", "'&&'", "'||'", "'non'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "COMMENT", "BLOCK_COMMENT", "WS", "VARIABILES", "MUNERA", "MAIOR", 
-			"FINIS_SEPARATOR", "PRINT", "READ", "NUMERUS", "TEXTUM", "DECIMALIS", 
-			"LITTERA", "BOOLEAN", "VERUM", "FALSUS", "ESTO", "SERIES", "STRUCTURE", 
+			null, "COMMENT", "BLOCK_COMMENT", "WS", "VARIABILES", "MAIOR", "FINIS_SEPARATOR", 
+			"PRINT", "READ", "NUMERUS", "TEXTUM", "DECIMALIS", "LITTERA", "BOOLEAN", 
+			"VERUM", "FALSUS", "IMPORT", "NOVUS", "ESTO", "SERIES", "STRUCTURE", 
 			"FINIS", "DUM", "FACERE", "PER", "SI", "ALITER", "ACTIO", "RATIO", "REDDERE", 
 			"PERGE", "INTERRUMPE", "EQUAL", "COMMA", "DOT_COMMA", "TWO_POINTS", "DOT", 
 			"INIT_BRACE", "FINAL_BRACE", "INIT_BRACKET", "FINAL_BRACKET", "INIT_PARENT", 
-			"FINAL_PARENT", "ABREV_PLUS", "ABREV_MINUS", "PLUS", "MINUS", "MULTIPLICATION", 
-			"DIVIDE", "EQUALS", "GREATER_EQUALS", "LESS_EQUALS", "DIFERENCE", "LESS", 
-			"GREATER", "AND", "OR", "NOT", "ID", "INT", "DECIMAL", "STRING", "CHAR", 
-			"ERROR_TOKEN"
+			"FINAL_PARENT", "BY_ONE_ADD", "BY_ONE_MINUS", "BY_ONE_MULTIPLICATION", 
+			"BY_ONE_DIVISION", "BY_ONE_PERCENT", "ABREV_PLUS", "ABREV_MINUS", "PLUS", 
+			"MINUS", "MULTIPLICATION", "DIVIDE", "PERCENT", "EQUALS", "GREATER_EQUALS", 
+			"LESS_EQUALS", "DIFERENCE", "LESS", "GREATER", "AND", "OR", "NOT", "ID", 
+			"INT", "DECIMAL", "STRING", "CHAR", "ERROR_TOKEN"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -195,21 +197,21 @@ public class PigLatinParser extends Parser {
 			_localctx = new ProgramRootContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(133);
+			setState(131);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 112L) != 0)) {
+			while (_la==VARIABILES || _la==MAIOR) {
 				{
 				{
-				setState(130);
+				setState(128);
 				body();
 				}
 				}
-				setState(135);
+				setState(133);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(136);
+			setState(134);
 			match(EOF);
 			}
 		}
@@ -233,9 +235,6 @@ public class PigLatinParser extends Parser {
 		public TerminalNode DOT_COMMA() { return getToken(PigLatinParser.DOT_COMMA, 0); }
 		public Variable_sectionContext variable_section() {
 			return getRuleContext(Variable_sectionContext.class,0);
-		}
-		public Munera_sectionContext munera_section() {
-			return getRuleContext(Munera_sectionContext.class,0);
 		}
 		public BodyContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -263,93 +262,22 @@ public class PigLatinParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(139);
+			setState(137);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==VARIABILES) {
 				{
-				setState(138);
+				setState(136);
 				variable_section();
 				}
 			}
 
-			setState(142);
-			_errHandler.sync(this);
-			_la = _input.LA(1);
-			if (_la==MUNERA) {
-				{
-				setState(141);
-				munera_section();
-				}
-			}
-
-			setState(144);
+			setState(139);
 			maior_section();
-			setState(145);
+			setState(140);
 			match(FINIS_SEPARATOR);
-			setState(146);
+			setState(141);
 			match(DOT_COMMA);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class Munera_sectionContext extends ParserRuleContext {
-		public Munera_sectionContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_munera_section; }
-	 
-		public Munera_sectionContext() { }
-		public void copyFrom(Munera_sectionContext ctx) {
-			super.copyFrom(ctx);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
-	public static class MuneraSectionContext extends Munera_sectionContext {
-		public TerminalNode MUNERA() { return getToken(PigLatinParser.MUNERA, 0); }
-		public TerminalNode GREATER() { return getToken(PigLatinParser.GREATER, 0); }
-		public Munera_bodyContext munera_body() {
-			return getRuleContext(Munera_bodyContext.class,0);
-		}
-		public MuneraSectionContext(Munera_sectionContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof PigLatinParserListener ) ((PigLatinParserListener)listener).enterMuneraSection(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof PigLatinParserListener ) ((PigLatinParserListener)listener).exitMuneraSection(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof PigLatinParserVisitor ) return ((PigLatinParserVisitor<? extends T>)visitor).visitMuneraSection(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-
-	public final Munera_sectionContext munera_section() throws RecognitionException {
-		Munera_sectionContext _localctx = new Munera_sectionContext(_ctx, getState());
-		enterRule(_localctx, 4, RULE_munera_section);
-		try {
-			_localctx = new MuneraSectionContext(_localctx);
-			enterOuterAlt(_localctx, 1);
-			{
-			setState(148);
-			match(MUNERA);
-			setState(149);
-			match(GREATER);
-			setState(150);
-			munera_body(0);
 			}
 		}
 		catch (RecognitionException re) {
@@ -428,8 +356,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Munera_bodyContext _localctx = new Munera_bodyContext(_ctx, _parentState);
 		Munera_bodyContext _prevctx = _localctx;
-		int _startState = 6;
-		enterRecursionRule(_localctx, 6, RULE_munera_body, _p);
+		int _startState = 4;
+		enterRecursionRule(_localctx, 4, RULE_munera_body, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -439,13 +367,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(153);
+			setState(144);
 			functions_block();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(159);
+			setState(150);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -454,16 +382,16 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new FunctionsBlockListContext(new Munera_bodyContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_munera_body);
-					setState(155);
+					setState(146);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(156);
+					setState(147);
 					functions_block();
 					}
 					} 
 				}
-				setState(161);
+				setState(152);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
 			}
 			}
 		}
@@ -533,16 +461,16 @@ public class PigLatinParser extends Parser {
 
 	public final Functions_blockContext functions_block() throws RecognitionException {
 		Functions_blockContext _localctx = new Functions_blockContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_functions_block);
+		enterRule(_localctx, 6, RULE_functions_block);
 		try {
-			setState(164);
+			setState(155);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case RATIO:
 				_localctx = new FuncDeclBlockContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(162);
+				setState(153);
 				function_declaration();
 				}
 				break;
@@ -550,7 +478,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ProcDeclBlockContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(163);
+				setState(154);
 				procedure_declaration();
 				}
 				break;
@@ -621,59 +549,59 @@ public class PigLatinParser extends Parser {
 
 	public final Function_declarationContext function_declaration() throws RecognitionException {
 		Function_declarationContext _localctx = new Function_declarationContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_function_declaration);
+		enterRule(_localctx, 8, RULE_function_declaration);
 		int _la;
 		try {
 			_localctx = new FunctionDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(166);
+			setState(157);
 			match(RATIO);
-			setState(167);
+			setState(158);
 			variable_function_type();
-			setState(168);
+			setState(159);
 			match(ID);
-			setState(169);
+			setState(160);
 			match(INIT_PARENT);
-			setState(171);
+			setState(162);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==ESTO || _la==SERIES) {
 				{
-				setState(170);
+				setState(161);
 				function_arguments(0);
 				}
 			}
 
-			setState(173);
+			setState(164);
 			match(FINAL_PARENT);
-			setState(174);
+			setState(165);
 			match(INIT_BRACE);
-			setState(176);
+			setState(167);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==VARIABILES) {
 				{
-				setState(175);
+				setState(166);
 				function_body();
 				}
 			}
 
-			setState(179);
+			setState(170);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+			if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 				{
-				setState(178);
+				setState(169);
 				code_body(0);
 				}
 			}
 
-			setState(181);
+			setState(172);
 			match(FINAL_BRACE);
-			setState(182);
+			setState(173);
 			match(FINIS);
-			setState(183);
+			setState(174);
 			match(DOT_COMMA);
 			}
 		}
@@ -723,12 +651,12 @@ public class PigLatinParser extends Parser {
 
 	public final Variable_function_typeContext variable_function_type() throws RecognitionException {
 		Variable_function_typeContext _localctx = new Variable_function_typeContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_variable_function_type);
+		enterRule(_localctx, 10, RULE_variable_function_type);
 		try {
 			_localctx = new FunctionReturNormalTypeContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(185);
+			setState(176);
 			variable_type();
 			}
 		}
@@ -792,57 +720,57 @@ public class PigLatinParser extends Parser {
 
 	public final Procedure_declarationContext procedure_declaration() throws RecognitionException {
 		Procedure_declarationContext _localctx = new Procedure_declarationContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_procedure_declaration);
+		enterRule(_localctx, 12, RULE_procedure_declaration);
 		int _la;
 		try {
 			_localctx = new ProcedureDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(187);
+			setState(178);
 			match(ACTIO);
-			setState(188);
+			setState(179);
 			match(ID);
-			setState(189);
+			setState(180);
 			match(INIT_PARENT);
-			setState(191);
+			setState(182);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==ESTO || _la==SERIES) {
 				{
-				setState(190);
+				setState(181);
 				function_arguments(0);
 				}
 			}
 
-			setState(193);
+			setState(184);
 			match(FINAL_PARENT);
-			setState(194);
+			setState(185);
 			match(INIT_BRACE);
-			setState(196);
+			setState(187);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==VARIABILES) {
 				{
-				setState(195);
+				setState(186);
 				procedure_body();
 				}
 			}
 
-			setState(199);
+			setState(190);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+			if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 				{
-				setState(198);
+				setState(189);
 				code_body(0);
 				}
 			}
 
-			setState(201);
+			setState(192);
 			match(FINAL_BRACE);
-			setState(202);
+			setState(193);
 			match(FINIS);
-			setState(203);
+			setState(194);
 			match(DOT_COMMA);
 			}
 		}
@@ -895,27 +823,27 @@ public class PigLatinParser extends Parser {
 
 	public final Function_bodyContext function_body() throws RecognitionException {
 		Function_bodyContext _localctx = new Function_bodyContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_function_body);
+		enterRule(_localctx, 14, RULE_function_body);
 		int _la;
 		try {
 			_localctx = new FunctionBodyContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(205);
+			setState(196);
 			match(VARIABILES);
-			setState(206);
+			setState(197);
 			match(INIT_BRACKET);
-			setState(208);
+			setState(199);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==ESTO || _la==SERIES) {
 				{
-				setState(207);
+				setState(198);
 				local_variable_list(0);
 				}
 			}
 
-			setState(210);
+			setState(201);
 			match(FINAL_BRACKET);
 			}
 		}
@@ -968,27 +896,27 @@ public class PigLatinParser extends Parser {
 
 	public final Procedure_bodyContext procedure_body() throws RecognitionException {
 		Procedure_bodyContext _localctx = new Procedure_bodyContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_procedure_body);
+		enterRule(_localctx, 16, RULE_procedure_body);
 		int _la;
 		try {
 			_localctx = new ProcedureBodyContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(212);
+			setState(203);
 			match(VARIABILES);
-			setState(213);
+			setState(204);
 			match(INIT_BRACKET);
-			setState(215);
+			setState(206);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==ESTO || _la==SERIES) {
 				{
-				setState(214);
+				setState(205);
 				local_variable_list(0);
 				}
 			}
 
-			setState(217);
+			setState(208);
 			match(FINAL_BRACKET);
 			}
 		}
@@ -1068,8 +996,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Local_variable_listContext _localctx = new Local_variable_listContext(_ctx, _parentState);
 		Local_variable_listContext _prevctx = _localctx;
-		int _startState = 20;
-		enterRecursionRule(_localctx, 20, RULE_local_variable_list, _p);
+		int _startState = 18;
+		enterRecursionRule(_localctx, 18, RULE_local_variable_list, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -1079,13 +1007,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(220);
+			setState(211);
 			local_variable();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(226);
+			setState(217);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,13,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -1094,16 +1022,16 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new LocalVariablesListContext(new Local_variable_listContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_local_variable_list);
-					setState(222);
+					setState(213);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(223);
+					setState(214);
 					local_variable();
 					}
 					} 
 				}
-				setState(228);
+				setState(219);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,13,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
 			}
 			}
 		}
@@ -1193,16 +1121,16 @@ public class PigLatinParser extends Parser {
 
 	public final Local_variableContext local_variable() throws RecognitionException {
 		Local_variableContext _localctx = new Local_variableContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_local_variable);
+		enterRule(_localctx, 20, RULE_local_variable);
 		try {
-			setState(232);
+			setState(223);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,14,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
 			case 1:
 				_localctx = new LocalVarDeclarationContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(229);
+				setState(220);
 				variable_declaration();
 				}
 				break;
@@ -1210,7 +1138,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new LocalArrayDeclarationContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(230);
+				setState(221);
 				normal_array_declaration();
 				}
 				break;
@@ -1218,7 +1146,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new LocalStructInstanceContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(231);
+				setState(222);
 				struct_instance();
 				}
 				break;
@@ -1301,8 +1229,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Function_argumentsContext _localctx = new Function_argumentsContext(_ctx, _parentState);
 		Function_argumentsContext _prevctx = _localctx;
-		int _startState = 24;
-		enterRecursionRule(_localctx, 24, RULE_function_arguments, _p);
+		int _startState = 22;
+		enterRecursionRule(_localctx, 22, RULE_function_arguments, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -1312,13 +1240,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(235);
+			setState(226);
 			argument();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(242);
+			setState(233);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,15,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -1327,18 +1255,18 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new FunctionArgsListContext(new Function_argumentsContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_function_arguments);
-					setState(237);
+					setState(228);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(238);
+					setState(229);
 					match(COMMA);
-					setState(239);
+					setState(230);
 					argument();
 					}
 					} 
 				}
-				setState(244);
+				setState(235);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,15,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			}
 			}
 		}
@@ -1414,22 +1342,22 @@ public class PigLatinParser extends Parser {
 
 	public final ArgumentContext argument() throws RecognitionException {
 		ArgumentContext _localctx = new ArgumentContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_argument);
+		enterRule(_localctx, 24, RULE_argument);
 		try {
-			setState(253);
+			setState(244);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case ESTO:
 				_localctx = new ArgumentVariableDeclarationContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(245);
+				setState(236);
 				match(ESTO);
-				setState(246);
+				setState(237);
 				match(ID);
-				setState(247);
+				setState(238);
 				match(TWO_POINTS);
-				setState(248);
+				setState(239);
 				argument_variable_type();
 				}
 				break;
@@ -1437,13 +1365,13 @@ public class PigLatinParser extends Parser {
 				_localctx = new ArgumentArrayDeclarationnContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(249);
+				setState(240);
 				match(SERIES);
-				setState(250);
+				setState(241);
 				match(ID);
-				setState(251);
+				setState(242);
 				match(TWO_POINTS);
-				setState(252);
+				setState(243);
 				argument_series_type();
 				}
 				break;
@@ -1497,12 +1425,12 @@ public class PigLatinParser extends Parser {
 
 	public final Argument_variable_typeContext argument_variable_type() throws RecognitionException {
 		Argument_variable_typeContext _localctx = new Argument_variable_typeContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_argument_variable_type);
+		enterRule(_localctx, 26, RULE_argument_variable_type);
 		try {
 			_localctx = new ArgumentNormalDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(255);
+			setState(246);
 			variable_type();
 			}
 		}
@@ -1552,12 +1480,12 @@ public class PigLatinParser extends Parser {
 
 	public final Argument_series_typeContext argument_series_type() throws RecognitionException {
 		Argument_series_typeContext _localctx = new Argument_series_typeContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_argument_series_type);
+		enterRule(_localctx, 28, RULE_argument_series_type);
 		try {
 			_localctx = new ArgumentArrayNormalDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(257);
+			setState(248);
 			variable_type();
 			}
 		}
@@ -1609,16 +1537,16 @@ public class PigLatinParser extends Parser {
 
 	public final Maior_sectionContext maior_section() throws RecognitionException {
 		Maior_sectionContext _localctx = new Maior_sectionContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_maior_section);
+		enterRule(_localctx, 30, RULE_maior_section);
 		try {
 			_localctx = new MaiorSectionContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(259);
+			setState(250);
 			match(MAIOR);
-			setState(260);
+			setState(251);
 			match(GREATER);
-			setState(261);
+			setState(252);
 			code_body(0);
 			}
 		}
@@ -1698,8 +1626,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Code_bodyContext _localctx = new Code_bodyContext(_ctx, _parentState);
 		Code_bodyContext _prevctx = _localctx;
-		int _startState = 34;
-		enterRecursionRule(_localctx, 34, RULE_code_body, _p);
+		int _startState = 32;
+		enterRecursionRule(_localctx, 32, RULE_code_body, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -1709,13 +1637,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(264);
+			setState(255);
 			control_block();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(270);
+			setState(261);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,17,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,16,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -1724,16 +1652,16 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new BlockControlListContext(new Code_bodyContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_code_body);
-					setState(266);
+					setState(257);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(267);
+					setState(258);
 					control_block();
 					}
 					} 
 				}
-				setState(272);
+				setState(263);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,17,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,16,_ctx);
 			}
 			}
 		}
@@ -1944,16 +1872,16 @@ public class PigLatinParser extends Parser {
 
 	public final Control_blockContext control_block() throws RecognitionException {
 		Control_blockContext _localctx = new Control_blockContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_control_block);
+		enterRule(_localctx, 34, RULE_control_block);
 		try {
-			setState(284);
+			setState(275);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,18,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,17,_ctx) ) {
 			case 1:
 				_localctx = new BlockCodeContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(273);
+				setState(264);
 				block_code();
 				}
 				break;
@@ -1961,7 +1889,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ConsoleActionsContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(274);
+				setState(265);
 				console_actions();
 				}
 				break;
@@ -1969,9 +1897,9 @@ public class PigLatinParser extends Parser {
 				_localctx = new FunctionSingleCallContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(275);
+				setState(266);
 				function_call();
-				setState(276);
+				setState(267);
 				match(DOT_COMMA);
 				}
 				break;
@@ -1979,7 +1907,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new LoopControlActionContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(278);
+				setState(269);
 				loop_control();
 				}
 				break;
@@ -1987,7 +1915,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ReturnControlActionContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(279);
+				setState(270);
 				return_control();
 				}
 				break;
@@ -1995,7 +1923,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new LocalAbbreviatedOperationContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(280);
+				setState(271);
 				abbreviated_operation();
 				}
 				break;
@@ -2003,7 +1931,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new LocalVariableRedefinitionContext(_localctx);
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(281);
+				setState(272);
 				variable_ussage();
 				}
 				break;
@@ -2011,7 +1939,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new LocalArrayRedefinedUssageContext(_localctx);
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(282);
+				setState(273);
 				array_redefined_ussage();
 				}
 				break;
@@ -2019,7 +1947,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new LocalNestedVariableUsageContext(_localctx);
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(283);
+				setState(274);
 				nested_variables_usage();
 				}
 				break;
@@ -2092,20 +2020,20 @@ public class PigLatinParser extends Parser {
 
 	public final Return_controlContext return_control() throws RecognitionException {
 		Return_controlContext _localctx = new Return_controlContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_return_control);
+		enterRule(_localctx, 36, RULE_return_control);
 		try {
-			setState(292);
+			setState(283);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,19,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,18,_ctx) ) {
 			case 1:
 				_localctx = new ReturnWithValueContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(286);
+				setState(277);
 				match(REDDERE);
-				setState(287);
+				setState(278);
 				expression(0);
-				setState(288);
+				setState(279);
 				match(DOT_COMMA);
 				}
 				break;
@@ -2113,9 +2041,9 @@ public class PigLatinParser extends Parser {
 				_localctx = new ReturnVoidContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(290);
+				setState(281);
 				match(REDDERE);
-				setState(291);
+				setState(282);
 				match(DOT_COMMA);
 				}
 				break;
@@ -2185,18 +2113,18 @@ public class PigLatinParser extends Parser {
 
 	public final Loop_controlContext loop_control() throws RecognitionException {
 		Loop_controlContext _localctx = new Loop_controlContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_loop_control);
+		enterRule(_localctx, 38, RULE_loop_control);
 		try {
-			setState(298);
+			setState(289);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case PERGE:
 				_localctx = new LoopContinueContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(294);
+				setState(285);
 				match(PERGE);
-				setState(295);
+				setState(286);
 				match(DOT_COMMA);
 				}
 				break;
@@ -2204,9 +2132,9 @@ public class PigLatinParser extends Parser {
 				_localctx = new LoopBreakContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(296);
+				setState(287);
 				match(INTERRUMPE);
-				setState(297);
+				setState(288);
 				match(DOT_COMMA);
 				}
 				break;
@@ -2301,18 +2229,18 @@ public class PigLatinParser extends Parser {
 
 	public final Console_actionsContext console_actions() throws RecognitionException {
 		Console_actionsContext _localctx = new Console_actionsContext(_ctx, getState());
-		enterRule(_localctx, 42, RULE_console_actions);
+		enterRule(_localctx, 40, RULE_console_actions);
 		try {
-			setState(308);
+			setState(299);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case ID:
 				_localctx = new ReadVariableInputContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(300);
+				setState(291);
 				nest_variable();
-				setState(301);
+				setState(292);
 				match(READ);
 				}
 				break;
@@ -2320,7 +2248,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ReadInputContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(303);
+				setState(294);
 				match(READ);
 				}
 				break;
@@ -2328,11 +2256,11 @@ public class PigLatinParser extends Parser {
 				_localctx = new PrintActionContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(304);
+				setState(295);
 				match(PRINT);
-				setState(305);
+				setState(296);
 				print_function(0);
-				setState(306);
+				setState(297);
 				match(DOT_COMMA);
 				}
 				break;
@@ -2417,8 +2345,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Print_functionContext _localctx = new Print_functionContext(_ctx, _parentState);
 		Print_functionContext _prevctx = _localctx;
-		int _startState = 44;
-		enterRecursionRule(_localctx, 44, RULE_print_function, _p);
+		int _startState = 42;
+		enterRecursionRule(_localctx, 42, RULE_print_function, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -2428,13 +2356,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(311);
+			setState(302);
 			expression(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(318);
+			setState(309);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,22,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,21,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -2443,18 +2371,18 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new PrintMultipleExprContext(new Print_functionContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_print_function);
-					setState(313);
+					setState(304);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(314);
+					setState(305);
 					match(PRINT);
-					setState(315);
+					setState(306);
 					expression(0);
 					}
 					} 
 				}
-				setState(320);
+				setState(311);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,22,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,21,_ctx);
 			}
 			}
 		}
@@ -2564,16 +2492,16 @@ public class PigLatinParser extends Parser {
 
 	public final Block_codeContext block_code() throws RecognitionException {
 		Block_codeContext _localctx = new Block_codeContext(_ctx, getState());
-		enterRule(_localctx, 46, RULE_block_code);
+		enterRule(_localctx, 44, RULE_block_code);
 		try {
-			setState(325);
+			setState(316);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case SI:
 				_localctx = new CodeBlockIfContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(321);
+				setState(312);
 				if_statement();
 				}
 				break;
@@ -2581,7 +2509,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new CodeBlockWhileContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(322);
+				setState(313);
 				while_statement();
 				}
 				break;
@@ -2589,7 +2517,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new CodeBlockDoWhileContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(323);
+				setState(314);
 				do_while_statement();
 				}
 				break;
@@ -2597,7 +2525,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new CodeBlockForContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(324);
+				setState(315);
 				for_statement();
 				}
 				break;
@@ -2667,49 +2595,49 @@ public class PigLatinParser extends Parser {
 
 	public final If_statementContext if_statement() throws RecognitionException {
 		If_statementContext _localctx = new If_statementContext(_ctx, getState());
-		enterRule(_localctx, 48, RULE_if_statement);
+		enterRule(_localctx, 46, RULE_if_statement);
 		int _la;
 		try {
 			_localctx = new IfStatementContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(327);
+			setState(318);
 			match(SI);
-			setState(328);
+			setState(319);
 			match(INIT_PARENT);
-			setState(329);
+			setState(320);
 			expression(0);
-			setState(330);
+			setState(321);
 			match(FINAL_PARENT);
-			setState(331);
+			setState(322);
 			match(INIT_BRACE);
-			setState(333);
+			setState(324);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+			if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 				{
-				setState(332);
+				setState(323);
 				code_body(0);
 				}
 			}
 
-			setState(335);
+			setState(326);
 			match(FINAL_BRACE);
-			setState(337);
+			setState(328);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,25,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,24,_ctx) ) {
 			case 1:
 				{
-				setState(336);
+				setState(327);
 				else_if_list(0);
 				}
 				break;
 			}
-			setState(339);
+			setState(330);
 			else_statement();
-			setState(340);
+			setState(331);
 			match(FINIS);
-			setState(341);
+			setState(332);
 			match(DOT_COMMA);
 			}
 		}
@@ -2789,8 +2717,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Else_if_listContext _localctx = new Else_if_listContext(_ctx, _parentState);
 		Else_if_listContext _prevctx = _localctx;
-		int _startState = 50;
-		enterRecursionRule(_localctx, 50, RULE_else_if_list, _p);
+		int _startState = 48;
+		enterRecursionRule(_localctx, 48, RULE_else_if_list, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -2800,13 +2728,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(344);
+			setState(335);
 			else_if_clause();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(350);
+			setState(341);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,26,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,25,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -2815,16 +2743,16 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new ElseIfListContext(new Else_if_listContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_else_if_list);
-					setState(346);
+					setState(337);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(347);
+					setState(338);
 					else_if_clause();
 					}
 					} 
 				}
-				setState(352);
+				setState(343);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,26,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,25,_ctx);
 			}
 			}
 		}
@@ -2882,33 +2810,33 @@ public class PigLatinParser extends Parser {
 
 	public final Else_if_clauseContext else_if_clause() throws RecognitionException {
 		Else_if_clauseContext _localctx = new Else_if_clauseContext(_ctx, getState());
-		enterRule(_localctx, 52, RULE_else_if_clause);
+		enterRule(_localctx, 50, RULE_else_if_clause);
 		int _la;
 		try {
 			_localctx = new ElseIfClauseContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(353);
+			setState(344);
 			match(ALITER);
-			setState(354);
+			setState(345);
 			match(INIT_PARENT);
-			setState(355);
+			setState(346);
 			expression(0);
-			setState(356);
+			setState(347);
 			match(FINAL_PARENT);
-			setState(357);
+			setState(348);
 			match(INIT_BRACE);
-			setState(359);
+			setState(350);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+			if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 				{
-				setState(358);
+				setState(349);
 				code_body(0);
 				}
 			}
 
-			setState(361);
+			setState(352);
 			match(FINAL_BRACE);
 			}
 		}
@@ -2978,31 +2906,31 @@ public class PigLatinParser extends Parser {
 
 	public final Else_statementContext else_statement() throws RecognitionException {
 		Else_statementContext _localctx = new Else_statementContext(_ctx, getState());
-		enterRule(_localctx, 54, RULE_else_statement);
+		enterRule(_localctx, 52, RULE_else_statement);
 		int _la;
 		try {
-			setState(370);
+			setState(361);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case ALITER:
 				_localctx = new ElseBlockContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(363);
+				setState(354);
 				match(ALITER);
-				setState(364);
+				setState(355);
 				match(INIT_BRACE);
-				setState(366);
+				setState(357);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+				if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 					{
-					setState(365);
+					setState(356);
 					code_body(0);
 					}
 				}
 
-				setState(368);
+				setState(359);
 				match(FINAL_BRACE);
 				}
 				break;
@@ -3072,37 +3000,37 @@ public class PigLatinParser extends Parser {
 
 	public final While_statementContext while_statement() throws RecognitionException {
 		While_statementContext _localctx = new While_statementContext(_ctx, getState());
-		enterRule(_localctx, 56, RULE_while_statement);
+		enterRule(_localctx, 54, RULE_while_statement);
 		int _la;
 		try {
 			_localctx = new WhileStatementContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(372);
+			setState(363);
 			match(DUM);
-			setState(373);
+			setState(364);
 			match(INIT_PARENT);
-			setState(374);
+			setState(365);
 			expression(0);
-			setState(375);
+			setState(366);
 			match(FINAL_PARENT);
-			setState(376);
+			setState(367);
 			match(INIT_BRACE);
-			setState(378);
+			setState(369);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+			if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 				{
-				setState(377);
+				setState(368);
 				code_body(0);
 				}
 			}
 
-			setState(380);
+			setState(371);
 			match(FINAL_BRACE);
-			setState(381);
+			setState(372);
 			match(FINIS);
-			setState(382);
+			setState(373);
 			match(DOT_COMMA);
 			}
 		}
@@ -3162,37 +3090,37 @@ public class PigLatinParser extends Parser {
 
 	public final Do_while_statementContext do_while_statement() throws RecognitionException {
 		Do_while_statementContext _localctx = new Do_while_statementContext(_ctx, getState());
-		enterRule(_localctx, 58, RULE_do_while_statement);
+		enterRule(_localctx, 56, RULE_do_while_statement);
 		int _la;
 		try {
 			_localctx = new DoWhileStatementContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(384);
+			setState(375);
 			match(FACERE);
-			setState(385);
+			setState(376);
 			match(INIT_BRACE);
-			setState(387);
+			setState(378);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+			if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 				{
-				setState(386);
+				setState(377);
 				code_body(0);
 				}
 			}
 
-			setState(389);
+			setState(380);
 			match(FINAL_BRACE);
-			setState(390);
+			setState(381);
 			match(DUM);
-			setState(391);
+			setState(382);
 			match(INIT_PARENT);
-			setState(392);
+			setState(383);
 			expression(0);
-			setState(393);
+			setState(384);
 			match(FINAL_PARENT);
-			setState(394);
+			setState(385);
 			match(DOT_COMMA);
 			}
 		}
@@ -3260,41 +3188,41 @@ public class PigLatinParser extends Parser {
 
 	public final For_statementContext for_statement() throws RecognitionException {
 		For_statementContext _localctx = new For_statementContext(_ctx, getState());
-		enterRule(_localctx, 60, RULE_for_statement);
+		enterRule(_localctx, 58, RULE_for_statement);
 		int _la;
 		try {
 			_localctx = new ForStatementContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(396);
+			setState(387);
 			match(PER);
-			setState(397);
+			setState(388);
 			match(INIT_PARENT);
-			setState(398);
+			setState(389);
 			for_init();
-			setState(399);
+			setState(390);
 			match(DOT_COMMA);
-			setState(400);
+			setState(391);
 			expression(0);
-			setState(401);
+			setState(392);
 			match(DOT_COMMA);
-			setState(402);
+			setState(393);
 			for_update();
-			setState(403);
+			setState(394);
 			match(FINAL_PARENT);
-			setState(404);
+			setState(395);
 			match(INIT_BRACE);
-			setState(406);
+			setState(397);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 144128384125895424L) != 0)) {
+			if (((((_la - 7)) & ~0x3f) == 0 && ((1L << (_la - 7)) & 144121785175474179L) != 0)) {
 				{
-				setState(405);
+				setState(396);
 				code_body(0);
 				}
 			}
 
-			setState(408);
+			setState(399);
 			match(FINAL_BRACE);
 			}
 		}
@@ -3372,24 +3300,24 @@ public class PigLatinParser extends Parser {
 
 	public final For_initContext for_init() throws RecognitionException {
 		For_initContext _localctx = new For_initContext(_ctx, getState());
-		enterRule(_localctx, 62, RULE_for_init);
+		enterRule(_localctx, 60, RULE_for_init);
 		try {
-			setState(419);
+			setState(410);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case ESTO:
 				_localctx = new ForInitVarDeclContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(410);
+				setState(401);
 				match(ESTO);
-				setState(411);
+				setState(402);
 				match(ID);
-				setState(412);
+				setState(403);
 				match(TWO_POINTS);
-				setState(413);
+				setState(404);
 				variable_type();
-				setState(414);
+				setState(405);
 				expression(0);
 				}
 				break;
@@ -3397,11 +3325,11 @@ public class PigLatinParser extends Parser {
 				_localctx = new ForInitAssignContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(416);
+				setState(407);
 				match(ID);
-				setState(417);
+				setState(408);
 				match(EQUAL);
-				setState(418);
+				setState(409);
 				expression(0);
 				}
 				break;
@@ -3495,18 +3423,18 @@ public class PigLatinParser extends Parser {
 
 	public final For_updateContext for_update() throws RecognitionException {
 		For_updateContext _localctx = new For_updateContext(_ctx, getState());
-		enterRule(_localctx, 64, RULE_for_update);
+		enterRule(_localctx, 62, RULE_for_update);
 		try {
-			setState(428);
+			setState(419);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,34,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,33,_ctx) ) {
 			case 1:
 				_localctx = new ForUpdateIncrementContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(421);
+				setState(412);
 				match(ID);
-				setState(422);
+				setState(413);
 				match(ABREV_PLUS);
 				}
 				break;
@@ -3514,9 +3442,9 @@ public class PigLatinParser extends Parser {
 				_localctx = new ForUpdateDecrementContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(423);
+				setState(414);
 				match(ID);
-				setState(424);
+				setState(415);
 				match(ABREV_MINUS);
 				}
 				break;
@@ -3524,11 +3452,11 @@ public class PigLatinParser extends Parser {
 				_localctx = new ForUpdateAssignContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(425);
+				setState(416);
 				match(ID);
-				setState(426);
+				setState(417);
 				match(EQUAL);
-				setState(427);
+				setState(418);
 				expression(0);
 				}
 				break;
@@ -3582,16 +3510,16 @@ public class PigLatinParser extends Parser {
 
 	public final Variable_sectionContext variable_section() throws RecognitionException {
 		Variable_sectionContext _localctx = new Variable_sectionContext(_ctx, getState());
-		enterRule(_localctx, 66, RULE_variable_section);
+		enterRule(_localctx, 64, RULE_variable_section);
 		try {
 			_localctx = new VariablesSectionContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(430);
+			setState(421);
 			match(VARIABILES);
-			setState(431);
+			setState(422);
 			match(GREATER);
-			setState(432);
+			setState(423);
 			variabiles_body(0);
 			}
 		}
@@ -3671,8 +3599,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Variabiles_bodyContext _localctx = new Variabiles_bodyContext(_ctx, _parentState);
 		Variabiles_bodyContext _prevctx = _localctx;
-		int _startState = 68;
-		enterRecursionRule(_localctx, 68, RULE_variabiles_body, _p);
+		int _startState = 66;
+		enterRecursionRule(_localctx, 66, RULE_variabiles_body, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -3682,13 +3610,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(435);
+			setState(426);
 			declarations();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(441);
+			setState(432);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,35,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,34,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -3697,16 +3625,16 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new DeclarationsVariablesListContext(new Variabiles_bodyContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_variabiles_body);
-					setState(437);
+					setState(428);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(438);
+					setState(429);
 					declarations();
 					}
 					} 
 				}
-				setState(443);
+				setState(434);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,35,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,34,_ctx);
 			}
 			}
 		}
@@ -3896,16 +3824,16 @@ public class PigLatinParser extends Parser {
 
 	public final DeclarationsContext declarations() throws RecognitionException {
 		DeclarationsContext _localctx = new DeclarationsContext(_ctx, getState());
-		enterRule(_localctx, 70, RULE_declarations);
+		enterRule(_localctx, 68, RULE_declarations);
 		try {
-			setState(452);
+			setState(443);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,36,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,35,_ctx) ) {
 			case 1:
 				_localctx = new VariableInstanceContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(444);
+				setState(435);
 				variable_declaration();
 				}
 				break;
@@ -3913,7 +3841,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new VariableRedefinedUssageContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(445);
+				setState(436);
 				variable_ussage();
 				}
 				break;
@@ -3921,7 +3849,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new NormalArrayInstanceContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(446);
+				setState(437);
 				normal_array_declaration();
 				}
 				break;
@@ -3929,7 +3857,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new StructDefinitionContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(447);
+				setState(438);
 				struct_declaration();
 				}
 				break;
@@ -3937,7 +3865,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ArrayRedefinedUssageContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(448);
+				setState(439);
 				array_redefined_ussage();
 				}
 				break;
@@ -3945,7 +3873,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new StructVariableInstanceContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(449);
+				setState(440);
 				struct_instance();
 				}
 				break;
@@ -3953,7 +3881,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new GlobalAbbreviatedOperationContext(_localctx);
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(450);
+				setState(441);
 				abbreviated_operation();
 				}
 				break;
@@ -3961,7 +3889,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new GlobalNestedVariableUsageContext(_localctx);
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(451);
+				setState(442);
 				nested_variables_usage();
 				}
 				break;
@@ -4021,24 +3949,24 @@ public class PigLatinParser extends Parser {
 
 	public final Array_redefined_ussageContext array_redefined_ussage() throws RecognitionException {
 		Array_redefined_ussageContext _localctx = new Array_redefined_ussageContext(_ctx, getState());
-		enterRule(_localctx, 72, RULE_array_redefined_ussage);
+		enterRule(_localctx, 70, RULE_array_redefined_ussage);
 		try {
 			_localctx = new RedefiniedArrayUssageContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(454);
+			setState(445);
 			match(ID);
-			setState(455);
+			setState(446);
 			match(INIT_BRACKET);
-			setState(456);
+			setState(447);
 			expression(0);
-			setState(457);
+			setState(448);
 			match(FINAL_BRACKET);
-			setState(458);
+			setState(449);
 			match(EQUAL);
-			setState(459);
+			setState(450);
 			expression(0);
-			setState(460);
+			setState(451);
 			match(DOT_COMMA);
 			}
 		}
@@ -4091,18 +4019,18 @@ public class PigLatinParser extends Parser {
 
 	public final Variable_ussageContext variable_ussage() throws RecognitionException {
 		Variable_ussageContext _localctx = new Variable_ussageContext(_ctx, getState());
-		enterRule(_localctx, 74, RULE_variable_ussage);
+		enterRule(_localctx, 72, RULE_variable_ussage);
 		try {
 			_localctx = new NormalVariableRedefiniedUsageContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(462);
+			setState(453);
 			match(ID);
-			setState(463);
+			setState(454);
 			match(EQUAL);
-			setState(464);
+			setState(455);
 			expression(0);
-			setState(465);
+			setState(456);
 			match(DOT_COMMA);
 			}
 		}
@@ -4157,18 +4085,18 @@ public class PigLatinParser extends Parser {
 
 	public final Nested_variables_usageContext nested_variables_usage() throws RecognitionException {
 		Nested_variables_usageContext _localctx = new Nested_variables_usageContext(_ctx, getState());
-		enterRule(_localctx, 76, RULE_nested_variables_usage);
+		enterRule(_localctx, 74, RULE_nested_variables_usage);
 		try {
 			_localctx = new NestedStructRedefiniedValueContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(467);
+			setState(458);
 			struct_values(0);
-			setState(468);
+			setState(459);
 			match(EQUAL);
-			setState(469);
+			setState(460);
 			expression(0);
-			setState(470);
+			setState(461);
 			match(DOT_COMMA);
 			}
 		}
@@ -4224,20 +4152,20 @@ public class PigLatinParser extends Parser {
 
 	public final Struct_instanceContext struct_instance() throws RecognitionException {
 		Struct_instanceContext _localctx = new Struct_instanceContext(_ctx, getState());
-		enterRule(_localctx, 78, RULE_struct_instance);
+		enterRule(_localctx, 76, RULE_struct_instance);
 		try {
 			_localctx = new StructInstanceContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(472);
+			setState(463);
 			match(ESTO);
-			setState(473);
+			setState(464);
 			match(ID);
-			setState(474);
+			setState(465);
 			match(TWO_POINTS);
-			setState(475);
+			setState(466);
 			match(ID);
-			setState(476);
+			setState(467);
 			struct_literal();
 			}
 		}
@@ -4294,22 +4222,22 @@ public class PigLatinParser extends Parser {
 
 	public final Variable_declarationContext variable_declaration() throws RecognitionException {
 		Variable_declarationContext _localctx = new Variable_declarationContext(_ctx, getState());
-		enterRule(_localctx, 80, RULE_variable_declaration);
+		enterRule(_localctx, 78, RULE_variable_declaration);
 		try {
 			_localctx = new VariableDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(478);
+			setState(469);
 			match(ESTO);
-			setState(479);
+			setState(470);
 			match(ID);
-			setState(480);
+			setState(471);
 			match(TWO_POINTS);
-			setState(481);
+			setState(472);
 			variable_type();
-			setState(482);
+			setState(473);
 			expression(0);
-			setState(483);
+			setState(474);
 			match(DOT_COMMA);
 			}
 		}
@@ -4371,37 +4299,37 @@ public class PigLatinParser extends Parser {
 
 	public final Normal_array_declarationContext normal_array_declaration() throws RecognitionException {
 		Normal_array_declarationContext _localctx = new Normal_array_declarationContext(_ctx, getState());
-		enterRule(_localctx, 82, RULE_normal_array_declaration);
+		enterRule(_localctx, 80, RULE_normal_array_declaration);
 		int _la;
 		try {
 			_localctx = new NormalArrayDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(485);
+			setState(476);
 			match(SERIES);
-			setState(486);
+			setState(477);
 			match(ID);
-			setState(487);
+			setState(478);
 			match(INIT_BRACKET);
-			setState(488);
+			setState(479);
 			expression(0);
-			setState(489);
+			setState(480);
 			match(FINAL_BRACKET);
-			setState(490);
+			setState(481);
 			match(TWO_POINTS);
-			setState(491);
+			setState(482);
 			variable_type();
-			setState(493);
+			setState(484);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==INIT_BRACE) {
 				{
-				setState(492);
+				setState(483);
 				array_initialization();
 				}
 			}
 
-			setState(495);
+			setState(486);
 			match(DOT_COMMA);
 			}
 		}
@@ -4453,16 +4381,16 @@ public class PigLatinParser extends Parser {
 
 	public final Array_initializationContext array_initialization() throws RecognitionException {
 		Array_initializationContext _localctx = new Array_initializationContext(_ctx, getState());
-		enterRule(_localctx, 84, RULE_array_initialization);
+		enterRule(_localctx, 82, RULE_array_initialization);
 		try {
 			_localctx = new ArrayInitWithValuesContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(497);
+			setState(488);
 			match(INIT_BRACE);
-			setState(498);
+			setState(489);
 			values_array_list(0);
-			setState(499);
+			setState(490);
 			match(FINAL_BRACE);
 			}
 		}
@@ -4543,8 +4471,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Values_array_listContext _localctx = new Values_array_listContext(_ctx, _parentState);
 		Values_array_listContext _prevctx = _localctx;
-		int _startState = 86;
-		enterRecursionRule(_localctx, 86, RULE_values_array_list, _p);
+		int _startState = 84;
+		enterRecursionRule(_localctx, 84, RULE_values_array_list, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -4554,13 +4482,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(502);
+			setState(493);
 			array_value();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(509);
+			setState(500);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,38,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,37,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -4569,18 +4497,18 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new ArrayValueListContext(new Values_array_listContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_values_array_list);
-					setState(504);
+					setState(495);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(505);
+					setState(496);
 					match(COMMA);
-					setState(506);
+					setState(497);
 					array_value();
 					}
 					} 
 				}
-				setState(511);
+				setState(502);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,38,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,37,_ctx);
 			}
 			}
 		}
@@ -4630,12 +4558,12 @@ public class PigLatinParser extends Parser {
 
 	public final Array_valueContext array_value() throws RecognitionException {
 		Array_valueContext _localctx = new Array_valueContext(_ctx, getState());
-		enterRule(_localctx, 88, RULE_array_value);
+		enterRule(_localctx, 86, RULE_array_value);
 		try {
 			_localctx = new ArrayNormalValueContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(512);
+			setState(503);
 			expression(0);
 			}
 		}
@@ -4768,26 +4696,26 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Struct_valuesContext _localctx = new Struct_valuesContext(_ctx, _parentState);
 		Struct_valuesContext _prevctx = _localctx;
-		int _startState = 90;
-		enterRecursionRule(_localctx, 90, RULE_struct_values, _p);
+		int _startState = 88;
+		enterRecursionRule(_localctx, 88, RULE_struct_values, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(525);
+			setState(516);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,39,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,38,_ctx) ) {
 			case 1:
 				{
 				_localctx = new StructBasePropertyContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 
-				setState(515);
+				setState(506);
 				match(ID);
-				setState(516);
+				setState(507);
 				match(DOT);
-				setState(517);
+				setState(508);
 				match(ID);
 				}
 				break;
@@ -4796,42 +4724,42 @@ public class PigLatinParser extends Parser {
 				_localctx = new StructBaseArrayPropertyContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(518);
+				setState(509);
 				match(ID);
-				setState(519);
+				setState(510);
 				match(INIT_BRACKET);
-				setState(520);
+				setState(511);
 				expression(0);
-				setState(521);
+				setState(512);
 				match(FINAL_BRACKET);
-				setState(522);
+				setState(513);
 				match(DOT);
-				setState(523);
+				setState(514);
 				match(ID);
 				}
 				break;
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(537);
+			setState(528);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,41,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,40,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(535);
+					setState(526);
 					_errHandler.sync(this);
-					switch ( getInterpreter().adaptivePredict(_input,40,_ctx) ) {
+					switch ( getInterpreter().adaptivePredict(_input,39,_ctx) ) {
 					case 1:
 						{
 						_localctx = new StructPropertyChainContext(new Struct_valuesContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_struct_values);
-						setState(527);
+						setState(518);
 						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
-						setState(528);
+						setState(519);
 						match(DOT);
-						setState(529);
+						setState(520);
 						match(ID);
 						}
 						break;
@@ -4839,22 +4767,22 @@ public class PigLatinParser extends Parser {
 						{
 						_localctx = new StructArrayAccessChainContext(new Struct_valuesContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_struct_values);
-						setState(530);
+						setState(521);
 						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-						setState(531);
+						setState(522);
 						match(INIT_BRACKET);
-						setState(532);
+						setState(523);
 						expression(0);
-						setState(533);
+						setState(524);
 						match(FINAL_BRACKET);
 						}
 						break;
 					}
 					} 
 				}
-				setState(539);
+				setState(530);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,41,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,40,_ctx);
 			}
 			}
 		}
@@ -4910,24 +4838,24 @@ public class PigLatinParser extends Parser {
 
 	public final Struct_declarationContext struct_declaration() throws RecognitionException {
 		Struct_declarationContext _localctx = new Struct_declarationContext(_ctx, getState());
-		enterRule(_localctx, 92, RULE_struct_declaration);
+		enterRule(_localctx, 90, RULE_struct_declaration);
 		try {
 			_localctx = new StructDeclarationContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(540);
+			setState(531);
 			match(STRUCTURE);
-			setState(541);
+			setState(532);
 			match(ID);
-			setState(542);
+			setState(533);
 			match(INIT_BRACE);
-			setState(543);
+			setState(534);
 			struct_body();
-			setState(544);
+			setState(535);
 			match(FINAL_BRACE);
-			setState(545);
+			setState(536);
 			match(FINIS);
-			setState(546);
+			setState(537);
 			match(DOT_COMMA);
 			}
 		}
@@ -4997,16 +4925,16 @@ public class PigLatinParser extends Parser {
 
 	public final Struct_bodyContext struct_body() throws RecognitionException {
 		Struct_bodyContext _localctx = new Struct_bodyContext(_ctx, getState());
-		enterRule(_localctx, 94, RULE_struct_body);
+		enterRule(_localctx, 92, RULE_struct_body);
 		try {
-			setState(550);
+			setState(541);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,42,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,41,_ctx) ) {
 			case 1:
 				_localctx = new StructSeparatedBodyContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(548);
+				setState(539);
 				struct_normal_body(0);
 				}
 				break;
@@ -5014,7 +4942,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new StructCommaBodyContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(549);
+				setState(540);
 				struct_comma_body(0);
 				}
 				break;
@@ -5098,8 +5026,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Struct_normal_bodyContext _localctx = new Struct_normal_bodyContext(_ctx, _parentState);
 		Struct_normal_bodyContext _prevctx = _localctx;
-		int _startState = 96;
-		enterRecursionRule(_localctx, 96, RULE_struct_normal_body, _p);
+		int _startState = 94;
+		enterRecursionRule(_localctx, 94, RULE_struct_normal_body, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -5109,15 +5037,15 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(553);
+			setState(544);
 			struct_attribute();
-			setState(554);
+			setState(545);
 			match(DOT_COMMA);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(562);
+			setState(553);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,43,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,42,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -5126,18 +5054,18 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new StructNormalBodyListContext(new Struct_normal_bodyContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_struct_normal_body);
-					setState(556);
+					setState(547);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(557);
+					setState(548);
 					struct_attribute();
-					setState(558);
+					setState(549);
 					match(DOT_COMMA);
 					}
 					} 
 				}
-				setState(564);
+				setState(555);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,43,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,42,_ctx);
 			}
 			}
 		}
@@ -5218,8 +5146,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Struct_comma_bodyContext _localctx = new Struct_comma_bodyContext(_ctx, _parentState);
 		Struct_comma_bodyContext _prevctx = _localctx;
-		int _startState = 98;
-		enterRecursionRule(_localctx, 98, RULE_struct_comma_body, _p);
+		int _startState = 96;
+		enterRecursionRule(_localctx, 96, RULE_struct_comma_body, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -5229,13 +5157,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(566);
+			setState(557);
 			struct_attribute();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(573);
+			setState(564);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,44,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,43,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -5244,18 +5172,18 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new StructCommaBodyListContext(new Struct_comma_bodyContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_struct_comma_body);
-					setState(568);
+					setState(559);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(569);
+					setState(560);
 					match(COMMA);
-					setState(570);
+					setState(561);
 					struct_attribute();
 					}
 					} 
 				}
-				setState(575);
+				setState(566);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,44,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,43,_ctx);
 			}
 			}
 		}
@@ -5325,16 +5253,16 @@ public class PigLatinParser extends Parser {
 
 	public final Struct_attributeContext struct_attribute() throws RecognitionException {
 		Struct_attributeContext _localctx = new Struct_attributeContext(_ctx, getState());
-		enterRule(_localctx, 100, RULE_struct_attribute);
+		enterRule(_localctx, 98, RULE_struct_attribute);
 		try {
-			setState(578);
+			setState(569);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case ESTO:
 				_localctx = new NormalVariableStructContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(576);
+				setState(567);
 				variable_without_value();
 				}
 				break;
@@ -5342,7 +5270,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ArrayVariableStructContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(577);
+				setState(568);
 				array_variable_struct();
 				}
 				break;
@@ -5399,18 +5327,18 @@ public class PigLatinParser extends Parser {
 
 	public final Variable_without_valueContext variable_without_value() throws RecognitionException {
 		Variable_without_valueContext _localctx = new Variable_without_valueContext(_ctx, getState());
-		enterRule(_localctx, 102, RULE_variable_without_value);
+		enterRule(_localctx, 100, RULE_variable_without_value);
 		try {
 			_localctx = new InternalStructNormalVariableContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(580);
+			setState(571);
 			match(ESTO);
-			setState(581);
+			setState(572);
 			match(ID);
-			setState(582);
+			setState(573);
 			match(TWO_POINTS);
-			setState(583);
+			setState(574);
 			variable_type();
 			}
 		}
@@ -5463,18 +5391,18 @@ public class PigLatinParser extends Parser {
 
 	public final Array_variable_structContext array_variable_struct() throws RecognitionException {
 		Array_variable_structContext _localctx = new Array_variable_structContext(_ctx, getState());
-		enterRule(_localctx, 104, RULE_array_variable_struct);
+		enterRule(_localctx, 102, RULE_array_variable_struct);
 		try {
 			_localctx = new InternalStructArrayContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(585);
+			setState(576);
 			match(SERIES);
-			setState(586);
+			setState(577);
 			match(ID);
-			setState(587);
+			setState(578);
 			match(TWO_POINTS);
-			setState(588);
+			setState(579);
 			variable_type();
 			}
 		}
@@ -5526,16 +5454,16 @@ public class PigLatinParser extends Parser {
 
 	public final Struct_literalContext struct_literal() throws RecognitionException {
 		Struct_literalContext _localctx = new Struct_literalContext(_ctx, getState());
-		enterRule(_localctx, 106, RULE_struct_literal);
+		enterRule(_localctx, 104, RULE_struct_literal);
 		try {
 			_localctx = new StructLiteralValueContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(590);
+			setState(581);
 			match(INIT_BRACE);
-			setState(591);
+			setState(582);
 			struct_data_list(0);
-			setState(592);
+			setState(583);
 			match(FINAL_BRACE);
 			}
 		}
@@ -5616,8 +5544,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Struct_data_listContext _localctx = new Struct_data_listContext(_ctx, _parentState);
 		Struct_data_listContext _prevctx = _localctx;
-		int _startState = 108;
-		enterRecursionRule(_localctx, 108, RULE_struct_data_list, _p);
+		int _startState = 106;
+		enterRecursionRule(_localctx, 106, RULE_struct_data_list, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -5627,13 +5555,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(595);
+			setState(586);
 			struct_data_value();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(602);
+			setState(593);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,46,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,45,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -5642,18 +5570,18 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new StructValueListContext(new Struct_data_listContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_struct_data_list);
-					setState(597);
+					setState(588);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(598);
+					setState(589);
 					match(COMMA);
-					setState(599);
+					setState(590);
 					struct_data_value();
 					}
 					} 
 				}
-				setState(604);
+				setState(595);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,46,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,45,_ctx);
 			}
 			}
 		}
@@ -5705,16 +5633,16 @@ public class PigLatinParser extends Parser {
 
 	public final Struct_data_valueContext struct_data_value() throws RecognitionException {
 		Struct_data_valueContext _localctx = new Struct_data_valueContext(_ctx, getState());
-		enterRule(_localctx, 110, RULE_struct_data_value);
+		enterRule(_localctx, 108, RULE_struct_data_value);
 		try {
 			_localctx = new StructDataNormalContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(605);
+			setState(596);
 			match(ID);
-			setState(606);
+			setState(597);
 			match(TWO_POINTS);
-			setState(607);
+			setState(598);
 			expression(0);
 			}
 		}
@@ -5970,14 +5898,14 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		ExpressionContext _localctx = new ExpressionContext(_ctx, _parentState);
 		ExpressionContext _prevctx = _localctx;
-		int _startState = 112;
-		enterRecursionRule(_localctx, 112, RULE_expression, _p);
+		int _startState = 110;
+		enterRecursionRule(_localctx, 110, RULE_expression, _p);
 		int _la;
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(617);
+			setState(608);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case INIT_PARENT:
@@ -5986,11 +5914,11 @@ public class PigLatinParser extends Parser {
 				_ctx = _localctx;
 				_prevctx = _localctx;
 
-				setState(610);
+				setState(601);
 				match(INIT_PARENT);
-				setState(611);
+				setState(602);
 				expression(0);
-				setState(612);
+				setState(603);
 				match(FINAL_PARENT);
 				}
 				break;
@@ -6000,7 +5928,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ExpressionUnaryContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(614);
+				setState(605);
 				((ExpressionUnaryContext)_localctx).op = _input.LT(1);
 				_la = _input.LA(1);
 				if ( !(_la==MINUS || _la==NOT) ) {
@@ -6011,7 +5939,7 @@ public class PigLatinParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(615);
+				setState(606);
 				expression(8);
 				}
 				break;
@@ -6027,7 +5955,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ExpressionValueContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(616);
+				setState(607);
 				normal_values();
 				}
 				break;
@@ -6035,24 +5963,24 @@ public class PigLatinParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(639);
+			setState(630);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,49,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,48,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(637);
+					setState(628);
 					_errHandler.sync(this);
-					switch ( getInterpreter().adaptivePredict(_input,48,_ctx) ) {
+					switch ( getInterpreter().adaptivePredict(_input,47,_ctx) ) {
 					case 1:
 						{
 						_localctx = new ExpressionMultDivContext(new ExpressionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(619);
+						setState(610);
 						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
-						setState(620);
+						setState(611);
 						((ExpressionMultDivContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==MULTIPLICATION || _la==DIVIDE) ) {
@@ -6063,7 +5991,7 @@ public class PigLatinParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(621);
+						setState(612);
 						expression(8);
 						}
 						break;
@@ -6071,9 +5999,9 @@ public class PigLatinParser extends Parser {
 						{
 						_localctx = new ExpressionAddSubContext(new ExpressionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(622);
+						setState(613);
 						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
-						setState(623);
+						setState(614);
 						((ExpressionAddSubContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==PLUS || _la==MINUS) ) {
@@ -6084,7 +6012,7 @@ public class PigLatinParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(624);
+						setState(615);
 						expression(7);
 						}
 						break;
@@ -6092,12 +6020,12 @@ public class PigLatinParser extends Parser {
 						{
 						_localctx = new ExpressionRelationalContext(new ExpressionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(625);
+						setState(616);
 						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
-						setState(626);
+						setState(617);
 						((ExpressionRelationalContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
-						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 15199648742375424L) != 0)) ) {
+						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 1945555039024054272L) != 0)) ) {
 							((ExpressionRelationalContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						}
 						else {
@@ -6105,7 +6033,7 @@ public class PigLatinParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(627);
+						setState(618);
 						expression(6);
 						}
 						break;
@@ -6113,9 +6041,9 @@ public class PigLatinParser extends Parser {
 						{
 						_localctx = new ExpressionEqualityContext(new ExpressionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(628);
+						setState(619);
 						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
-						setState(629);
+						setState(620);
 						((ExpressionEqualityContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
 						if ( !(_la==EQUALS || _la==DIFERENCE) ) {
@@ -6126,7 +6054,7 @@ public class PigLatinParser extends Parser {
 							_errHandler.reportMatch(this);
 							consume();
 						}
-						setState(630);
+						setState(621);
 						expression(5);
 						}
 						break;
@@ -6134,11 +6062,11 @@ public class PigLatinParser extends Parser {
 						{
 						_localctx = new ExpressionAndContext(new ExpressionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(631);
+						setState(622);
 						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-						setState(632);
+						setState(623);
 						match(AND);
-						setState(633);
+						setState(624);
 						expression(4);
 						}
 						break;
@@ -6146,20 +6074,20 @@ public class PigLatinParser extends Parser {
 						{
 						_localctx = new ExpressionOrContext(new ExpressionContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expression);
-						setState(634);
+						setState(625);
 						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-						setState(635);
+						setState(626);
 						match(OR);
-						setState(636);
+						setState(627);
 						expression(3);
 						}
 						break;
 					}
 					} 
 				}
-				setState(641);
+				setState(632);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,49,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,48,_ctx);
 			}
 			}
 		}
@@ -6297,16 +6225,16 @@ public class PigLatinParser extends Parser {
 
 	public final Variable_typeContext variable_type() throws RecognitionException {
 		Variable_typeContext _localctx = new Variable_typeContext(_ctx, getState());
-		enterRule(_localctx, 114, RULE_variable_type);
+		enterRule(_localctx, 112, RULE_variable_type);
 		try {
-			setState(648);
+			setState(639);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case TEXTUM:
 				_localctx = new TypeTextContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(642);
+				setState(633);
 				match(TEXTUM);
 				}
 				break;
@@ -6314,7 +6242,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new TypeIntContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(643);
+				setState(634);
 				match(NUMERUS);
 				}
 				break;
@@ -6322,7 +6250,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new TypeDecimalContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(644);
+				setState(635);
 				match(DECIMALIS);
 				}
 				break;
@@ -6330,7 +6258,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new TypeCharContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(645);
+				setState(636);
 				match(LITTERA);
 				}
 				break;
@@ -6338,7 +6266,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new TypeBooleanContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(646);
+				setState(637);
 				match(BOOLEAN);
 				}
 				break;
@@ -6346,7 +6274,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new TypeCustomIdContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(647);
+				setState(638);
 				match(ID);
 				}
 				break;
@@ -6403,18 +6331,18 @@ public class PigLatinParser extends Parser {
 
 	public final Array_callContext array_call() throws RecognitionException {
 		Array_callContext _localctx = new Array_callContext(_ctx, getState());
-		enterRule(_localctx, 116, RULE_array_call);
+		enterRule(_localctx, 114, RULE_array_call);
 		try {
 			_localctx = new ArrayCallContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(650);
+			setState(641);
 			match(ID);
-			setState(651);
+			setState(642);
 			match(INIT_BRACKET);
-			setState(652);
+			setState(643);
 			expression(0);
-			setState(653);
+			setState(644);
 			match(FINAL_BRACKET);
 			}
 		}
@@ -6467,27 +6395,27 @@ public class PigLatinParser extends Parser {
 
 	public final Function_callContext function_call() throws RecognitionException {
 		Function_callContext _localctx = new Function_callContext(_ctx, getState());
-		enterRule(_localctx, 118, RULE_function_call);
+		enterRule(_localctx, 116, RULE_function_call);
 		int _la;
 		try {
 			_localctx = new FunctionCallingContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(655);
+			setState(646);
 			match(ID);
-			setState(656);
+			setState(647);
 			match(INIT_PARENT);
-			setState(658);
+			setState(649);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4539664776992751616L) != 0)) {
+			if (((((_la - 14)) & ~0x3f) == 0 && ((1L << (_la - 14)) & 35465984647102467L) != 0)) {
 				{
-				setState(657);
+				setState(648);
 				arguments_list(0);
 				}
 			}
 
-			setState(660);
+			setState(651);
 			match(FINAL_PARENT);
 			}
 		}
@@ -6568,8 +6496,8 @@ public class PigLatinParser extends Parser {
 		int _parentState = getState();
 		Arguments_listContext _localctx = new Arguments_listContext(_ctx, _parentState);
 		Arguments_listContext _prevctx = _localctx;
-		int _startState = 120;
-		enterRecursionRule(_localctx, 120, RULE_arguments_list, _p);
+		int _startState = 118;
+		enterRecursionRule(_localctx, 118, RULE_arguments_list, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
@@ -6579,13 +6507,13 @@ public class PigLatinParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(663);
+			setState(654);
 			expression(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(670);
+			setState(661);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,52,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,51,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
@@ -6594,18 +6522,18 @@ public class PigLatinParser extends Parser {
 					{
 					_localctx = new ArgumentFunctionListContext(new Arguments_listContext(_parentctx, _parentState));
 					pushNewRecursionContext(_localctx, _startState, RULE_arguments_list);
-					setState(665);
+					setState(656);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(666);
+					setState(657);
 					match(COMMA);
-					setState(667);
+					setState(658);
 					expression(0);
 					}
 					} 
 				}
-				setState(672);
+				setState(663);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,52,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,51,_ctx);
 			}
 			}
 		}
@@ -6693,16 +6621,16 @@ public class PigLatinParser extends Parser {
 
 	public final Nest_variableContext nest_variable() throws RecognitionException {
 		Nest_variableContext _localctx = new Nest_variableContext(_ctx, getState());
-		enterRule(_localctx, 122, RULE_nest_variable);
+		enterRule(_localctx, 120, RULE_nest_variable);
 		try {
-			setState(676);
+			setState(667);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,53,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,52,_ctx) ) {
 			case 1:
 				_localctx = new NestedValueVariableContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(673);
+				setState(664);
 				struct_values(0);
 				}
 				break;
@@ -6710,7 +6638,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ArrayCallVariableContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(674);
+				setState(665);
 				array_call();
 				}
 				break;
@@ -6718,7 +6646,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new SigleValueVariableContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(675);
+				setState(666);
 				match(ID);
 				}
 				break;
@@ -6960,16 +6888,16 @@ public class PigLatinParser extends Parser {
 
 	public final Normal_valuesContext normal_values() throws RecognitionException {
 		Normal_valuesContext _localctx = new Normal_valuesContext(_ctx, getState());
-		enterRule(_localctx, 124, RULE_normal_values);
+		enterRule(_localctx, 122, RULE_normal_values);
 		try {
-			setState(689);
+			setState(680);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,54,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,53,_ctx) ) {
 			case 1:
 				_localctx = new ValStringContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(678);
+				setState(669);
 				match(STRING);
 				}
 				break;
@@ -6977,7 +6905,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValCharContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(679);
+				setState(670);
 				match(CHAR);
 				}
 				break;
@@ -6985,7 +6913,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValDecimalContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(680);
+				setState(671);
 				match(DECIMAL);
 				}
 				break;
@@ -6993,7 +6921,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValIntContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(681);
+				setState(672);
 				match(INT);
 				}
 				break;
@@ -7001,7 +6929,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValBoolContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(682);
+				setState(673);
 				boolean_values();
 				}
 				break;
@@ -7009,7 +6937,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValArrayCallContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(683);
+				setState(674);
 				array_call();
 				}
 				break;
@@ -7017,7 +6945,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValFunctionCallContext(_localctx);
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(684);
+				setState(675);
 				function_call();
 				}
 				break;
@@ -7025,7 +6953,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValStructNestValueContext(_localctx);
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(685);
+				setState(676);
 				struct_values(0);
 				}
 				break;
@@ -7033,7 +6961,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValStructPropertyLiteralContext(_localctx);
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(686);
+				setState(677);
 				struct_literal();
 				}
 				break;
@@ -7041,7 +6969,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValArrayLiteralContext(_localctx);
 				enterOuterAlt(_localctx, 10);
 				{
-				setState(687);
+				setState(678);
 				array_initialization();
 				}
 				break;
@@ -7049,7 +6977,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new ValIdCallContext(_localctx);
 				enterOuterAlt(_localctx, 11);
 				{
-				setState(688);
+				setState(679);
 				match(ID);
 				}
 				break;
@@ -7117,16 +7045,16 @@ public class PigLatinParser extends Parser {
 
 	public final Boolean_valuesContext boolean_values() throws RecognitionException {
 		Boolean_valuesContext _localctx = new Boolean_valuesContext(_ctx, getState());
-		enterRule(_localctx, 126, RULE_boolean_values);
+		enterRule(_localctx, 124, RULE_boolean_values);
 		try {
-			setState(693);
+			setState(684);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case VERUM:
 				_localctx = new BoolTrueContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(691);
+				setState(682);
 				match(VERUM);
 				}
 				break;
@@ -7134,7 +7062,7 @@ public class PigLatinParser extends Parser {
 				_localctx = new BoolFalseContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(692);
+				setState(683);
 				match(FALSUS);
 				}
 				break;
@@ -7256,20 +7184,20 @@ public class PigLatinParser extends Parser {
 
 	public final Abbreviated_operationContext abbreviated_operation() throws RecognitionException {
 		Abbreviated_operationContext _localctx = new Abbreviated_operationContext(_ctx, getState());
-		enterRule(_localctx, 128, RULE_abbreviated_operation);
+		enterRule(_localctx, 126, RULE_abbreviated_operation);
 		try {
-			setState(711);
+			setState(702);
 			_errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,56,_ctx) ) {
+			switch ( getInterpreter().adaptivePredict(_input,55,_ctx) ) {
 			case 1:
 				_localctx = new IncOperationContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(695);
+				setState(686);
 				nest_variable();
-				setState(696);
+				setState(687);
 				match(ABREV_PLUS);
-				setState(697);
+				setState(688);
 				match(DOT_COMMA);
 				}
 				break;
@@ -7277,11 +7205,11 @@ public class PigLatinParser extends Parser {
 				_localctx = new DecOperationContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(699);
+				setState(690);
 				nest_variable();
-				setState(700);
+				setState(691);
 				match(ABREV_MINUS);
-				setState(701);
+				setState(692);
 				match(DOT_COMMA);
 				}
 				break;
@@ -7289,11 +7217,11 @@ public class PigLatinParser extends Parser {
 				_localctx = new IncPrevOperationContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(703);
+				setState(694);
 				match(ABREV_PLUS);
-				setState(704);
+				setState(695);
 				nest_variable();
-				setState(705);
+				setState(696);
 				match(DOT_COMMA);
 				}
 				break;
@@ -7301,11 +7229,11 @@ public class PigLatinParser extends Parser {
 				_localctx = new DecPrevOperationContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(707);
+				setState(698);
 				match(ABREV_MINUS);
-				setState(708);
+				setState(699);
 				nest_variable();
-				setState(709);
+				setState(700);
 				match(DOT_COMMA);
 				}
 				break;
@@ -7324,33 +7252,33 @@ public class PigLatinParser extends Parser {
 
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
-		case 3:
+		case 2:
 			return munera_body_sempred((Munera_bodyContext)_localctx, predIndex);
-		case 10:
+		case 9:
 			return local_variable_list_sempred((Local_variable_listContext)_localctx, predIndex);
-		case 12:
+		case 11:
 			return function_arguments_sempred((Function_argumentsContext)_localctx, predIndex);
-		case 17:
+		case 16:
 			return code_body_sempred((Code_bodyContext)_localctx, predIndex);
-		case 22:
+		case 21:
 			return print_function_sempred((Print_functionContext)_localctx, predIndex);
-		case 25:
+		case 24:
 			return else_if_list_sempred((Else_if_listContext)_localctx, predIndex);
-		case 34:
+		case 33:
 			return variabiles_body_sempred((Variabiles_bodyContext)_localctx, predIndex);
-		case 43:
+		case 42:
 			return values_array_list_sempred((Values_array_listContext)_localctx, predIndex);
-		case 45:
+		case 44:
 			return struct_values_sempred((Struct_valuesContext)_localctx, predIndex);
-		case 48:
+		case 47:
 			return struct_normal_body_sempred((Struct_normal_bodyContext)_localctx, predIndex);
-		case 49:
+		case 48:
 			return struct_comma_body_sempred((Struct_comma_bodyContext)_localctx, predIndex);
-		case 54:
+		case 53:
 			return struct_data_list_sempred((Struct_data_listContext)_localctx, predIndex);
-		case 56:
+		case 55:
 			return expression_sempred((ExpressionContext)_localctx, predIndex);
-		case 60:
+		case 59:
 			return arguments_list_sempred((Arguments_listContext)_localctx, predIndex);
 		}
 		return true;
@@ -7467,7 +7395,7 @@ public class PigLatinParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001>\u02ca\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0004\u0001E\u02c1\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
 		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
 		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
 		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
@@ -7483,430 +7411,425 @@ public class PigLatinParser extends Parser {
 		"-\u0007-\u0002.\u0007.\u0002/\u0007/\u00020\u00070\u00021\u00071\u0002"+
 		"2\u00072\u00023\u00073\u00024\u00074\u00025\u00075\u00026\u00076\u0002"+
 		"7\u00077\u00028\u00078\u00029\u00079\u0002:\u0007:\u0002;\u0007;\u0002"+
-		"<\u0007<\u0002=\u0007=\u0002>\u0007>\u0002?\u0007?\u0002@\u0007@\u0001"+
-		"\u0000\u0005\u0000\u0084\b\u0000\n\u0000\f\u0000\u0087\t\u0000\u0001\u0000"+
-		"\u0001\u0000\u0001\u0001\u0003\u0001\u008c\b\u0001\u0001\u0001\u0003\u0001"+
-		"\u008f\b\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0002"+
-		"\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0003\u0001\u0003\u0001\u0003"+
-		"\u0001\u0003\u0001\u0003\u0005\u0003\u009e\b\u0003\n\u0003\f\u0003\u00a1"+
-		"\t\u0003\u0001\u0004\u0001\u0004\u0003\u0004\u00a5\b\u0004\u0001\u0005"+
-		"\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0003\u0005\u00ac\b\u0005"+
-		"\u0001\u0005\u0001\u0005\u0001\u0005\u0003\u0005\u00b1\b\u0005\u0001\u0005"+
-		"\u0003\u0005\u00b4\b\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005"+
-		"\u0001\u0006\u0001\u0006\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007"+
-		"\u0003\u0007\u00c0\b\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0003\u0007"+
-		"\u00c5\b\u0007\u0001\u0007\u0003\u0007\u00c8\b\u0007\u0001\u0007\u0001"+
-		"\u0007\u0001\u0007\u0001\u0007\u0001\b\u0001\b\u0001\b\u0003\b\u00d1\b"+
-		"\b\u0001\b\u0001\b\u0001\t\u0001\t\u0001\t\u0003\t\u00d8\b\t\u0001\t\u0001"+
-		"\t\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0005\n\u00e1\b\n\n\n\f\n\u00e4"+
-		"\t\n\u0001\u000b\u0001\u000b\u0001\u000b\u0003\u000b\u00e9\b\u000b\u0001"+
-		"\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0005\f\u00f1\b\f\n\f\f\f\u00f4"+
-		"\t\f\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0003"+
-		"\r\u00fe\b\r\u0001\u000e\u0001\u000e\u0001\u000f\u0001\u000f\u0001\u0010"+
-		"\u0001\u0010\u0001\u0010\u0001\u0010\u0001\u0011\u0001\u0011\u0001\u0011"+
-		"\u0001\u0011\u0001\u0011\u0005\u0011\u010d\b\u0011\n\u0011\f\u0011\u0110"+
-		"\t\u0011\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001"+
-		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0003"+
-		"\u0012\u011d\b\u0012\u0001\u0013\u0001\u0013\u0001\u0013\u0001\u0013\u0001"+
-		"\u0013\u0001\u0013\u0003\u0013\u0125\b\u0013\u0001\u0014\u0001\u0014\u0001"+
-		"\u0014\u0001\u0014\u0003\u0014\u012b\b\u0014\u0001\u0015\u0001\u0015\u0001"+
-		"\u0015\u0001\u0015\u0001\u0015\u0001\u0015\u0001\u0015\u0001\u0015\u0003"+
-		"\u0015\u0135\b\u0015\u0001\u0016\u0001\u0016\u0001\u0016\u0001\u0016\u0001"+
-		"\u0016\u0001\u0016\u0005\u0016\u013d\b\u0016\n\u0016\f\u0016\u0140\t\u0016"+
-		"\u0001\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0003\u0017\u0146\b\u0017"+
-		"\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018"+
-		"\u0003\u0018\u014e\b\u0018\u0001\u0018\u0001\u0018\u0003\u0018\u0152\b"+
-		"\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0019\u0001"+
-		"\u0019\u0001\u0019\u0001\u0019\u0001\u0019\u0005\u0019\u015d\b\u0019\n"+
-		"\u0019\f\u0019\u0160\t\u0019\u0001\u001a\u0001\u001a\u0001\u001a\u0001"+
-		"\u001a\u0001\u001a\u0001\u001a\u0003\u001a\u0168\b\u001a\u0001\u001a\u0001"+
-		"\u001a\u0001\u001b\u0001\u001b\u0001\u001b\u0003\u001b\u016f\b\u001b\u0001"+
-		"\u001b\u0001\u001b\u0003\u001b\u0173\b\u001b\u0001\u001c\u0001\u001c\u0001"+
-		"\u001c\u0001\u001c\u0001\u001c\u0001\u001c\u0003\u001c\u017b\b\u001c\u0001"+
-		"\u001c\u0001\u001c\u0001\u001c\u0001\u001c\u0001\u001d\u0001\u001d\u0001"+
-		"\u001d\u0003\u001d\u0184\b\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0001"+
-		"\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0001\u001e\u0001\u001e\u0001"+
-		"\u001e\u0001\u001e\u0001\u001e\u0001\u001e\u0001\u001e\u0001\u001e\u0001"+
-		"\u001e\u0001\u001e\u0003\u001e\u0197\b\u001e\u0001\u001e\u0001\u001e\u0001"+
-		"\u001f\u0001\u001f\u0001\u001f\u0001\u001f\u0001\u001f\u0001\u001f\u0001"+
-		"\u001f\u0001\u001f\u0001\u001f\u0003\u001f\u01a4\b\u001f\u0001 \u0001"+
-		" \u0001 \u0001 \u0001 \u0001 \u0001 \u0003 \u01ad\b \u0001!\u0001!\u0001"+
-		"!\u0001!\u0001\"\u0001\"\u0001\"\u0001\"\u0001\"\u0005\"\u01b8\b\"\n\""+
-		"\f\"\u01bb\t\"\u0001#\u0001#\u0001#\u0001#\u0001#\u0001#\u0001#\u0001"+
-		"#\u0003#\u01c5\b#\u0001$\u0001$\u0001$\u0001$\u0001$\u0001$\u0001$\u0001"+
-		"$\u0001%\u0001%\u0001%\u0001%\u0001%\u0001&\u0001&\u0001&\u0001&\u0001"+
-		"&\u0001\'\u0001\'\u0001\'\u0001\'\u0001\'\u0001\'\u0001(\u0001(\u0001"+
-		"(\u0001(\u0001(\u0001(\u0001(\u0001)\u0001)\u0001)\u0001)\u0001)\u0001"+
-		")\u0001)\u0001)\u0003)\u01ee\b)\u0001)\u0001)\u0001*\u0001*\u0001*\u0001"+
-		"*\u0001+\u0001+\u0001+\u0001+\u0001+\u0001+\u0005+\u01fc\b+\n+\f+\u01ff"+
-		"\t+\u0001,\u0001,\u0001-\u0001-\u0001-\u0001-\u0001-\u0001-\u0001-\u0001"+
-		"-\u0001-\u0001-\u0001-\u0003-\u020e\b-\u0001-\u0001-\u0001-\u0001-\u0001"+
-		"-\u0001-\u0001-\u0001-\u0005-\u0218\b-\n-\f-\u021b\t-\u0001.\u0001.\u0001"+
-		".\u0001.\u0001.\u0001.\u0001.\u0001.\u0001/\u0001/\u0003/\u0227\b/\u0001"+
-		"0\u00010\u00010\u00010\u00010\u00010\u00010\u00010\u00050\u0231\b0\n0"+
-		"\f0\u0234\t0\u00011\u00011\u00011\u00011\u00011\u00011\u00051\u023c\b"+
-		"1\n1\f1\u023f\t1\u00012\u00012\u00032\u0243\b2\u00013\u00013\u00013\u0001"+
-		"3\u00013\u00014\u00014\u00014\u00014\u00014\u00015\u00015\u00015\u0001"+
-		"5\u00016\u00016\u00016\u00016\u00016\u00016\u00056\u0259\b6\n6\f6\u025c"+
-		"\t6\u00017\u00017\u00017\u00017\u00018\u00018\u00018\u00018\u00018\u0001"+
-		"8\u00018\u00018\u00038\u026a\b8\u00018\u00018\u00018\u00018\u00018\u0001"+
-		"8\u00018\u00018\u00018\u00018\u00018\u00018\u00018\u00018\u00018\u0001"+
-		"8\u00018\u00018\u00058\u027e\b8\n8\f8\u0281\t8\u00019\u00019\u00019\u0001"+
-		"9\u00019\u00019\u00039\u0289\b9\u0001:\u0001:\u0001:\u0001:\u0001:\u0001"+
-		";\u0001;\u0001;\u0003;\u0293\b;\u0001;\u0001;\u0001<\u0001<\u0001<\u0001"+
-		"<\u0001<\u0001<\u0005<\u029d\b<\n<\f<\u02a0\t<\u0001=\u0001=\u0001=\u0003"+
-		"=\u02a5\b=\u0001>\u0001>\u0001>\u0001>\u0001>\u0001>\u0001>\u0001>\u0001"+
-		">\u0001>\u0001>\u0003>\u02b2\b>\u0001?\u0001?\u0003?\u02b6\b?\u0001@\u0001"+
-		"@\u0001@\u0001@\u0001@\u0001@\u0001@\u0001@\u0001@\u0001@\u0001@\u0001"+
-		"@\u0001@\u0001@\u0001@\u0001@\u0003@\u02c8\b@\u0001@\u0000\u000e\u0006"+
-		"\u0014\u0018\",2DVZ`blpxA\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012"+
-		"\u0014\u0016\u0018\u001a\u001c\u001e \"$&(*,.02468:<>@BDFHJLNPRTVXZ\\"+
-		"^`bdfhjlnprtvxz|~\u0080\u0000\u0005\u0002\u0000--88\u0001\u0000./\u0001"+
-		"\u0000,-\u0002\u00001245\u0002\u00000033\u02e8\u0000\u0085\u0001\u0000"+
-		"\u0000\u0000\u0002\u008b\u0001\u0000\u0000\u0000\u0004\u0094\u0001\u0000"+
-		"\u0000\u0000\u0006\u0098\u0001\u0000\u0000\u0000\b\u00a4\u0001\u0000\u0000"+
-		"\u0000\n\u00a6\u0001\u0000\u0000\u0000\f\u00b9\u0001\u0000\u0000\u0000"+
-		"\u000e\u00bb\u0001\u0000\u0000\u0000\u0010\u00cd\u0001\u0000\u0000\u0000"+
-		"\u0012\u00d4\u0001\u0000\u0000\u0000\u0014\u00db\u0001\u0000\u0000\u0000"+
-		"\u0016\u00e8\u0001\u0000\u0000\u0000\u0018\u00ea\u0001\u0000\u0000\u0000"+
-		"\u001a\u00fd\u0001\u0000\u0000\u0000\u001c\u00ff\u0001\u0000\u0000\u0000"+
-		"\u001e\u0101\u0001\u0000\u0000\u0000 \u0103\u0001\u0000\u0000\u0000\""+
-		"\u0107\u0001\u0000\u0000\u0000$\u011c\u0001\u0000\u0000\u0000&\u0124\u0001"+
-		"\u0000\u0000\u0000(\u012a\u0001\u0000\u0000\u0000*\u0134\u0001\u0000\u0000"+
-		"\u0000,\u0136\u0001\u0000\u0000\u0000.\u0145\u0001\u0000\u0000\u00000"+
-		"\u0147\u0001\u0000\u0000\u00002\u0157\u0001\u0000\u0000\u00004\u0161\u0001"+
-		"\u0000\u0000\u00006\u0172\u0001\u0000\u0000\u00008\u0174\u0001\u0000\u0000"+
-		"\u0000:\u0180\u0001\u0000\u0000\u0000<\u018c\u0001\u0000\u0000\u0000>"+
-		"\u01a3\u0001\u0000\u0000\u0000@\u01ac\u0001\u0000\u0000\u0000B\u01ae\u0001"+
-		"\u0000\u0000\u0000D\u01b2\u0001\u0000\u0000\u0000F\u01c4\u0001\u0000\u0000"+
-		"\u0000H\u01c6\u0001\u0000\u0000\u0000J\u01ce\u0001\u0000\u0000\u0000L"+
-		"\u01d3\u0001\u0000\u0000\u0000N\u01d8\u0001\u0000\u0000\u0000P\u01de\u0001"+
-		"\u0000\u0000\u0000R\u01e5\u0001\u0000\u0000\u0000T\u01f1\u0001\u0000\u0000"+
-		"\u0000V\u01f5\u0001\u0000\u0000\u0000X\u0200\u0001\u0000\u0000\u0000Z"+
-		"\u020d\u0001\u0000\u0000\u0000\\\u021c\u0001\u0000\u0000\u0000^\u0226"+
-		"\u0001\u0000\u0000\u0000`\u0228\u0001\u0000\u0000\u0000b\u0235\u0001\u0000"+
-		"\u0000\u0000d\u0242\u0001\u0000\u0000\u0000f\u0244\u0001\u0000\u0000\u0000"+
-		"h\u0249\u0001\u0000\u0000\u0000j\u024e\u0001\u0000\u0000\u0000l\u0252"+
-		"\u0001\u0000\u0000\u0000n\u025d\u0001\u0000\u0000\u0000p\u0269\u0001\u0000"+
-		"\u0000\u0000r\u0288\u0001\u0000\u0000\u0000t\u028a\u0001\u0000\u0000\u0000"+
-		"v\u028f\u0001\u0000\u0000\u0000x\u0296\u0001\u0000\u0000\u0000z\u02a4"+
-		"\u0001\u0000\u0000\u0000|\u02b1\u0001\u0000\u0000\u0000~\u02b5\u0001\u0000"+
-		"\u0000\u0000\u0080\u02c7\u0001\u0000\u0000\u0000\u0082\u0084\u0003\u0002"+
-		"\u0001\u0000\u0083\u0082\u0001\u0000\u0000\u0000\u0084\u0087\u0001\u0000"+
-		"\u0000\u0000\u0085\u0083\u0001\u0000\u0000\u0000\u0085\u0086\u0001\u0000"+
-		"\u0000\u0000\u0086\u0088\u0001\u0000\u0000\u0000\u0087\u0085\u0001\u0000"+
-		"\u0000\u0000\u0088\u0089\u0005\u0000\u0000\u0001\u0089\u0001\u0001\u0000"+
-		"\u0000\u0000\u008a\u008c\u0003B!\u0000\u008b\u008a\u0001\u0000\u0000\u0000"+
-		"\u008b\u008c\u0001\u0000\u0000\u0000\u008c\u008e\u0001\u0000\u0000\u0000"+
-		"\u008d\u008f\u0003\u0004\u0002\u0000\u008e\u008d\u0001\u0000\u0000\u0000"+
-		"\u008e\u008f\u0001\u0000\u0000\u0000\u008f\u0090\u0001\u0000\u0000\u0000"+
-		"\u0090\u0091\u0003 \u0010\u0000\u0091\u0092\u0005\u0007\u0000\u0000\u0092"+
-		"\u0093\u0005!\u0000\u0000\u0093\u0003\u0001\u0000\u0000\u0000\u0094\u0095"+
-		"\u0005\u0005\u0000\u0000\u0095\u0096\u00055\u0000\u0000\u0096\u0097\u0003"+
-		"\u0006\u0003\u0000\u0097\u0005\u0001\u0000\u0000\u0000\u0098\u0099\u0006"+
-		"\u0003\uffff\uffff\u0000\u0099\u009a\u0003\b\u0004\u0000\u009a\u009f\u0001"+
-		"\u0000\u0000\u0000\u009b\u009c\n\u0002\u0000\u0000\u009c\u009e\u0003\b"+
-		"\u0004\u0000\u009d\u009b\u0001\u0000\u0000\u0000\u009e\u00a1\u0001\u0000"+
-		"\u0000\u0000\u009f\u009d\u0001\u0000\u0000\u0000\u009f\u00a0\u0001\u0000"+
-		"\u0000\u0000\u00a0\u0007\u0001\u0000\u0000\u0000\u00a1\u009f\u0001\u0000"+
-		"\u0000\u0000\u00a2\u00a5\u0003\n\u0005\u0000\u00a3\u00a5\u0003\u000e\u0007"+
-		"\u0000\u00a4\u00a2\u0001\u0000\u0000\u0000\u00a4\u00a3\u0001\u0000\u0000"+
-		"\u0000\u00a5\t\u0001\u0000\u0000\u0000\u00a6\u00a7\u0005\u001b\u0000\u0000"+
-		"\u00a7\u00a8\u0003\f\u0006\u0000\u00a8\u00a9\u00059\u0000\u0000\u00a9"+
-		"\u00ab\u0005(\u0000\u0000\u00aa\u00ac\u0003\u0018\f\u0000\u00ab\u00aa"+
-		"\u0001\u0000\u0000\u0000\u00ab\u00ac\u0001\u0000\u0000\u0000\u00ac\u00ad"+
-		"\u0001\u0000\u0000\u0000\u00ad\u00ae\u0005)\u0000\u0000\u00ae\u00b0\u0005"+
-		"$\u0000\u0000\u00af\u00b1\u0003\u0010\b\u0000\u00b0\u00af\u0001\u0000"+
-		"\u0000\u0000\u00b0\u00b1\u0001\u0000\u0000\u0000\u00b1\u00b3\u0001\u0000"+
-		"\u0000\u0000\u00b2\u00b4\u0003\"\u0011\u0000\u00b3\u00b2\u0001\u0000\u0000"+
-		"\u0000\u00b3\u00b4\u0001\u0000\u0000\u0000\u00b4\u00b5\u0001\u0000\u0000"+
-		"\u0000\u00b5\u00b6\u0005%\u0000\u0000\u00b6\u00b7\u0005\u0014\u0000\u0000"+
-		"\u00b7\u00b8\u0005!\u0000\u0000\u00b8\u000b\u0001\u0000\u0000\u0000\u00b9"+
-		"\u00ba\u0003r9\u0000\u00ba\r\u0001\u0000\u0000\u0000\u00bb\u00bc\u0005"+
-		"\u001a\u0000\u0000\u00bc\u00bd\u00059\u0000\u0000\u00bd\u00bf\u0005(\u0000"+
-		"\u0000\u00be\u00c0\u0003\u0018\f\u0000\u00bf\u00be\u0001\u0000\u0000\u0000"+
-		"\u00bf\u00c0\u0001\u0000\u0000\u0000\u00c0\u00c1\u0001\u0000\u0000\u0000"+
-		"\u00c1\u00c2\u0005)\u0000\u0000\u00c2\u00c4\u0005$\u0000\u0000\u00c3\u00c5"+
-		"\u0003\u0012\t\u0000\u00c4\u00c3\u0001\u0000\u0000\u0000\u00c4\u00c5\u0001"+
-		"\u0000\u0000\u0000\u00c5\u00c7\u0001\u0000\u0000\u0000\u00c6\u00c8\u0003"+
-		"\"\u0011\u0000\u00c7\u00c6\u0001\u0000\u0000\u0000\u00c7\u00c8\u0001\u0000"+
-		"\u0000\u0000\u00c8\u00c9\u0001\u0000\u0000\u0000\u00c9\u00ca\u0005%\u0000"+
-		"\u0000\u00ca\u00cb\u0005\u0014\u0000\u0000\u00cb\u00cc\u0005!\u0000\u0000"+
-		"\u00cc\u000f\u0001\u0000\u0000\u0000\u00cd\u00ce\u0005\u0004\u0000\u0000"+
-		"\u00ce\u00d0\u0005&\u0000\u0000\u00cf\u00d1\u0003\u0014\n\u0000\u00d0"+
-		"\u00cf\u0001\u0000\u0000\u0000\u00d0\u00d1\u0001\u0000\u0000\u0000\u00d1"+
-		"\u00d2\u0001\u0000\u0000\u0000\u00d2\u00d3\u0005\'\u0000\u0000\u00d3\u0011"+
-		"\u0001\u0000\u0000\u0000\u00d4\u00d5\u0005\u0004\u0000\u0000\u00d5\u00d7"+
-		"\u0005&\u0000\u0000\u00d6\u00d8\u0003\u0014\n\u0000\u00d7\u00d6\u0001"+
-		"\u0000\u0000\u0000\u00d7\u00d8\u0001\u0000\u0000\u0000\u00d8\u00d9\u0001"+
-		"\u0000\u0000\u0000\u00d9\u00da\u0005\'\u0000\u0000\u00da\u0013\u0001\u0000"+
-		"\u0000\u0000\u00db\u00dc\u0006\n\uffff\uffff\u0000\u00dc\u00dd\u0003\u0016"+
-		"\u000b\u0000\u00dd\u00e2\u0001\u0000\u0000\u0000\u00de\u00df\n\u0002\u0000"+
-		"\u0000\u00df\u00e1\u0003\u0016\u000b\u0000\u00e0\u00de\u0001\u0000\u0000"+
-		"\u0000\u00e1\u00e4\u0001\u0000\u0000\u0000\u00e2\u00e0\u0001\u0000\u0000"+
-		"\u0000\u00e2\u00e3\u0001\u0000\u0000\u0000\u00e3\u0015\u0001\u0000\u0000"+
-		"\u0000\u00e4\u00e2\u0001\u0000\u0000\u0000\u00e5\u00e9\u0003P(\u0000\u00e6"+
-		"\u00e9\u0003R)\u0000\u00e7\u00e9\u0003N\'\u0000\u00e8\u00e5\u0001\u0000"+
-		"\u0000\u0000\u00e8\u00e6\u0001\u0000\u0000\u0000\u00e8\u00e7\u0001\u0000"+
-		"\u0000\u0000\u00e9\u0017\u0001\u0000\u0000\u0000\u00ea\u00eb\u0006\f\uffff"+
-		"\uffff\u0000\u00eb\u00ec\u0003\u001a\r\u0000\u00ec\u00f2\u0001\u0000\u0000"+
-		"\u0000\u00ed\u00ee\n\u0002\u0000\u0000\u00ee\u00ef\u0005 \u0000\u0000"+
-		"\u00ef\u00f1\u0003\u001a\r\u0000\u00f0\u00ed\u0001\u0000\u0000\u0000\u00f1"+
-		"\u00f4\u0001\u0000\u0000\u0000\u00f2\u00f0\u0001\u0000\u0000\u0000\u00f2"+
-		"\u00f3\u0001\u0000\u0000\u0000\u00f3\u0019\u0001\u0000\u0000\u0000\u00f4"+
-		"\u00f2\u0001\u0000\u0000\u0000\u00f5\u00f6\u0005\u0011\u0000\u0000\u00f6"+
-		"\u00f7\u00059\u0000\u0000\u00f7\u00f8\u0005\"\u0000\u0000\u00f8\u00fe"+
-		"\u0003\u001c\u000e\u0000\u00f9\u00fa\u0005\u0012\u0000\u0000\u00fa\u00fb"+
-		"\u00059\u0000\u0000\u00fb\u00fc\u0005\"\u0000\u0000\u00fc\u00fe\u0003"+
-		"\u001e\u000f\u0000\u00fd\u00f5\u0001\u0000\u0000\u0000\u00fd\u00f9\u0001"+
-		"\u0000\u0000\u0000\u00fe\u001b\u0001\u0000\u0000\u0000\u00ff\u0100\u0003"+
-		"r9\u0000\u0100\u001d\u0001\u0000\u0000\u0000\u0101\u0102\u0003r9\u0000"+
-		"\u0102\u001f\u0001\u0000\u0000\u0000\u0103\u0104\u0005\u0006\u0000\u0000"+
-		"\u0104\u0105\u00055\u0000\u0000\u0105\u0106\u0003\"\u0011\u0000\u0106"+
-		"!\u0001\u0000\u0000\u0000\u0107\u0108\u0006\u0011\uffff\uffff\u0000\u0108"+
-		"\u0109\u0003$\u0012\u0000\u0109\u010e\u0001\u0000\u0000\u0000\u010a\u010b"+
-		"\n\u0002\u0000\u0000\u010b\u010d\u0003$\u0012\u0000\u010c\u010a\u0001"+
-		"\u0000\u0000\u0000\u010d\u0110\u0001\u0000\u0000\u0000\u010e\u010c\u0001"+
-		"\u0000\u0000\u0000\u010e\u010f\u0001\u0000\u0000\u0000\u010f#\u0001\u0000"+
-		"\u0000\u0000\u0110\u010e\u0001\u0000\u0000\u0000\u0111\u011d\u0003.\u0017"+
-		"\u0000\u0112\u011d\u0003*\u0015\u0000\u0113\u0114\u0003v;\u0000\u0114"+
-		"\u0115\u0005!\u0000\u0000\u0115\u011d\u0001\u0000\u0000\u0000\u0116\u011d"+
-		"\u0003(\u0014\u0000\u0117\u011d\u0003&\u0013\u0000\u0118\u011d\u0003\u0080"+
-		"@\u0000\u0119\u011d\u0003J%\u0000\u011a\u011d\u0003H$\u0000\u011b\u011d"+
-		"\u0003L&\u0000\u011c\u0111\u0001\u0000\u0000\u0000\u011c\u0112\u0001\u0000"+
-		"\u0000\u0000\u011c\u0113\u0001\u0000\u0000\u0000\u011c\u0116\u0001\u0000"+
-		"\u0000\u0000\u011c\u0117\u0001\u0000\u0000\u0000\u011c\u0118\u0001\u0000"+
-		"\u0000\u0000\u011c\u0119\u0001\u0000\u0000\u0000\u011c\u011a\u0001\u0000"+
-		"\u0000\u0000\u011c\u011b\u0001\u0000\u0000\u0000\u011d%\u0001\u0000\u0000"+
-		"\u0000\u011e\u011f\u0005\u001c\u0000\u0000\u011f\u0120\u0003p8\u0000\u0120"+
-		"\u0121\u0005!\u0000\u0000\u0121\u0125\u0001\u0000\u0000\u0000\u0122\u0123"+
-		"\u0005\u001c\u0000\u0000\u0123\u0125\u0005!\u0000\u0000\u0124\u011e\u0001"+
-		"\u0000\u0000\u0000\u0124\u0122\u0001\u0000\u0000\u0000\u0125\'\u0001\u0000"+
-		"\u0000\u0000\u0126\u0127\u0005\u001d\u0000\u0000\u0127\u012b\u0005!\u0000"+
-		"\u0000\u0128\u0129\u0005\u001e\u0000\u0000\u0129\u012b\u0005!\u0000\u0000"+
-		"\u012a\u0126\u0001\u0000\u0000\u0000\u012a\u0128\u0001\u0000\u0000\u0000"+
-		"\u012b)\u0001\u0000\u0000\u0000\u012c\u012d\u0003z=\u0000\u012d\u012e"+
-		"\u0005\t\u0000\u0000\u012e\u0135\u0001\u0000\u0000\u0000\u012f\u0135\u0005"+
-		"\t\u0000\u0000\u0130\u0131\u0005\b\u0000\u0000\u0131\u0132\u0003,\u0016"+
-		"\u0000\u0132\u0133\u0005!\u0000\u0000\u0133\u0135\u0001\u0000\u0000\u0000"+
-		"\u0134\u012c\u0001\u0000\u0000\u0000\u0134\u012f\u0001\u0000\u0000\u0000"+
-		"\u0134\u0130\u0001\u0000\u0000\u0000\u0135+\u0001\u0000\u0000\u0000\u0136"+
-		"\u0137\u0006\u0016\uffff\uffff\u0000\u0137\u0138\u0003p8\u0000\u0138\u013e"+
-		"\u0001\u0000\u0000\u0000\u0139\u013a\n\u0002\u0000\u0000\u013a\u013b\u0005"+
-		"\b\u0000\u0000\u013b\u013d\u0003p8\u0000\u013c\u0139\u0001\u0000\u0000"+
-		"\u0000\u013d\u0140\u0001\u0000\u0000\u0000\u013e\u013c\u0001\u0000\u0000"+
-		"\u0000\u013e\u013f\u0001\u0000\u0000\u0000\u013f-\u0001\u0000\u0000\u0000"+
-		"\u0140\u013e\u0001\u0000\u0000\u0000\u0141\u0146\u00030\u0018\u0000\u0142"+
-		"\u0146\u00038\u001c\u0000\u0143\u0146\u0003:\u001d\u0000\u0144\u0146\u0003"+
-		"<\u001e\u0000\u0145\u0141\u0001\u0000\u0000\u0000\u0145\u0142\u0001\u0000"+
-		"\u0000\u0000\u0145\u0143\u0001\u0000\u0000\u0000\u0145\u0144\u0001\u0000"+
-		"\u0000\u0000\u0146/\u0001\u0000\u0000\u0000\u0147\u0148\u0005\u0018\u0000"+
-		"\u0000\u0148\u0149\u0005(\u0000\u0000\u0149\u014a\u0003p8\u0000\u014a"+
-		"\u014b\u0005)\u0000\u0000\u014b\u014d\u0005$\u0000\u0000\u014c\u014e\u0003"+
-		"\"\u0011\u0000\u014d\u014c\u0001\u0000\u0000\u0000\u014d\u014e\u0001\u0000"+
-		"\u0000\u0000\u014e\u014f\u0001\u0000\u0000\u0000\u014f\u0151\u0005%\u0000"+
-		"\u0000\u0150\u0152\u00032\u0019\u0000\u0151\u0150\u0001\u0000\u0000\u0000"+
-		"\u0151\u0152\u0001\u0000\u0000\u0000\u0152\u0153\u0001\u0000\u0000\u0000"+
-		"\u0153\u0154\u00036\u001b\u0000\u0154\u0155\u0005\u0014\u0000\u0000\u0155"+
-		"\u0156\u0005!\u0000\u0000\u01561\u0001\u0000\u0000\u0000\u0157\u0158\u0006"+
-		"\u0019\uffff\uffff\u0000\u0158\u0159\u00034\u001a\u0000\u0159\u015e\u0001"+
-		"\u0000\u0000\u0000\u015a\u015b\n\u0002\u0000\u0000\u015b\u015d\u00034"+
-		"\u001a\u0000\u015c\u015a\u0001\u0000\u0000\u0000\u015d\u0160\u0001\u0000"+
-		"\u0000\u0000\u015e\u015c\u0001\u0000\u0000\u0000\u015e\u015f\u0001\u0000"+
-		"\u0000\u0000\u015f3\u0001\u0000\u0000\u0000\u0160\u015e\u0001\u0000\u0000"+
-		"\u0000\u0161\u0162\u0005\u0019\u0000\u0000\u0162\u0163\u0005(\u0000\u0000"+
-		"\u0163\u0164\u0003p8\u0000\u0164\u0165\u0005)\u0000\u0000\u0165\u0167"+
-		"\u0005$\u0000\u0000\u0166\u0168\u0003\"\u0011\u0000\u0167\u0166\u0001"+
-		"\u0000\u0000\u0000\u0167\u0168\u0001\u0000\u0000\u0000\u0168\u0169\u0001"+
-		"\u0000\u0000\u0000\u0169\u016a\u0005%\u0000\u0000\u016a5\u0001\u0000\u0000"+
-		"\u0000\u016b\u016c\u0005\u0019\u0000\u0000\u016c\u016e\u0005$\u0000\u0000"+
-		"\u016d\u016f\u0003\"\u0011\u0000\u016e\u016d\u0001\u0000\u0000\u0000\u016e"+
-		"\u016f\u0001\u0000\u0000\u0000\u016f\u0170\u0001\u0000\u0000\u0000\u0170"+
-		"\u0173\u0005%\u0000\u0000\u0171\u0173\u0001\u0000\u0000\u0000\u0172\u016b"+
-		"\u0001\u0000\u0000\u0000\u0172\u0171\u0001\u0000\u0000\u0000\u01737\u0001"+
-		"\u0000\u0000\u0000\u0174\u0175\u0005\u0015\u0000\u0000\u0175\u0176\u0005"+
-		"(\u0000\u0000\u0176\u0177\u0003p8\u0000\u0177\u0178\u0005)\u0000\u0000"+
-		"\u0178\u017a\u0005$\u0000\u0000\u0179\u017b\u0003\"\u0011\u0000\u017a"+
-		"\u0179\u0001\u0000\u0000\u0000\u017a\u017b\u0001\u0000\u0000\u0000\u017b"+
-		"\u017c\u0001\u0000\u0000\u0000\u017c\u017d\u0005%\u0000\u0000\u017d\u017e"+
-		"\u0005\u0014\u0000\u0000\u017e\u017f\u0005!\u0000\u0000\u017f9\u0001\u0000"+
-		"\u0000\u0000\u0180\u0181\u0005\u0016\u0000\u0000\u0181\u0183\u0005$\u0000"+
-		"\u0000\u0182\u0184\u0003\"\u0011\u0000\u0183\u0182\u0001\u0000\u0000\u0000"+
-		"\u0183\u0184\u0001\u0000\u0000\u0000\u0184\u0185\u0001\u0000\u0000\u0000"+
-		"\u0185\u0186\u0005%\u0000\u0000\u0186\u0187\u0005\u0015\u0000\u0000\u0187"+
-		"\u0188\u0005(\u0000\u0000\u0188\u0189\u0003p8\u0000\u0189\u018a\u0005"+
-		")\u0000\u0000\u018a\u018b\u0005!\u0000\u0000\u018b;\u0001\u0000\u0000"+
-		"\u0000\u018c\u018d\u0005\u0017\u0000\u0000\u018d\u018e\u0005(\u0000\u0000"+
-		"\u018e\u018f\u0003>\u001f\u0000\u018f\u0190\u0005!\u0000\u0000\u0190\u0191"+
-		"\u0003p8\u0000\u0191\u0192\u0005!\u0000\u0000\u0192\u0193\u0003@ \u0000"+
-		"\u0193\u0194\u0005)\u0000\u0000\u0194\u0196\u0005$\u0000\u0000\u0195\u0197"+
-		"\u0003\"\u0011\u0000\u0196\u0195\u0001\u0000\u0000\u0000\u0196\u0197\u0001"+
-		"\u0000\u0000\u0000\u0197\u0198\u0001\u0000\u0000\u0000\u0198\u0199\u0005"+
-		"%\u0000\u0000\u0199=\u0001\u0000\u0000\u0000\u019a\u019b\u0005\u0011\u0000"+
-		"\u0000\u019b\u019c\u00059\u0000\u0000\u019c\u019d\u0005\"\u0000\u0000"+
-		"\u019d\u019e\u0003r9\u0000\u019e\u019f\u0003p8\u0000\u019f\u01a4\u0001"+
-		"\u0000\u0000\u0000\u01a0\u01a1\u00059\u0000\u0000\u01a1\u01a2\u0005\u001f"+
-		"\u0000\u0000\u01a2\u01a4\u0003p8\u0000\u01a3\u019a\u0001\u0000\u0000\u0000"+
+		"<\u0007<\u0002=\u0007=\u0002>\u0007>\u0002?\u0007?\u0001\u0000\u0005\u0000"+
+		"\u0082\b\u0000\n\u0000\f\u0000\u0085\t\u0000\u0001\u0000\u0001\u0000\u0001"+
+		"\u0001\u0003\u0001\u008a\b\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0005"+
+		"\u0002\u0095\b\u0002\n\u0002\f\u0002\u0098\t\u0002\u0001\u0003\u0001\u0003"+
+		"\u0003\u0003\u009c\b\u0003\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0003\u0004\u00a3\b\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0003\u0004\u00a8\b\u0004\u0001\u0004\u0003\u0004\u00ab\b\u0004\u0001"+
+		"\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0005\u0001\u0005\u0001"+
+		"\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0003\u0006\u00b7\b\u0006\u0001"+
+		"\u0006\u0001\u0006\u0001\u0006\u0003\u0006\u00bc\b\u0006\u0001\u0006\u0003"+
+		"\u0006\u00bf\b\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0001"+
+		"\u0007\u0001\u0007\u0001\u0007\u0003\u0007\u00c8\b\u0007\u0001\u0007\u0001"+
+		"\u0007\u0001\b\u0001\b\u0001\b\u0003\b\u00cf\b\b\u0001\b\u0001\b\u0001"+
+		"\t\u0001\t\u0001\t\u0001\t\u0001\t\u0005\t\u00d8\b\t\n\t\f\t\u00db\t\t"+
+		"\u0001\n\u0001\n\u0001\n\u0003\n\u00e0\b\n\u0001\u000b\u0001\u000b\u0001"+
+		"\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0005\u000b\u00e8\b\u000b\n"+
+		"\u000b\f\u000b\u00eb\t\u000b\u0001\f\u0001\f\u0001\f\u0001\f\u0001\f\u0001"+
+		"\f\u0001\f\u0001\f\u0003\f\u00f5\b\f\u0001\r\u0001\r\u0001\u000e\u0001"+
+		"\u000e\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u0010\u0001"+
+		"\u0010\u0001\u0010\u0001\u0010\u0001\u0010\u0005\u0010\u0104\b\u0010\n"+
+		"\u0010\f\u0010\u0107\t\u0010\u0001\u0011\u0001\u0011\u0001\u0011\u0001"+
+		"\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001\u0011\u0001"+
+		"\u0011\u0001\u0011\u0003\u0011\u0114\b\u0011\u0001\u0012\u0001\u0012\u0001"+
+		"\u0012\u0001\u0012\u0001\u0012\u0001\u0012\u0003\u0012\u011c\b\u0012\u0001"+
+		"\u0013\u0001\u0013\u0001\u0013\u0001\u0013\u0003\u0013\u0122\b\u0013\u0001"+
+		"\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001\u0014\u0001"+
+		"\u0014\u0001\u0014\u0003\u0014\u012c\b\u0014\u0001\u0015\u0001\u0015\u0001"+
+		"\u0015\u0001\u0015\u0001\u0015\u0001\u0015\u0005\u0015\u0134\b\u0015\n"+
+		"\u0015\f\u0015\u0137\t\u0015\u0001\u0016\u0001\u0016\u0001\u0016\u0001"+
+		"\u0016\u0003\u0016\u013d\b\u0016\u0001\u0017\u0001\u0017\u0001\u0017\u0001"+
+		"\u0017\u0001\u0017\u0001\u0017\u0003\u0017\u0145\b\u0017\u0001\u0017\u0001"+
+		"\u0017\u0003\u0017\u0149\b\u0017\u0001\u0017\u0001\u0017\u0001\u0017\u0001"+
+		"\u0017\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0001\u0018\u0005"+
+		"\u0018\u0154\b\u0018\n\u0018\f\u0018\u0157\t\u0018\u0001\u0019\u0001\u0019"+
+		"\u0001\u0019\u0001\u0019\u0001\u0019\u0001\u0019\u0003\u0019\u015f\b\u0019"+
+		"\u0001\u0019\u0001\u0019\u0001\u001a\u0001\u001a\u0001\u001a\u0003\u001a"+
+		"\u0166\b\u001a\u0001\u001a\u0001\u001a\u0003\u001a\u016a\b\u001a\u0001"+
+		"\u001b\u0001\u001b\u0001\u001b\u0001\u001b\u0001\u001b\u0001\u001b\u0003"+
+		"\u001b\u0172\b\u001b\u0001\u001b\u0001\u001b\u0001\u001b\u0001\u001b\u0001"+
+		"\u001c\u0001\u001c\u0001\u001c\u0003\u001c\u017b\b\u001c\u0001\u001c\u0001"+
+		"\u001c\u0001\u001c\u0001\u001c\u0001\u001c\u0001\u001c\u0001\u001c\u0001"+
+		"\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0001"+
+		"\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0003\u001d\u018e\b\u001d\u0001"+
+		"\u001d\u0001\u001d\u0001\u001e\u0001\u001e\u0001\u001e\u0001\u001e\u0001"+
+		"\u001e\u0001\u001e\u0001\u001e\u0001\u001e\u0001\u001e\u0003\u001e\u019b"+
+		"\b\u001e\u0001\u001f\u0001\u001f\u0001\u001f\u0001\u001f\u0001\u001f\u0001"+
+		"\u001f\u0001\u001f\u0003\u001f\u01a4\b\u001f\u0001 \u0001 \u0001 \u0001"+
+		" \u0001!\u0001!\u0001!\u0001!\u0001!\u0005!\u01af\b!\n!\f!\u01b2\t!\u0001"+
+		"\"\u0001\"\u0001\"\u0001\"\u0001\"\u0001\"\u0001\"\u0001\"\u0003\"\u01bc"+
+		"\b\"\u0001#\u0001#\u0001#\u0001#\u0001#\u0001#\u0001#\u0001#\u0001$\u0001"+
+		"$\u0001$\u0001$\u0001$\u0001%\u0001%\u0001%\u0001%\u0001%\u0001&\u0001"+
+		"&\u0001&\u0001&\u0001&\u0001&\u0001\'\u0001\'\u0001\'\u0001\'\u0001\'"+
+		"\u0001\'\u0001\'\u0001(\u0001(\u0001(\u0001(\u0001(\u0001(\u0001(\u0001"+
+		"(\u0003(\u01e5\b(\u0001(\u0001(\u0001)\u0001)\u0001)\u0001)\u0001*\u0001"+
+		"*\u0001*\u0001*\u0001*\u0001*\u0005*\u01f3\b*\n*\f*\u01f6\t*\u0001+\u0001"+
+		"+\u0001,\u0001,\u0001,\u0001,\u0001,\u0001,\u0001,\u0001,\u0001,\u0001"+
+		",\u0001,\u0003,\u0205\b,\u0001,\u0001,\u0001,\u0001,\u0001,\u0001,\u0001"+
+		",\u0001,\u0005,\u020f\b,\n,\f,\u0212\t,\u0001-\u0001-\u0001-\u0001-\u0001"+
+		"-\u0001-\u0001-\u0001-\u0001.\u0001.\u0003.\u021e\b.\u0001/\u0001/\u0001"+
+		"/\u0001/\u0001/\u0001/\u0001/\u0001/\u0005/\u0228\b/\n/\f/\u022b\t/\u0001"+
+		"0\u00010\u00010\u00010\u00010\u00010\u00050\u0233\b0\n0\f0\u0236\t0\u0001"+
+		"1\u00011\u00031\u023a\b1\u00012\u00012\u00012\u00012\u00012\u00013\u0001"+
+		"3\u00013\u00013\u00013\u00014\u00014\u00014\u00014\u00015\u00015\u0001"+
+		"5\u00015\u00015\u00015\u00055\u0250\b5\n5\f5\u0253\t5\u00016\u00016\u0001"+
+		"6\u00016\u00017\u00017\u00017\u00017\u00017\u00017\u00017\u00017\u0003"+
+		"7\u0261\b7\u00017\u00017\u00017\u00017\u00017\u00017\u00017\u00017\u0001"+
+		"7\u00017\u00017\u00017\u00017\u00017\u00017\u00017\u00017\u00017\u0005"+
+		"7\u0275\b7\n7\f7\u0278\t7\u00018\u00018\u00018\u00018\u00018\u00018\u0003"+
+		"8\u0280\b8\u00019\u00019\u00019\u00019\u00019\u0001:\u0001:\u0001:\u0003"+
+		":\u028a\b:\u0001:\u0001:\u0001;\u0001;\u0001;\u0001;\u0001;\u0001;\u0005"+
+		";\u0294\b;\n;\f;\u0297\t;\u0001<\u0001<\u0001<\u0003<\u029c\b<\u0001="+
+		"\u0001=\u0001=\u0001=\u0001=\u0001=\u0001=\u0001=\u0001=\u0001=\u0001"+
+		"=\u0003=\u02a9\b=\u0001>\u0001>\u0003>\u02ad\b>\u0001?\u0001?\u0001?\u0001"+
+		"?\u0001?\u0001?\u0001?\u0001?\u0001?\u0001?\u0001?\u0001?\u0001?\u0001"+
+		"?\u0001?\u0001?\u0003?\u02bf\b?\u0001?\u0000\u000e\u0004\u0012\u0016 "+
+		"*0BTX^`jnv@\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016"+
+		"\u0018\u001a\u001c\u001e \"$&(*,.02468:<>@BDFHJLNPRTVXZ\\^`bdfhjlnprt"+
+		"vxz|~\u0000\u0005\u0002\u000033??\u0001\u000045\u0001\u000023\u0002\u0000"+
+		"89;<\u0002\u000077::\u02df\u0000\u0083\u0001\u0000\u0000\u0000\u0002\u0089"+
+		"\u0001\u0000\u0000\u0000\u0004\u008f\u0001\u0000\u0000\u0000\u0006\u009b"+
+		"\u0001\u0000\u0000\u0000\b\u009d\u0001\u0000\u0000\u0000\n\u00b0\u0001"+
+		"\u0000\u0000\u0000\f\u00b2\u0001\u0000\u0000\u0000\u000e\u00c4\u0001\u0000"+
+		"\u0000\u0000\u0010\u00cb\u0001\u0000\u0000\u0000\u0012\u00d2\u0001\u0000"+
+		"\u0000\u0000\u0014\u00df\u0001\u0000\u0000\u0000\u0016\u00e1\u0001\u0000"+
+		"\u0000\u0000\u0018\u00f4\u0001\u0000\u0000\u0000\u001a\u00f6\u0001\u0000"+
+		"\u0000\u0000\u001c\u00f8\u0001\u0000\u0000\u0000\u001e\u00fa\u0001\u0000"+
+		"\u0000\u0000 \u00fe\u0001\u0000\u0000\u0000\"\u0113\u0001\u0000\u0000"+
+		"\u0000$\u011b\u0001\u0000\u0000\u0000&\u0121\u0001\u0000\u0000\u0000("+
+		"\u012b\u0001\u0000\u0000\u0000*\u012d\u0001\u0000\u0000\u0000,\u013c\u0001"+
+		"\u0000\u0000\u0000.\u013e\u0001\u0000\u0000\u00000\u014e\u0001\u0000\u0000"+
+		"\u00002\u0158\u0001\u0000\u0000\u00004\u0169\u0001\u0000\u0000\u00006"+
+		"\u016b\u0001\u0000\u0000\u00008\u0177\u0001\u0000\u0000\u0000:\u0183\u0001"+
+		"\u0000\u0000\u0000<\u019a\u0001\u0000\u0000\u0000>\u01a3\u0001\u0000\u0000"+
+		"\u0000@\u01a5\u0001\u0000\u0000\u0000B\u01a9\u0001\u0000\u0000\u0000D"+
+		"\u01bb\u0001\u0000\u0000\u0000F\u01bd\u0001\u0000\u0000\u0000H\u01c5\u0001"+
+		"\u0000\u0000\u0000J\u01ca\u0001\u0000\u0000\u0000L\u01cf\u0001\u0000\u0000"+
+		"\u0000N\u01d5\u0001\u0000\u0000\u0000P\u01dc\u0001\u0000\u0000\u0000R"+
+		"\u01e8\u0001\u0000\u0000\u0000T\u01ec\u0001\u0000\u0000\u0000V\u01f7\u0001"+
+		"\u0000\u0000\u0000X\u0204\u0001\u0000\u0000\u0000Z\u0213\u0001\u0000\u0000"+
+		"\u0000\\\u021d\u0001\u0000\u0000\u0000^\u021f\u0001\u0000\u0000\u0000"+
+		"`\u022c\u0001\u0000\u0000\u0000b\u0239\u0001\u0000\u0000\u0000d\u023b"+
+		"\u0001\u0000\u0000\u0000f\u0240\u0001\u0000\u0000\u0000h\u0245\u0001\u0000"+
+		"\u0000\u0000j\u0249\u0001\u0000\u0000\u0000l\u0254\u0001\u0000\u0000\u0000"+
+		"n\u0260\u0001\u0000\u0000\u0000p\u027f\u0001\u0000\u0000\u0000r\u0281"+
+		"\u0001\u0000\u0000\u0000t\u0286\u0001\u0000\u0000\u0000v\u028d\u0001\u0000"+
+		"\u0000\u0000x\u029b\u0001\u0000\u0000\u0000z\u02a8\u0001\u0000\u0000\u0000"+
+		"|\u02ac\u0001\u0000\u0000\u0000~\u02be\u0001\u0000\u0000\u0000\u0080\u0082"+
+		"\u0003\u0002\u0001\u0000\u0081\u0080\u0001\u0000\u0000\u0000\u0082\u0085"+
+		"\u0001\u0000\u0000\u0000\u0083\u0081\u0001\u0000\u0000\u0000\u0083\u0084"+
+		"\u0001\u0000\u0000\u0000\u0084\u0086\u0001\u0000\u0000\u0000\u0085\u0083"+
+		"\u0001\u0000\u0000\u0000\u0086\u0087\u0005\u0000\u0000\u0001\u0087\u0001"+
+		"\u0001\u0000\u0000\u0000\u0088\u008a\u0003@ \u0000\u0089\u0088\u0001\u0000"+
+		"\u0000\u0000\u0089\u008a\u0001\u0000\u0000\u0000\u008a\u008b\u0001\u0000"+
+		"\u0000\u0000\u008b\u008c\u0003\u001e\u000f\u0000\u008c\u008d\u0005\u0006"+
+		"\u0000\u0000\u008d\u008e\u0005\"\u0000\u0000\u008e\u0003\u0001\u0000\u0000"+
+		"\u0000\u008f\u0090\u0006\u0002\uffff\uffff\u0000\u0090\u0091\u0003\u0006"+
+		"\u0003\u0000\u0091\u0096\u0001\u0000\u0000\u0000\u0092\u0093\n\u0002\u0000"+
+		"\u0000\u0093\u0095\u0003\u0006\u0003\u0000\u0094\u0092\u0001\u0000\u0000"+
+		"\u0000\u0095\u0098\u0001\u0000\u0000\u0000\u0096\u0094\u0001\u0000\u0000"+
+		"\u0000\u0096\u0097\u0001\u0000\u0000\u0000\u0097\u0005\u0001\u0000\u0000"+
+		"\u0000\u0098\u0096\u0001\u0000\u0000\u0000\u0099\u009c\u0003\b\u0004\u0000"+
+		"\u009a\u009c\u0003\f\u0006\u0000\u009b\u0099\u0001\u0000\u0000\u0000\u009b"+
+		"\u009a\u0001\u0000\u0000\u0000\u009c\u0007\u0001\u0000\u0000\u0000\u009d"+
+		"\u009e\u0005\u001c\u0000\u0000\u009e\u009f\u0003\n\u0005\u0000\u009f\u00a0"+
+		"\u0005@\u0000\u0000\u00a0\u00a2\u0005)\u0000\u0000\u00a1\u00a3\u0003\u0016"+
+		"\u000b\u0000\u00a2\u00a1\u0001\u0000\u0000\u0000\u00a2\u00a3\u0001\u0000"+
+		"\u0000\u0000\u00a3\u00a4\u0001\u0000\u0000\u0000\u00a4\u00a5\u0005*\u0000"+
+		"\u0000\u00a5\u00a7\u0005%\u0000\u0000\u00a6\u00a8\u0003\u000e\u0007\u0000"+
+		"\u00a7\u00a6\u0001\u0000\u0000\u0000\u00a7\u00a8\u0001\u0000\u0000\u0000"+
+		"\u00a8\u00aa\u0001\u0000\u0000\u0000\u00a9\u00ab\u0003 \u0010\u0000\u00aa"+
+		"\u00a9\u0001\u0000\u0000\u0000\u00aa\u00ab\u0001\u0000\u0000\u0000\u00ab"+
+		"\u00ac\u0001\u0000\u0000\u0000\u00ac\u00ad\u0005&\u0000\u0000\u00ad\u00ae"+
+		"\u0005\u0015\u0000\u0000\u00ae\u00af\u0005\"\u0000\u0000\u00af\t\u0001"+
+		"\u0000\u0000\u0000\u00b0\u00b1\u0003p8\u0000\u00b1\u000b\u0001\u0000\u0000"+
+		"\u0000\u00b2\u00b3\u0005\u001b\u0000\u0000\u00b3\u00b4\u0005@\u0000\u0000"+
+		"\u00b4\u00b6\u0005)\u0000\u0000\u00b5\u00b7\u0003\u0016\u000b\u0000\u00b6"+
+		"\u00b5\u0001\u0000\u0000\u0000\u00b6\u00b7\u0001\u0000\u0000\u0000\u00b7"+
+		"\u00b8\u0001\u0000\u0000\u0000\u00b8\u00b9\u0005*\u0000\u0000\u00b9\u00bb"+
+		"\u0005%\u0000\u0000\u00ba\u00bc\u0003\u0010\b\u0000\u00bb\u00ba\u0001"+
+		"\u0000\u0000\u0000\u00bb\u00bc\u0001\u0000\u0000\u0000\u00bc\u00be\u0001"+
+		"\u0000\u0000\u0000\u00bd\u00bf\u0003 \u0010\u0000\u00be\u00bd\u0001\u0000"+
+		"\u0000\u0000\u00be\u00bf\u0001\u0000\u0000\u0000\u00bf\u00c0\u0001\u0000"+
+		"\u0000\u0000\u00c0\u00c1\u0005&\u0000\u0000\u00c1\u00c2\u0005\u0015\u0000"+
+		"\u0000\u00c2\u00c3\u0005\"\u0000\u0000\u00c3\r\u0001\u0000\u0000\u0000"+
+		"\u00c4\u00c5\u0005\u0004\u0000\u0000\u00c5\u00c7\u0005\'\u0000\u0000\u00c6"+
+		"\u00c8\u0003\u0012\t\u0000\u00c7\u00c6\u0001\u0000\u0000\u0000\u00c7\u00c8"+
+		"\u0001\u0000\u0000\u0000\u00c8\u00c9\u0001\u0000\u0000\u0000\u00c9\u00ca"+
+		"\u0005(\u0000\u0000\u00ca\u000f\u0001\u0000\u0000\u0000\u00cb\u00cc\u0005"+
+		"\u0004\u0000\u0000\u00cc\u00ce\u0005\'\u0000\u0000\u00cd\u00cf\u0003\u0012"+
+		"\t\u0000\u00ce\u00cd\u0001\u0000\u0000\u0000\u00ce\u00cf\u0001\u0000\u0000"+
+		"\u0000\u00cf\u00d0\u0001\u0000\u0000\u0000\u00d0\u00d1\u0005(\u0000\u0000"+
+		"\u00d1\u0011\u0001\u0000\u0000\u0000\u00d2\u00d3\u0006\t\uffff\uffff\u0000"+
+		"\u00d3\u00d4\u0003\u0014\n\u0000\u00d4\u00d9\u0001\u0000\u0000\u0000\u00d5"+
+		"\u00d6\n\u0002\u0000\u0000\u00d6\u00d8\u0003\u0014\n\u0000\u00d7\u00d5"+
+		"\u0001\u0000\u0000\u0000\u00d8\u00db\u0001\u0000\u0000\u0000\u00d9\u00d7"+
+		"\u0001\u0000\u0000\u0000\u00d9\u00da\u0001\u0000\u0000\u0000\u00da\u0013"+
+		"\u0001\u0000\u0000\u0000\u00db\u00d9\u0001\u0000\u0000\u0000\u00dc\u00e0"+
+		"\u0003N\'\u0000\u00dd\u00e0\u0003P(\u0000\u00de\u00e0\u0003L&\u0000\u00df"+
+		"\u00dc\u0001\u0000\u0000\u0000\u00df\u00dd\u0001\u0000\u0000\u0000\u00df"+
+		"\u00de\u0001\u0000\u0000\u0000\u00e0\u0015\u0001\u0000\u0000\u0000\u00e1"+
+		"\u00e2\u0006\u000b\uffff\uffff\u0000\u00e2\u00e3\u0003\u0018\f\u0000\u00e3"+
+		"\u00e9\u0001\u0000\u0000\u0000\u00e4\u00e5\n\u0002\u0000\u0000\u00e5\u00e6"+
+		"\u0005!\u0000\u0000\u00e6\u00e8\u0003\u0018\f\u0000\u00e7\u00e4\u0001"+
+		"\u0000\u0000\u0000\u00e8\u00eb\u0001\u0000\u0000\u0000\u00e9\u00e7\u0001"+
+		"\u0000\u0000\u0000\u00e9\u00ea\u0001\u0000\u0000\u0000\u00ea\u0017\u0001"+
+		"\u0000\u0000\u0000\u00eb\u00e9\u0001\u0000\u0000\u0000\u00ec\u00ed\u0005"+
+		"\u0012\u0000\u0000\u00ed\u00ee\u0005@\u0000\u0000\u00ee\u00ef\u0005#\u0000"+
+		"\u0000\u00ef\u00f5\u0003\u001a\r\u0000\u00f0\u00f1\u0005\u0013\u0000\u0000"+
+		"\u00f1\u00f2\u0005@\u0000\u0000\u00f2\u00f3\u0005#\u0000\u0000\u00f3\u00f5"+
+		"\u0003\u001c\u000e\u0000\u00f4\u00ec\u0001\u0000\u0000\u0000\u00f4\u00f0"+
+		"\u0001\u0000\u0000\u0000\u00f5\u0019\u0001\u0000\u0000\u0000\u00f6\u00f7"+
+		"\u0003p8\u0000\u00f7\u001b\u0001\u0000\u0000\u0000\u00f8\u00f9\u0003p"+
+		"8\u0000\u00f9\u001d\u0001\u0000\u0000\u0000\u00fa\u00fb\u0005\u0005\u0000"+
+		"\u0000\u00fb\u00fc\u0005<\u0000\u0000\u00fc\u00fd\u0003 \u0010\u0000\u00fd"+
+		"\u001f\u0001\u0000\u0000\u0000\u00fe\u00ff\u0006\u0010\uffff\uffff\u0000"+
+		"\u00ff\u0100\u0003\"\u0011\u0000\u0100\u0105\u0001\u0000\u0000\u0000\u0101"+
+		"\u0102\n\u0002\u0000\u0000\u0102\u0104\u0003\"\u0011\u0000\u0103\u0101"+
+		"\u0001\u0000\u0000\u0000\u0104\u0107\u0001\u0000\u0000\u0000\u0105\u0103"+
+		"\u0001\u0000\u0000\u0000\u0105\u0106\u0001\u0000\u0000\u0000\u0106!\u0001"+
+		"\u0000\u0000\u0000\u0107\u0105\u0001\u0000\u0000\u0000\u0108\u0114\u0003"+
+		",\u0016\u0000\u0109\u0114\u0003(\u0014\u0000\u010a\u010b\u0003t:\u0000"+
+		"\u010b\u010c\u0005\"\u0000\u0000\u010c\u0114\u0001\u0000\u0000\u0000\u010d"+
+		"\u0114\u0003&\u0013\u0000\u010e\u0114\u0003$\u0012\u0000\u010f\u0114\u0003"+
+		"~?\u0000\u0110\u0114\u0003H$\u0000\u0111\u0114\u0003F#\u0000\u0112\u0114"+
+		"\u0003J%\u0000\u0113\u0108\u0001\u0000\u0000\u0000\u0113\u0109\u0001\u0000"+
+		"\u0000\u0000\u0113\u010a\u0001\u0000\u0000\u0000\u0113\u010d\u0001\u0000"+
+		"\u0000\u0000\u0113\u010e\u0001\u0000\u0000\u0000\u0113\u010f\u0001\u0000"+
+		"\u0000\u0000\u0113\u0110\u0001\u0000\u0000\u0000\u0113\u0111\u0001\u0000"+
+		"\u0000\u0000\u0113\u0112\u0001\u0000\u0000\u0000\u0114#\u0001\u0000\u0000"+
+		"\u0000\u0115\u0116\u0005\u001d\u0000\u0000\u0116\u0117\u0003n7\u0000\u0117"+
+		"\u0118\u0005\"\u0000\u0000\u0118\u011c\u0001\u0000\u0000\u0000\u0119\u011a"+
+		"\u0005\u001d\u0000\u0000\u011a\u011c\u0005\"\u0000\u0000\u011b\u0115\u0001"+
+		"\u0000\u0000\u0000\u011b\u0119\u0001\u0000\u0000\u0000\u011c%\u0001\u0000"+
+		"\u0000\u0000\u011d\u011e\u0005\u001e\u0000\u0000\u011e\u0122\u0005\"\u0000"+
+		"\u0000\u011f\u0120\u0005\u001f\u0000\u0000\u0120\u0122\u0005\"\u0000\u0000"+
+		"\u0121\u011d\u0001\u0000\u0000\u0000\u0121\u011f\u0001\u0000\u0000\u0000"+
+		"\u0122\'\u0001\u0000\u0000\u0000\u0123\u0124\u0003x<\u0000\u0124\u0125"+
+		"\u0005\b\u0000\u0000\u0125\u012c\u0001\u0000\u0000\u0000\u0126\u012c\u0005"+
+		"\b\u0000\u0000\u0127\u0128\u0005\u0007\u0000\u0000\u0128\u0129\u0003*"+
+		"\u0015\u0000\u0129\u012a\u0005\"\u0000\u0000\u012a\u012c\u0001\u0000\u0000"+
+		"\u0000\u012b\u0123\u0001\u0000\u0000\u0000\u012b\u0126\u0001\u0000\u0000"+
+		"\u0000\u012b\u0127\u0001\u0000\u0000\u0000\u012c)\u0001\u0000\u0000\u0000"+
+		"\u012d\u012e\u0006\u0015\uffff\uffff\u0000\u012e\u012f\u0003n7\u0000\u012f"+
+		"\u0135\u0001\u0000\u0000\u0000\u0130\u0131\n\u0002\u0000\u0000\u0131\u0132"+
+		"\u0005\u0007\u0000\u0000\u0132\u0134\u0003n7\u0000\u0133\u0130\u0001\u0000"+
+		"\u0000\u0000\u0134\u0137\u0001\u0000\u0000\u0000\u0135\u0133\u0001\u0000"+
+		"\u0000\u0000\u0135\u0136\u0001\u0000\u0000\u0000\u0136+\u0001\u0000\u0000"+
+		"\u0000\u0137\u0135\u0001\u0000\u0000\u0000\u0138\u013d\u0003.\u0017\u0000"+
+		"\u0139\u013d\u00036\u001b\u0000\u013a\u013d\u00038\u001c\u0000\u013b\u013d"+
+		"\u0003:\u001d\u0000\u013c\u0138\u0001\u0000\u0000\u0000\u013c\u0139\u0001"+
+		"\u0000\u0000\u0000\u013c\u013a\u0001\u0000\u0000\u0000\u013c\u013b\u0001"+
+		"\u0000\u0000\u0000\u013d-\u0001\u0000\u0000\u0000\u013e\u013f\u0005\u0019"+
+		"\u0000\u0000\u013f\u0140\u0005)\u0000\u0000\u0140\u0141\u0003n7\u0000"+
+		"\u0141\u0142\u0005*\u0000\u0000\u0142\u0144\u0005%\u0000\u0000\u0143\u0145"+
+		"\u0003 \u0010\u0000\u0144\u0143\u0001\u0000\u0000\u0000\u0144\u0145\u0001"+
+		"\u0000\u0000\u0000\u0145\u0146\u0001\u0000\u0000\u0000\u0146\u0148\u0005"+
+		"&\u0000\u0000\u0147\u0149\u00030\u0018\u0000\u0148\u0147\u0001\u0000\u0000"+
+		"\u0000\u0148\u0149\u0001\u0000\u0000\u0000\u0149\u014a\u0001\u0000\u0000"+
+		"\u0000\u014a\u014b\u00034\u001a\u0000\u014b\u014c\u0005\u0015\u0000\u0000"+
+		"\u014c\u014d\u0005\"\u0000\u0000\u014d/\u0001\u0000\u0000\u0000\u014e"+
+		"\u014f\u0006\u0018\uffff\uffff\u0000\u014f\u0150\u00032\u0019\u0000\u0150"+
+		"\u0155\u0001\u0000\u0000\u0000\u0151\u0152\n\u0002\u0000\u0000\u0152\u0154"+
+		"\u00032\u0019\u0000\u0153\u0151\u0001\u0000\u0000\u0000\u0154\u0157\u0001"+
+		"\u0000\u0000\u0000\u0155\u0153\u0001\u0000\u0000\u0000\u0155\u0156\u0001"+
+		"\u0000\u0000\u0000\u01561\u0001\u0000\u0000\u0000\u0157\u0155\u0001\u0000"+
+		"\u0000\u0000\u0158\u0159\u0005\u001a\u0000\u0000\u0159\u015a\u0005)\u0000"+
+		"\u0000\u015a\u015b\u0003n7\u0000\u015b\u015c\u0005*\u0000\u0000\u015c"+
+		"\u015e\u0005%\u0000\u0000\u015d\u015f\u0003 \u0010\u0000\u015e\u015d\u0001"+
+		"\u0000\u0000\u0000\u015e\u015f\u0001\u0000\u0000\u0000\u015f\u0160\u0001"+
+		"\u0000\u0000\u0000\u0160\u0161\u0005&\u0000\u0000\u01613\u0001\u0000\u0000"+
+		"\u0000\u0162\u0163\u0005\u001a\u0000\u0000\u0163\u0165\u0005%\u0000\u0000"+
+		"\u0164\u0166\u0003 \u0010\u0000\u0165\u0164\u0001\u0000\u0000\u0000\u0165"+
+		"\u0166\u0001\u0000\u0000\u0000\u0166\u0167\u0001\u0000\u0000\u0000\u0167"+
+		"\u016a\u0005&\u0000\u0000\u0168\u016a\u0001\u0000\u0000\u0000\u0169\u0162"+
+		"\u0001\u0000\u0000\u0000\u0169\u0168\u0001\u0000\u0000\u0000\u016a5\u0001"+
+		"\u0000\u0000\u0000\u016b\u016c\u0005\u0016\u0000\u0000\u016c\u016d\u0005"+
+		")\u0000\u0000\u016d\u016e\u0003n7\u0000\u016e\u016f\u0005*\u0000\u0000"+
+		"\u016f\u0171\u0005%\u0000\u0000\u0170\u0172\u0003 \u0010\u0000\u0171\u0170"+
+		"\u0001\u0000\u0000\u0000\u0171\u0172\u0001\u0000\u0000\u0000\u0172\u0173"+
+		"\u0001\u0000\u0000\u0000\u0173\u0174\u0005&\u0000\u0000\u0174\u0175\u0005"+
+		"\u0015\u0000\u0000\u0175\u0176\u0005\"\u0000\u0000\u01767\u0001\u0000"+
+		"\u0000\u0000\u0177\u0178\u0005\u0017\u0000\u0000\u0178\u017a\u0005%\u0000"+
+		"\u0000\u0179\u017b\u0003 \u0010\u0000\u017a\u0179\u0001\u0000\u0000\u0000"+
+		"\u017a\u017b\u0001\u0000\u0000\u0000\u017b\u017c\u0001\u0000\u0000\u0000"+
+		"\u017c\u017d\u0005&\u0000\u0000\u017d\u017e\u0005\u0016\u0000\u0000\u017e"+
+		"\u017f\u0005)\u0000\u0000\u017f\u0180\u0003n7\u0000\u0180\u0181\u0005"+
+		"*\u0000\u0000\u0181\u0182\u0005\"\u0000\u0000\u01829\u0001\u0000\u0000"+
+		"\u0000\u0183\u0184\u0005\u0018\u0000\u0000\u0184\u0185\u0005)\u0000\u0000"+
+		"\u0185\u0186\u0003<\u001e\u0000\u0186\u0187\u0005\"\u0000\u0000\u0187"+
+		"\u0188\u0003n7\u0000\u0188\u0189\u0005\"\u0000\u0000\u0189\u018a\u0003"+
+		">\u001f\u0000\u018a\u018b\u0005*\u0000\u0000\u018b\u018d\u0005%\u0000"+
+		"\u0000\u018c\u018e\u0003 \u0010\u0000\u018d\u018c\u0001\u0000\u0000\u0000"+
+		"\u018d\u018e\u0001\u0000\u0000\u0000\u018e\u018f\u0001\u0000\u0000\u0000"+
+		"\u018f\u0190\u0005&\u0000\u0000\u0190;\u0001\u0000\u0000\u0000\u0191\u0192"+
+		"\u0005\u0012\u0000\u0000\u0192\u0193\u0005@\u0000\u0000\u0193\u0194\u0005"+
+		"#\u0000\u0000\u0194\u0195\u0003p8\u0000\u0195\u0196\u0003n7\u0000\u0196"+
+		"\u019b\u0001\u0000\u0000\u0000\u0197\u0198\u0005@\u0000\u0000\u0198\u0199"+
+		"\u0005 \u0000\u0000\u0199\u019b\u0003n7\u0000\u019a\u0191\u0001\u0000"+
+		"\u0000\u0000\u019a\u0197\u0001\u0000\u0000\u0000\u019b=\u0001\u0000\u0000"+
+		"\u0000\u019c\u019d\u0005@\u0000\u0000\u019d\u01a4\u00050\u0000\u0000\u019e"+
+		"\u019f\u0005@\u0000\u0000\u019f\u01a4\u00051\u0000\u0000\u01a0\u01a1\u0005"+
+		"@\u0000\u0000\u01a1\u01a2\u0005 \u0000\u0000\u01a2\u01a4\u0003n7\u0000"+
+		"\u01a3\u019c\u0001\u0000\u0000\u0000\u01a3\u019e\u0001\u0000\u0000\u0000"+
 		"\u01a3\u01a0\u0001\u0000\u0000\u0000\u01a4?\u0001\u0000\u0000\u0000\u01a5"+
-		"\u01a6\u00059\u0000\u0000\u01a6\u01ad\u0005*\u0000\u0000\u01a7\u01a8\u0005"+
-		"9\u0000\u0000\u01a8\u01ad\u0005+\u0000\u0000\u01a9\u01aa\u00059\u0000"+
-		"\u0000\u01aa\u01ab\u0005\u001f\u0000\u0000\u01ab\u01ad\u0003p8\u0000\u01ac"+
-		"\u01a5\u0001\u0000\u0000\u0000\u01ac\u01a7\u0001\u0000\u0000\u0000\u01ac"+
-		"\u01a9\u0001\u0000\u0000\u0000\u01adA\u0001\u0000\u0000\u0000\u01ae\u01af"+
-		"\u0005\u0004\u0000\u0000\u01af\u01b0\u00055\u0000\u0000\u01b0\u01b1\u0003"+
-		"D\"\u0000\u01b1C\u0001\u0000\u0000\u0000\u01b2\u01b3\u0006\"\uffff\uffff"+
-		"\u0000\u01b3\u01b4\u0003F#\u0000\u01b4\u01b9\u0001\u0000\u0000\u0000\u01b5"+
-		"\u01b6\n\u0002\u0000\u0000\u01b6\u01b8\u0003F#\u0000\u01b7\u01b5\u0001"+
-		"\u0000\u0000\u0000\u01b8\u01bb\u0001\u0000\u0000\u0000\u01b9\u01b7\u0001"+
-		"\u0000\u0000\u0000\u01b9\u01ba\u0001\u0000\u0000\u0000\u01baE\u0001\u0000"+
-		"\u0000\u0000\u01bb\u01b9\u0001\u0000\u0000\u0000\u01bc\u01c5\u0003P(\u0000"+
-		"\u01bd\u01c5\u0003J%\u0000\u01be\u01c5\u0003R)\u0000\u01bf\u01c5\u0003"+
-		"\\.\u0000\u01c0\u01c5\u0003H$\u0000\u01c1\u01c5\u0003N\'\u0000\u01c2\u01c5"+
-		"\u0003\u0080@\u0000\u01c3\u01c5\u0003L&\u0000\u01c4\u01bc\u0001\u0000"+
-		"\u0000\u0000\u01c4\u01bd\u0001\u0000\u0000\u0000\u01c4\u01be\u0001\u0000"+
-		"\u0000\u0000\u01c4\u01bf\u0001\u0000\u0000\u0000\u01c4\u01c0\u0001\u0000"+
-		"\u0000\u0000\u01c4\u01c1\u0001\u0000\u0000\u0000\u01c4\u01c2\u0001\u0000"+
-		"\u0000\u0000\u01c4\u01c3\u0001\u0000\u0000\u0000\u01c5G\u0001\u0000\u0000"+
-		"\u0000\u01c6\u01c7\u00059\u0000\u0000\u01c7\u01c8\u0005&\u0000\u0000\u01c8"+
-		"\u01c9\u0003p8\u0000\u01c9\u01ca\u0005\'\u0000\u0000\u01ca\u01cb\u0005"+
-		"\u001f\u0000\u0000\u01cb\u01cc\u0003p8\u0000\u01cc\u01cd\u0005!\u0000"+
-		"\u0000\u01cdI\u0001\u0000\u0000\u0000\u01ce\u01cf\u00059\u0000\u0000\u01cf"+
-		"\u01d0\u0005\u001f\u0000\u0000\u01d0\u01d1\u0003p8\u0000\u01d1\u01d2\u0005"+
-		"!\u0000\u0000\u01d2K\u0001\u0000\u0000\u0000\u01d3\u01d4\u0003Z-\u0000"+
-		"\u01d4\u01d5\u0005\u001f\u0000\u0000\u01d5\u01d6\u0003p8\u0000\u01d6\u01d7"+
-		"\u0005!\u0000\u0000\u01d7M\u0001\u0000\u0000\u0000\u01d8\u01d9\u0005\u0011"+
-		"\u0000\u0000\u01d9\u01da\u00059\u0000\u0000\u01da\u01db\u0005\"\u0000"+
-		"\u0000\u01db\u01dc\u00059\u0000\u0000\u01dc\u01dd\u0003j5\u0000\u01dd"+
-		"O\u0001\u0000\u0000\u0000\u01de\u01df\u0005\u0011\u0000\u0000\u01df\u01e0"+
-		"\u00059\u0000\u0000\u01e0\u01e1\u0005\"\u0000\u0000\u01e1\u01e2\u0003"+
-		"r9\u0000\u01e2\u01e3\u0003p8\u0000\u01e3\u01e4\u0005!\u0000\u0000\u01e4"+
-		"Q\u0001\u0000\u0000\u0000\u01e5\u01e6\u0005\u0012\u0000\u0000\u01e6\u01e7"+
-		"\u00059\u0000\u0000\u01e7\u01e8\u0005&\u0000\u0000\u01e8\u01e9\u0003p"+
-		"8\u0000\u01e9\u01ea\u0005\'\u0000\u0000\u01ea\u01eb\u0005\"\u0000\u0000"+
-		"\u01eb\u01ed\u0003r9\u0000\u01ec\u01ee\u0003T*\u0000\u01ed\u01ec\u0001"+
-		"\u0000\u0000\u0000\u01ed\u01ee\u0001\u0000\u0000\u0000\u01ee\u01ef\u0001"+
-		"\u0000\u0000\u0000\u01ef\u01f0\u0005!\u0000\u0000\u01f0S\u0001\u0000\u0000"+
-		"\u0000\u01f1\u01f2\u0005$\u0000\u0000\u01f2\u01f3\u0003V+\u0000\u01f3"+
-		"\u01f4\u0005%\u0000\u0000\u01f4U\u0001\u0000\u0000\u0000\u01f5\u01f6\u0006"+
-		"+\uffff\uffff\u0000\u01f6\u01f7\u0003X,\u0000\u01f7\u01fd\u0001\u0000"+
-		"\u0000\u0000\u01f8\u01f9\n\u0002\u0000\u0000\u01f9\u01fa\u0005 \u0000"+
-		"\u0000\u01fa\u01fc\u0003X,\u0000\u01fb\u01f8\u0001\u0000\u0000\u0000\u01fc"+
-		"\u01ff\u0001\u0000\u0000\u0000\u01fd\u01fb\u0001\u0000\u0000\u0000\u01fd"+
-		"\u01fe\u0001\u0000\u0000\u0000\u01feW\u0001\u0000\u0000\u0000\u01ff\u01fd"+
-		"\u0001\u0000\u0000\u0000\u0200\u0201\u0003p8\u0000\u0201Y\u0001\u0000"+
-		"\u0000\u0000\u0202\u0203\u0006-\uffff\uffff\u0000\u0203\u0204\u00059\u0000"+
-		"\u0000\u0204\u0205\u0005#\u0000\u0000\u0205\u020e\u00059\u0000\u0000\u0206"+
-		"\u0207\u00059\u0000\u0000\u0207\u0208\u0005&\u0000\u0000\u0208\u0209\u0003"+
-		"p8\u0000\u0209\u020a\u0005\'\u0000\u0000\u020a\u020b\u0005#\u0000\u0000"+
-		"\u020b\u020c\u00059\u0000\u0000\u020c\u020e\u0001\u0000\u0000\u0000\u020d"+
-		"\u0202\u0001\u0000\u0000\u0000\u020d\u0206\u0001\u0000\u0000\u0000\u020e"+
-		"\u0219\u0001\u0000\u0000\u0000\u020f\u0210\n\u0004\u0000\u0000\u0210\u0211"+
-		"\u0005#\u0000\u0000\u0211\u0218\u00059\u0000\u0000\u0212\u0213\n\u0003"+
-		"\u0000\u0000\u0213\u0214\u0005&\u0000\u0000\u0214\u0215\u0003p8\u0000"+
-		"\u0215\u0216\u0005\'\u0000\u0000\u0216\u0218\u0001\u0000\u0000\u0000\u0217"+
-		"\u020f\u0001\u0000\u0000\u0000\u0217\u0212\u0001\u0000\u0000\u0000\u0218"+
-		"\u021b\u0001\u0000\u0000\u0000\u0219\u0217\u0001\u0000\u0000\u0000\u0219"+
-		"\u021a\u0001\u0000\u0000\u0000\u021a[\u0001\u0000\u0000\u0000\u021b\u0219"+
-		"\u0001\u0000\u0000\u0000\u021c\u021d\u0005\u0013\u0000\u0000\u021d\u021e"+
-		"\u00059\u0000\u0000\u021e\u021f\u0005$\u0000\u0000\u021f\u0220\u0003^"+
-		"/\u0000\u0220\u0221\u0005%\u0000\u0000\u0221\u0222\u0005\u0014\u0000\u0000"+
-		"\u0222\u0223\u0005!\u0000\u0000\u0223]\u0001\u0000\u0000\u0000\u0224\u0227"+
-		"\u0003`0\u0000\u0225\u0227\u0003b1\u0000\u0226\u0224\u0001\u0000\u0000"+
-		"\u0000\u0226\u0225\u0001\u0000\u0000\u0000\u0227_\u0001\u0000\u0000\u0000"+
-		"\u0228\u0229\u00060\uffff\uffff\u0000\u0229\u022a\u0003d2\u0000\u022a"+
-		"\u022b\u0005!\u0000\u0000\u022b\u0232\u0001\u0000\u0000\u0000\u022c\u022d"+
-		"\n\u0002\u0000\u0000\u022d\u022e\u0003d2\u0000\u022e\u022f\u0005!\u0000"+
-		"\u0000\u022f\u0231\u0001\u0000\u0000\u0000\u0230\u022c\u0001\u0000\u0000"+
-		"\u0000\u0231\u0234\u0001\u0000\u0000\u0000\u0232\u0230\u0001\u0000\u0000"+
-		"\u0000\u0232\u0233\u0001\u0000\u0000\u0000\u0233a\u0001\u0000\u0000\u0000"+
-		"\u0234\u0232\u0001\u0000\u0000\u0000\u0235\u0236\u00061\uffff\uffff\u0000"+
-		"\u0236\u0237\u0003d2\u0000\u0237\u023d\u0001\u0000\u0000\u0000\u0238\u0239"+
-		"\n\u0002\u0000\u0000\u0239\u023a\u0005 \u0000\u0000\u023a\u023c\u0003"+
-		"d2\u0000\u023b\u0238\u0001\u0000\u0000\u0000\u023c\u023f\u0001\u0000\u0000"+
-		"\u0000\u023d\u023b\u0001\u0000\u0000\u0000\u023d\u023e\u0001\u0000\u0000"+
-		"\u0000\u023ec\u0001\u0000\u0000\u0000\u023f\u023d\u0001\u0000\u0000\u0000"+
-		"\u0240\u0243\u0003f3\u0000\u0241\u0243\u0003h4\u0000\u0242\u0240\u0001"+
-		"\u0000\u0000\u0000\u0242\u0241\u0001\u0000\u0000\u0000\u0243e\u0001\u0000"+
-		"\u0000\u0000\u0244\u0245\u0005\u0011\u0000\u0000\u0245\u0246\u00059\u0000"+
-		"\u0000\u0246\u0247\u0005\"\u0000\u0000\u0247\u0248\u0003r9\u0000\u0248"+
-		"g\u0001\u0000\u0000\u0000\u0249\u024a\u0005\u0012\u0000\u0000\u024a\u024b"+
-		"\u00059\u0000\u0000\u024b\u024c\u0005\"\u0000\u0000\u024c\u024d\u0003"+
-		"r9\u0000\u024di\u0001\u0000\u0000\u0000\u024e\u024f\u0005$\u0000\u0000"+
-		"\u024f\u0250\u0003l6\u0000\u0250\u0251\u0005%\u0000\u0000\u0251k\u0001"+
-		"\u0000\u0000\u0000\u0252\u0253\u00066\uffff\uffff\u0000\u0253\u0254\u0003"+
-		"n7\u0000\u0254\u025a\u0001\u0000\u0000\u0000\u0255\u0256\n\u0002\u0000"+
-		"\u0000\u0256\u0257\u0005 \u0000\u0000\u0257\u0259\u0003n7\u0000\u0258"+
-		"\u0255\u0001\u0000\u0000\u0000\u0259\u025c\u0001\u0000\u0000\u0000\u025a"+
-		"\u0258\u0001\u0000\u0000\u0000\u025a\u025b\u0001\u0000\u0000\u0000\u025b"+
-		"m\u0001\u0000\u0000\u0000\u025c\u025a\u0001\u0000\u0000\u0000\u025d\u025e"+
-		"\u00059\u0000\u0000\u025e\u025f\u0005\"\u0000\u0000\u025f\u0260\u0003"+
-		"p8\u0000\u0260o\u0001\u0000\u0000\u0000\u0261\u0262\u00068\uffff\uffff"+
-		"\u0000\u0262\u0263\u0005(\u0000\u0000\u0263\u0264\u0003p8\u0000\u0264"+
-		"\u0265\u0005)\u0000\u0000\u0265\u026a\u0001\u0000\u0000\u0000\u0266\u0267"+
-		"\u0007\u0000\u0000\u0000\u0267\u026a\u0003p8\b\u0268\u026a\u0003|>\u0000"+
-		"\u0269\u0261\u0001\u0000\u0000\u0000\u0269\u0266\u0001\u0000\u0000\u0000"+
-		"\u0269\u0268\u0001\u0000\u0000\u0000\u026a\u027f\u0001\u0000\u0000\u0000"+
-		"\u026b\u026c\n\u0007\u0000\u0000\u026c\u026d\u0007\u0001\u0000\u0000\u026d"+
-		"\u027e\u0003p8\b\u026e\u026f\n\u0006\u0000\u0000\u026f\u0270\u0007\u0002"+
-		"\u0000\u0000\u0270\u027e\u0003p8\u0007\u0271\u0272\n\u0005\u0000\u0000"+
-		"\u0272\u0273\u0007\u0003\u0000\u0000\u0273\u027e\u0003p8\u0006\u0274\u0275"+
-		"\n\u0004\u0000\u0000\u0275\u0276\u0007\u0004\u0000\u0000\u0276\u027e\u0003"+
-		"p8\u0005\u0277\u0278\n\u0003\u0000\u0000\u0278\u0279\u00056\u0000\u0000"+
-		"\u0279\u027e\u0003p8\u0004\u027a\u027b\n\u0002\u0000\u0000\u027b\u027c"+
-		"\u00057\u0000\u0000\u027c\u027e\u0003p8\u0003\u027d\u026b\u0001\u0000"+
-		"\u0000\u0000\u027d\u026e\u0001\u0000\u0000\u0000\u027d\u0271\u0001\u0000"+
-		"\u0000\u0000\u027d\u0274\u0001\u0000\u0000\u0000\u027d\u0277\u0001\u0000"+
-		"\u0000\u0000\u027d\u027a\u0001\u0000\u0000\u0000\u027e\u0281\u0001\u0000"+
-		"\u0000\u0000\u027f\u027d\u0001\u0000\u0000\u0000\u027f\u0280\u0001\u0000"+
-		"\u0000\u0000\u0280q\u0001\u0000\u0000\u0000\u0281\u027f\u0001\u0000\u0000"+
-		"\u0000\u0282\u0289\u0005\u000b\u0000\u0000\u0283\u0289\u0005\n\u0000\u0000"+
-		"\u0284\u0289\u0005\f\u0000\u0000\u0285\u0289\u0005\r\u0000\u0000\u0286"+
-		"\u0289\u0005\u000e\u0000\u0000\u0287\u0289\u00059\u0000\u0000\u0288\u0282"+
-		"\u0001\u0000\u0000\u0000\u0288\u0283\u0001\u0000\u0000\u0000\u0288\u0284"+
-		"\u0001\u0000\u0000\u0000\u0288\u0285\u0001\u0000\u0000\u0000\u0288\u0286"+
-		"\u0001\u0000\u0000\u0000\u0288\u0287\u0001\u0000\u0000\u0000\u0289s\u0001"+
-		"\u0000\u0000\u0000\u028a\u028b\u00059\u0000\u0000\u028b\u028c\u0005&\u0000"+
-		"\u0000\u028c\u028d\u0003p8\u0000\u028d\u028e\u0005\'\u0000\u0000\u028e"+
-		"u\u0001\u0000\u0000\u0000\u028f\u0290\u00059\u0000\u0000\u0290\u0292\u0005"+
-		"(\u0000\u0000\u0291\u0293\u0003x<\u0000\u0292\u0291\u0001\u0000\u0000"+
-		"\u0000\u0292\u0293\u0001\u0000\u0000\u0000\u0293\u0294\u0001\u0000\u0000"+
-		"\u0000\u0294\u0295\u0005)\u0000\u0000\u0295w\u0001\u0000\u0000\u0000\u0296"+
-		"\u0297\u0006<\uffff\uffff\u0000\u0297\u0298\u0003p8\u0000\u0298\u029e"+
-		"\u0001\u0000\u0000\u0000\u0299\u029a\n\u0002\u0000\u0000\u029a\u029b\u0005"+
-		" \u0000\u0000\u029b\u029d\u0003p8\u0000\u029c\u0299\u0001\u0000\u0000"+
-		"\u0000\u029d\u02a0\u0001\u0000\u0000\u0000\u029e\u029c\u0001\u0000\u0000"+
-		"\u0000\u029e\u029f\u0001\u0000\u0000\u0000\u029fy\u0001\u0000\u0000\u0000"+
-		"\u02a0\u029e\u0001\u0000\u0000\u0000\u02a1\u02a5\u0003Z-\u0000\u02a2\u02a5"+
-		"\u0003t:\u0000\u02a3\u02a5\u00059\u0000\u0000\u02a4\u02a1\u0001\u0000"+
-		"\u0000\u0000\u02a4\u02a2\u0001\u0000\u0000\u0000\u02a4\u02a3\u0001\u0000"+
-		"\u0000\u0000\u02a5{\u0001\u0000\u0000\u0000\u02a6\u02b2\u0005<\u0000\u0000"+
-		"\u02a7\u02b2\u0005=\u0000\u0000\u02a8\u02b2\u0005;\u0000\u0000\u02a9\u02b2"+
-		"\u0005:\u0000\u0000\u02aa\u02b2\u0003~?\u0000\u02ab\u02b2\u0003t:\u0000"+
-		"\u02ac\u02b2\u0003v;\u0000\u02ad\u02b2\u0003Z-\u0000\u02ae\u02b2\u0003"+
-		"j5\u0000\u02af\u02b2\u0003T*\u0000\u02b0\u02b2\u00059\u0000\u0000\u02b1"+
-		"\u02a6\u0001\u0000\u0000\u0000\u02b1\u02a7\u0001\u0000\u0000\u0000\u02b1"+
-		"\u02a8\u0001\u0000\u0000\u0000\u02b1\u02a9\u0001\u0000\u0000\u0000\u02b1"+
-		"\u02aa\u0001\u0000\u0000\u0000\u02b1\u02ab\u0001\u0000\u0000\u0000\u02b1"+
-		"\u02ac\u0001\u0000\u0000\u0000\u02b1\u02ad\u0001\u0000\u0000\u0000\u02b1"+
-		"\u02ae\u0001\u0000\u0000\u0000\u02b1\u02af\u0001\u0000\u0000\u0000\u02b1"+
-		"\u02b0\u0001\u0000\u0000\u0000\u02b2}\u0001\u0000\u0000\u0000\u02b3\u02b6"+
-		"\u0005\u000f\u0000\u0000\u02b4\u02b6\u0005\u0010\u0000\u0000\u02b5\u02b3"+
-		"\u0001\u0000\u0000\u0000\u02b5\u02b4\u0001\u0000\u0000\u0000\u02b6\u007f"+
-		"\u0001\u0000\u0000\u0000\u02b7\u02b8\u0003z=\u0000\u02b8\u02b9\u0005*"+
-		"\u0000\u0000\u02b9\u02ba\u0005!\u0000\u0000\u02ba\u02c8\u0001\u0000\u0000"+
-		"\u0000\u02bb\u02bc\u0003z=\u0000\u02bc\u02bd\u0005+\u0000\u0000\u02bd"+
-		"\u02be\u0005!\u0000\u0000\u02be\u02c8\u0001\u0000\u0000\u0000\u02bf\u02c0"+
-		"\u0005*\u0000\u0000\u02c0\u02c1\u0003z=\u0000\u02c1\u02c2\u0005!\u0000"+
-		"\u0000\u02c2\u02c8\u0001\u0000\u0000\u0000\u02c3\u02c4\u0005+\u0000\u0000"+
-		"\u02c4\u02c5\u0003z=\u0000\u02c5\u02c6\u0005!\u0000\u0000\u02c6\u02c8"+
-		"\u0001\u0000\u0000\u0000\u02c7\u02b7\u0001\u0000\u0000\u0000\u02c7\u02bb"+
-		"\u0001\u0000\u0000\u0000\u02c7\u02bf\u0001\u0000\u0000\u0000\u02c7\u02c3"+
-		"\u0001\u0000\u0000\u0000\u02c8\u0081\u0001\u0000\u0000\u00009\u0085\u008b"+
-		"\u008e\u009f\u00a4\u00ab\u00b0\u00b3\u00bf\u00c4\u00c7\u00d0\u00d7\u00e2"+
-		"\u00e8\u00f2\u00fd\u010e\u011c\u0124\u012a\u0134\u013e\u0145\u014d\u0151"+
-		"\u015e\u0167\u016e\u0172\u017a\u0183\u0196\u01a3\u01ac\u01b9\u01c4\u01ed"+
-		"\u01fd\u020d\u0217\u0219\u0226\u0232\u023d\u0242\u025a\u0269\u027d\u027f"+
-		"\u0288\u0292\u029e\u02a4\u02b1\u02b5\u02c7";
+		"\u01a6\u0005\u0004\u0000\u0000\u01a6\u01a7\u0005<\u0000\u0000\u01a7\u01a8"+
+		"\u0003B!\u0000\u01a8A\u0001\u0000\u0000\u0000\u01a9\u01aa\u0006!\uffff"+
+		"\uffff\u0000\u01aa\u01ab\u0003D\"\u0000\u01ab\u01b0\u0001\u0000\u0000"+
+		"\u0000\u01ac\u01ad\n\u0002\u0000\u0000\u01ad\u01af\u0003D\"\u0000\u01ae"+
+		"\u01ac\u0001\u0000\u0000\u0000\u01af\u01b2\u0001\u0000\u0000\u0000\u01b0"+
+		"\u01ae\u0001\u0000\u0000\u0000\u01b0\u01b1\u0001\u0000\u0000\u0000\u01b1"+
+		"C\u0001\u0000\u0000\u0000\u01b2\u01b0\u0001\u0000\u0000\u0000\u01b3\u01bc"+
+		"\u0003N\'\u0000\u01b4\u01bc\u0003H$\u0000\u01b5\u01bc\u0003P(\u0000\u01b6"+
+		"\u01bc\u0003Z-\u0000\u01b7\u01bc\u0003F#\u0000\u01b8\u01bc\u0003L&\u0000"+
+		"\u01b9\u01bc\u0003~?\u0000\u01ba\u01bc\u0003J%\u0000\u01bb\u01b3\u0001"+
+		"\u0000\u0000\u0000\u01bb\u01b4\u0001\u0000\u0000\u0000\u01bb\u01b5\u0001"+
+		"\u0000\u0000\u0000\u01bb\u01b6\u0001\u0000\u0000\u0000\u01bb\u01b7\u0001"+
+		"\u0000\u0000\u0000\u01bb\u01b8\u0001\u0000\u0000\u0000\u01bb\u01b9\u0001"+
+		"\u0000\u0000\u0000\u01bb\u01ba\u0001\u0000\u0000\u0000\u01bcE\u0001\u0000"+
+		"\u0000\u0000\u01bd\u01be\u0005@\u0000\u0000\u01be\u01bf\u0005\'\u0000"+
+		"\u0000\u01bf\u01c0\u0003n7\u0000\u01c0\u01c1\u0005(\u0000\u0000\u01c1"+
+		"\u01c2\u0005 \u0000\u0000\u01c2\u01c3\u0003n7\u0000\u01c3\u01c4\u0005"+
+		"\"\u0000\u0000\u01c4G\u0001\u0000\u0000\u0000\u01c5\u01c6\u0005@\u0000"+
+		"\u0000\u01c6\u01c7\u0005 \u0000\u0000\u01c7\u01c8\u0003n7\u0000\u01c8"+
+		"\u01c9\u0005\"\u0000\u0000\u01c9I\u0001\u0000\u0000\u0000\u01ca\u01cb"+
+		"\u0003X,\u0000\u01cb\u01cc\u0005 \u0000\u0000\u01cc\u01cd\u0003n7\u0000"+
+		"\u01cd\u01ce\u0005\"\u0000\u0000\u01ceK\u0001\u0000\u0000\u0000\u01cf"+
+		"\u01d0\u0005\u0012\u0000\u0000\u01d0\u01d1\u0005@\u0000\u0000\u01d1\u01d2"+
+		"\u0005#\u0000\u0000\u01d2\u01d3\u0005@\u0000\u0000\u01d3\u01d4\u0003h"+
+		"4\u0000\u01d4M\u0001\u0000\u0000\u0000\u01d5\u01d6\u0005\u0012\u0000\u0000"+
+		"\u01d6\u01d7\u0005@\u0000\u0000\u01d7\u01d8\u0005#\u0000\u0000\u01d8\u01d9"+
+		"\u0003p8\u0000\u01d9\u01da\u0003n7\u0000\u01da\u01db\u0005\"\u0000\u0000"+
+		"\u01dbO\u0001\u0000\u0000\u0000\u01dc\u01dd\u0005\u0013\u0000\u0000\u01dd"+
+		"\u01de\u0005@\u0000\u0000\u01de\u01df\u0005\'\u0000\u0000\u01df\u01e0"+
+		"\u0003n7\u0000\u01e0\u01e1\u0005(\u0000\u0000\u01e1\u01e2\u0005#\u0000"+
+		"\u0000\u01e2\u01e4\u0003p8\u0000\u01e3\u01e5\u0003R)\u0000\u01e4\u01e3"+
+		"\u0001\u0000\u0000\u0000\u01e4\u01e5\u0001\u0000\u0000\u0000\u01e5\u01e6"+
+		"\u0001\u0000\u0000\u0000\u01e6\u01e7\u0005\"\u0000\u0000\u01e7Q\u0001"+
+		"\u0000\u0000\u0000\u01e8\u01e9\u0005%\u0000\u0000\u01e9\u01ea\u0003T*"+
+		"\u0000\u01ea\u01eb\u0005&\u0000\u0000\u01ebS\u0001\u0000\u0000\u0000\u01ec"+
+		"\u01ed\u0006*\uffff\uffff\u0000\u01ed\u01ee\u0003V+\u0000\u01ee\u01f4"+
+		"\u0001\u0000\u0000\u0000\u01ef\u01f0\n\u0002\u0000\u0000\u01f0\u01f1\u0005"+
+		"!\u0000\u0000\u01f1\u01f3\u0003V+\u0000\u01f2\u01ef\u0001\u0000\u0000"+
+		"\u0000\u01f3\u01f6\u0001\u0000\u0000\u0000\u01f4\u01f2\u0001\u0000\u0000"+
+		"\u0000\u01f4\u01f5\u0001\u0000\u0000\u0000\u01f5U\u0001\u0000\u0000\u0000"+
+		"\u01f6\u01f4\u0001\u0000\u0000\u0000\u01f7\u01f8\u0003n7\u0000\u01f8W"+
+		"\u0001\u0000\u0000\u0000\u01f9\u01fa\u0006,\uffff\uffff\u0000\u01fa\u01fb"+
+		"\u0005@\u0000\u0000\u01fb\u01fc\u0005$\u0000\u0000\u01fc\u0205\u0005@"+
+		"\u0000\u0000\u01fd\u01fe\u0005@\u0000\u0000\u01fe\u01ff\u0005\'\u0000"+
+		"\u0000\u01ff\u0200\u0003n7\u0000\u0200\u0201\u0005(\u0000\u0000\u0201"+
+		"\u0202\u0005$\u0000\u0000\u0202\u0203\u0005@\u0000\u0000\u0203\u0205\u0001"+
+		"\u0000\u0000\u0000\u0204\u01f9\u0001\u0000\u0000\u0000\u0204\u01fd\u0001"+
+		"\u0000\u0000\u0000\u0205\u0210\u0001\u0000\u0000\u0000\u0206\u0207\n\u0004"+
+		"\u0000\u0000\u0207\u0208\u0005$\u0000\u0000\u0208\u020f\u0005@\u0000\u0000"+
+		"\u0209\u020a\n\u0003\u0000\u0000\u020a\u020b\u0005\'\u0000\u0000\u020b"+
+		"\u020c\u0003n7\u0000\u020c\u020d\u0005(\u0000\u0000\u020d\u020f\u0001"+
+		"\u0000\u0000\u0000\u020e\u0206\u0001\u0000\u0000\u0000\u020e\u0209\u0001"+
+		"\u0000\u0000\u0000\u020f\u0212\u0001\u0000\u0000\u0000\u0210\u020e\u0001"+
+		"\u0000\u0000\u0000\u0210\u0211\u0001\u0000\u0000\u0000\u0211Y\u0001\u0000"+
+		"\u0000\u0000\u0212\u0210\u0001\u0000\u0000\u0000\u0213\u0214\u0005\u0014"+
+		"\u0000\u0000\u0214\u0215\u0005@\u0000\u0000\u0215\u0216\u0005%\u0000\u0000"+
+		"\u0216\u0217\u0003\\.\u0000\u0217\u0218\u0005&\u0000\u0000\u0218\u0219"+
+		"\u0005\u0015\u0000\u0000\u0219\u021a\u0005\"\u0000\u0000\u021a[\u0001"+
+		"\u0000\u0000\u0000\u021b\u021e\u0003^/\u0000\u021c\u021e\u0003`0\u0000"+
+		"\u021d\u021b\u0001\u0000\u0000\u0000\u021d\u021c\u0001\u0000\u0000\u0000"+
+		"\u021e]\u0001\u0000\u0000\u0000\u021f\u0220\u0006/\uffff\uffff\u0000\u0220"+
+		"\u0221\u0003b1\u0000\u0221\u0222\u0005\"\u0000\u0000\u0222\u0229\u0001"+
+		"\u0000\u0000\u0000\u0223\u0224\n\u0002\u0000\u0000\u0224\u0225\u0003b"+
+		"1\u0000\u0225\u0226\u0005\"\u0000\u0000\u0226\u0228\u0001\u0000\u0000"+
+		"\u0000\u0227\u0223\u0001\u0000\u0000\u0000\u0228\u022b\u0001\u0000\u0000"+
+		"\u0000\u0229\u0227\u0001\u0000\u0000\u0000\u0229\u022a\u0001\u0000\u0000"+
+		"\u0000\u022a_\u0001\u0000\u0000\u0000\u022b\u0229\u0001\u0000\u0000\u0000"+
+		"\u022c\u022d\u00060\uffff\uffff\u0000\u022d\u022e\u0003b1\u0000\u022e"+
+		"\u0234\u0001\u0000\u0000\u0000\u022f\u0230\n\u0002\u0000\u0000\u0230\u0231"+
+		"\u0005!\u0000\u0000\u0231\u0233\u0003b1\u0000\u0232\u022f\u0001\u0000"+
+		"\u0000\u0000\u0233\u0236\u0001\u0000\u0000\u0000\u0234\u0232\u0001\u0000"+
+		"\u0000\u0000\u0234\u0235\u0001\u0000\u0000\u0000\u0235a\u0001\u0000\u0000"+
+		"\u0000\u0236\u0234\u0001\u0000\u0000\u0000\u0237\u023a\u0003d2\u0000\u0238"+
+		"\u023a\u0003f3\u0000\u0239\u0237\u0001\u0000\u0000\u0000\u0239\u0238\u0001"+
+		"\u0000\u0000\u0000\u023ac\u0001\u0000\u0000\u0000\u023b\u023c\u0005\u0012"+
+		"\u0000\u0000\u023c\u023d\u0005@\u0000\u0000\u023d\u023e\u0005#\u0000\u0000"+
+		"\u023e\u023f\u0003p8\u0000\u023fe\u0001\u0000\u0000\u0000\u0240\u0241"+
+		"\u0005\u0013\u0000\u0000\u0241\u0242\u0005@\u0000\u0000\u0242\u0243\u0005"+
+		"#\u0000\u0000\u0243\u0244\u0003p8\u0000\u0244g\u0001\u0000\u0000\u0000"+
+		"\u0245\u0246\u0005%\u0000\u0000\u0246\u0247\u0003j5\u0000\u0247\u0248"+
+		"\u0005&\u0000\u0000\u0248i\u0001\u0000\u0000\u0000\u0249\u024a\u00065"+
+		"\uffff\uffff\u0000\u024a\u024b\u0003l6\u0000\u024b\u0251\u0001\u0000\u0000"+
+		"\u0000\u024c\u024d\n\u0002\u0000\u0000\u024d\u024e\u0005!\u0000\u0000"+
+		"\u024e\u0250\u0003l6\u0000\u024f\u024c\u0001\u0000\u0000\u0000\u0250\u0253"+
+		"\u0001\u0000\u0000\u0000\u0251\u024f\u0001\u0000\u0000\u0000\u0251\u0252"+
+		"\u0001\u0000\u0000\u0000\u0252k\u0001\u0000\u0000\u0000\u0253\u0251\u0001"+
+		"\u0000\u0000\u0000\u0254\u0255\u0005@\u0000\u0000\u0255\u0256\u0005#\u0000"+
+		"\u0000\u0256\u0257\u0003n7\u0000\u0257m\u0001\u0000\u0000\u0000\u0258"+
+		"\u0259\u00067\uffff\uffff\u0000\u0259\u025a\u0005)\u0000\u0000\u025a\u025b"+
+		"\u0003n7\u0000\u025b\u025c\u0005*\u0000\u0000\u025c\u0261\u0001\u0000"+
+		"\u0000\u0000\u025d\u025e\u0007\u0000\u0000\u0000\u025e\u0261\u0003n7\b"+
+		"\u025f\u0261\u0003z=\u0000\u0260\u0258\u0001\u0000\u0000\u0000\u0260\u025d"+
+		"\u0001\u0000\u0000\u0000\u0260\u025f\u0001\u0000\u0000\u0000\u0261\u0276"+
+		"\u0001\u0000\u0000\u0000\u0262\u0263\n\u0007\u0000\u0000\u0263\u0264\u0007"+
+		"\u0001\u0000\u0000\u0264\u0275\u0003n7\b\u0265\u0266\n\u0006\u0000\u0000"+
+		"\u0266\u0267\u0007\u0002\u0000\u0000\u0267\u0275\u0003n7\u0007\u0268\u0269"+
+		"\n\u0005\u0000\u0000\u0269\u026a\u0007\u0003\u0000\u0000\u026a\u0275\u0003"+
+		"n7\u0006\u026b\u026c\n\u0004\u0000\u0000\u026c\u026d\u0007\u0004\u0000"+
+		"\u0000\u026d\u0275\u0003n7\u0005\u026e\u026f\n\u0003\u0000\u0000\u026f"+
+		"\u0270\u0005=\u0000\u0000\u0270\u0275\u0003n7\u0004\u0271\u0272\n\u0002"+
+		"\u0000\u0000\u0272\u0273\u0005>\u0000\u0000\u0273\u0275\u0003n7\u0003"+
+		"\u0274\u0262\u0001\u0000\u0000\u0000\u0274\u0265\u0001\u0000\u0000\u0000"+
+		"\u0274\u0268\u0001\u0000\u0000\u0000\u0274\u026b\u0001\u0000\u0000\u0000"+
+		"\u0274\u026e\u0001\u0000\u0000\u0000\u0274\u0271\u0001\u0000\u0000\u0000"+
+		"\u0275\u0278\u0001\u0000\u0000\u0000\u0276\u0274\u0001\u0000\u0000\u0000"+
+		"\u0276\u0277\u0001\u0000\u0000\u0000\u0277o\u0001\u0000\u0000\u0000\u0278"+
+		"\u0276\u0001\u0000\u0000\u0000\u0279\u0280\u0005\n\u0000\u0000\u027a\u0280"+
+		"\u0005\t\u0000\u0000\u027b\u0280\u0005\u000b\u0000\u0000\u027c\u0280\u0005"+
+		"\f\u0000\u0000\u027d\u0280\u0005\r\u0000\u0000\u027e\u0280\u0005@\u0000"+
+		"\u0000\u027f\u0279\u0001\u0000\u0000\u0000\u027f\u027a\u0001\u0000\u0000"+
+		"\u0000\u027f\u027b\u0001\u0000\u0000\u0000\u027f\u027c\u0001\u0000\u0000"+
+		"\u0000\u027f\u027d\u0001\u0000\u0000\u0000\u027f\u027e\u0001\u0000\u0000"+
+		"\u0000\u0280q\u0001\u0000\u0000\u0000\u0281\u0282\u0005@\u0000\u0000\u0282"+
+		"\u0283\u0005\'\u0000\u0000\u0283\u0284\u0003n7\u0000\u0284\u0285\u0005"+
+		"(\u0000\u0000\u0285s\u0001\u0000\u0000\u0000\u0286\u0287\u0005@\u0000"+
+		"\u0000\u0287\u0289\u0005)\u0000\u0000\u0288\u028a\u0003v;\u0000\u0289"+
+		"\u0288\u0001\u0000\u0000\u0000\u0289\u028a\u0001\u0000\u0000\u0000\u028a"+
+		"\u028b\u0001\u0000\u0000\u0000\u028b\u028c\u0005*\u0000\u0000\u028cu\u0001"+
+		"\u0000\u0000\u0000\u028d\u028e\u0006;\uffff\uffff\u0000\u028e\u028f\u0003"+
+		"n7\u0000\u028f\u0295\u0001\u0000\u0000\u0000\u0290\u0291\n\u0002\u0000"+
+		"\u0000\u0291\u0292\u0005!\u0000\u0000\u0292\u0294\u0003n7\u0000\u0293"+
+		"\u0290\u0001\u0000\u0000\u0000\u0294\u0297\u0001\u0000\u0000\u0000\u0295"+
+		"\u0293\u0001\u0000\u0000\u0000\u0295\u0296\u0001\u0000\u0000\u0000\u0296"+
+		"w\u0001\u0000\u0000\u0000\u0297\u0295\u0001\u0000\u0000\u0000\u0298\u029c"+
+		"\u0003X,\u0000\u0299\u029c\u0003r9\u0000\u029a\u029c\u0005@\u0000\u0000"+
+		"\u029b\u0298\u0001\u0000\u0000\u0000\u029b\u0299\u0001\u0000\u0000\u0000"+
+		"\u029b\u029a\u0001\u0000\u0000\u0000\u029cy\u0001\u0000\u0000\u0000\u029d"+
+		"\u02a9\u0005C\u0000\u0000\u029e\u02a9\u0005D\u0000\u0000\u029f\u02a9\u0005"+
+		"B\u0000\u0000\u02a0\u02a9\u0005A\u0000\u0000\u02a1\u02a9\u0003|>\u0000"+
+		"\u02a2\u02a9\u0003r9\u0000\u02a3\u02a9\u0003t:\u0000\u02a4\u02a9\u0003"+
+		"X,\u0000\u02a5\u02a9\u0003h4\u0000\u02a6\u02a9\u0003R)\u0000\u02a7\u02a9"+
+		"\u0005@\u0000\u0000\u02a8\u029d\u0001\u0000\u0000\u0000\u02a8\u029e\u0001"+
+		"\u0000\u0000\u0000\u02a8\u029f\u0001\u0000\u0000\u0000\u02a8\u02a0\u0001"+
+		"\u0000\u0000\u0000\u02a8\u02a1\u0001\u0000\u0000\u0000\u02a8\u02a2\u0001"+
+		"\u0000\u0000\u0000\u02a8\u02a3\u0001\u0000\u0000\u0000\u02a8\u02a4\u0001"+
+		"\u0000\u0000\u0000\u02a8\u02a5\u0001\u0000\u0000\u0000\u02a8\u02a6\u0001"+
+		"\u0000\u0000\u0000\u02a8\u02a7\u0001\u0000\u0000\u0000\u02a9{\u0001\u0000"+
+		"\u0000\u0000\u02aa\u02ad\u0005\u000e\u0000\u0000\u02ab\u02ad\u0005\u000f"+
+		"\u0000\u0000\u02ac\u02aa\u0001\u0000\u0000\u0000\u02ac\u02ab\u0001\u0000"+
+		"\u0000\u0000\u02ad}\u0001\u0000\u0000\u0000\u02ae\u02af\u0003x<\u0000"+
+		"\u02af\u02b0\u00050\u0000\u0000\u02b0\u02b1\u0005\"\u0000\u0000\u02b1"+
+		"\u02bf\u0001\u0000\u0000\u0000\u02b2\u02b3\u0003x<\u0000\u02b3\u02b4\u0005"+
+		"1\u0000\u0000\u02b4\u02b5\u0005\"\u0000\u0000\u02b5\u02bf\u0001\u0000"+
+		"\u0000\u0000\u02b6\u02b7\u00050\u0000\u0000\u02b7\u02b8\u0003x<\u0000"+
+		"\u02b8\u02b9\u0005\"\u0000\u0000\u02b9\u02bf\u0001\u0000\u0000\u0000\u02ba"+
+		"\u02bb\u00051\u0000\u0000\u02bb\u02bc\u0003x<\u0000\u02bc\u02bd\u0005"+
+		"\"\u0000\u0000\u02bd\u02bf\u0001\u0000\u0000\u0000\u02be\u02ae\u0001\u0000"+
+		"\u0000\u0000\u02be\u02b2\u0001\u0000\u0000\u0000\u02be\u02b6\u0001\u0000"+
+		"\u0000\u0000\u02be\u02ba\u0001\u0000\u0000\u0000\u02bf\u007f\u0001\u0000"+
+		"\u0000\u00008\u0083\u0089\u0096\u009b\u00a2\u00a7\u00aa\u00b6\u00bb\u00be"+
+		"\u00c7\u00ce\u00d9\u00df\u00e9\u00f4\u0105\u0113\u011b\u0121\u012b\u0135"+
+		"\u013c\u0144\u0148\u0155\u015e\u0165\u0169\u0171\u017a\u018d\u019a\u01a3"+
+		"\u01b0\u01bb\u01e4\u01f4\u0204\u020e\u0210\u021d\u0229\u0234\u0239\u0251"+
+		"\u0260\u0274\u0276\u027f\u0289\u0295\u029b\u02a8\u02ac\u02be";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

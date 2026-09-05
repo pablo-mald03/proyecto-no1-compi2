@@ -49,6 +49,7 @@ READ: 'leer';
 
 //--- IF-ELSE
 DEFINE: 'definir';
+STRUCT: 'estructura';
 IF: 'si';
 ELSE_IF: 'sino';
 ELSE: 'contrario';

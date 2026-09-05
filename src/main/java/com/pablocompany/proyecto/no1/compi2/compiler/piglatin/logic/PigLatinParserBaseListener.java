@@ -41,18 +41,6 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMuneraSection(PigLatinParser.MuneraSectionContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMuneraSection(PigLatinParser.MuneraSectionContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterFunctionsBlockList(PigLatinParser.FunctionsBlockListContext ctx) { }
 	/**
 	 * {@inheritDoc}

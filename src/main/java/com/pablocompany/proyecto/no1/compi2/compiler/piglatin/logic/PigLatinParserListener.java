@@ -30,18 +30,6 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitBody(PigLatinParser.BodyContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code MuneraSection}
-	 * labeled alternative in {@link PigLatinParser#munera_section}.
-	 * @param ctx the parse tree
-	 */
-	void enterMuneraSection(PigLatinParser.MuneraSectionContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code MuneraSection}
-	 * labeled alternative in {@link PigLatinParser#munera_section}.
-	 * @param ctx the parse tree
-	 */
-	void exitMuneraSection(PigLatinParser.MuneraSectionContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code FunctionsBlockList}
 	 * labeled alternative in {@link PigLatinParser#munera_body}.
 	 * @param ctx the parse tree

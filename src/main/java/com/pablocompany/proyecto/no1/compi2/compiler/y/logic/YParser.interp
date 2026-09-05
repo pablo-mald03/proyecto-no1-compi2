@@ -12,6 +12,7 @@ null
 'imprimir'
 'leer'
 'definir'
+'estructura'
 'si'
 'sino'
 'contrario'
@@ -43,12 +44,18 @@ null
 ']'
 '('
 ')'
+'+='
+'-='
+'*='
+'/='
+'%='
 '++'
 '--'
 '+'
 '-'
 '*'
 '/'
+'%'
 '=='
 '>='
 '<='
@@ -79,6 +86,7 @@ LAMBDA
 PRINT
 READ
 DEFINE
+STRUCT
 IF
 ELSE_IF
 ELSE
@@ -110,12 +118,18 @@ INIT_BRACKET
 FINAL_BRACKET
 INIT_PARENT
 FINAL_PARENT
+BY_ONE_ADD
+BY_ONE_MINUS
+BY_ONE_MULTIPLICATION
+BY_ONE_DIVISION
+BY_ONE_PERCENT
 ABREV_PLUS
 ABREV_MINUS
 PLUS
 MINUS
 MULTIPLICATION
 DIVIDE
+PERCENT
 EQUALS
 GREATER_EQUALS
 LESS_EQUALS
@@ -138,4 +152,4 @@ code
 
 
 atn:
-[4, 1, 64, 13, 2, 0, 7, 0, 2, 1, 7, 1, 1, 0, 5, 0, 6, 8, 0, 10, 0, 12, 0, 9, 9, 0, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0, 2, 0, 0, 11, 0, 7, 1, 0, 0, 0, 2, 10, 1, 0, 0, 0, 4, 6, 3, 2, 1, 0, 5, 4, 1, 0, 0, 0, 6, 9, 1, 0, 0, 0, 7, 5, 1, 0, 0, 0, 7, 8, 1, 0, 0, 0, 8, 1, 1, 0, 0, 0, 9, 7, 1, 0, 0, 0, 10, 11, 5, 7, 0, 0, 11, 3, 1, 0, 0, 0, 1, 7]
+[4, 1, 71, 13, 2, 0, 7, 0, 2, 1, 7, 1, 1, 0, 5, 0, 6, 8, 0, 10, 0, 12, 0, 9, 9, 0, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0, 2, 0, 0, 11, 0, 7, 1, 0, 0, 0, 2, 10, 1, 0, 0, 0, 4, 6, 3, 2, 1, 0, 5, 4, 1, 0, 0, 0, 6, 9, 1, 0, 0, 0, 7, 5, 1, 0, 0, 0, 7, 8, 1, 0, 0, 0, 8, 1, 1, 0, 0, 0, 9, 7, 1, 0, 0, 0, 10, 11, 5, 7, 0, 0, 11, 3, 1, 0, 0, 0, 1, 7]

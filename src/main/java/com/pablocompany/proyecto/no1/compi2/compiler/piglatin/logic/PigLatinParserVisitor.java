@@ -24,13 +24,6 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBody(PigLatinParser.BodyContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code MuneraSection}
-	 * labeled alternative in {@link PigLatinParser#munera_section}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMuneraSection(PigLatinParser.MuneraSectionContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code FunctionsBlockList}
 	 * labeled alternative in {@link PigLatinParser#munera_body}.
 	 * @param ctx the parse tree

@@ -32,13 +32,6 @@ public class PigLatinParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitMuneraSection(PigLatinParser.MuneraSectionContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public T visitFunctionsBlockList(PigLatinParser.FunctionsBlockListContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

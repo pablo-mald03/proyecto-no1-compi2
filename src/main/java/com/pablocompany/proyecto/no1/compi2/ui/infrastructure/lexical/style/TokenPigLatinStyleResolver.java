@@ -20,14 +20,16 @@ public class TokenPigLatinStyleResolver implements TokenStyleProvider {
             case Token.INVALID_TYPE -> TokenStyle.ERROR;
             case PigLatinLexer.ID -> TokenStyle.IDENTIFIER;
             case PigLatinLexer.ABREV_MINUS, PigLatinLexer.ABREV_PLUS, PigLatinLexer.PLUS,
-                 PigLatinLexer.MINUS, PigLatinLexer.DIVIDE, PigLatinLexer.MULTIPLICATION,
+                 PigLatinLexer.MINUS, PigLatinLexer.DIVIDE, PigLatinLexer.MULTIPLICATION, PigLatinLexer.PERCENT,
                  PigLatinLexer.EQUALS, PigLatinLexer.GREATER_EQUALS, PigLatinLexer.LESS_EQUALS,
                  PigLatinLexer.DIFERENCE,
                  PigLatinLexer.LESS, PigLatinLexer.GREATER, PigLatinLexer.AND, PigLatinLexer.OR,
                  PigLatinLexer.NOT, PigLatinLexer.EQUAL,
-                 PigLatinLexer.MUNERA, PigLatinLexer.MAIOR, PigLatinLexer.VARIABILES,
+                 PigLatinLexer.MAIOR, PigLatinLexer.VARIABILES,
                  PigLatinLexer.FINIS_SEPARATOR,
-                 PigLatinLexer.VERUM, PigLatinLexer.FALSUS -> TokenStyle.OPERATOR;
+                 PigLatinLexer.BY_ONE_ADD, PigLatinLexer.BY_ONE_MINUS,
+                 PigLatinLexer.BY_ONE_MULTIPLICATION, PigLatinLexer.BY_ONE_DIVISION, PigLatinLexer.BY_ONE_PERCENT ->
+                    TokenStyle.OPERATOR;
             case PigLatinLexer.NUMERUS, PigLatinLexer.LITTERA,
                  PigLatinLexer.DECIMALIS, PigLatinLexer.TEXTUM, PigLatinLexer.ESTO,
                  PigLatinLexer.BOOLEAN,
@@ -35,7 +37,8 @@ public class TokenPigLatinStyleResolver implements TokenStyleProvider {
                  PigLatinLexer.DUM, PigLatinLexer.PER, PigLatinLexer.FACERE, PigLatinLexer.SI,
                  PigLatinLexer.ALITER, PigLatinLexer.ACTIO,
                  PigLatinLexer.REDDERE, PigLatinLexer.RATIO, PigLatinLexer.READ, PigLatinLexer.PRINT,
-                 PigLatinLexer.INTERRUMPE, PigLatinLexer.PERGE ->
+                 PigLatinLexer.INTERRUMPE, PigLatinLexer.PERGE, PigLatinLexer.IMPORT, PigLatinLexer.NOVUS,
+                 PigLatinLexer.VERUM, PigLatinLexer.FALSUS ->
                     TokenStyle.KEYWORD;
 
             case PigLatinLexer.STRING, PigLatinLexer.CHAR -> TokenStyle.STRING;

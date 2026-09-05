@@ -1,5 +1,5 @@
-// Generated from PigLatinLexer.g4 by ANTLR 4.13.2
-package com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic;
+// Generated from /home/pablo03/Escritorio/Compi2/proyecto-no1-compi2/src/main/java/com/pablocompany/proyecto/no1/compi2/compiler/piglatin/PigLatinLexer.g4 by ANTLR 4.13.2
+package com.pablocompany.proyecto.no1.compi2.compiler.piglatin;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

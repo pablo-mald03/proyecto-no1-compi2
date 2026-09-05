@@ -24,11 +24,13 @@ public class TokenZettaradianStyleResolver implements TokenStyleProvider {
             case ZLexer.ID -> TokenStyle.Z_IDENTIFIER;
 
             case ZLexer.ABREV_MINUS, ZLexer.ABREV_PLUS, ZLexer.PLUS,
-                 ZLexer.MINUS, ZLexer.DIVIDE, ZLexer.MULTIPLICATION,
+                 ZLexer.MINUS, ZLexer.DIVIDE, ZLexer.MULTIPLICATION, ZLexer.PERCENT,
                  ZLexer.EQUALS, ZLexer.GREATER_EQUALS, ZLexer.LESS_EQUALS,
                  ZLexer.DIFERENCE,
                  ZLexer.LESS, ZLexer.GREATER, ZLexer.AND, ZLexer.OR,
-                 ZLexer.NOT, ZLexer.EQUAL -> TokenStyle.Z_OPERATOR;
+                 ZLexer.NOT, ZLexer.EQUAL, ZLexer.BY_ONE_ADD, ZLexer.BY_ONE_MINUS ,
+                 ZLexer.BY_ONE_MULTIPLICATION, ZLexer.BY_ONE_DIVISION, ZLexer.BY_ONE_PERCENT
+                    -> TokenStyle.Z_OPERATOR;
 
             case ZLexer.INTEGER,
                  ZLexer.DOUBLE, ZLexer.CHARACTER, ZLexer.BOOLEAN,
@@ -36,9 +38,12 @@ public class TokenZettaradianStyleResolver implements TokenStyleProvider {
                  ZLexer.RETURN, ZLexer.CONTINUE,
                  ZLexer.IF, ZLexer.ELSE,
                  ZLexer.CASE, ZLexer.DO,
-                 ZLexer.BREAK, ZLexer.DEFAULT, ZLexer.READ, ZLexer.PRINT, ZLexer.PRINTLN,
+                 ZLexer.BREAK, ZLexer.DEFAULT,
                  ZLexer.WHILE, ZLexer.FOR,
-                 ZLexer.TRUE, ZLexer.FALSE, ZLexer.PUBLIC, ZLexer.VOID, ZLexer.CLASS -> TokenStyle.Z_KEYWORD;
+                 ZLexer.TRUE, ZLexer.FALSE, ZLexer.PUBLIC, ZLexer.VOID, ZLexer.CLASS,
+                 ZLexer.NEW, ZLexer.NULL -> TokenStyle.Z_KEYWORD;
+
+            case ZLexer.READ, ZLexer.PRINT, ZLexer.PRINTLN -> TokenStyle.Z_FUNCTIONS;
 
             case ZLexer.TEXT, ZLexer.CHAR -> TokenStyle.Z_STRING;
 

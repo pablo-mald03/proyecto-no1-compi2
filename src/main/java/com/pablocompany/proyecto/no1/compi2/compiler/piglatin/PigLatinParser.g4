@@ -10,7 +10,6 @@ program
 
     
 body:   variable_section?
-        munera_section?
         maior_section 
         FINIS_SEPARATOR DOT_COMMA
     ;
@@ -18,9 +17,6 @@ body:   variable_section?
 /*===*****===== MAIOR SECTION =====*****===*/
 /*===*****========*****===== MAIOR SECTION (FUNCTIONS) ===*****==========*****===*/
 
-munera_section
-    : MUNERA GREATER munera_body # MuneraSection
-    ;
 
 munera_body
     : munera_body functions_block # FunctionsBlockList

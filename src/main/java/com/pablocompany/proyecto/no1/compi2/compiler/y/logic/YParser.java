@@ -18,15 +18,16 @@ public class YParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		INDENT=1, DEDENT=2, COMMENT=3, BLOCK_COMMENT=4, NEWLINE=5, WS=6, STRUCTURES_REGION=7, 
-		FUNCTION_REGION=8, LAMBDA=9, PRINT=10, READ=11, DEFINE=12, IF=13, ELSE_IF=14, 
-		ELSE=15, SO=16, SWITCH=17, CASE=18, BREAK=19, ALWAYS=20, FOR=21, WHILE=22, 
-		DO=23, RETURN=24, CONTINUE=25, INTEGER=26, STRING=27, FLOAT=28, CHARACTER=29, 
-		BOOLEAN=30, TRUE=31, FALSE=32, EQUAL=33, COMMA=34, DOT_COMMA=35, TWO_POINTS=36, 
-		DOT=37, INIT_BRACE=38, FINAL_BRACE=39, INIT_BRACKET=40, FINAL_BRACKET=41, 
-		INIT_PARENT=42, FINAL_PARENT=43, ABREV_PLUS=44, ABREV_MINUS=45, PLUS=46, 
-		MINUS=47, MULTIPLICATION=48, DIVIDE=49, EQUALS=50, GREATER_EQUALS=51, 
-		LESS_EQUALS=52, DIFERENCE=53, LESS=54, GREATER=55, AND=56, OR=57, NOT=58, 
-		ID=59, INT=60, DECIMAL=61, TEXT=62, CHAR=63, ERROR_TOKEN=64;
+		FUNCTION_REGION=8, LAMBDA=9, PRINT=10, READ=11, DEFINE=12, STRUCT=13, 
+		IF=14, ELSE_IF=15, ELSE=16, SO=17, SWITCH=18, CASE=19, BREAK=20, ALWAYS=21, 
+		FOR=22, WHILE=23, DO=24, RETURN=25, CONTINUE=26, INTEGER=27, STRING=28, 
+		FLOAT=29, CHARACTER=30, BOOLEAN=31, TRUE=32, FALSE=33, EQUAL=34, COMMA=35, 
+		DOT_COMMA=36, TWO_POINTS=37, DOT=38, INIT_BRACE=39, FINAL_BRACE=40, INIT_BRACKET=41, 
+		FINAL_BRACKET=42, INIT_PARENT=43, FINAL_PARENT=44, BY_ONE_ADD=45, BY_ONE_MINUS=46, 
+		BY_ONE_MULTIPLICATION=47, BY_ONE_DIVISION=48, BY_ONE_PERCENT=49, ABREV_PLUS=50, 
+		ABREV_MINUS=51, PLUS=52, MINUS=53, MULTIPLICATION=54, DIVIDE=55, PERCENT=56, 
+		EQUALS=57, GREATER_EQUALS=58, LESS_EQUALS=59, DIFERENCE=60, LESS=61, GREATER=62, 
+		AND=63, OR=64, NOT=65, ID=66, INT=67, DECIMAL=68, TEXT=69, CHAR=70, ERROR_TOKEN=71;
 	public static final int
 		RULE_program = 0, RULE_code = 1;
 	private static String[] makeRuleNames() {
@@ -39,13 +40,14 @@ public class YParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, "'%estructuras'", "'%funciones'", 
-			"'->'", "'imprimir'", "'leer'", "'definir'", "'si'", "'sino'", "'contrario'", 
-			"'entonces'", "'elegir'", "'caso'", "'romper'", "'siempre'", "'para'", 
-			"'mientras'", "'hacer'", "'retornar'", "'continuar'", "'entero'", "'cadena'", 
-			"'flotante'", "'caracter'", "'bool'", "'verdadero'", "'falso'", "'='", 
-			"','", "';'", "':'", "'.'", "'{'", "'}'", "'['", "']'", "'('", "')'", 
-			"'++'", "'--'", "'+'", "'-'", "'*'", "'/'", "'=='", "'>='", "'<='", "'!='", 
-			"'<'", "'>'", "'&&'", "'||'", "'!'"
+			"'->'", "'imprimir'", "'leer'", "'definir'", "'estructura'", "'si'", 
+			"'sino'", "'contrario'", "'entonces'", "'elegir'", "'caso'", "'romper'", 
+			"'siempre'", "'para'", "'mientras'", "'hacer'", "'retornar'", "'continuar'", 
+			"'entero'", "'cadena'", "'flotante'", "'caracter'", "'bool'", "'verdadero'", 
+			"'falso'", "'='", "','", "';'", "':'", "'.'", "'{'", "'}'", "'['", "']'", 
+			"'('", "')'", "'+='", "'-='", "'*='", "'/='", "'%='", "'++'", "'--'", 
+			"'+'", "'-'", "'*'", "'/'", "'%'", "'=='", "'>='", "'<='", "'!='", "'<'", 
+			"'>'", "'&&'", "'||'", "'!'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
@@ -53,14 +55,15 @@ public class YParser extends Parser {
 		return new String[] {
 			null, "INDENT", "DEDENT", "COMMENT", "BLOCK_COMMENT", "NEWLINE", "WS", 
 			"STRUCTURES_REGION", "FUNCTION_REGION", "LAMBDA", "PRINT", "READ", "DEFINE", 
-			"IF", "ELSE_IF", "ELSE", "SO", "SWITCH", "CASE", "BREAK", "ALWAYS", "FOR", 
-			"WHILE", "DO", "RETURN", "CONTINUE", "INTEGER", "STRING", "FLOAT", "CHARACTER", 
-			"BOOLEAN", "TRUE", "FALSE", "EQUAL", "COMMA", "DOT_COMMA", "TWO_POINTS", 
-			"DOT", "INIT_BRACE", "FINAL_BRACE", "INIT_BRACKET", "FINAL_BRACKET", 
-			"INIT_PARENT", "FINAL_PARENT", "ABREV_PLUS", "ABREV_MINUS", "PLUS", "MINUS", 
-			"MULTIPLICATION", "DIVIDE", "EQUALS", "GREATER_EQUALS", "LESS_EQUALS", 
-			"DIFERENCE", "LESS", "GREATER", "AND", "OR", "NOT", "ID", "INT", "DECIMAL", 
-			"TEXT", "CHAR", "ERROR_TOKEN"
+			"STRUCT", "IF", "ELSE_IF", "ELSE", "SO", "SWITCH", "CASE", "BREAK", "ALWAYS", 
+			"FOR", "WHILE", "DO", "RETURN", "CONTINUE", "INTEGER", "STRING", "FLOAT", 
+			"CHARACTER", "BOOLEAN", "TRUE", "FALSE", "EQUAL", "COMMA", "DOT_COMMA", 
+			"TWO_POINTS", "DOT", "INIT_BRACE", "FINAL_BRACE", "INIT_BRACKET", "FINAL_BRACKET", 
+			"INIT_PARENT", "FINAL_PARENT", "BY_ONE_ADD", "BY_ONE_MINUS", "BY_ONE_MULTIPLICATION", 
+			"BY_ONE_DIVISION", "BY_ONE_PERCENT", "ABREV_PLUS", "ABREV_MINUS", "PLUS", 
+			"MINUS", "MULTIPLICATION", "DIVIDE", "PERCENT", "EQUALS", "GREATER_EQUALS", 
+			"LESS_EQUALS", "DIFERENCE", "LESS", "GREATER", "AND", "OR", "NOT", "ID", 
+			"INT", "DECIMAL", "TEXT", "CHAR", "ERROR_TOKEN"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -219,7 +222,7 @@ public class YParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001@\r\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
+		"\u0004\u0001G\r\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0001"+
 		"\u0000\u0005\u0000\u0006\b\u0000\n\u0000\f\u0000\t\t\u0000\u0001\u0001"+
 		"\u0001\u0001\u0001\u0001\u0000\u0000\u0002\u0000\u0002\u0000\u0000\u000b"+
 		"\u0000\u0007\u0001\u0000\u0000\u0000\u0002\n\u0001\u0000\u0000\u0000\u0004"+
