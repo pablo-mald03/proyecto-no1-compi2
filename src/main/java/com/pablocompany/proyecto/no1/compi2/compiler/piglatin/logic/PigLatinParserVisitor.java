@@ -24,145 +24,19 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBody(PigLatinParser.BodyContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code FunctionsBlockList}
-	 * labeled alternative in {@link PigLatinParser#munera_body}.
+	 * Visit a parse tree produced by the {@code ImportLists}
+	 * labeled alternative in {@link PigLatinParser#import_list}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFunctionsBlockList(PigLatinParser.FunctionsBlockListContext ctx);
+	T visitImportLists(PigLatinParser.ImportListsContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code FunctionsSingleBlock}
-	 * labeled alternative in {@link PigLatinParser#munera_body}.
+	 * Visit a parse tree produced by the {@code AccessorInstruction}
+	 * labeled alternative in {@link PigLatinParser#accessor}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFunctionsSingleBlock(PigLatinParser.FunctionsSingleBlockContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code FuncDeclBlock}
-	 * labeled alternative in {@link PigLatinParser#functions_block}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFuncDeclBlock(PigLatinParser.FuncDeclBlockContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ProcDeclBlock}
-	 * labeled alternative in {@link PigLatinParser#functions_block}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitProcDeclBlock(PigLatinParser.ProcDeclBlockContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code FunctionDeclaration}
-	 * labeled alternative in {@link PigLatinParser#function_declaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionDeclaration(PigLatinParser.FunctionDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code FunctionReturNormalType}
-	 * labeled alternative in {@link PigLatinParser#variable_function_type}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionReturNormalType(PigLatinParser.FunctionReturNormalTypeContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ProcedureDeclaration}
-	 * labeled alternative in {@link PigLatinParser#procedure_declaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitProcedureDeclaration(PigLatinParser.ProcedureDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code FunctionBody}
-	 * labeled alternative in {@link PigLatinParser#function_body}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionBody(PigLatinParser.FunctionBodyContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ProcedureBody}
-	 * labeled alternative in {@link PigLatinParser#procedure_body}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitProcedureBody(PigLatinParser.ProcedureBodyContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocalVariablesList}
-	 * labeled alternative in {@link PigLatinParser#local_variable_list}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocalVariablesList(PigLatinParser.LocalVariablesListContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocalSingleVariable}
-	 * labeled alternative in {@link PigLatinParser#local_variable_list}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocalSingleVariable(PigLatinParser.LocalSingleVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocalVarDeclaration}
-	 * labeled alternative in {@link PigLatinParser#local_variable}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocalVarDeclaration(PigLatinParser.LocalVarDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocalArrayDeclaration}
-	 * labeled alternative in {@link PigLatinParser#local_variable}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocalArrayDeclaration(PigLatinParser.LocalArrayDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocalStructInstance}
-	 * labeled alternative in {@link PigLatinParser#local_variable}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocalStructInstance(PigLatinParser.LocalStructInstanceContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code FunctionSingleArg}
-	 * labeled alternative in {@link PigLatinParser#function_arguments}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionSingleArg(PigLatinParser.FunctionSingleArgContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code FunctionArgsList}
-	 * labeled alternative in {@link PigLatinParser#function_arguments}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionArgsList(PigLatinParser.FunctionArgsListContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ArgumentVariableDeclaration}
-	 * labeled alternative in {@link PigLatinParser#argument}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitArgumentVariableDeclaration(PigLatinParser.ArgumentVariableDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ArgumentArrayDeclarationn}
-	 * labeled alternative in {@link PigLatinParser#argument}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitArgumentArrayDeclarationn(PigLatinParser.ArgumentArrayDeclarationnContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ArgumentNormalDeclaration}
-	 * labeled alternative in {@link PigLatinParser#argument_variable_type}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitArgumentNormalDeclaration(PigLatinParser.ArgumentNormalDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ArgumentArrayNormalDeclaration}
-	 * labeled alternative in {@link PigLatinParser#argument_series_type}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitArgumentArrayNormalDeclaration(PigLatinParser.ArgumentArrayNormalDeclarationContext ctx);
+	T visitAccessorInstruction(PigLatinParser.AccessorInstructionContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code MaiorSection}
 	 * labeled alternative in {@link PigLatinParser#maior_section}.
