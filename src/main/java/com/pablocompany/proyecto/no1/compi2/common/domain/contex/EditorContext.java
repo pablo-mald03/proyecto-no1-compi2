@@ -34,8 +34,6 @@ public class EditorContext {
 
     private ParseTree parseTree;
 
-    /*   private com.pablocompany.practica.no1.compi2.domain.semantic.AstNode ast;*/
-
     private String compiledCode;
 
     private boolean isParsed;

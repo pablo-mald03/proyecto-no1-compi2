@@ -1,8 +1,9 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.SyntaxHighlightListener;
+import com.pablocompany.proyecto.no1.compi2.common.domain.parsingstep.ParserAnalyzer;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.ParserFactory;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
@@ -144,6 +145,7 @@ public class WorkspacePanel extends JPanel {
     public void clearAllCompilationData() {
         for (Map.Entry<String, EditorContext> entry : fileContexts.entrySet()) {
             entry.getValue().clearParsingErrors();
+            entry.getValue().clearSemanticErrors();
         }
 
         for (DefaultMutableTreeNode node : fileTreePanel.getFileNodes().values()) {
@@ -165,6 +167,45 @@ public class WorkspacePanel extends JPanel {
         compiledOutput = "";
         isCompiled = false;
 
+        this.executeParsingPhase();
+
+        boolean semanticErrors = this.verifyErrors("Error de compilacion: se encontraron: ");
+
+        if (semanticErrors) {
+            return false;
+        }
+
+        String finalCompiledCode =
+                "#include <stdio.h>\n\n" +
+                        "int main() {\n" +
+                        "    int numero;\n" +
+                        "    printf(\"Ingrese un numero: \");\n" +
+                        "    scanf(\"%d\", &numero);\n" +
+                        "    printf(\"El numero ingresado fue: %d\\n\", numero);\n" +
+                        "    return 0;\n" +
+                        "}";
+
+
+        if (!finalCompiledCode.isEmpty()) {
+            this.compiledOutput = finalCompiledCode;
+            this.isCompiled = true;
+
+            generateCompiledFile(finalCompiledCode);
+        } else {
+            notifier.logError("No se genero codigo compilado");
+
+            return false;
+        }
+
+        notifier.logSuccess("Compilacion exitosa");
+        return true;
+    }
+
+    /**
+     * Method to execute the parsin phase for all the files
+     *
+     */
+    private void executeParsingPhase() {
         // Get all file nodes
         List<FileNode> allFiles = new ArrayList<>();
         collectAllFiles(fileTreePanel.getRootNode(), allFiles);
@@ -200,55 +241,30 @@ public class WorkspacePanel extends JPanel {
         }
 
         // Phase 3: Parse all PigLatin files (.pig)
-        String finalCompiledCode = "";
         for (FileNode file : pigLatinFiles) {
             parseFile(file);
-
-            String compiled = file.getEditorContext().getCompiledCode();
-            if (compiled != null && !compiled.isEmpty()) {
-                finalCompiledCode = compiled;
-                break;
-            }
         }
+    }
 
-        // Collect all error
+    /**
+     * Principal method to verify the errors in the different phases
+     *
+     */
+    private boolean verifyErrors(String message) {
         List<CompilerError> allErrors = getAllCompilationErrors();
 
         notifier.notifyErrorsUpdated(allErrors);
 
         if (!allErrors.isEmpty()) {
-            notifier.logError("Compilacion completada con " + allErrors.size() + " errores");
+            notifier.logError(message + allErrors.size() + " errores");
             return false;
         }
 
-        finalCompiledCode =
-                "#include <stdio.h>\n\n" +
-                        "int main() {\n" +
-                        "    int numero;\n" +
-                        "    printf(\"Ingrese un numero: \");\n" +
-                        "    scanf(\"%d\", &numero);\n" +
-                        "    printf(\"El numero ingresado fue: %d\\n\", numero);\n" +
-                        "    return 0;\n" +
-                        "}";
-
-
-        if (!finalCompiledCode.isEmpty()) {
-            this.compiledOutput = finalCompiledCode;
-            this.isCompiled = true;
-
-            generateCompiledFile(finalCompiledCode);
-        } else {
-            notifier.logError("No se genero codigo compilado");
-
-            return false;
-        }
-
-        notifier.logSuccess("Compilacion exitosa");
         return true;
     }
 
     /**
-     * Parse a single file TODO
+     * Parse a single file using the appropriate parser
      */
     private void parseFile(FileNode fileNode) {
         if (fileNode.isDirectory()) return;
@@ -265,22 +281,25 @@ public class WorkspacePanel extends JPanel {
         EditorContext context = getContextForFile(filePath);
         context.setSourceCode(content);
 
-        SyntaxHighlightListener listener = SyntaxHighlightListenerFactory.createListener(extension, filePath, fileName);
-        if (listener != null) {
-            listener.highlight(context);
+        // Get the appropriate parser for this extension
+        ParserAnalyzer parser = ParserFactory.getParser(extension);
+        if (parser != null) {
+            parser.parse(context);
+
             fileNode.getEditorContext().setParsed(true);
 
             String compiledCode = context.getCompiledCode();
             if (compiledCode != null && !compiledCode.isEmpty()) {
                 fileNode.getEditorContext().setCompiledCode(compiledCode);
-                fileNode.getEditorContext().setParsed(true);
+                fileNode.getEditorContext().setCompiled(true);
             }
 
+            // Collect errors from context
             List<CompilerError> errors = context.getAllCompilerErrors();
             if (errors != null && !errors.isEmpty()) {
                 for (CompilerError error : errors) {
                     error.setFilePath(filePath);
-                    error.setFileName(fileNode.getName());
+                    error.setFileName(fileName);
                 }
                 fileNode.addAllCompilationErrors(errors);
             }

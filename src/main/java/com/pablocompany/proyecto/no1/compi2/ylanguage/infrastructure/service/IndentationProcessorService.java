@@ -20,23 +20,24 @@ public class IndentationProcessorService {
     private final int newLineTokenType;
     private final int eofTokenType;
 
-    //Principal method to process the idents
+    /**
+     * Processes raw lexer tokens to inject virtual INDENT and DEDENT tokens based in line indentation.
+     */
     public List<Token> processTokens(List<Token> rawTokens) {
         List<Token> result = new ArrayList<>();
         Stack<Integer> indentStack = new Stack<>();
-        indentStack.push(0); //base ident
+        indentStack.push(0); // Base indentation level (column 0)
 
         boolean isStartOfLine = true;
 
         for (Token token : rawTokens) {
 
-            //ignore hidden tokens
+            // Discard hidden channel tokens (whitespace/comments) for parsing execution
             if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-                result.add(token);
                 continue;
             }
 
-            // If we found the EOF closes the open block
+            // At EOF, close all remaining open indentation blocks
             if (token.getType() == eofTokenType) {
                 while (indentStack.size() > 1) {
                     indentStack.pop();
@@ -46,31 +47,32 @@ public class IndentationProcessorService {
                 break;
             }
 
-            // If the token is a new line prepare the start line ( scope)
+            // Flag the next non-hidden token to evaluate line column alignment
             if (token.getType() == newLineTokenType) {
                 result.add(token);
                 isStartOfLine = true;
                 continue;
             }
 
-            // if we found a new start line evaluate the column (compares if its not the same column)
+            // Evaluate indentation level on the first default channel token of a line
             if (isStartOfLine) {
                 int currentColumn = token.getCharPositionInLine();
                 int previousColumn = indentStack.peek();
 
                 if (currentColumn > previousColumn) {
-                    //Open new block
+                    // Open a new block
                     indentStack.push(currentColumn);
                     result.add(createSyntheticToken(indentTokenType, "INDENT", token));
                 } else if (currentColumn < previousColumn) {
-                    // closes the block
+                    // Close matching blocks
                     while (currentColumn < indentStack.peek()) {
                         indentStack.pop();
                         result.add(createSyntheticToken(dedentTokenType, "DEDENT", token));
                     }
-                    // if before to get the peek the column doesnt match with the stack column is an error
+                    // Validate indentation alignment
                     if (currentColumn != indentStack.peek()) {
-                        throw new RuntimeException("Error de indentacion, línea: " + token.getLine() + ". Se esperaba alineacion con un bloque superior.");
+                        throw new RuntimeException("Error de identacion en la linea: " + token.getLine() +
+                                ". Se esperaba una identacion al mismo nivel del ambito abierto.");
                     }
                 }
                 isStartOfLine = false;
@@ -82,7 +84,9 @@ public class IndentationProcessorService {
         return result;
     }
 
-    //Auxiliary method to create the virtual token
+    /**
+     * Creates a synthetic token for INDENT / DEDENT insertion.
+     */
     private Token createSyntheticToken(int type, String text, Token referenceToken) {
         CommonToken token = new CommonToken(type, text);
         token.setLine(referenceToken.getLine());

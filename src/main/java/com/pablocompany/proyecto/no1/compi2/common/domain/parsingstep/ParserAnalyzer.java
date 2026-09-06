@@ -12,8 +12,4 @@ public interface ParserAnalyzer {
      */
     void parse(EditorContext context);
 
-    /**
-     * Get the file extension this parser handles
-     */
-    String getSupportedExtension();
 }
