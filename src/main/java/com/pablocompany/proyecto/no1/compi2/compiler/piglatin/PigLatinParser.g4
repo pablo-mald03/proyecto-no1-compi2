@@ -33,8 +33,7 @@ maior_section
     ;
 
 code_body
-    : code_body control_block # BlockControlList
-    | control_block           # BlockSingleControl
+    : control_block+        #CodeBodyStatement
     ;
 
 control_block
@@ -52,15 +51,14 @@ control_block
 /*------ RETURN STATEMENT ------*/
 
 return_control
-    : REDDERE expression DOT_COMMA # ReturnWithValue
-    | REDDERE DOT_COMMA            # ReturnVoid
+    : REDDERE expression? DOT_COMMA         # ReturnStatement
     ;
 
 /*------ LOOP CONTROL STATEMENTS ------*/
 
 loop_control
-    : PERGE DOT_COMMA      # LoopContinue
-    | INTERRUMPE DOT_COMMA # LoopBreak
+    : PERGE DOT_COMMA               # LoopContinue
+    | INTERRUMPE DOT_COMMA          # LoopBreak
     ;
 
 console_actions
@@ -90,17 +88,15 @@ if_statement
     ;
 
 else_if_list
-    : else_if_list else_if_clause # ElseIfList
-    | else_if_clause              # ElseIfSingle
+    : else_if_clause+       #ElseIfList
     ;
 
 else_if_clause
-    : ALITER INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body? FINAL_BRACE # ElseIfClause
+    : ALITER INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body? FINAL_BRACE      # ElseIfClause
     ;
 
 else_statement
-    : ALITER INIT_BRACE code_body? FINAL_BRACE   # ElseBlock
-    | /* Lambda */                               # ElseEmpty
+    : (ALITER INIT_BRACE code_body? FINAL_BRACE)?       # ElseStatement
     ;
 
 /*------ CYCLES ------*/
@@ -138,9 +134,9 @@ variable_section
 
 /*------ DECLARATE VARIABILES SECTION ------*/
 
-variabiles_body: variabiles_body declarations   # DeclarationsVariablesList
-                | declarations                  # DeclarationsSingleVariable
-                ;
+variabiles_body
+    : declarations+     #VariabilesBody
+    ;
 
 
 /*------ DECLARATIONS PRODUCTIONS SECTION------*/
@@ -197,8 +193,7 @@ array_initialization
     ;
 
 values_array_list
-    : values_array_list COMMA array_value # ArrayValueList
-    | array_value                         # ArraySingleValue
+    : array_value (COMMA array_value)*
     ;
 
 array_value
@@ -228,13 +223,11 @@ struct_body
     ;
 
 struct_normal_body
-    : struct_normal_body struct_attribute DOT_COMMA             # StructNormalBodyList
-    | struct_attribute DOT_COMMA                                # StructNormalBodySingle
+    : (struct_attribute DOT_COMMA)+         #StructNormalBody
     ;
 
 struct_comma_body
-    : struct_comma_body COMMA struct_attribute      # StructCommaBodyList
-    | struct_attribute                              # StructCommaBodySingle
+    : struct_attribute (COMMA struct_attribute)*        #StructCommaStatementBody
     ;
 
 
@@ -266,8 +259,7 @@ struct_literal
     ;
 
 struct_data_list
-    : struct_data_list COMMA struct_data_value # StructValueList
-    | struct_data_value                        # StructSingleValue
+    : struct_data_value (COMMA struct_data_value)*      #StructDataList
     ;
 
 struct_data_value
@@ -314,8 +306,7 @@ function_call
     ;
 
 arguments_list
-    : arguments_list COMMA expression           # ArgumentFunctionList
-    | expression                                # ArgumentSingleFunction
+    : expression (COMMA expression)*            #ArgumentsList
     ;
 
 /*-----STRUCT VARIABLE INSTANCE PRODUCTIONS-----*/
@@ -346,10 +337,8 @@ boolean_values
     ;
 
 abbreviated_operation
-    : nest_variable ABREV_PLUS DOT_COMMA  # IncOperation
-    | nest_variable ABREV_MINUS DOT_COMMA # DecOperation
-    | ABREV_PLUS nest_variable  DOT_COMMA  # IncPrevOperation
-    | ABREV_MINUS nest_variable  DOT_COMMA # DecPrevOperation
+    : nest_variable ABREV_PLUS DOT_COMMA        # IncOperation
+    | nest_variable ABREV_MINUS DOT_COMMA       # DecOperation
+    | ABREV_PLUS nest_variable  DOT_COMMA       # IncPrevOperation
+    | ABREV_MINUS nest_variable  DOT_COMMA      # DecPrevOperation
     ;
-
-
