@@ -173,18 +173,6 @@ public class YParserBaseListener implements YParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStatementFunctionCall(YParser.StatementFunctionCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStatementFunctionCall(YParser.StatementFunctionCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterStatementLoopControl(YParser.StatementLoopControlContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -593,49 +581,49 @@ public class YParserBaseListener implements YParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIncOperation(YParser.IncOperationContext ctx) { }
+	@Override public void enterIncSufixOperation(YParser.IncSufixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitIncOperation(YParser.IncOperationContext ctx) { }
+	@Override public void exitIncSufixOperation(YParser.IncSufixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDecOperation(YParser.DecOperationContext ctx) { }
+	@Override public void enterDecSufixOperation(YParser.DecSufixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitDecOperation(YParser.DecOperationContext ctx) { }
+	@Override public void exitDecSufixOperation(YParser.DecSufixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIncPrevOperation(YParser.IncPrevOperationContext ctx) { }
+	@Override public void enterIncPrefixOperation(YParser.IncPrefixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitIncPrevOperation(YParser.IncPrevOperationContext ctx) { }
+	@Override public void exitIncPrefixOperation(YParser.IncPrefixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDecPrevOperation(YParser.DecPrevOperationContext ctx) { }
+	@Override public void enterDecPrefixOperation(YParser.DecPrefixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitDecPrevOperation(YParser.DecPrevOperationContext ctx) { }
+	@Override public void exitDecPrefixOperation(YParser.DecPrefixOperationContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -701,13 +689,85 @@ public class YParserBaseListener implements YParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFunctionCalling(YParser.FunctionCallingContext ctx) { }
+	@Override public void enterAssingmentStatement(YParser.AssingmentStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFunctionCalling(YParser.FunctionCallingContext ctx) { }
+	@Override public void exitAssingmentStatement(YParser.AssingmentStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterNestedVariable(YParser.NestedVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitNestedVariable(YParser.NestedVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectArrayAccessChain(YParser.ObjectArrayAccessChainContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectArrayAccessChain(YParser.ObjectArrayAccessChainContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectPropertyChain(YParser.ObjectPropertyChainContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectPropertyChain(YParser.ObjectPropertyChainContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBaseIdentifier(YParser.BaseIdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBaseIdentifier(YParser.BaseIdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArrayLiteralValue(YParser.ArrayLiteralValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrayLiteralValue(YParser.ArrayLiteralValueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArrayValuesList(YParser.ArrayValuesListContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrayValuesList(YParser.ArrayValuesListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -756,18 +816,6 @@ public class YParserBaseListener implements YParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitDefiniedArrayVariable(YParser.DefiniedArrayVariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAssingmentStatement(YParser.AssingmentStatementContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAssingmentStatement(YParser.AssingmentStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -1001,61 +1049,49 @@ public class YParserBaseListener implements YParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterValueBool(YParser.ValueBoolContext ctx) { }
+	@Override public void enterValBool(YParser.ValBoolContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitValueBool(YParser.ValueBoolContext ctx) { }
+	@Override public void exitValBool(YParser.ValBoolContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterValueFunctionCall(YParser.ValueFunctionCallContext ctx) { }
+	@Override public void enterValObjectAccess(YParser.ValObjectAccessContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitValueFunctionCall(YParser.ValueFunctionCallContext ctx) { }
+	@Override public void exitValObjectAccess(YParser.ValObjectAccessContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterValueReadCall(YParser.ValueReadCallContext ctx) { }
+	@Override public void enterValArrayLiteral(YParser.ValArrayLiteralContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitValueReadCall(YParser.ValueReadCallContext ctx) { }
+	@Override public void exitValArrayLiteral(YParser.ValArrayLiteralContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterValueAccessorCall(YParser.ValueAccessorCallContext ctx) { }
+	@Override public void enterValReadCall(YParser.ValReadCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitValueAccessorCall(YParser.ValueAccessorCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterInitValueArrayLiteral(YParser.InitValueArrayLiteralContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitInitValueArrayLiteral(YParser.InitValueArrayLiteralContext ctx) { }
+	@Override public void exitValReadCall(YParser.ValReadCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -1092,42 +1128,6 @@ public class YParserBaseListener implements YParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitExpressionList(YParser.ExpressionListContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAccessorPropertyChain(YParser.AccessorPropertyChainContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAccessorPropertyChain(YParser.AccessorPropertyChainContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAccessorArrayChain(YParser.AccessorArrayChainContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAccessorArrayChain(YParser.AccessorArrayChainContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterAccessorBase(YParser.AccessorBaseContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitAccessorBase(YParser.AccessorBaseContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

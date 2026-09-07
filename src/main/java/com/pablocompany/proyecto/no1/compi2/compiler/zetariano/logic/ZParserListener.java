@@ -138,18 +138,6 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitStatementConsoleAction(ZParser.StatementConsoleActionContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code StatementFunctionCall}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void enterStatementFunctionCall(ZParser.StatementFunctionCallContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StatementFunctionCall}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void exitStatementFunctionCall(ZParser.StatementFunctionCallContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code StatementLoopControl}
 	 * labeled alternative in {@link ZParser#statement}.
 	 * @param ctx the parse tree
@@ -760,41 +748,17 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitDecPrefixOperation(ZParser.DecPrefixOperationContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code NestedObjectVariable}
+	 * Enter a parse tree produced by the {@code NestedVariable}
 	 * labeled alternative in {@link ZParser#nest_variable}.
 	 * @param ctx the parse tree
 	 */
-	void enterNestedObjectVariable(ZParser.NestedObjectVariableContext ctx);
+	void enterNestedVariable(ZParser.NestedVariableContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code NestedObjectVariable}
+	 * Exit a parse tree produced by the {@code NestedVariable}
 	 * labeled alternative in {@link ZParser#nest_variable}.
 	 * @param ctx the parse tree
 	 */
-	void exitNestedObjectVariable(ZParser.NestedObjectVariableContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code NestedArrayVariable}
-	 * labeled alternative in {@link ZParser#nest_variable}.
-	 * @param ctx the parse tree
-	 */
-	void enterNestedArrayVariable(ZParser.NestedArrayVariableContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code NestedArrayVariable}
-	 * labeled alternative in {@link ZParser#nest_variable}.
-	 * @param ctx the parse tree
-	 */
-	void exitNestedArrayVariable(ZParser.NestedArrayVariableContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code NestedSingleVariable}
-	 * labeled alternative in {@link ZParser#nest_variable}.
-	 * @param ctx the parse tree
-	 */
-	void enterNestedSingleVariable(ZParser.NestedSingleVariableContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code NestedSingleVariable}
-	 * labeled alternative in {@link ZParser#nest_variable}.
-	 * @param ctx the parse tree
-	 */
-	void exitNestedSingleVariable(ZParser.NestedSingleVariableContext ctx);
+	void exitNestedVariable(ZParser.NestedVariableContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ObjectMethodChain}
 	 * labeled alternative in {@link ZParser#object_values}.
@@ -820,42 +784,6 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitObjectArrayAccessChain(ZParser.ObjectArrayAccessChainContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ObjectBaseProperty}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterObjectBaseProperty(ZParser.ObjectBasePropertyContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ObjectBaseProperty}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitObjectBaseProperty(ZParser.ObjectBasePropertyContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code ObjectBaseArrayProperty}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterObjectBaseArrayProperty(ZParser.ObjectBaseArrayPropertyContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ObjectBaseArrayProperty}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitObjectBaseArrayProperty(ZParser.ObjectBaseArrayPropertyContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code ObjectBaseMethodCall}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterObjectBaseMethodCall(ZParser.ObjectBaseMethodCallContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ObjectBaseMethodCall}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitObjectBaseMethodCall(ZParser.ObjectBaseMethodCallContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code ObjectPropertyChain}
 	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
@@ -868,29 +796,29 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitObjectPropertyChain(ZParser.ObjectPropertyChainContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ArrayCall}
-	 * labeled alternative in {@link ZParser#array_call}.
+	 * Enter a parse tree produced by the {@code BaseFunctionCall}
+	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
 	 */
-	void enterArrayCall(ZParser.ArrayCallContext ctx);
+	void enterBaseFunctionCall(ZParser.BaseFunctionCallContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code ArrayCall}
-	 * labeled alternative in {@link ZParser#array_call}.
+	 * Exit a parse tree produced by the {@code BaseFunctionCall}
+	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
 	 */
-	void exitArrayCall(ZParser.ArrayCallContext ctx);
+	void exitBaseFunctionCall(ZParser.BaseFunctionCallContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code FunctionCalling}
-	 * labeled alternative in {@link ZParser#function_call}.
+	 * Enter a parse tree produced by the {@code BaseIdentifier}
+	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
 	 */
-	void enterFunctionCalling(ZParser.FunctionCallingContext ctx);
+	void enterBaseIdentifier(ZParser.BaseIdentifierContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code FunctionCalling}
-	 * labeled alternative in {@link ZParser#function_call}.
+	 * Exit a parse tree produced by the {@code BaseIdentifier}
+	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
 	 */
-	void exitFunctionCalling(ZParser.FunctionCallingContext ctx);
+	void exitBaseIdentifier(ZParser.BaseIdentifierContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ArgumentsList}
 	 * labeled alternative in {@link ZParser#arguments_list}.
@@ -1252,30 +1180,6 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitValObjectAccess(ZParser.ValObjectAccessContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ValArrayCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterValArrayCall(ZParser.ValArrayCallContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ValArrayCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitValArrayCall(ZParser.ValArrayCallContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code ValFunctionCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterValFunctionCall(ZParser.ValFunctionCallContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ValFunctionCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitValFunctionCall(ZParser.ValFunctionCallContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code ValArrayLiteral}
 	 * labeled alternative in {@link ZParser#normal_values}.
 	 * @param ctx the parse tree
@@ -1299,18 +1203,6 @@ public interface ZParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitValReadCall(ZParser.ValReadCallContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code ValIdCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterValIdCall(ZParser.ValIdCallContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ValIdCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitValIdCall(ZParser.ValIdCallContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code BoolTrue}
 	 * labeled alternative in {@link ZParser#boolean_values}.

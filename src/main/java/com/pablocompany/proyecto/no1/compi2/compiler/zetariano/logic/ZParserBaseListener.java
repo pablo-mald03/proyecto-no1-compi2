@@ -149,18 +149,6 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStatementFunctionCall(ZParser.StatementFunctionCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStatementFunctionCall(ZParser.StatementFunctionCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterStatementLoopControl(ZParser.StatementLoopControlContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -773,37 +761,13 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterNestedObjectVariable(ZParser.NestedObjectVariableContext ctx) { }
+	@Override public void enterNestedVariable(ZParser.NestedVariableContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitNestedObjectVariable(ZParser.NestedObjectVariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterNestedArrayVariable(ZParser.NestedArrayVariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitNestedArrayVariable(ZParser.NestedArrayVariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterNestedSingleVariable(ZParser.NestedSingleVariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitNestedSingleVariable(ZParser.NestedSingleVariableContext ctx) { }
+	@Override public void exitNestedVariable(ZParser.NestedVariableContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -833,42 +797,6 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterObjectBaseProperty(ZParser.ObjectBasePropertyContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitObjectBaseProperty(ZParser.ObjectBasePropertyContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterObjectBaseArrayProperty(ZParser.ObjectBaseArrayPropertyContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitObjectBaseArrayProperty(ZParser.ObjectBaseArrayPropertyContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterObjectBaseMethodCall(ZParser.ObjectBaseMethodCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitObjectBaseMethodCall(ZParser.ObjectBaseMethodCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterObjectPropertyChain(ZParser.ObjectPropertyChainContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -881,25 +809,25 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterArrayCall(ZParser.ArrayCallContext ctx) { }
+	@Override public void enterBaseFunctionCall(ZParser.BaseFunctionCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitArrayCall(ZParser.ArrayCallContext ctx) { }
+	@Override public void exitBaseFunctionCall(ZParser.BaseFunctionCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFunctionCalling(ZParser.FunctionCallingContext ctx) { }
+	@Override public void enterBaseIdentifier(ZParser.BaseIdentifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitFunctionCalling(ZParser.FunctionCallingContext ctx) { }
+	@Override public void exitBaseIdentifier(ZParser.BaseIdentifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -1265,30 +1193,6 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterValArrayCall(ZParser.ValArrayCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitValArrayCall(ZParser.ValArrayCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterValFunctionCall(ZParser.ValFunctionCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitValFunctionCall(ZParser.ValFunctionCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterValArrayLiteral(ZParser.ValArrayLiteralContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -1308,18 +1212,6 @@ public class ZParserBaseListener implements ZParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitValReadCall(ZParser.ValReadCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterValIdCall(ZParser.ValIdCallContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitValIdCall(ZParser.ValIdCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

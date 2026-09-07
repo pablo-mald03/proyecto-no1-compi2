@@ -101,13 +101,6 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatementConsoleAction(YParser.StatementConsoleActionContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code StatementFunctionCall}
-	 * labeled alternative in {@link YParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatementFunctionCall(YParser.StatementFunctionCallContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code StatementLoopControl}
 	 * labeled alternative in {@link YParser#statement}.
 	 * @param ctx the parse tree
@@ -346,33 +339,33 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitReadCall(YParser.ReadCallContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code IncOperation}
+	 * Visit a parse tree produced by the {@code IncSufixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitIncOperation(YParser.IncOperationContext ctx);
+	T visitIncSufixOperation(YParser.IncSufixOperationContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code DecOperation}
+	 * Visit a parse tree produced by the {@code DecSufixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDecOperation(YParser.DecOperationContext ctx);
+	T visitDecSufixOperation(YParser.DecSufixOperationContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code IncPrevOperation}
+	 * Visit a parse tree produced by the {@code IncPrefixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitIncPrevOperation(YParser.IncPrevOperationContext ctx);
+	T visitIncPrefixOperation(YParser.IncPrefixOperationContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code DecPrevOperation}
+	 * Visit a parse tree produced by the {@code DecPrefixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDecPrevOperation(YParser.DecPrevOperationContext ctx);
+	T visitDecPrefixOperation(YParser.DecPrefixOperationContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code CompoundAddAssignment}
 	 * labeled alternative in {@link YParser#compound_assignment}.
@@ -409,12 +402,54 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCompoundModAssignment(YParser.CompoundModAssignmentContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code FunctionCalling}
-	 * labeled alternative in {@link YParser#function_call}.
+	 * Visit a parse tree produced by the {@code AssingmentStatement}
+	 * labeled alternative in {@link YParser#assignment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFunctionCalling(YParser.FunctionCallingContext ctx);
+	T visitAssingmentStatement(YParser.AssingmentStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code NestedVariable}
+	 * labeled alternative in {@link YParser#nest_variable}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitNestedVariable(YParser.NestedVariableContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ObjectArrayAccessChain}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectArrayAccessChain(YParser.ObjectArrayAccessChainContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ObjectPropertyChain}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectPropertyChain(YParser.ObjectPropertyChainContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BaseIdentifier}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBaseIdentifier(YParser.BaseIdentifierContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayLiteralValue}
+	 * labeled alternative in {@link YParser#array_literal}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayLiteralValue(YParser.ArrayLiteralValueContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArrayValuesList}
+	 * labeled alternative in {@link YParser#array_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayValuesList(YParser.ArrayValuesListContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code NotDefiniedVariable}
 	 * labeled alternative in {@link YParser#variable_declaration}.
@@ -443,13 +478,6 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitDefiniedArrayVariable(YParser.DefiniedArrayVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code AssingmentStatement}
-	 * labeled alternative in {@link YParser#assignment}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAssingmentStatement(YParser.AssingmentStatementContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code IntValue}
 	 * labeled alternative in {@link YParser#type}.
@@ -584,40 +612,33 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValueInt(YParser.ValueIntContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ValueBool}
+	 * Visit a parse tree produced by the {@code ValBool}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitValueBool(YParser.ValueBoolContext ctx);
+	T visitValBool(YParser.ValBoolContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ValueFunctionCall}
+	 * Visit a parse tree produced by the {@code ValObjectAccess}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitValueFunctionCall(YParser.ValueFunctionCallContext ctx);
+	T visitValObjectAccess(YParser.ValObjectAccessContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ValueReadCall}
+	 * Visit a parse tree produced by the {@code ValArrayLiteral}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitValueReadCall(YParser.ValueReadCallContext ctx);
+	T visitValArrayLiteral(YParser.ValArrayLiteralContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ValueAccessorCall}
+	 * Visit a parse tree produced by the {@code ValReadCall}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitValueAccessorCall(YParser.ValueAccessorCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code InitValueArrayLiteral}
-	 * labeled alternative in {@link YParser#normal_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInitValueArrayLiteral(YParser.InitValueArrayLiteralContext ctx);
+	T visitValReadCall(YParser.ValReadCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code BoolTrue}
 	 * labeled alternative in {@link YParser#boolean_values}.
@@ -639,27 +660,6 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExpressionList(YParser.ExpressionListContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code AccessorPropertyChain}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAccessorPropertyChain(YParser.AccessorPropertyChainContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code AccessorArrayChain}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAccessorArrayChain(YParser.AccessorArrayChainContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code AccessorBase}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAccessorBase(YParser.AccessorBaseContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link YParser#skip_lines}.
 	 * @param ctx the parse tree

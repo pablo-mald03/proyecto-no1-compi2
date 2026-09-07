@@ -48,7 +48,6 @@ parameter
 statement
     : block_statement                   # StatementBlock
     | console_actions                   # StatementConsoleAction
-    | function_call DOT_COMMA           # StatementFunctionCall
     | loop_control                      # StatementLoopControl
     | return_statement                  # StatementReturn
     | abbreviated_operation             # StatementAbbreviatedOperation
@@ -206,33 +205,19 @@ abbreviated_operation
 
 /*--------****--- ASSIGNMENT / OPERATION TARGET ---****--------*/
 nest_variable
-    : object_values   # NestedObjectVariable
-    | array_call       # NestedArrayVariable
-    | ID                # NestedSingleVariable
+    : object_values   # NestedVariable
     ;
 
 /*--------****--- OBJECT AND ARRAY ACCESS CHAINS ---****--------*/
-
 object_values
     : object_values DOT ID                                                  # ObjectPropertyChain
     | object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT         # ObjectMethodChain
     | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
-    | ID DOT ID                                                             # ObjectBaseProperty
-    | ID DOT ID INIT_PARENT arguments_list? FINAL_PARENT                    # ObjectBaseMethodCall
-    | ID INIT_BRACKET expression FINAL_BRACKET DOT ID                       # ObjectBaseArrayProperty
+    | ID INIT_PARENT arguments_list? FINAL_PARENT                          # BaseFunctionCall
+    | ID                                                                    # BaseIdentifier
     ;
 
 
-/*--------****--- MULTI-DIMENSIONAL OR NORMAL ARRAY CALLS ---****--------*/
-array_call
-    : ID (INIT_BRACKET expression FINAL_BRACKET)+           # ArrayCall
-    ;
-
-/*--------****--- FUNCTION CALLING ---****--------*/
-
-function_call
-    : ID INIT_PARENT arguments_list? FINAL_PARENT           # FunctionCalling
-    ;
 
 /*--------****--- ARGUMENT FUNCTION LIST ---****--------*/
 
@@ -299,11 +284,8 @@ normal_values
     | NULL                          # ValNull
     | instantiation                 # ValInstantiation
     | object_values                 # ValObjectAccess
-    | array_call                    # ValArrayCall
-    | function_call                 # ValFunctionCall
     | array_literal                 # ValArrayLiteral
     | read_call                     # ValReadCall
-    | ID                            # ValIdCall
     ;
 
 /*--------****--- BOOLEAN VALUES ---****--------*/

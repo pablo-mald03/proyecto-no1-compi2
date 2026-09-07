@@ -14,9 +14,11 @@ body
     : import_list* variable_section? maior_section FINIS_SEPARATOR DOT_COMMA
     ;
 
+/*===*****========*****===== BODY SECTION ===*****==========*****===*/
+
 /*------ IMPORT LIST PRODUCTION ------*/
 import_list
-    : IMPORT accessor #ImportLists
+    : IMPORT accessor       #ImportLists
     ;
 
 /*------ IMPORT ACCESSOR PRODUCTION ------*/
@@ -25,27 +27,77 @@ accessor
     ;
 
 /*===*****===== MAIOR SECTION =====*****===*/
-/*===*****========*****===== MAIOR SECTION (FUNCTIONS) ===*****==========*****===*/
 
-/*===*****========*****===== MUNERA SECTION ===*****==========*****===*/
+/*===*****========*****===== MAIOR SECTION ===*****==========*****===*/
 maior_section
     : MAIOR GREATER code_body # MaiorSection
     ;
 
 code_body
-    : control_block+        #CodeBodyStatement
+    : statement*        #CodeBodyStatement
     ;
 
-control_block
+statement
     : block_code                            # BlockCode
     | console_actions                       # ConsoleActions
-    | function_call DOT_COMMA               # FunctionSingleCall
     | loop_control                          # LoopControlAction
     | return_control                        # ReturnControlAction
     | abbreviated_operation                 # LocalAbbreviatedOperation
-    | variable_ussage                       # LocalVariableRedefinition
-    | array_redefined_ussage                # LocalArrayRedefinedUssage
-    | nested_variables_usage                # LocalNestedVariableUsage
+    | assignment                            # LocalAssignment
+    | object_values DOT_COMMA               # StatementObjectPropertyCalling
+    ;
+
+/*===*****===== COMMON CODE SECTION =====*****===*/
+
+block_code
+    : if_statement              # CodeBlockIf
+    | while_statement           # CodeBlockWhile
+    | do_while_statement        # CodeBlockDoWhile
+    | for_statement             # CodeBlockFor
+    ;
+
+/*------ IF STATEMENT PRODUCTION ------*/
+
+if_statement
+    : SI INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body FINAL_BRACE else_if_list? else_statement FINIS DOT_COMMA # IfStatement
+    ;
+
+/*------ ELSE IF LIST STATEMENT PRODUCTION ------*/
+else_if_list
+    : else_if_clause+       #ElseIfList
+    ;
+
+else_if_clause
+    : ALITER INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body FINAL_BRACE      # ElseIfClause
+    ;
+
+else_statement
+    : (ALITER INIT_BRACE code_body FINAL_BRACE)?       # ElseStatement
+    ;
+
+/*------ LOOPS ------*/
+
+while_statement
+    : DUM INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body FINAL_BRACE FINIS DOT_COMMA # WhileStatement
+    ;
+
+do_while_statement
+    : FACERE INIT_BRACE code_body FINAL_BRACE DUM INIT_PARENT expression FINAL_PARENT DOT_COMMA # DoWhileStatement
+    ;
+
+for_statement
+    : PER INIT_PARENT for_init DOT_COMMA expression DOT_COMMA for_update FINAL_PARENT INIT_BRACE code_body FINAL_BRACE  # ForStatement
+    ;
+
+for_init
+    : ESTO ID TWO_POINTS variable_type expression # ForInitVarDecl
+    | ID EQUAL expression                         # ForInitAssign
+    ;
+
+for_update
+    : ID ABREV_PLUS        # ForUpdateIncrement
+    | ID ABREV_MINUS       # ForUpdateDecrement
+    | ID EQUAL expression  # ForUpdateAssign
     ;
 
 /*------ RETURN STATEMENT ------*/
@@ -61,10 +113,12 @@ loop_control
     | INTERRUMPE DOT_COMMA          # LoopBreak
     ;
 
+/*===*****===== CONSOLE ACTIONS SECTION =====*****===*/
+
 console_actions
-    : nest_variable READ             # ReadVariableInput
-    | READ                           # ReadInput
-    | PRINT print_function DOT_COMMA # PrintAction
+    : nest_variable READ                    # ReadVariableInput
+    | READ                                  # ReadInput
+    | PRINT print_function DOT_COMMA        # PrintAction
     ;
 
 print_function
@@ -72,144 +126,64 @@ print_function
     | expression                      # PrintSingleExpr
     ;
 
-/*===*****===== COMMON CODE SECTION =====*****===*/
-
-block_code
-    : if_statement       # CodeBlockIf
-    | while_statement    # CodeBlockWhile
-    | do_while_statement # CodeBlockDoWhile
-    | for_statement      # CodeBlockFor
-    ;
-
-/*------ IF STATEMENT PRODUCTION ------*/
-
-if_statement
-    : SI INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body? FINAL_BRACE else_if_list? else_statement FINIS DOT_COMMA # IfStatement
-    ;
-
-else_if_list
-    : else_if_clause+       #ElseIfList
-    ;
-
-else_if_clause
-    : ALITER INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body? FINAL_BRACE      # ElseIfClause
-    ;
-
-else_statement
-    : (ALITER INIT_BRACE code_body? FINAL_BRACE)?       # ElseStatement
-    ;
-
-/*------ CYCLES ------*/
-
-while_statement
-    : DUM INIT_PARENT expression FINAL_PARENT INIT_BRACE code_body? FINAL_BRACE FINIS DOT_COMMA # WhileStatement
-    ;
-
-do_while_statement
-    : FACERE INIT_BRACE code_body? FINAL_BRACE DUM INIT_PARENT expression FINAL_PARENT DOT_COMMA # DoWhileStatement
-    ;
-
-for_statement
-    : PER INIT_PARENT for_init DOT_COMMA expression DOT_COMMA for_update FINAL_PARENT INIT_BRACE code_body? FINAL_BRACE  # ForStatement
-    ;
-
-for_init
-    : ESTO ID TWO_POINTS variable_type expression # ForInitVarDecl
-    | ID EQUAL expression                         # ForInitAssign
-    ;
-
-for_update
-    : ID ABREV_PLUS        # ForUpdateIncrement
-    | ID ABREV_MINUS       # ForUpdateDecrement
-    | ID EQUAL expression  # ForUpdateAssign
-    ;
-
-
 /*===*****===== VARIABILES SECTION =====*****===*/
 
 variable_section
     : VARIABILES GREATER variabiles_body    #VariablesSection
     ;
 
-
 /*------ DECLARATE VARIABILES SECTION ------*/
 
 variabiles_body
-    : declarations+     #VariabilesBody
+    : declaration+          #VariabilesBody
     ;
-
 
 /*------ DECLARATIONS PRODUCTIONS SECTION------*/
-declarations
+
+declaration
     : variable_declaration          # VariableInstance
-    | variable_ussage               # VariableRedefinedUssage
-    | normal_array_declaration      # NormalArrayInstance
+    | assignment                    # VariableAssignment
+    | array_declaration             # NormalArrayInstance
     | struct_declaration            # StructDefinition
-    | array_redefined_ussage        # ArrayRedefinedUssage
     | struct_instance               # StructVariableInstance
     | abbreviated_operation         # GlobalAbbreviatedOperation
-    | nested_variables_usage        # GlobalNestedVariableUsage
+    | compound_assignment           # CompoundAssignment
     ;
-
-
-/*-----VARIABLE USAGE PRODUCTIONS-----*/
-
-/*-----STRUCT INSTANCE PRODUCTIONS-----*/
-array_redefined_ussage
-    : ID INIT_BRACKET expression FINAL_BRACKET EQUAL expression DOT_COMMA   #RedefiniedArrayUssage
-    ;
-
-variable_ussage
-    : ID EQUAL expression DOT_COMMA                 # NormalVariableRedefiniedUsage
-    ;
-
-nested_variables_usage
-    : struct_values EQUAL expression DOT_COMMA      #NestedStructRedefiniedValue
-    ;
-
-/*-----STRUCT INSTANCE PRODUCTIONS-----*/
-
-struct_instance
-    : ESTO ID TWO_POINTS ID struct_literal         # StructInstance
-    ;
-
-
 
 /*-----VARIABLE PRODUCTIONS-----*/
+
 variable_declaration
-    : ESTO ID TWO_POINTS variable_type expression DOT_COMMA # VariableDeclaration
+    : ESTO ID TWO_POINTS variable_type? expression DOT_COMMA         # VariableDeclaration
     ;
 
+/*-----ASSIGNMENT PRODUCTIONS-----*/
 
-normal_array_declaration
-    : SERIES ID INIT_BRACKET expression FINAL_BRACKET TWO_POINTS variable_type array_initialization? DOT_COMMA   # NormalArrayDeclaration
+assignment
+    : nest_variable EQUAL expression DOT_COMMA # StructAssignment
     ;
 
+/*------ COMPOUND ASSIGNMENT PRODUCTIONS ------*/
+compound_assignment
+    : nest_variable BY_ONE_ADD expression DOT_COMMA                 # CompoundAddAssignment
+    | nest_variable BY_ONE_MINUS expression DOT_COMMA               # CompoundSubAssignment
+    | nest_variable BY_ONE_MULTIPLICATION expression DOT_COMMA      # CompoundMulAssignment
+    | nest_variable BY_ONE_DIVISION expression DOT_COMMA            # CompoundDivAssignment
+    | nest_variable BY_ONE_PERCENT expression DOT_COMMA             # CompoundModAssignment
+    ;
 
-/*---****------****--- ARRAY PROPERTIES SECTION ---****------****---*/
+/*-----ARRAY PRODUCTIONS-----*/
+
+array_declaration
+    : SERIES ID INIT_BRACKET expression FINAL_BRACKET TWO_POINTS variable_type array_initialization? DOT_COMMA      # NormalArrayDeclaration
+    ;
 
 array_initialization
     : INIT_BRACE values_array_list FINAL_BRACE      # ArrayInitWithValues
     ;
 
 values_array_list
-    : array_value (COMMA array_value)*
+    : expression (COMMA expression)*
     ;
-
-array_value
-    : expression  # ArrayNormalValue
-    ;
-
-
-/*--------****--- VALUES SECTION NESTED PROPERTIES---****--------*/
-
-struct_values
-    : struct_values DOT ID                                      # StructPropertyChain
-    | struct_values INIT_BRACKET expression FINAL_BRACKET       # StructArrayAccessChain
-    | ID DOT ID                                                 # StructBaseProperty
-    | ID INIT_BRACKET expression FINAL_BRACKET DOT ID           # StructBaseArrayProperty
-    ;
-
 
 /*---****------****--- STRUCT DEFINITION SECTION ---****------****---*/
 
@@ -230,8 +204,6 @@ struct_comma_body
     : struct_attribute (COMMA struct_attribute)*        #StructCommaStatementBody
     ;
 
-
-
 /*---****------****--- STRUCT VARIABLES DECLARATION DEFINITION SECTION ---****------****---*/
 
 struct_attribute
@@ -239,20 +211,19 @@ struct_attribute
     | array_variable_struct             # ArrayVariableStruct
     ;
 
-
-/*-----STRUCT VARIABLE INSTANCE PRODUCTIONS-----*/
-
 variable_without_value
     : ESTO ID TWO_POINTS variable_type      # InternalStructNormalVariable
     ;
-
 
 array_variable_struct
     : SERIES ID TWO_POINTS variable_type           # InternalStructArray
     ;
 
+/*-----STRUCT INSTANCE PRODUCTIONS-----*/
 
-/*-----STRUCT INSTANCE VALUES PRODUCTIONS-----*/
+struct_instance
+    : ESTO ID TWO_POINTS ID struct_literal DOT_COMMA # StructInstance
+    ;
 
 struct_literal
     : INIT_BRACE struct_data_list FINAL_BRACE  # StructLiteralValue
@@ -266,13 +237,32 @@ struct_data_value
     : ID TWO_POINTS expression                 # StructDataNormal
     ;
 
+/*-----STRUCT PROPERTY ACCESS -----*/
+
+/*--------****--- ASSIGNMENT / OPERATION TARGET ---****--------*/
+nest_variable
+    : object_values   # NestedVariable
+    ;
+
+/*--------****--- OBJECT AND ARRAY ACCESS CHAINS ---****--------*/
+object_values
+    : object_values DOT ID                                                  # ObjectPropertyChain
+    | object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT         # ObjectMethodChain
+    | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
+    | ID INIT_PARENT arguments_list? FINAL_PARENT                          # BaseFunctionCall
+    | ID                                                                    # BaseIdentifier
+    ;
+
+arguments_list
+    : expression (COMMA expression)*            #ArgumentsList
+    ;
 
 /*--******-------****--- OPERATION SECTION ---****-------******--*/
 
 expression
     : INIT_PARENT expression FINAL_PARENT                                           # ExpressionParents
     | op=(NOT | MINUS) expression                                                   # ExpressionUnary
-    | expression op=(MULTIPLICATION | DIVIDE) expression                            # ExpressionMultDiv
+    | expression op=(MULTIPLICATION | DIVIDE | PERCENT) expression                  # ExpressionMultDiv
     | expression op=(PLUS | MINUS) expression                                       # ExpressionAddSub
     | expression op=(LESS | GREATER | LESS_EQUALS | GREATER_EQUALS) expression      # ExpressionRelational
     | expression op=(EQUALS | DIFERENCE) expression                                 # ExpressionEquality
@@ -281,9 +271,8 @@ expression
     | normal_values                                                                 # ExpressionValue
     ;
 
-
-
 /*--------****--- VALUES AND TYPES SECTION ---****--------*/
+
 variable_type
     : TEXTUM    # TypeText
     | NUMERUS   # TypeInt
@@ -293,48 +282,26 @@ variable_type
     | ID        # TypeCustomId
     ;
 
-/*--------****--- ARRAY CALLING SECTION ---****--------*/
-array_call
-    : ID INIT_BRACKET expression FINAL_BRACKET     # ArrayCall
-    ;
-
-
-/*--------****--- FUNCTION CALLING ---****--------*/
-
-function_call
-    : ID INIT_PARENT arguments_list? FINAL_PARENT      # FunctionCalling
-    ;
-
-arguments_list
-    : expression (COMMA expression)*            #ArgumentsList
-    ;
-
-/*-----STRUCT VARIABLE INSTANCE PRODUCTIONS-----*/
-nest_variable
-    : struct_values         # NestedValueVariable
-    | array_call            # ArrayCallVariable
-    | ID                    # SigleValueVariable
-    ;
-
 /*--------****--- PRINCIPAL VALUES DATA ---****--------*/
+
 normal_values
-    : STRING                    # ValString
-    | CHAR                      # ValChar
-    | DECIMAL                   # ValDecimal
-    | INT                       # ValInt
-    | boolean_values            # ValBool
-    | array_call                # ValArrayCall
-    | function_call             # ValFunctionCall
-    | struct_values             # ValStructNestValue
-    | struct_literal            # ValStructPropertyLiteral
-    | array_initialization      # ValArrayLiteral
-    | ID                        # ValIdCall
+    : STRING                                            # ValString
+    | CHAR                                              # ValChar
+    | DECIMAL                                           # ValDecimal
+    | INT                                               # ValInt
+    | boolean_values                                    # ValBool
+    | object_values                                     # ValStructNestValue
+    | struct_literal                                    # ValStructPropertyLiteral
+    | array_initialization                              # ValArrayInitialLiteral
+    | NOVUS ID INIT_PARENT arguments_list? FINAL_PARENT # ValNewInstance
     ;
 
 boolean_values
     : VERUM     # BoolTrue
     | FALSUS    # BoolFalse
     ;
+
+/*-----ABBREVIATED OPERATIONS-----*/
 
 abbreviated_operation
     : nest_variable ABREV_PLUS DOT_COMMA        # IncOperation

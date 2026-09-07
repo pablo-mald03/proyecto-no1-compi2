@@ -59,7 +59,6 @@ parameter
 statement
     : block_statement                           #StatementBlock
     | console_actions                           #StatementConsoleAction
-    | function_call NEWLINE+                    #StatementFunctionCall
     | loop_control                              #StatementLoopControl
     | abbreviated_operation                     #StatementAbbreviatedOperation
     | compound_assignment                       #StatementCompoundAssignment
@@ -134,16 +133,16 @@ for_statement
 /*** FOR INIT STATEMENT PRODUCTION ****/
 for_init
     : type ID EQUAL expression   #ForInitVarDecl
-    | accessor EQUAL expression  #ForInitAssign
+    | nest_variable EQUAL expression  #ForInitAssign
     ;
 
 /*** FOR UPDATE STATEMENT PRODUCTION ****/
 for_update
-    : accessor ABREV_PLUS         #ForUpdateIncrement
-    | accessor ABREV_MINUS        #ForUpdateDecrement
-    | ABREV_PLUS accessor         #ForUpdatePrefixIncrement
-    | ABREV_MINUS accessor        #ForUpdatePrefixDecrement
-    | accessor EQUAL expression   #ForUpdateAssign
+    : nest_variable ABREV_PLUS         #ForUpdateIncrement
+    | nest_variable ABREV_MINUS        #ForUpdateDecrement
+    | ABREV_PLUS nest_variable         #ForUpdatePrefixIncrement
+    | ABREV_MINUS nest_variable        #ForUpdatePrefixDecrement
+    | nest_variable EQUAL expression   #ForUpdateAssign
     ;
 
 /*** BREAK FLOW PRODUCTIONS ****/
@@ -163,27 +162,57 @@ read_call
     : READ INIT_PARENT FINAL_PARENT   #ReadCall
     ;
 
-/*---*******---- INCREMENT / DECREMENT PRODUCTIONS (SUFIX AND PREFIX) ----*******---*/
+/*------ INCREMENT / DECREMENT PRODUCTIONS (PREFIX AND SUFIX) ------*/
 abbreviated_operation
-    : accessor ABREV_PLUS NEWLINE+    #IncOperation
-    | accessor ABREV_MINUS NEWLINE+   #DecOperation
-    | ABREV_PLUS accessor NEWLINE+    #IncPrevOperation
-    | ABREV_MINUS accessor NEWLINE+   #DecPrevOperation
+    : nest_variable ABREV_PLUS DOT_COMMA    # IncSufixOperation
+    | nest_variable ABREV_MINUS DOT_COMMA   # DecSufixOperation
+    | ABREV_PLUS nest_variable  DOT_COMMA   # IncPrefixOperation
+    | ABREV_MINUS nest_variable  DOT_COMMA   # DecPrefixOperation
     ;
 
 /*---*******---- COMPOUND ASSIGNMENT PRODUCTIONS ----*******---*/
+/*------ COMPOUND ASSIGNMENT PRODUCTIONS ------*/
 compound_assignment
-    : accessor BY_ONE_ADD expression NEWLINE+             #CompoundAddAssignment
-    | accessor BY_ONE_MINUS expression NEWLINE+           #CompoundSubAssignment
-    | accessor BY_ONE_MULTIPLICATION expression NEWLINE+  #CompoundMulAssignment
-    | accessor BY_ONE_DIVISION expression NEWLINE+        #CompoundDivAssignment
-    | accessor BY_ONE_PERCENT expression NEWLINE+         #CompoundModAssignment
+    : nest_variable BY_ONE_ADD expression DOT_COMMA                 # CompoundAddAssignment
+    | nest_variable BY_ONE_MINUS expression DOT_COMMA               # CompoundSubAssignment
+    | nest_variable BY_ONE_MULTIPLICATION expression DOT_COMMA      # CompoundMulAssignment
+    | nest_variable BY_ONE_DIVISION expression DOT_COMMA            # CompoundDivAssignment
+    | nest_variable BY_ONE_PERCENT expression DOT_COMMA             # CompoundModAssignment
     ;
 
-/*---*******---- FUNCTION CALLING PRODUCTIONS ----*******---*/
-function_call
-    : ID INIT_PARENT expression_list? FINAL_PARENT   #FunctionCalling
+/*** ASSIGNMENT DECLARATIONS ****/
+assignment
+    : nest_variable EQUAL expression         #AssingmentStatement
     ;
+
+
+
+/*--------****--- ASSIGNMENT / OPERATION TARGET ---****--------*/
+nest_variable
+    : object_values   # NestedVariable
+    ;
+
+/*--------****--- OBJECT AND ARRAY ACCESS CHAINS ---****--------*/
+object_values
+    : object_values DOT ID                                                  # ObjectPropertyChain
+    | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
+    | ID                                                                    # BaseIdentifier
+    ;
+
+/*--------****--- OPERATIONS WITH ARRAY VALUES---****--------*/
+
+
+/*--------****--- ARRAY VALUES ---****--------*/
+array_literal
+    : INIT_BRACE array_values? FINAL_BRACE   # ArrayLiteralValue
+    ;
+
+/*--------****--- ARRAY VALUES ---****--------*/
+
+array_values
+    : expression (COMMA expression)*   # ArrayValuesList
+    ;
+
 
 /*** VARIABLE DECLARATIONS MULTI-DIMENSIONAL ARRAYS ALLOWED ****/
 
@@ -192,12 +221,6 @@ variable_declaration
     | type ID EQUAL expression                                            #DefiniedVariable
     | type ID (INIT_BRACKET expression FINAL_BRACKET)+                    #NotDefiniedArrayVariable
     | type ID (INIT_BRACKET expression FINAL_BRACKET)+ EQUAL expression   #DefiniedArrayVariable
-    ;
-
-
-/*** ASSIGNMENT DECLARATIONS ****/
-assignment
-    : accessor EQUAL expression         #AssingmentStatement
     ;
 
 
@@ -231,11 +254,10 @@ normal_values
     | CHAR                                          # ValueChar
     | DECIMAL                                       # ValueDecimal
     | INT                                           # ValueInt
-    | boolean_values                                # ValueBool
-    | function_call                                 # ValueFunctionCall
-    | read_call                                     # ValueReadCall
-    | accessor                                      # ValueAccessorCall
-    | INIT_BRACE expression_list FINAL_BRACE        # InitValueArrayLiteral
+    | boolean_values                # ValBool
+    | object_values                 # ValObjectAccess
+    | array_literal                 # ValArrayLiteral
+    | read_call                     # ValReadCall
     ;
 
 /*** BOOLEAN VALUES ****/
@@ -249,13 +271,6 @@ boolean_values
 
 expression_list
     : expression (COMMA expression)*        #ExpressionList
-    ;
-
-/*** ACCESSOR DECLARATIONS  (NESTED VALUES) ****/
-accessor
-    : accessor DOT ID                                       #AccessorPropertyChain
-    | accessor INIT_BRACKET expression FINAL_BRACKET        #AccessorArrayChain
-    | ID                                                    #AccessorBase
     ;
 
 /*** NEW LINE PRODUCTION ****/

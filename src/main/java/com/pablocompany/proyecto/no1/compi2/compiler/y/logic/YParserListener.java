@@ -162,18 +162,6 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitStatementConsoleAction(YParser.StatementConsoleActionContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code StatementFunctionCall}
-	 * labeled alternative in {@link YParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void enterStatementFunctionCall(YParser.StatementFunctionCallContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StatementFunctionCall}
-	 * labeled alternative in {@link YParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void exitStatementFunctionCall(YParser.StatementFunctionCallContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code StatementLoopControl}
 	 * labeled alternative in {@link YParser#statement}.
 	 * @param ctx the parse tree
@@ -582,53 +570,53 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitReadCall(YParser.ReadCallContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code IncOperation}
+	 * Enter a parse tree produced by the {@code IncSufixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void enterIncOperation(YParser.IncOperationContext ctx);
+	void enterIncSufixOperation(YParser.IncSufixOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code IncOperation}
+	 * Exit a parse tree produced by the {@code IncSufixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void exitIncOperation(YParser.IncOperationContext ctx);
+	void exitIncSufixOperation(YParser.IncSufixOperationContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code DecOperation}
+	 * Enter a parse tree produced by the {@code DecSufixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void enterDecOperation(YParser.DecOperationContext ctx);
+	void enterDecSufixOperation(YParser.DecSufixOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code DecOperation}
+	 * Exit a parse tree produced by the {@code DecSufixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void exitDecOperation(YParser.DecOperationContext ctx);
+	void exitDecSufixOperation(YParser.DecSufixOperationContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code IncPrevOperation}
+	 * Enter a parse tree produced by the {@code IncPrefixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void enterIncPrevOperation(YParser.IncPrevOperationContext ctx);
+	void enterIncPrefixOperation(YParser.IncPrefixOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code IncPrevOperation}
+	 * Exit a parse tree produced by the {@code IncPrefixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void exitIncPrevOperation(YParser.IncPrevOperationContext ctx);
+	void exitIncPrefixOperation(YParser.IncPrefixOperationContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code DecPrevOperation}
+	 * Enter a parse tree produced by the {@code DecPrefixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void enterDecPrevOperation(YParser.DecPrevOperationContext ctx);
+	void enterDecPrefixOperation(YParser.DecPrefixOperationContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code DecPrevOperation}
+	 * Exit a parse tree produced by the {@code DecPrefixOperation}
 	 * labeled alternative in {@link YParser#abbreviated_operation}.
 	 * @param ctx the parse tree
 	 */
-	void exitDecPrevOperation(YParser.DecPrevOperationContext ctx);
+	void exitDecPrefixOperation(YParser.DecPrefixOperationContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code CompoundAddAssignment}
 	 * labeled alternative in {@link YParser#compound_assignment}.
@@ -690,17 +678,89 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitCompoundModAssignment(YParser.CompoundModAssignmentContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code FunctionCalling}
-	 * labeled alternative in {@link YParser#function_call}.
+	 * Enter a parse tree produced by the {@code AssingmentStatement}
+	 * labeled alternative in {@link YParser#assignment}.
 	 * @param ctx the parse tree
 	 */
-	void enterFunctionCalling(YParser.FunctionCallingContext ctx);
+	void enterAssingmentStatement(YParser.AssingmentStatementContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code FunctionCalling}
-	 * labeled alternative in {@link YParser#function_call}.
+	 * Exit a parse tree produced by the {@code AssingmentStatement}
+	 * labeled alternative in {@link YParser#assignment}.
 	 * @param ctx the parse tree
 	 */
-	void exitFunctionCalling(YParser.FunctionCallingContext ctx);
+	void exitAssingmentStatement(YParser.AssingmentStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code NestedVariable}
+	 * labeled alternative in {@link YParser#nest_variable}.
+	 * @param ctx the parse tree
+	 */
+	void enterNestedVariable(YParser.NestedVariableContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code NestedVariable}
+	 * labeled alternative in {@link YParser#nest_variable}.
+	 * @param ctx the parse tree
+	 */
+	void exitNestedVariable(YParser.NestedVariableContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ObjectArrayAccessChain}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectArrayAccessChain(YParser.ObjectArrayAccessChainContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectArrayAccessChain}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectArrayAccessChain(YParser.ObjectArrayAccessChainContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ObjectPropertyChain}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectPropertyChain(YParser.ObjectPropertyChainContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectPropertyChain}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectPropertyChain(YParser.ObjectPropertyChainContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BaseIdentifier}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterBaseIdentifier(YParser.BaseIdentifierContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BaseIdentifier}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitBaseIdentifier(YParser.BaseIdentifierContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ArrayLiteralValue}
+	 * labeled alternative in {@link YParser#array_literal}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayLiteralValue(YParser.ArrayLiteralValueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ArrayLiteralValue}
+	 * labeled alternative in {@link YParser#array_literal}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayLiteralValue(YParser.ArrayLiteralValueContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ArrayValuesList}
+	 * labeled alternative in {@link YParser#array_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayValuesList(YParser.ArrayValuesListContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ArrayValuesList}
+	 * labeled alternative in {@link YParser#array_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayValuesList(YParser.ArrayValuesListContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code NotDefiniedVariable}
 	 * labeled alternative in {@link YParser#variable_declaration}.
@@ -749,18 +809,6 @@ public interface YParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDefiniedArrayVariable(YParser.DefiniedArrayVariableContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code AssingmentStatement}
-	 * labeled alternative in {@link YParser#assignment}.
-	 * @param ctx the parse tree
-	 */
-	void enterAssingmentStatement(YParser.AssingmentStatementContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code AssingmentStatement}
-	 * labeled alternative in {@link YParser#assignment}.
-	 * @param ctx the parse tree
-	 */
-	void exitAssingmentStatement(YParser.AssingmentStatementContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code IntValue}
 	 * labeled alternative in {@link YParser#type}.
@@ -990,65 +1038,53 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitValueInt(YParser.ValueIntContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ValueBool}
+	 * Enter a parse tree produced by the {@code ValBool}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void enterValueBool(YParser.ValueBoolContext ctx);
+	void enterValBool(YParser.ValBoolContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code ValueBool}
+	 * Exit a parse tree produced by the {@code ValBool}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void exitValueBool(YParser.ValueBoolContext ctx);
+	void exitValBool(YParser.ValBoolContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ValueFunctionCall}
+	 * Enter a parse tree produced by the {@code ValObjectAccess}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void enterValueFunctionCall(YParser.ValueFunctionCallContext ctx);
+	void enterValObjectAccess(YParser.ValObjectAccessContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code ValueFunctionCall}
+	 * Exit a parse tree produced by the {@code ValObjectAccess}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void exitValueFunctionCall(YParser.ValueFunctionCallContext ctx);
+	void exitValObjectAccess(YParser.ValObjectAccessContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ValueReadCall}
+	 * Enter a parse tree produced by the {@code ValArrayLiteral}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void enterValueReadCall(YParser.ValueReadCallContext ctx);
+	void enterValArrayLiteral(YParser.ValArrayLiteralContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code ValueReadCall}
+	 * Exit a parse tree produced by the {@code ValArrayLiteral}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void exitValueReadCall(YParser.ValueReadCallContext ctx);
+	void exitValArrayLiteral(YParser.ValArrayLiteralContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ValueAccessorCall}
+	 * Enter a parse tree produced by the {@code ValReadCall}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void enterValueAccessorCall(YParser.ValueAccessorCallContext ctx);
+	void enterValReadCall(YParser.ValReadCallContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code ValueAccessorCall}
+	 * Exit a parse tree produced by the {@code ValReadCall}
 	 * labeled alternative in {@link YParser#normal_values}.
 	 * @param ctx the parse tree
 	 */
-	void exitValueAccessorCall(YParser.ValueAccessorCallContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code InitValueArrayLiteral}
-	 * labeled alternative in {@link YParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterInitValueArrayLiteral(YParser.InitValueArrayLiteralContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code InitValueArrayLiteral}
-	 * labeled alternative in {@link YParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitInitValueArrayLiteral(YParser.InitValueArrayLiteralContext ctx);
+	void exitValReadCall(YParser.ValReadCallContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code BoolTrue}
 	 * labeled alternative in {@link YParser#boolean_values}.
@@ -1085,42 +1121,6 @@ public interface YParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExpressionList(YParser.ExpressionListContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code AccessorPropertyChain}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 */
-	void enterAccessorPropertyChain(YParser.AccessorPropertyChainContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code AccessorPropertyChain}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 */
-	void exitAccessorPropertyChain(YParser.AccessorPropertyChainContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code AccessorArrayChain}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 */
-	void enterAccessorArrayChain(YParser.AccessorArrayChainContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code AccessorArrayChain}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 */
-	void exitAccessorArrayChain(YParser.AccessorArrayChainContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code AccessorBase}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 */
-	void enterAccessorBase(YParser.AccessorBaseContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code AccessorBase}
-	 * labeled alternative in {@link YParser#accessor}.
-	 * @param ctx the parse tree
-	 */
-	void exitAccessorBase(YParser.AccessorBaseContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link YParser#skip_lines}.
 	 * @param ctx the parse tree

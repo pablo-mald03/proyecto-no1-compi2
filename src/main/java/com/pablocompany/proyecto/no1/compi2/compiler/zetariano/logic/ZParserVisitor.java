@@ -87,13 +87,6 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatementConsoleAction(ZParser.StatementConsoleActionContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code StatementFunctionCall}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatementFunctionCall(ZParser.StatementFunctionCallContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code StatementLoopControl}
 	 * labeled alternative in {@link ZParser#statement}.
 	 * @param ctx the parse tree
@@ -450,26 +443,12 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDecPrefixOperation(ZParser.DecPrefixOperationContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code NestedObjectVariable}
+	 * Visit a parse tree produced by the {@code NestedVariable}
 	 * labeled alternative in {@link ZParser#nest_variable}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitNestedObjectVariable(ZParser.NestedObjectVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code NestedArrayVariable}
-	 * labeled alternative in {@link ZParser#nest_variable}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNestedArrayVariable(ZParser.NestedArrayVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code NestedSingleVariable}
-	 * labeled alternative in {@link ZParser#nest_variable}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNestedSingleVariable(ZParser.NestedSingleVariableContext ctx);
+	T visitNestedVariable(ZParser.NestedVariableContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ObjectMethodChain}
 	 * labeled alternative in {@link ZParser#object_values}.
@@ -485,27 +464,6 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitObjectArrayAccessChain(ZParser.ObjectArrayAccessChainContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ObjectBaseProperty}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitObjectBaseProperty(ZParser.ObjectBasePropertyContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ObjectBaseArrayProperty}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitObjectBaseArrayProperty(ZParser.ObjectBaseArrayPropertyContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ObjectBaseMethodCall}
-	 * labeled alternative in {@link ZParser#object_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitObjectBaseMethodCall(ZParser.ObjectBaseMethodCallContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code ObjectPropertyChain}
 	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
@@ -513,19 +471,19 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitObjectPropertyChain(ZParser.ObjectPropertyChainContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ArrayCall}
-	 * labeled alternative in {@link ZParser#array_call}.
+	 * Visit a parse tree produced by the {@code BaseFunctionCall}
+	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitArrayCall(ZParser.ArrayCallContext ctx);
+	T visitBaseFunctionCall(ZParser.BaseFunctionCallContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code FunctionCalling}
-	 * labeled alternative in {@link ZParser#function_call}.
+	 * Visit a parse tree produced by the {@code BaseIdentifier}
+	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFunctionCalling(ZParser.FunctionCallingContext ctx);
+	T visitBaseIdentifier(ZParser.BaseIdentifierContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ArgumentsList}
 	 * labeled alternative in {@link ZParser#arguments_list}.
@@ -737,20 +695,6 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValObjectAccess(ZParser.ValObjectAccessContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ValArrayCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitValArrayCall(ZParser.ValArrayCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ValFunctionCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitValFunctionCall(ZParser.ValFunctionCallContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code ValArrayLiteral}
 	 * labeled alternative in {@link ZParser#normal_values}.
 	 * @param ctx the parse tree
@@ -764,13 +708,6 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitValReadCall(ZParser.ValReadCallContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ValIdCall}
-	 * labeled alternative in {@link ZParser#normal_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitValIdCall(ZParser.ValIdCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code BoolTrue}
 	 * labeled alternative in {@link ZParser#boolean_values}.
