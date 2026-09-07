@@ -334,8 +334,7 @@ public class FileTreePanel extends JPanel {
 
     private DefaultMutableTreeNode findNodeByPath(DefaultMutableTreeNode node, String path) {
         Object userObj = node.getUserObject();
-        if (userObj instanceof FileNode) {
-            FileNode fileNode = (FileNode) userObj;
+        if (userObj instanceof FileNode fileNode) {
             if (path.equals(fileNode.getFilePath())) {
                 return node;
             }

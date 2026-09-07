@@ -18,6 +18,9 @@ public class TranslatorErrorService {
         message = message.replace("mismatched", "Inaceptable,");
         message = message.replace("at", "antes de");
         message = message.replace("missing", "Falto colocar");
+        message = message.replace("no", "No");
+        message = message.replace("alternantes", "alternativa");
+        message = message.replace("deive", "de codigo");
 
         return message;
     }

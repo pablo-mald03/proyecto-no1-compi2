@@ -20,11 +20,11 @@ import java.util.List;
 @Data
 public class EditorContext {
 
+    /*File properties*/
     private String filePath;
-
     private String fileName;
-
-    private String graphvizCode;
+    private String fileExtension;
+    private boolean isDirectory;
 
     private String sourceCode;
 

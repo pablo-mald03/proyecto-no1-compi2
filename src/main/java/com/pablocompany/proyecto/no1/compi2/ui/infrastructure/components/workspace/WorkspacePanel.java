@@ -306,6 +306,9 @@ public class WorkspacePanel extends JPanel {
 
         EditorContext context = getContextForFile(filePath);
         context.setSourceCode(content);
+        context.setFileName(fileName);
+        context.setFilePath(filePath);
+        context.setFileExtension(extension);
 
         // Get the appropriate parser for this extension
         ParserAnalyzer parser = ParserFactory.getParser(extension);
