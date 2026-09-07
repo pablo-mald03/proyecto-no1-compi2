@@ -20,9 +20,9 @@ public class ParserFactory {
         }
 
         return switch (extension.toLowerCase()) {
-            case ".z" -> new YParserAnalyzer();
-            case ".pig" -> new ZettaradianParserAnalyzer();
-            case ".y" -> new PigLatinParserAnalyzer();
+            case ".y" -> new YParserAnalyzer();
+            case ".z" -> new ZettaradianParserAnalyzer();
+            case ".pig" -> new PigLatinParserAnalyzer();
             default -> null;
         };
     }

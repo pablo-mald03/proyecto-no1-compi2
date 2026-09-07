@@ -90,7 +90,7 @@ public class ErrorsTable extends JTable {
             public Component getTableCellRendererComponent(JTable t, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, column);
 
-                if (column == 1 || column == 2 || column == 3) {
+                if (column == 1 || column == 2 || column == 3 || column == 4) {
                     setHorizontalAlignment(SwingConstants.CENTER);
                     setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
                 } else {
@@ -134,7 +134,7 @@ public class ErrorsTable extends JTable {
 
         getColumnModel().getColumn(0).setPreferredWidth(120);
 
-        getColumnModel().getColumn(1).setPreferredWidth(120);
+        getColumnModel().getColumn(1).setPreferredWidth(100);
 
         getColumnModel().getColumn(2).setPreferredWidth(120);
 
@@ -144,7 +144,7 @@ public class ErrorsTable extends JTable {
         getColumnModel().getColumn(4).setPreferredWidth(90);
         getColumnModel().getColumn(4).setMaxWidth(110);
 
-        getColumnModel().getColumn(5).setPreferredWidth(100);
+        getColumnModel().getColumn(5).setPreferredWidth(120);
         getColumnModel().getColumn(5).setMaxWidth(120);
 
         getColumnModel().getColumn(6).setPreferredWidth(350);

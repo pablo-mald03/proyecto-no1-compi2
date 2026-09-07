@@ -20,6 +20,10 @@ import java.util.List;
 @Data
 public class EditorContext {
 
+    private String filePath;
+
+    private String fileName;
+
     private String graphvizCode;
 
     private String sourceCode;
@@ -51,6 +55,8 @@ public class EditorContext {
 
     public EditorContext() {
         this.tokens = new ArrayList<>();
+        this.filePath = "";
+        this.fileName = "";
         this.compiledCode = "";
         this.isParsed = false;
         this.isCompiled = false;
