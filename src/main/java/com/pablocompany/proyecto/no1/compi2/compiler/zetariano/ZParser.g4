@@ -57,6 +57,7 @@ statement
     | array_redefined_ussage            # StatementArrayAssignment
     | variable_ussage                   # StatementVariableAssignment
     | variable_declaration              # StatementVariableDeclaration
+    | object_values DOT_COMMA           # StatementObjectPropertyCalling
     ;
 
 /*------ RETURN STATEMENT ------*/
@@ -220,6 +221,7 @@ object_values
     | ID DOT ID INIT_PARENT arguments_list? FINAL_PARENT                    # ObjectBaseMethodCall
     | ID INIT_BRACKET expression FINAL_BRACKET DOT ID                       # ObjectBaseArrayProperty
     ;
+
 
 /*--------****--- MULTI-DIMENSIONAL OR NORMAL ARRAY CALLS ---****--------*/
 array_call

@@ -5,7 +5,7 @@ options {
 }
 
 program
-    : body* EOF # ProgramRoot
+    : body* EOF
     ;
 
 /*===*****========*****===== BODY SECTION ===*****==========*****===*/

@@ -11,12 +11,11 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by the {@code ProgramRoot}
-	 * labeled alternative in {@link PigLatinParser#program}.
+	 * Visit a parse tree produced by {@link PigLatinParser#program}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitProgramRoot(PigLatinParser.ProgramRootContext ctx);
+	T visitProgram(PigLatinParser.ProgramContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link PigLatinParser#body}.
 	 * @param ctx the parse tree

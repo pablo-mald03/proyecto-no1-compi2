@@ -17,13 +17,13 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterProgramRoot(PigLatinParser.ProgramRootContext ctx) { }
+	@Override public void enterProgram(PigLatinParser.ProgramContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitProgramRoot(PigLatinParser.ProgramRootContext ctx) { }
+	@Override public void exitProgram(PigLatinParser.ProgramContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

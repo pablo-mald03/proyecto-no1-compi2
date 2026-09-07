@@ -8,17 +8,15 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface PigLatinParserListener extends ParseTreeListener {
 	/**
-	 * Enter a parse tree produced by the {@code ProgramRoot}
-	 * labeled alternative in {@link PigLatinParser#program}.
+	 * Enter a parse tree produced by {@link PigLatinParser#program}.
 	 * @param ctx the parse tree
 	 */
-	void enterProgramRoot(PigLatinParser.ProgramRootContext ctx);
+	void enterProgram(PigLatinParser.ProgramContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code ProgramRoot}
-	 * labeled alternative in {@link PigLatinParser#program}.
+	 * Exit a parse tree produced by {@link PigLatinParser#program}.
 	 * @param ctx the parse tree
 	 */
-	void exitProgramRoot(PigLatinParser.ProgramRootContext ctx);
+	void exitProgram(PigLatinParser.ProgramContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link PigLatinParser#body}.
 	 * @param ctx the parse tree

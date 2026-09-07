@@ -147,18 +147,6 @@ public class PigLatinParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ProgramContext extends ParserRuleContext {
-		public ProgramContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_program; }
-	 
-		public ProgramContext() { }
-		public void copyFrom(ProgramContext ctx) {
-			super.copyFrom(ctx);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
-	public static class ProgramRootContext extends ProgramContext {
 		public TerminalNode EOF() { return getToken(PigLatinParser.EOF, 0); }
 		public List<BodyContext> body() {
 			return getRuleContexts(BodyContext.class);
@@ -166,18 +154,21 @@ public class PigLatinParser extends Parser {
 		public BodyContext body(int i) {
 			return getRuleContext(BodyContext.class,i);
 		}
-		public ProgramRootContext(ProgramContext ctx) { copyFrom(ctx); }
+		public ProgramContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_program; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof PigLatinParserListener ) ((PigLatinParserListener)listener).enterProgramRoot(this);
+			if ( listener instanceof PigLatinParserListener ) ((PigLatinParserListener)listener).enterProgram(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof PigLatinParserListener ) ((PigLatinParserListener)listener).exitProgramRoot(this);
+			if ( listener instanceof PigLatinParserListener ) ((PigLatinParserListener)listener).exitProgram(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof PigLatinParserVisitor ) return ((PigLatinParserVisitor<? extends T>)visitor).visitProgramRoot(this);
+			if ( visitor instanceof PigLatinParserVisitor ) return ((PigLatinParserVisitor<? extends T>)visitor).visitProgram(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -187,7 +178,6 @@ public class PigLatinParser extends Parser {
 		enterRule(_localctx, 0, RULE_program);
 		int _la;
 		try {
-			_localctx = new ProgramRootContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(109);

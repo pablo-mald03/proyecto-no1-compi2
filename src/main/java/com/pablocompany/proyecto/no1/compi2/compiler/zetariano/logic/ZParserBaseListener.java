@@ -257,6 +257,18 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterStatementObjectPropertyCalling(ZParser.StatementObjectPropertyCallingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitStatementObjectPropertyCalling(ZParser.StatementObjectPropertyCallingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterReturnStatement(ZParser.ReturnStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
