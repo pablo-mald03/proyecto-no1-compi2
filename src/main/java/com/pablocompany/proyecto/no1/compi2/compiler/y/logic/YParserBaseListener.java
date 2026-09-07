@@ -737,6 +737,18 @@ public class YParserBaseListener implements YParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterBaseFunctionCall(YParser.BaseFunctionCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBaseFunctionCall(YParser.BaseFunctionCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterBaseIdentifier(YParser.BaseIdentifierContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -744,6 +756,18 @@ public class YParserBaseListener implements YParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitBaseIdentifier(YParser.BaseIdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArgumentsList(YParser.ArgumentsListContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArgumentsList(YParser.ArgumentsListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

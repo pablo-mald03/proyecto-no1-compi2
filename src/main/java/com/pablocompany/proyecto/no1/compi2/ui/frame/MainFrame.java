@@ -89,6 +89,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         // ==========================
         // Final Setup
         // ==========================
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setVisible(true);
 
@@ -231,6 +232,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         if (managementScreen != null) {
             WorkspacePanel workspace = managementScreen.getWorkspacePanel();
             workspace.saveAllFiles();
+            this.clearLogs();
             boolean success = workspace.compileAllFiles();
             if (success) {
                 logSuccess("Compilacion completada");
@@ -284,12 +286,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         );
     }
 
-    /**
-     * Load project structure from directory
-     */
-    private void loadProjectFromDirectory(File projectDir) {
-        // TODO: Implement loading of project structure
-    }
 
     /**
      * Initialize the screens
@@ -313,7 +309,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     /**
-     * Setup the root layer with all components
+     * Set up the root layer with all components
      */
     private void setupRootLayer() {
         rootPanel = new RootLayer(
@@ -351,6 +347,15 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     public void logInfo(String message) {
         if (managementScreen != null) {
             managementScreen.getBottomPanel().getConsole().appendInfo(message);
+        } else {
+            System.out.println("[INFO] " + message);
+        }
+    }
+
+    @Override
+    public void logWarning(String message) {
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().getConsole().appendWarn(message);
         } else {
             System.out.println("[INFO] " + message);
         }

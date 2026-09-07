@@ -726,6 +726,18 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitObjectPropertyChain(YParser.ObjectPropertyChainContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code BaseFunctionCall}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterBaseFunctionCall(YParser.BaseFunctionCallContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BaseFunctionCall}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitBaseFunctionCall(YParser.BaseFunctionCallContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code BaseIdentifier}
 	 * labeled alternative in {@link YParser#object_values}.
 	 * @param ctx the parse tree
@@ -737,6 +749,18 @@ public interface YParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitBaseIdentifier(YParser.BaseIdentifierContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ArgumentsList}
+	 * labeled alternative in {@link YParser#arguments_list}.
+	 * @param ctx the parse tree
+	 */
+	void enterArgumentsList(YParser.ArgumentsListContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ArgumentsList}
+	 * labeled alternative in {@link YParser#arguments_list}.
+	 * @param ctx the parse tree
+	 */
+	void exitArgumentsList(YParser.ArgumentsListContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ArrayLiteralValue}
 	 * labeled alternative in {@link YParser#array_literal}.

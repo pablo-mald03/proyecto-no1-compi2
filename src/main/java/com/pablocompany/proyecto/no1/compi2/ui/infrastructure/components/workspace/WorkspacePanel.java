@@ -78,7 +78,7 @@ public class WorkspacePanel extends JPanel {
         tabbedPane.setEnabledAt(0, false);
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileTreePanel, tabbedPane);
-        splitPane.setDividerLocation(250);
+        splitPane.setDividerLocation(290);
         splitPane.setDividerSize(4);
         splitPane.setBorder(BorderFactory.createEmptyBorder());
         splitPane.setBackground(Theme.BACKGROUND_DARK.getColorSet());
@@ -167,13 +167,37 @@ public class WorkspacePanel extends JPanel {
         compiledOutput = "";
         isCompiled = false;
 
+        notifier.logWarning("Iniciando proceso de compilacion...");
+
+        notifier.logInfo("Analisis sintactico en curso...");
+
+        //SYNTACTIC PHASE
+
         this.executeParsingPhase();
 
-        boolean semanticErrors = this.verifyErrors("Error de compilacion: se encontraron: ");
+        boolean syntacticErrors = this.verifyErrors("Error de compilacion: se encontraron: ");
 
-        if (semanticErrors) {
+        if (syntacticErrors) {
             return false;
         }
+        notifier.logSuccess("Analisis sintactico completado");
+
+        //AST BUILDING PHASE
+
+        //VERIFY STEPS
+
+        notifier.logWarning("Verificando importacion de paquetes...");
+
+
+        notifier.logInfo("Analisis semantico en curso...");
+
+        //SEMANTIC PHASE
+
+        notifier.logSuccess("Analisis semantico completado");
+
+
+        notifier.logInfo("Generacion de codigo 3D en curso...");
+
 
         String finalCompiledCode =
                 "#include <stdio.h>\n\n" +
@@ -185,6 +209,8 @@ public class WorkspacePanel extends JPanel {
                         "    return 0;\n" +
                         "}";
 
+
+        notifier.logSuccess("Generacion de codigo 3D completado");
 
         if (!finalCompiledCode.isEmpty()) {
             this.compiledOutput = finalCompiledCode;
@@ -257,10 +283,10 @@ public class WorkspacePanel extends JPanel {
 
         if (!allErrors.isEmpty()) {
             notifier.logError(message + allErrors.size() + " errores");
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     /**

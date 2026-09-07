@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.errors;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.TranslatorErrorService;
 import lombok.Getter;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
@@ -44,8 +45,10 @@ public class YErrorListener extends BaseErrorListener {
             lexeme = offendingSymbol.toString();
         }
 
+        String message = TranslatorErrorService.translateError(msg);
+
         CompilerError error = new CompilerError(lexeme, line, charPositionInLine,
-                errorType, msg, filePath, fileName);
+                errorType, message, filePath, fileName);
 
         errors.add(error);
     }

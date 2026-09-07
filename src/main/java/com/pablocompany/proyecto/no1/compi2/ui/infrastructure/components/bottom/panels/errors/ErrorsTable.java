@@ -16,10 +16,9 @@ import java.awt.*;
 import java.util.List;
 
 /**
- *
+ * This class is the principal Table to show the errors
  * @author pablo03
  */
-//This class is the principal Table to sho the errors 
 public class ErrorsTable extends JTable {
 
     private final DefaultTableModel tableModel;
@@ -41,8 +40,14 @@ public class ErrorsTable extends JTable {
         setupRenderer();
 
         setupColumnWidths();
+
+        setRowHeight(30);
     }
 
+    /**
+     * This method set up the desing of the table
+     *
+     */
     private void setupDesign() {
         setBackground(Theme.SIDEBAR_DARKT.getColorSet());
         setForeground(Theme.FOREGROUND_DARK.getColorSet());
@@ -59,7 +64,9 @@ public class ErrorsTable extends JTable {
         setGridColor(Theme.BORDER_DARK.getColorSet());
     }
 
-    //Method who setup the header table
+    /**
+     * Method who set up the headers of the table
+     */
     private void setupHeader() {
         JTableHeader header = getTableHeader();
         header.setBackground(Theme.BACKGROUND_DARK.getColorSet());
@@ -83,20 +90,26 @@ public class ErrorsTable extends JTable {
         });
     }
 
-    //Render the columns
+    /**
+     * Render the columns method
+     *
+     */
     private void setupRenderer() {
         DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, column);
 
+                // Center alignment for specific columns
                 if (column == 1 || column == 2 || column == 3 || column == 4) {
                     setHorizontalAlignment(SwingConstants.CENTER);
-                    setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
+                    setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
                 } else {
                     setHorizontalAlignment(SwingConstants.LEFT);
-                    setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+                    setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
                 }
+
+                setVerticalAlignment(SwingConstants.CENTER);
 
                 if (!isSelected) {
                     switch (column) {
@@ -117,6 +130,15 @@ public class ErrorsTable extends JTable {
                             c.setForeground(Theme.FOREGROUND_DARK.getColorSet());
                     }
                 }
+
+                if (column == 6 && value instanceof String) {
+                    String text = (String) value;
+                    if (text.length() > 50) {
+                        setText("<html><body style='width: " + (getColumnModel().getColumn(column).getWidth() - 30) + "px; text-align: left;'>"
+                                + text.replaceAll("\n", "<br>") + "</body></html>");
+                    }
+                }
+
                 return c;
             }
         };
@@ -148,9 +170,42 @@ public class ErrorsTable extends JTable {
         getColumnModel().getColumn(5).setMaxWidth(120);
 
         getColumnModel().getColumn(6).setPreferredWidth(350);
+        // Allow description column to grow
+        getColumnModel().getColumn(6).setMinWidth(200);
     }
 
-    //Method to fill the table with the errors
+    /**
+     * Calculate and set row heights based on content
+     */
+    private void adjustRowHeights() {
+        // Clear any custom row heights
+        for (int row = 0; row < getRowCount(); row++) {
+            int rowHeight = getRowHeight();
+
+            for (int column = 0; column < getColumnCount(); column++) {
+                Component comp = prepareRenderer(getCellRenderer(row, column), row, column);
+                int compHeight = comp.getPreferredSize().height;
+
+                // Add padding
+                compHeight += 10;
+
+                if (compHeight > rowHeight) {
+                    rowHeight = compHeight;
+                }
+            }
+
+            // Limit maximum row height to prevent extreme sizes
+            if (rowHeight > 150) {
+                rowHeight = 150;
+            }
+
+            setRowHeight(row, Math.max(getRowHeight(), rowHeight));
+        }
+    }
+
+    /**
+     * Method to fill the table with the errors
+     */
     public void loadErrors(List<CompilerError> errors) {
 
         if ((errors == null || errors.isEmpty()) && tableModel.getRowCount() == 0) {
@@ -174,10 +229,28 @@ public class ErrorsTable extends JTable {
                     error.getDescription()
             });
         }
+
+        adjustRowHeights();
     }
 
-    //Method to clear the table
+    /**
+     * Method to clear the table
+     */
     public void clear() {
         tableModel.setRowCount(0);
+        // Reset row heights
+        setRowHeight(30);
+    }
+
+    /**
+     * Override to recalculate row heights when columns are resized
+     */
+    @Override
+    public void doLayout() {
+        super.doLayout();
+        // Only recalculate if there are rows
+        if (getRowCount() > 0) {
+            adjustRowHeights();
+        }
     }
 }

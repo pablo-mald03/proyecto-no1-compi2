@@ -196,7 +196,14 @@ nest_variable
 object_values
     : object_values DOT ID                                                  # ObjectPropertyChain
     | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
+    | ID INIT_PARENT arguments_list? FINAL_PARENT                           # BaseFunctionCall
     | ID                                                                    # BaseIdentifier
+    ;
+
+/*--------****--- ARGUMENTS FOR FUNCTIONS LIST---****--------*/
+
+arguments_list
+    : expression (COMMA expression)*            #ArgumentsList
     ;
 
 /*--------****--- OPERATIONS WITH ARRAY VALUES---****--------*/

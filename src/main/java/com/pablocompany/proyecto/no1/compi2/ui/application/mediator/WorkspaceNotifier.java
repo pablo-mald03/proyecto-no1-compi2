@@ -22,6 +22,8 @@ public interface WorkspaceNotifier {
     /*SECTION OF LOGS*/
     void logInfo(String message);
 
+    void logWarning(String message);
+
     void logSuccess(String message);
 
     void logError(String message);

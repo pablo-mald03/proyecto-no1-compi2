@@ -430,12 +430,26 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitObjectPropertyChain(YParser.ObjectPropertyChainContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code BaseFunctionCall}
+	 * labeled alternative in {@link YParser#object_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBaseFunctionCall(YParser.BaseFunctionCallContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code BaseIdentifier}
 	 * labeled alternative in {@link YParser#object_values}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitBaseIdentifier(YParser.BaseIdentifierContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ArgumentsList}
+	 * labeled alternative in {@link YParser#arguments_list}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArgumentsList(YParser.ArgumentsListContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ArrayLiteralValue}
 	 * labeled alternative in {@link YParser#array_literal}.

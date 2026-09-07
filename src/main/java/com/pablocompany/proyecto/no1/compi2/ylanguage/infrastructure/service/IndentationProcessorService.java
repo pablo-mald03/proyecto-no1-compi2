@@ -1,6 +1,8 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.service;
 
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
@@ -23,7 +25,7 @@ public class IndentationProcessorService {
     /**
      * Processes raw lexer tokens to inject virtual INDENT and DEDENT tokens based in line indentation.
      */
-    public List<Token> processTokens(List<Token> rawTokens) {
+    public List<Token> processTokens(List<Token> rawTokens, List<CompilerError> errorList) {
         List<Token> result = new ArrayList<>();
         Stack<Integer> indentStack = new Stack<>();
         indentStack.push(0); // Base indentation level (column 0)
@@ -71,8 +73,9 @@ public class IndentationProcessorService {
                     }
                     // Validate indentation alignment
                     if (currentColumn != indentStack.peek()) {
-                        throw new RuntimeException("Error de identacion en la linea: " + token.getLine() +
-                                ". Se esperaba una identacion al mismo nivel del ambito abierto.");
+                        errorList.add(new CompilerError("Identacion", token.getLine(), currentColumn + 1, ErrorType.SYNTACTIC
+                                , "", "", "Error de identacion en la linea: " + token.getLine() +
+                                ". Se esperaba identacion al mismo nivel del ambito abierto."));
                     }
                 }
                 isStartOfLine = false;

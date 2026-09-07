@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsingstep.ParserAnalyzer;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinLexer;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinParser;
@@ -24,21 +25,35 @@ public class PigLatinParserAnalyzer implements ParserAnalyzer {
             return;
         }
 
-        PigLatinLexer lexer = new PigLatinLexer(CharStreams.fromString(context.getSourceCode()));
+        context.clearParsingErrors();
+
+        String filePath = context.getFilePath();
+        String fileName = context.getFileName();
+
+        PigLatinLexer lexer = new PigLatinLexer(CharStreams.fromString(source));
+        lexer.removeErrorListeners();
+        PigLatinErrorListener lexerListener = new PigLatinErrorListener(ErrorType.LEXIC, filePath, fileName);
+        lexer.addErrorListener(lexerListener);
+
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
 
         context.clearParsingErrors();
 
         PigLatinParser parser = new PigLatinParser(tokens);
+        parser.removeErrorListeners();
+        PigLatinErrorListener parserListener = new PigLatinErrorListener(ErrorType.SYNTACTIC, filePath, fileName);
+        parser.addErrorListener(parserListener);
 
         ParseTree yParseTree = parser.program();
 
-        // Update context execution state
+        //Update context execution state with collected CompilerError objects
         context.setParseTree(yParseTree);
-        /*
-        context.setParserErrors(errors);*/
-        context.setParsed(true);
+        context.setLexicalErrors(lexerListener.getErrors());
+        context.setParserErrors(parserListener.getErrors());
+
+        boolean hasErrors = lexerListener.hasErrors() || parserListener.hasErrors();
+        context.setParsed(!hasErrors);
     }
 
     /**
