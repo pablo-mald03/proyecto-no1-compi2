@@ -12,44 +12,44 @@ program
 
 /*---*******---- STRUCTURES PRODUCTIONS ----*******---*/
 structures_region
-    : STRUCTURES_REGION NEWLINE+ struct_declaration*
+    : STRUCTURES_REGION NEWLINE+ struct_declaration*            #StructRegionDeclaration
     ;
 
 /*** STRUCT DECLARATION ****/
 struct_declaration
-    : STRUCT ID TWO_POINTS NEWLINE INDENT struct_field* DEDENT skip_lines?
+    : STRUCT ID TWO_POINTS NEWLINE INDENT struct_field* DEDENT skip_lines?      #StructDeclaration
     ;
 
 /*** STRUCT FIELDS ****/
 struct_field
-    : type ID NEWLINE+
-    | type ID INIT_BRACKET INT FINAL_BRACKET NEWLINE+
+    : type ID NEWLINE+                                              #StructNormalProperty
+    | type ID INIT_BRACKET expression FINAL_BRACKET NEWLINE+        #StructArrayProperty
     ;
 
 
 /*---*******---- FUNCTIONS PRODUCTIONS ----*******---*/
 
 functions_region
-    : FUNCTION_REGION NEWLINE+ function_declaration*
+    : FUNCTION_REGION NEWLINE+ function_declaration*        #FunctionSection
     ;
 
 /*** FUNCION DECLARATION FIELDS ****/
 
 function_declaration
-    : DEFINE ID INIT_PARENT parameter_list? FINAL_PARENT (LAMBDA type)? TWO_POINTS NEWLINE INDENT statement* DEDENT skip_lines?
+    : DEFINE ID INIT_PARENT parameter_list? FINAL_PARENT (LAMBDA type)? TWO_POINTS NEWLINE INDENT statement* DEDENT skip_lines?     #FunctionDeclaration
     ;
 
 /*** PARAMETER FIELDS ****/
 parameter_list
-    : parameter (COMMA parameter)*
+    : parameter (COMMA parameter)*      #ParameterList
     ;
 
 /*** FUNCTION PARAMETER FIELDS ****/
 
 parameter
-    : type ID
-    | INIT_BRACKET FINAL_BRACKET type ID
-    | INIT_BRACE FINAL_BRACE ID ID
+    : type ID                                   #PrimitiveParameter
+    | INIT_BRACKET FINAL_BRACKET type ID        #ArrayParameter
+    | INIT_BRACE FINAL_BRACE ID ID              #StructParameter
     ;
 
 
@@ -57,71 +57,79 @@ parameter
 
 /*** VARIABLE STATEMENTS ****/
 statement
-    : variable_declaration NEWLINE+
-    | assignment NEWLINE+
-    | RETURN expression NEWLINE+
-    | expression NEWLINE+
+    : variable_declaration NEWLINE+         #VariableDeclarationStatement
+    | assignment NEWLINE+                   #AssignmentVariableStatement
+    | RETURN expression? NEWLINE+           #ReturnStatement
     ;
 
 /*** VARIABLE DECLARATIONS ****/
 variable_declaration
-    : type ID
-    | type ID EQUAL expression
+    : type ID                       #NotDefiniedVariable
+    | type ID EQUAL expression      #DefiniedVariable
     ;
 
 
 /*** ASSIGNMENT DECLARATIONS ****/
 assignment
-    : accessor EQUAL expression
+    : accessor EQUAL expression         #AssingmentStatement
     ;
 
 
 /*** TYPES PRODUCTIONS ****/
 type
-    : INTEGER
-    | STRING
-    | FLOAT
-    | CHARACTER
-    | BOOLEAN
-    | ID
+    : INTEGER           #IntValue
+    | STRING            #StringValue
+    | FLOAT             #FloatValue
+    | CHARACTER         #CharValue
+    | BOOLEAN           #BooleanValue
+    | ID                #CustomTypeValue
     ;
 
 
 /*** EXPRESSION PRODUCTIONS ****/
 expression
-    : INIT_BRACE expression_list FINAL_BRACE
-    | accessor
-    | INT
-    | DECIMAL
-    | CHAR
-    // ... más reglas de expresiones
+    : INIT_PARENT expression FINAL_PARENT                                           # ExpressionParents
+    | op=(NOT | MINUS) expression                                                   # ExpressionUnary
+    | expression op=(MULTIPLICATION | DIVIDE) expression                            # ExpressionMultDiv
+    | expression op=(PLUS | MINUS) expression                                       # ExpressionAddSub
+    | expression op=(LESS | GREATER | LESS_EQUALS | GREATER_EQUALS) expression      # ExpressionRelational
+    | expression op=(EQUALS | DIFERENCE) expression                                 # ExpressionEquality
+    | expression AND expression                                                     # ExpressionAnd
+    | expression OR expression                                                      # ExpressionOr
+    | normal_values                                                                 # ExpressionValue
     ;
 
 /*--------****--- PRINCIPAL VALUES DATA ---****--------*/
 normal_values
-    : STRING                    # ValueString
-    | CHAR                      # ValueChar
-    | DECIMAL                   # ValueDecimal
-    | INT                       # ValueInt
-    | boolean_values            # ValueBool
-    | array_call                # ValueArrayCall
-    | function_call             # ValueFunctionCall
-    | struct_values             # ValueStructNestValue
-    | struct_literal            # ValueStructPropertyLiteral
-    | array_initialization      # ValueArrayLiteral
-    | ID                        # ValueIdCall
+    : STRING                                        # ValueString
+    | CHAR                                          # ValueChar
+    | DECIMAL                                       # ValueDecimal
+    | INT                                           # ValueInt
+    | boolean_values                                # ValueBool
+    /*| array_call                                    # ValueArrayCall
+    | function_call                                 # ValueFunctionCall
+    | struct_values                                 # ValueStructNestValue
+    | struct_literal                                # ValueStructPropertyLiteral*/
+    | INIT_BRACE expression_list FINAL_BRACE        # InitValueArrayLiteral
+    | ID                                            # ValueIdCall
     ;
 
+/*** BOOLEAN VALUES ****/
+
+boolean_values
+    : TRUE     # BoolTrue
+    | FALSE    # BoolFalse
+    ;
 
 /*** EXPRESSION LIST ****/
 
 expression_list
-    : expression (COMMA expression)*
+    : expression (COMMA expression)*        #ExpressionList
     ;
 
 /*** ACCESSOR DECLARATIONS  (NESTED VALUES) ****/
 accessor
-    : ID (DOT ID)*
+    : ID (DOT ID)*              #AccessNested
     ;
 
 /*** NEW LINE PRODUCTION ****/
