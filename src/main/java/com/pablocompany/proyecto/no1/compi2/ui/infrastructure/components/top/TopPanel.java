@@ -29,6 +29,7 @@ public class TopPanel extends JPanel {
 
     private final JMenuBar menuBar;
     private final JToolBar toolBar;
+    private final JLabel mainClassLabel;
 
     public TopPanel(
             WorkspaceNotifier notifier,
@@ -54,6 +55,9 @@ public class TopPanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Theme.BORDER_LIGHT.getColorSet());
 
+        // Create main class label
+        mainClassLabel = createMainClassLabel();
+
         // Create menu bar
         menuBar = createMenuBar();
 
@@ -69,17 +73,33 @@ public class TopPanel extends JPanel {
     }
 
     /**
-     * Add components to toolbar - buttons aligned to the right
+     * Create the main class label
+     */
+    private JLabel createMainClassLabel() {
+        JLabel label = new JLabel("Main Class: No seleccionada");
+        label.setFont(new Font("Liberation Mono", Font.PLAIN, 12));
+        label.setForeground(Theme.FOREGROUND_LIGHT.getColorSet());
+        label.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+        label.setOpaque(true);
+        label.setBackground(Theme.STATUS_BAR_LIGHT.getColorSet());
+        return label;
+    }
+
+    /**
+     * Add components to toolbar - Main Class label left, buttons right
      */
     private void addToolbarComponents() {
-        // Add spacer to push buttons to the right
+        // Main class label on the left
+        toolBar.add(mainClassLabel);
+
+        // Spacer to push buttons to the right
         toolBar.add(Box.createHorizontalGlue());
 
         // ==========================================
         // BUTTONS WITH DIFFERENT COLORS - Aligned right
         // ==========================================
 
-        // Save button - Success/Green
+        // Save button
         toolBar.add(createToolbarButton(
                 "Guardar",
                 e -> onSave(),
@@ -87,10 +107,9 @@ public class TopPanel extends JPanel {
                 UIColors.ACCEPT_ACCENT_HOVER_BUTTON.getColorSet()
         ));
 
-        // Separator
         toolBar.addSeparator(new Dimension(8, 0));
 
-        // Compile button - Info/Blue
+        // Compile button
         toolBar.add(createToolbarButton(
                 "Compilar",
                 e -> onCompile(),
@@ -98,10 +117,9 @@ public class TopPanel extends JPanel {
                 new Color(54, 147, 241).brighter()
         ));
 
-        // Separator
         toolBar.addSeparator(new Dimension(8, 0));
 
-        // Execute button - Success/Green brighter
+        // Execute button
         toolBar.add(createToolbarButton(
                 "Ejecutar",
                 e -> onExecute(),
@@ -111,8 +129,20 @@ public class TopPanel extends JPanel {
     }
 
     /**
-     * Create the menu bar with all menus
+     * Update the main class label
      */
+    public void updateMainClass(String mainClassName) {
+        if (mainClassName == null || mainClassName.isEmpty()) {
+            mainClassLabel.setText("Main Class: No seleccionada");
+            mainClassLabel.setForeground(new Color(180, 100, 100));
+        } else {
+            mainClassLabel.setText("Main Class: " + mainClassName);
+            mainClassLabel.setForeground(Theme.FOREGROUND_LIGHT.getColorSet());
+        }
+        revalidate();
+        repaint();
+    }
+
     /**
      * Create the menu bar with all menus
      */

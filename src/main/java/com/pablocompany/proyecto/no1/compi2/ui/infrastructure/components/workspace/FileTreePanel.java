@@ -233,7 +233,9 @@ public class FileTreePanel extends JPanel {
         boolean isDirectory = selectedFileNode != null && selectedFileNode.isDirectory();
         boolean isFile = selectedFileNode != null && !selectedFileNode.isDirectory();
 
-        popupMenu.showPopup(fileTree, e, isRoot, isDirectory, isFile);
+        boolean isPigFile = isFile && selectedFileNode.getExtension().equals(".pig");
+
+        popupMenu.showPopup(fileTree, e, isRoot, isDirectory, isFile, isPigFile);
     }
 
     /**

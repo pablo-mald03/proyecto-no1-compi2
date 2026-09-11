@@ -49,6 +49,10 @@ public class WorkspacePanel extends JPanel {
     //Principal reference for the file Contexts
     private final Map<String, EditorContext> fileContexts;
 
+    // NEW: Main class reference
+    private String mainClassPath;
+    private FileNode mainClassNode;
+
     /**
      * Constructor with custom project name
      */
@@ -84,8 +88,58 @@ public class WorkspacePanel extends JPanel {
         splitPane.setBackground(Theme.BACKGROUND_DARK.getColorSet());
 
         add(splitPane, BorderLayout.CENTER);
+
+        this.mainClassPath = null;
+        this.mainClassNode = null;
     }
 
+    /**
+     * Set the selected file as Main Class
+     */
+    public void setSelectedAsMainClass() {
+        DefaultMutableTreeNode node = fileTreePanel.getSelectedNode();
+        if (node == null) {
+            return;
+        }
+
+        Object userObj = node.getUserObject();
+        if (!(userObj instanceof FileNode fileNode)) {
+            return;
+        }
+
+        if (fileNode.isDirectory() || !fileNode.getExtension().equals(".pig")) {
+            notifier.alertToast("Solo los archivos .pig pueden ser Main Class", true);
+            return;
+        }
+
+        this.mainClassPath = fileNode.getFilePath();
+        this.mainClassNode = fileNode;
+
+        notifier.notifyMainClassChanged(fileNode.getName());
+        notifier.logInfo("Main Class establecida: " + fileNode.getName());
+    }
+
+    /**
+     * Get the main class node
+     */
+    public FileNode getMainClass() {
+        return mainClassNode;
+    }
+
+    /**
+     * Check if a main class is selected
+     */
+    public boolean hasMainClass() {
+        return mainClassNode != null;
+    }
+
+    /**
+     * Clear the main class (when closing project)
+     */
+    public void clearMainClass() {
+        this.mainClassPath = null;
+        this.mainClassNode = null;
+    }
 
     /**
      * Get or create EditorContext for a file
@@ -163,11 +217,19 @@ public class WorkspacePanel extends JPanel {
      * Compile all files in the project (MOST IMPORTANT METHOD)
      */
     public boolean compileAllFiles() {
+
+        if (!hasMainClass()) {
+            notifier.alertToast("Debes seleccionar una Main Class antes de compilar", true);
+            notifier.logError("No hay Main Class seleccionada");
+            return false;
+        }
+
         this.clearAllCompilationData();
         compiledOutput = "";
         isCompiled = false;
 
         notifier.logWarning("Iniciando proceso de compilacion...");
+        notifier.logInfo("Main Class: " + mainClassNode.getName());
 
         notifier.logInfo("Analisis sintactico en curso...");
 

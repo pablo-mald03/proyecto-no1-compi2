@@ -8,13 +8,13 @@ import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.Compile
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
-import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ProgressCallback;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors.ErrorsPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationContainer;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.modals.ConfirmationManager;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.toast.ToastNotification;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileNode;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.WorkspacePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.layers.RootLayer;
@@ -231,8 +231,15 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     private void onCompile() {
         if (managementScreen != null) {
             WorkspacePanel workspace = managementScreen.getWorkspacePanel();
+
+            if (!workspace.hasMainClass()) {
+                alertToast("Debes seleccionar una Main Class antes de compilar", true);
+                return;
+            }
+
             workspace.saveAllFiles();
             this.clearLogs();
+
             boolean success = workspace.compileAllFiles();
             if (success) {
                 logSuccess("Compilacion completada");
@@ -278,7 +285,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
                 this::onOpenProject,
                 this::onCloseProject,
                 this::onSave,
-                this::onSaveAs,
                 this::onCompile,
                 this::onExecute,
                 this::onExit,
@@ -477,55 +483,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     @Override
-    public void notifyImportProject() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Importar proyecto desde ZIP");
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("ZIP files", "zip"));
-
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File zipFile = fileChooser.getSelectedFile();
-
-            JFileChooser dirChooser = new JFileChooser();
-            dirChooser.setDialogTitle("Seleccionar directorio de destino");
-            dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            dirChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-
-            int dirResult = dirChooser.showSaveDialog(this);
-            if (dirResult == JFileChooser.APPROVE_OPTION) {
-                File targetDir = dirChooser.getSelectedFile();
-
-                try {
-                    logInfo("Importando proyecto desde: " + zipFile.getName());
-
-                    projectImporterExporter.importFromZip(zipFile, targetDir,
-                            new ProgressCallback() {
-                                @Override
-                                public void onProgress(int current, int total, String fileName) {
-                                    if (current % 10 == 0 || current == total) {
-                                        logInfo("Progreso: " + current + "/" + total + " archivos");
-                                    }
-                                }
-
-                                @Override
-                                public void onComplete() {
-                                    logSuccess("Importación completada");
-                                }
-                            });
-
-                    onProjectOpened(targetDir);
-
-                } catch (IOException e) {
-                    logError("Error al importar el proyecto: " + e.getMessage());
-                    alertToast("Error al importar el proyecto: " + e.getMessage(), true);
-                }
-            }
-        }
-    }
-
-
-    @Override
     public void notifyDownloadCompiledCode() {
         if (managementScreen != null && currentProjectDir != null) {
             JFileChooser fileChooser = new JFileChooser();
@@ -571,21 +528,20 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         }
     }
 
-    /**
-     * Save all files
-     *
-     */
-    public void notifySaveAllFiles() {
+    @Override
+    public void notifyMainClassChanged(String mainClassName) {
         if (managementScreen != null) {
-            managementScreen.getWorkspacePanel().saveAllFiles();
-        } else {
-            alertToast("No hay ningún proyecto abierto", true);
+            managementScreen.getTopPanel().updateMainClass(mainClassName);
         }
     }
 
     @Override
-    public void notifyFileOpened(String filePath, String content, String extension) {
-
+    public String getMainClassName() {
+        if (managementScreen != null) {
+            FileNode mainClass = managementScreen.getWorkspacePanel().getMainClass();
+            return mainClass != null ? mainClass.getName() : null;
+        }
+        return null;
     }
 
 

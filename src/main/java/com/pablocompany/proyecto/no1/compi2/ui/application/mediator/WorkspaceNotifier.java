@@ -56,24 +56,18 @@ public interface WorkspaceNotifier {
     void notifyExecuteCompiledCode();
 
     /**
-     * Notify the action to import any project
-     */
-    void notifyImportProject();
-
-    /**
      * Save file notification
      */
     void notifySaveFile(String filePath, String content);
 
     /**
-     * Notify when a file is opened to update syntax highlighting
-     *
+     * Notify that the main class has changed
      */
-    void notifyFileOpened(String filePath, String content, String extension);
+    void notifyMainClassChanged(String mainClassName);
 
     /**
-     * Save all files
-     *
+     * Get the currently selected main class
      */
-    void notifySaveAllFiles();
+    String getMainClassName();
+
 }

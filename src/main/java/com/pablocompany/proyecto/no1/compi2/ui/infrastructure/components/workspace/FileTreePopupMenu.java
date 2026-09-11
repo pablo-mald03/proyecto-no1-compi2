@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.worksp
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +15,7 @@ import java.awt.event.MouseEvent;
  * @author pablo03
  */
 @Getter
+@Setter
 public class FileTreePopupMenu extends JPopupMenu {
 
     private final WorkspaceNotifier notifier;
@@ -27,11 +29,13 @@ public class FileTreePopupMenu extends JPopupMenu {
     private JMenuItem createYFileMenuItem;
     private JMenuItem createZFileMenuItem;
     private JMenuItem createPigFileMenuItem;
+    private JMenuItem setAsMainClassMenuItem;
 
     // Context information
     private boolean isRootSelected;
     private boolean isDirectorySelected;
     private boolean isFileSelected;
+    private boolean isPigFileSelected;
 
     public FileTreePopupMenu(WorkspaceNotifier notifier, WorkspacePanel workspacePanel) {
         this.notifier = notifier;
@@ -46,10 +50,13 @@ public class FileTreePopupMenu extends JPopupMenu {
         newFolderMenuItem = createMenuItem("New Folder", e -> workspacePanel.createNewFolder());
         renameMenuItem = createMenuItem("Rename (F2)", e -> workspacePanel.renameSelectedNode());
         deleteMenuItem = createMenuItem("Delete", e -> workspacePanel.deleteSelectedNode());
+        setAsMainClassMenuItem = createMenuItem("Establecer Main Class", e -> workspacePanel.setSelectedAsMainClass());
 
         // Add to popup
         add(newFileMenu);
         add(newFolderMenuItem);
+        addSeparator();
+        add(setAsMainClassMenuItem);
         addSeparator();
         add(renameMenuItem);
         add(deleteMenuItem);
@@ -107,10 +114,11 @@ public class FileTreePopupMenu extends JPopupMenu {
     /**
      * Update menu visibility based on selection context
      */
-    public void updateContext(boolean isRoot, boolean isDirectory, boolean isFile) {
+    public void updateContext(boolean isRoot, boolean isDirectory, boolean isFile, boolean isPigFile) {
         this.isRootSelected = isRoot;
         this.isDirectorySelected = isDirectory;
         this.isFileSelected = isFile;
+        this.isPigFileSelected = isPigFile;
 
         // Root and directories can create files and folders
         boolean canCreate = isRoot || isDirectory;
@@ -128,13 +136,17 @@ public class FileTreePopupMenu extends JPopupMenu {
             newFileMenu.setEnabled(false);
             newFolderMenuItem.setEnabled(false);
         }
+
+        // Set as Main Class only for .pig files
+        setAsMainClassMenuItem.setEnabled(isPigFile);
     }
 
     /**
      * Show the popup with updated context
      */
-    public void showPopup(JTree tree, MouseEvent e, boolean isRoot, boolean isDirectory, boolean isFile) {
-        updateContext(isRoot, isDirectory, isFile);
+    public void showPopup(JTree tree, MouseEvent e, boolean isRoot, boolean isDirectory,
+                          boolean isFile, boolean isPigFile) {
+        updateContext(isRoot, isDirectory, isFile, isPigFile);
         show(tree, e.getX(), e.getY());
     }
 }
