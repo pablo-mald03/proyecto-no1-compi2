@@ -1,7 +1,8 @@
-package com.pablocompany.practica.no1.compi2.domain.wrappers;
+package com.pablocompany.proyecto.no1.compi2.common.domain.wrappers;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.types.TypeNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.types.enums.DataType;
+
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.TypeNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.enums.DataType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,19 +11,19 @@ import lombok.Setter;
 @Setter
 public class TypeWrapper {
 
-    private final TypeNode typeNode;
+    private final TypeNodePigLatin typeNode;
 
     private final String value;
 
     private final String fullExpression;
 
-    public TypeWrapper(TypeNode typeNode, String value) {
+    public TypeWrapper(TypeNodePigLatin typeNode, String value) {
         this.typeNode = typeNode;
         this.value = value;
         this.fullExpression = value;
     }
 
-    public TypeWrapper(TypeNode typeNode, String value, String fullExpression) {
+    public TypeWrapper(TypeNodePigLatin typeNode, String value, String fullExpression) {
         this.typeNode = typeNode;
         this.value = value;
         this.fullExpression = fullExpression;

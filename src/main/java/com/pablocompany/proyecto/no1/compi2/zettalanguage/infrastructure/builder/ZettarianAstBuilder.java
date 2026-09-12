@@ -2,18 +2,18 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.builde
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.compiler.zetariano.logic.ZParserBaseVisitor;
 
 /**
  * AST builder for the Z language
  */
-public class ZettarianAstBuilder extends ZParserBaseVisitor<AstNode> implements AstBuilder {
+public class ZettarianAstBuilder extends ZParserBaseVisitor<PigLatinAstNode> implements AstBuilder {
 
     private EditorContext context;
 
     @Override
-    public AstNode build(EditorContext context) {
+    public PigLatinAstNode build(EditorContext context) {
         this.context = context;
 
         if (context.getParseTree() == null) {

@@ -2,7 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.common.domain.parsing;
 
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 
 /**
  * Interface for AST builders
@@ -16,7 +16,7 @@ public interface AstBuilder {
      * @param context The EditorContext with the ANTLR parse tree
      * @return The root node of the custom AST, or null if building failed
      */
-    AstNode build(EditorContext context);
+    PigLatinAstNode build(EditorContext context);
 
     /**
      * Get the file extension this builder handles

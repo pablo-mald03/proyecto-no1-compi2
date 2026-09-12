@@ -4,7 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.AstBuilderFactory;
 import com.pablocompany.proyecto.no1.compi2.compiler.y.logic.YLexer;
 import com.pablocompany.proyecto.no1.compi2.compiler.y.logic.YParser;
@@ -87,8 +87,8 @@ public class YParserAnalyzer implements ParserAnalyzer {
 
         AstBuilder builder = AstBuilderFactory.getBuilder(".y");
         if (builder != null) {
-            AstNode ast = builder.build(context);
-            context.setAstNode(ast);
+            PigLatinAstNode ast = builder.build(context);
+            context.setPigLatinAstNode(ast);
         }
     }
 }
