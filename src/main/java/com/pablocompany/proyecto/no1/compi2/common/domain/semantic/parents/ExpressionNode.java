@@ -1,6 +1,7 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.parents;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.AstNode;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 
 //This class represents all the expression nodes like values
 public abstract class ExpressionNode extends AstNode {

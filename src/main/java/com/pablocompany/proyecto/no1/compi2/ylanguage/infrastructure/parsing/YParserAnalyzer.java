@@ -2,7 +2,10 @@ package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.parsing;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
-import com.pablocompany.proyecto.no1.compi2.common.domain.parsingstep.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
+import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.AstBuilderFactory;
 import com.pablocompany.proyecto.no1.compi2.compiler.y.logic.YLexer;
 import com.pablocompany.proyecto.no1.compi2.compiler.y.logic.YParser;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.errors.YErrorListener;
@@ -77,5 +80,15 @@ public class YParserAnalyzer implements ParserAnalyzer {
 
         boolean hasErrors = lexerListener.hasErrors() || parserListener.hasErrors();
         context.setParsed(!hasErrors);
+
+        if (hasErrors) {
+            return;
+        }
+
+        AstBuilder builder = AstBuilderFactory.getBuilder(".y");
+        if (builder != null) {
+            AstNode ast = builder.build(context);
+            context.setAstNode(ast);
+        }
     }
 }

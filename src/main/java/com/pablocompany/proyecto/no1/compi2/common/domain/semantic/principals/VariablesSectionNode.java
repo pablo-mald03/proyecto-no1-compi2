@@ -1,7 +1,8 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.principals;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.principals;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.AstNode;
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.Getter;
 
 import java.util.List;

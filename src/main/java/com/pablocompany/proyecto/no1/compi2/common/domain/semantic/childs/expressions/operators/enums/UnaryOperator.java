@@ -1,4 +1,4 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.operators.enums;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.operators.enums;
 
 //This enum represents the unary operators
 public enum UnaryOperator {

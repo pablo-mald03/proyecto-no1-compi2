@@ -1,8 +1,8 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.StatementNode;
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.StatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.Getter;
 
 @Getter

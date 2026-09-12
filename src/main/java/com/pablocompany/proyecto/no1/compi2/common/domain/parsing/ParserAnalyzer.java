@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.common.domain.parsingstep;
+package com.pablocompany.proyecto.no1.compi2.common.domain.parsing;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 

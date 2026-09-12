@@ -1,12 +1,11 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.functions;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.functions;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.AstNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.VariableDeclarationNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.StatementNode;
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.StatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.Getter;
 
-import javax.swing.plaf.nimbus.State;
 import java.util.List;
 
 //This is the principal procedure declaration node

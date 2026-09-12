@@ -1,9 +1,8 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic;
 
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 //This sclass is the principal of the family nodes of the AST
 @Getter

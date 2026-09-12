@@ -1,10 +1,11 @@
-package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure;
+package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.parsing;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
-import com.pablocompany.proyecto.no1.compi2.common.domain.parsingstep.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinLexer;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinParser;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.errors.PigLatinErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;

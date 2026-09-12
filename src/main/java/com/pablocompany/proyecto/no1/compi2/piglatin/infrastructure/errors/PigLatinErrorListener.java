@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure;
+package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.errors;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
@@ -17,14 +17,14 @@ import java.util.List;
  *
  */
 @Getter
-public class ZettaradianErrorListener extends BaseErrorListener {
+public class PigLatinErrorListener extends BaseErrorListener {
 
     private final List<CompilerError> errors = new ArrayList<>();
     private final ErrorType errorType;
     private final String filePath;
     private final String fileName;
 
-    public ZettaradianErrorListener(ErrorType errorType, String filePath, String fileName) {
+    public PigLatinErrorListener(ErrorType errorType, String filePath, String fileName) {
         this.errorType = errorType;
         this.filePath = filePath;
         this.fileName = fileName;

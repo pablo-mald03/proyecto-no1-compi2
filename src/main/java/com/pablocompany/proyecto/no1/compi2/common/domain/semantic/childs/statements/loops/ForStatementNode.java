@@ -1,9 +1,10 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.loops;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.loops;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.AstNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.ExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.StatementNode;
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.ExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.StatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.Getter;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 //This is the principal class to represents the for statement
 @Getter
 public class ForStatementNode extends StatementNode {
-    private final AstNode init; //Could be a variabledeclaration or assingment node
+    private final AstNode init; //Could be a variable declaration or assignment node
     private final ExpressionNode condition;
     private final AstNode update; //Could be an assigment or incrementable variable
     private final List<AstNode> body;

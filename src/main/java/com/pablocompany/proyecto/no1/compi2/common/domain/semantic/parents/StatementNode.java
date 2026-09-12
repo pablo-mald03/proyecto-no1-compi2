@@ -1,6 +1,7 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.parents;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.AstNode;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 
 //This is the principal representation for all the structure control, declaration and definitions
 public abstract class StatementNode extends AstNode {

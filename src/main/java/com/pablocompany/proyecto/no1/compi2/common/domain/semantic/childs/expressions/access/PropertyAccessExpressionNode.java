@@ -1,7 +1,7 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.access;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.access;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.ExpressionNode;
 import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.ExpressionNode;
 import lombok.Getter;
 
 //This class represents an access property (or nested values)

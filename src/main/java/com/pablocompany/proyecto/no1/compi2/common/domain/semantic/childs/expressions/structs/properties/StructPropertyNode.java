@@ -1,8 +1,9 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs.properties;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs.properties;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.AstNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.ExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.ExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.Getter;
 
 //This class represents a property of an struct

@@ -1,40 +1,40 @@
-package com.pablocompany.practica.no1.compi2.domain.visitors;
+package com.pablocompany.proyecto.no1.compi2.common.domain.visitors;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.ProgramNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.access.PropertyAccessExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.arrays.ArrayDeclarationNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.assignation.*;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs.StructInstanceNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs.declaration.StructAttributeNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.structs.properties.StructPropertyNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.types.TypeNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.values.ArrayCallExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.values.FunctionCallExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.values.IdentifierExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.values.LiteralExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.VariableDeclarationNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.breakpoints.BreakStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.breakpoints.ContinueStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.breakpoints.ReturnStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.conditionals.ElseBlockNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.conditionals.ElseIfNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.conditionals.IfStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.functions.FunctionDeclarationNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.functions.ParameterNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.functions.ProcedureDeclarationNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.iostreams.PrintStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.iostreams.ReadStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.loops.DoWhileStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.loops.ForStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.loops.WhileStatementNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.BodyNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.principals.MaiorSectionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.principals.MuneraSectionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.principals.VariablesSectionNode;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ProgramNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.access.PropertyAccessExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.arrays.ArrayDeclarationNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.assignation.*;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs.StructInstanceNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs.declaration.StructAttributeNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.structs.properties.StructPropertyNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.types.TypeNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.values.ArrayCallExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.values.FunctionCallExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.values.IdentifierExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.values.LiteralExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.VariableDeclarationNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.breakpoints.BreakStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.breakpoints.ContinueStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.breakpoints.ReturnStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.conditionals.ElseBlockNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.conditionals.ElseIfNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.conditionals.IfStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.functions.FunctionDeclarationNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.functions.ParameterNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.functions.ProcedureDeclarationNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.iostreams.PrintStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.iostreams.ReadStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.loops.DoWhileStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.loops.ForStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.loops.WhileStatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.BodyNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.principals.MaiorSectionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.principals.VariablesSectionNode;
 
 //This interface is the principal to generate the diferent compiler phases
 public interface AstVisitor<T> {
@@ -47,7 +47,6 @@ public interface AstVisitor<T> {
 
 
     //=======Principal sections
-    T visit(MuneraSectionNode node);
 
     T visit(MaiorSectionNode node);
 

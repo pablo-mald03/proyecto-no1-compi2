@@ -5,6 +5,7 @@
 package com.pablocompany.proyecto.no1.compi2.common.domain.contex;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import lombok.Data;
 import org.antlr.v4.runtime.Token;
@@ -43,6 +44,8 @@ public class EditorContext {
     private boolean isParsed;
 
     private boolean isCompiled;
+
+    private AstNode astNode;
 
  /*   private Environment globalEnvironment;
 

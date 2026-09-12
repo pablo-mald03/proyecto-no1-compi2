@@ -1,8 +1,9 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.functions;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.functions;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.AstNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.types.TypeNode;
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.types.TypeNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.Getter;
 
 //This is the principal parameters args node

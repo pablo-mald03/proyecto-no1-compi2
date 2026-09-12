@@ -1,8 +1,9 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.statements.breakpoints;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.statements.breakpoints;
 
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.ExpressionNode;
-import com.pablocompany.practica.no1.compi2.domain.semantic.parents.StatementNode;
-import com.pablocompany.practica.no1.compi2.domain.visitors.AstVisitor;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.ExpressionNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.parents.StatementNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.visitors.AstVisitor;
 import lombok.Getter;
 
 //This is the principal class to represents a return node

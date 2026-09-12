@@ -1,4 +1,4 @@
-package com.pablocompany.practica.no1.compi2.domain.semantic.childs.expressions.types.enums;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.childs.expressions.types.enums;
 
 //This enum is the principal variable types
 public enum DataType {
