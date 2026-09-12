@@ -4,16 +4,14 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.Bod
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
 
-import java.util.List;
-
 //This is the principal node that defines the program structure
 @Getter
 public class ProgramNodePigLatin extends PigLatinAstNode {
-    private final List<BodyNodePigLatin> bodies;
+    private final BodyNodePigLatin body;
 
-    public ProgramNodePigLatin(int line, int column, List<BodyNodePigLatin> bodies) {
+    public ProgramNodePigLatin(int line, int column, BodyNodePigLatin body) {
         super(line, column);
-        this.bodies = bodies;
+        this.body = body;
     }
 
     @Override

@@ -4,9 +4,13 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.ShortlyOperationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.arrays.ArrayDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.assignation.*;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.imports.AccessorNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.imports.ImportNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.instances.ExpressionStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.StructInstanceNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodePigLatin;
@@ -22,6 +26,7 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.stat
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.breakpoints.ContinueStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.breakpoints.ReturnStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.conditionals.ElseBlockNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.conditionals.ElseIfListNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.conditionals.ElseIfNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.conditionals.IfStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.functions.FunctionDeclarationNodePigLatin;
@@ -33,6 +38,8 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.stat
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.ForStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.WhileStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.BodyNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.CodeBodyNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.MaiorSectionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.VariablesSectionNodePigLatin;
 
@@ -46,6 +53,8 @@ public interface PigLatinAstVisitor<T> {
     T visit(ProgramNodePigLatin node);
 
     T visit(BodyNodePigLatin node);
+
+    T visit(CodeBodyNodePigLatin node);
 
 
     //=======Principal sections
@@ -99,6 +108,17 @@ public interface PigLatinAstVisitor<T> {
 
     T visit(VariablesSectionNodePigLatin node);
 
+    T visit(ShortlyOperationNodePigLatin node);
+
+    T visit(ExpressionNodePigLatin node);
+
+    T visit(ImportNodePigLatin node);
+
+    T visit(AccessorNodePigLatin node);
+
+    T visit(ExpressionStatementNodePigLatin node);
+
+    T visit(ElseIfListNodePigLatin node);
 
     //Abbreviation value variables
     T visit(IncrementStatementNodePigLatin node);

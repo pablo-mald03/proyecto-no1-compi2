@@ -14,14 +14,20 @@ import java.util.List;
 @Setter
 public class FunctionCallExpressionNodePigLatin extends ExpressionNodePigLatin {
 
+    private final ExpressionNodePigLatin target;
+
     private final String functionName;
 
     private final List<ExpressionNodePigLatin> arguments;
 
     private TypeNodePigLatin inferredType;
 
-    public FunctionCallExpressionNodePigLatin(int line, int column, String functionName, List<ExpressionNodePigLatin> arguments) {
+    public FunctionCallExpressionNodePigLatin(int line, int column,
+                                              ExpressionNodePigLatin target,
+                                              String functionName,
+                                              List<ExpressionNodePigLatin> arguments) {
         super(line, column);
+        this.target = target;
         this.functionName = functionName;
         this.arguments = arguments;
     }
