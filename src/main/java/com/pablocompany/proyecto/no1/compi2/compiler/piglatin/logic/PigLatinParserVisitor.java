@@ -324,13 +324,6 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitNormalArrayInstance(PigLatinParser.NormalArrayInstanceContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code StructDefinition}
-	 * labeled alternative in {@link PigLatinParser#declaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructDefinition(PigLatinParser.StructDefinitionContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code StructVariableInstance}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
 	 * @param ctx the parse tree
@@ -420,41 +413,6 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitValues_array_list(PigLatinParser.Values_array_listContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructDeclaration}
-	 * labeled alternative in {@link PigLatinParser#struct_declaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructDeclaration(PigLatinParser.StructDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructSeparatedBody}
-	 * labeled alternative in {@link PigLatinParser#struct_body}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructSeparatedBody(PigLatinParser.StructSeparatedBodyContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructCommaBody}
-	 * labeled alternative in {@link PigLatinParser#struct_body}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructCommaBody(PigLatinParser.StructCommaBodyContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructNormalBody}
-	 * labeled alternative in {@link PigLatinParser#struct_normal_body}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructNormalBody(PigLatinParser.StructNormalBodyContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructCommaStatementBody}
-	 * labeled alternative in {@link PigLatinParser#struct_comma_body}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructCommaStatementBody(PigLatinParser.StructCommaStatementBodyContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code NormalVariableStruct}
 	 * labeled alternative in {@link PigLatinParser#struct_attribute}.

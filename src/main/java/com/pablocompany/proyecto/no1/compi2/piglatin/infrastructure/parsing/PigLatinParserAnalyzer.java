@@ -2,9 +2,12 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.parsing;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
+import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.AstBuilderFactory;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinLexer;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinParser;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.errors.PigLatinErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -55,6 +58,17 @@ public class PigLatinParserAnalyzer implements ParserAnalyzer {
 
         boolean hasErrors = lexerListener.hasErrors() || parserListener.hasErrors();
         context.setParsed(!hasErrors);
+
+        if (hasErrors) {
+            return;
+        }
+
+        AstBuilder builder = AstBuilderFactory.getBuilder(".pig");
+        if (builder != null) {
+            PigLatinAstNode ast = builder.build(context);
+            context.setAstNode(ast);
+        }
+
     }
 
     /**

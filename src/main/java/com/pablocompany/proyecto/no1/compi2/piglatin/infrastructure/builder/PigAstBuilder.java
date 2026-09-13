@@ -25,8 +25,6 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expr
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.operators.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.StructInstanceNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructBodyNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructPropertyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.TypeNodePigLatin;
@@ -50,7 +48,6 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.stat
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.BodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.CodeBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.StatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.MaiorSectionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesSectionNodePigLatin;
@@ -180,8 +177,8 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
 
         List<PigLatinAstNode> statements = new ArrayList<>();
         for (PigLatinParser.StatementContext stmtCtx : ctx.statement()) {
-            AstNode stmt = stmtCtx.accept(this);
-            statements.add((StatementNodePigLatin) stmt);
+            PigLatinAstNode stmt = stmtCtx.accept(this);
+            statements.add(stmt);
         }
         return new CodeBodyNodePigLatin(line, column, statements);
     }
@@ -549,11 +546,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     }
 
     @Override
-    public PigLatinAstNode visitStructDefinition(PigLatinParser.StructDefinitionContext ctx) {
-        return ctx.struct_declaration().accept(this);
-    }
-
-    @Override
     public PigLatinAstNode visitStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx) {
         return ctx.struct_instance().accept(this);
     }
@@ -696,50 +688,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     //========================
     // STRUCT OPERATIONS
     //========================
-
-    @Override
-    public PigLatinAstNode visitStructDeclaration(PigLatinParser.StructDeclarationContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String id = ctx.ID().getText();
-        StructBodyNodePigLatin body = (StructBodyNodePigLatin) ctx.struct_body().accept(this);
-        return new StructDeclarationNodePigLatin(line, column, body, id);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructSeparatedBody(PigLatinParser.StructSeparatedBodyContext ctx) {
-        return ctx.struct_normal_body().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructCommaBody(PigLatinParser.StructCommaBodyContext ctx) {
-        return ctx.struct_comma_body().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructNormalBody(PigLatinParser.StructNormalBodyContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        List<StructAttributeNodePigLatin> attrs = new ArrayList<>();
-        for (PigLatinParser.Struct_attributeContext aCtx : ctx.struct_attribute()) {
-            attrs.add((StructAttributeNodePigLatin) aCtx.accept(this));
-        }
-        return new StructBodyNodePigLatin(line, column, attrs);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructCommaStatementBody(PigLatinParser.StructCommaStatementBodyContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        List<StructAttributeNodePigLatin> attrs = new ArrayList<>();
-        for (PigLatinParser.Struct_attributeContext aCtx : ctx.struct_attribute()) {
-            attrs.add((StructAttributeNodePigLatin) aCtx.accept(this));
-        }
-        return new StructBodyNodePigLatin(line, column, attrs);
-    }
 
     @Override
     public PigLatinAstNode visitNormalVariableStruct(PigLatinParser.NormalVariableStructContext ctx) {

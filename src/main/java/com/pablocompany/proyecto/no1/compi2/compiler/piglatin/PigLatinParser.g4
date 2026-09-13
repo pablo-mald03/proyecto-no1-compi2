@@ -147,10 +147,9 @@ declaration
     : variable_declaration          # VariableInstance
     | assignment                    # VariableAssignment
     | array_declaration             # NormalArrayInstance
-    | struct_declaration            # StructDefinition
     | struct_instance               # StructVariableInstance
     | abbreviated_operation         # GlobalAbbreviatedOperation
-    | compound_assignment           # CompoundAssignment
+    | compound_assignment DOT_COMMA          # CompoundAssignment
     ;
 
 /*-----VARIABLE PRODUCTIONS-----*/
@@ -167,11 +166,11 @@ assignment
 
 /*------ COMPOUND ASSIGNMENT PRODUCTIONS ------*/
 compound_assignment
-    : nest_variable BY_ONE_ADD expression DOT_COMMA                 # CompoundAddAssignment
-    | nest_variable BY_ONE_MINUS expression DOT_COMMA               # CompoundSubAssignment
-    | nest_variable BY_ONE_MULTIPLICATION expression DOT_COMMA      # CompoundMulAssignment
-    | nest_variable BY_ONE_DIVISION expression DOT_COMMA            # CompoundDivAssignment
-    | nest_variable BY_ONE_PERCENT expression DOT_COMMA             # CompoundModAssignment
+    : nest_variable BY_ONE_ADD expression                 # CompoundAddAssignment
+    | nest_variable BY_ONE_MINUS expression               # CompoundSubAssignment
+    | nest_variable BY_ONE_MULTIPLICATION expression      # CompoundMulAssignment
+    | nest_variable BY_ONE_DIVISION expression            # CompoundDivAssignment
+    | nest_variable BY_ONE_PERCENT expression             # CompoundModAssignment
     ;
 
 /*-----ARRAY PRODUCTIONS-----*/
@@ -186,25 +185,6 @@ array_initialization
 
 values_array_list
     : expression (COMMA expression)*
-    ;
-
-/*---****------****--- STRUCT DEFINITION SECTION ---****------****---*/
-
-struct_declaration
-    : STRUCTURE ID INIT_BRACE struct_body FINAL_BRACE FINIS DOT_COMMA # StructDeclaration
-    ;
-
-struct_body
-    : struct_normal_body    # StructSeparatedBody
-    | struct_comma_body     # StructCommaBody
-    ;
-
-struct_normal_body
-    : (struct_attribute DOT_COMMA)+         #StructNormalBody
-    ;
-
-struct_comma_body
-    : struct_attribute (COMMA struct_attribute)*        #StructCommaStatementBody
     ;
 
 /*---****------****--- STRUCT VARIABLES DECLARATION DEFINITION SECTION ---****------****---*/

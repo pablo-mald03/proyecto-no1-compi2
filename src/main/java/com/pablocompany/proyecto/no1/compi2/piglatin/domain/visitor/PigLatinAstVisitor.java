@@ -27,9 +27,6 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.stat
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.conditionals.ElseIfListNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.conditionals.ElseIfNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.conditionals.IfStatementNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.functions.FunctionDeclarationNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.functions.ParameterNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.functions.ProcedureDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.iostreams.PrintStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.iostreams.ReadStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.*;
@@ -167,13 +164,6 @@ public interface PigLatinAstVisitor<T> {
 
     T visit(ContinueStatementNodePigLatin node);
 
-    //Functions
-    T visit(FunctionDeclarationNodePigLatin node);
-
-    T visit(ProcedureDeclarationNodePigLatin node);
-
     T visit(ArgumentsNodePigLatin node);
-
-    T visit(ParameterNodePigLatin node);
 
 }

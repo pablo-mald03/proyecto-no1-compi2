@@ -2,9 +2,12 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.parsin
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
+import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.AstBuilderFactory;
 import com.pablocompany.proyecto.no1.compi2.compiler.zetariano.logic.ZLexer;
 import com.pablocompany.proyecto.no1.compi2.compiler.zetariano.logic.ZParser;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.errors.ZettaradianErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -54,6 +57,16 @@ public class ZettaradianParserAnalyzer implements ParserAnalyzer {
 
         boolean hasErrors = lexerListener.hasErrors() || parserListener.hasErrors();
         context.setParsed(!hasErrors);
+
+        if (hasErrors) {
+            return;
+        }
+
+        AstBuilder builder = AstBuilderFactory.getBuilder(".z");
+        if (builder != null) {
+            PigLatinAstNode ast = builder.build(context);
+            context.setAstNode(ast);
+        }
     }
 
 }

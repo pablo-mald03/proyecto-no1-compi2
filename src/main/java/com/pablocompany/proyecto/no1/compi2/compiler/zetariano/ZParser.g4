@@ -51,7 +51,7 @@ statement
     | loop_control                      # StatementLoopControl
     | return_statement                  # StatementReturn
     | abbreviated_operation             # StatementAbbreviatedOperation
-    | compound_assignment               # StatementCompoundAssignment
+    | compound_assignment DOT_COMMA     # StatementCompoundAssignment
     | nested_variables_usage            # StatementNestedAssignment
     | array_redefined_ussage            # StatementArrayAssignment
     | variable_ussage                   # StatementVariableAssignment
@@ -163,7 +163,7 @@ for_update
     | ABREV_PLUS nest_variable         #ForUpdatePrefixIncrement
     | ABREV_MINUS nest_variable        #ForUpdatePrefixDecrement
     | nest_variable EQUAL expression   #ForUpdateAssign
-    | compound_assignment               # ComPoundAssingment
+    | compound_assignment              # ComPoundAssingment
     ;
 
 /*===*****===== VARIABLES AND ASSIGNMENT SECTION =====*****===*/
@@ -191,11 +191,11 @@ nested_variables_usage
 
 /*------ COMPOUND ASSIGNMENT PRODUCTIONS ------*/
 compound_assignment
-    : nest_variable BY_ONE_ADD expression DOT_COMMA                 # CompoundAddAssignment
-    | nest_variable BY_ONE_MINUS expression DOT_COMMA               # CompoundSubAssignment
-    | nest_variable BY_ONE_MULTIPLICATION expression DOT_COMMA      # CompoundMulAssignment
-    | nest_variable BY_ONE_DIVISION expression DOT_COMMA            # CompoundDivAssignment
-    | nest_variable BY_ONE_PERCENT expression DOT_COMMA             # CompoundModAssignment
+    : nest_variable BY_ONE_ADD expression                 # CompoundAddAssignment
+    | nest_variable BY_ONE_MINUS expression               # CompoundSubAssignment
+    | nest_variable BY_ONE_MULTIPLICATION expression      # CompoundMulAssignment
+    | nest_variable BY_ONE_DIVISION expression            # CompoundDivAssignment
+    | nest_variable BY_ONE_PERCENT expression             # CompoundModAssignment
     ;
 
 /*------ INCREMENT / DECREMENT PRODUCTIONS (PREFIX AND SUFIX) ------*/

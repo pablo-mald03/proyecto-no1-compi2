@@ -61,7 +61,7 @@ statement
     | console_actions                           #StatementConsoleAction
     | loop_control                              #StatementLoopControl
     | abbreviated_operation                     #StatementAbbreviatedOperation
-    | compound_assignment                       #StatementCompoundAssignment
+    | compound_assignment DOT_COMMA             #StatementCompoundAssignment
     | struct_declaration                        #StatementStructDeclaration
     | variable_declaration NEWLINE+             #VariableDeclarationStatement
     | assignment NEWLINE+                       #AssignmentVariableStatement
@@ -138,12 +138,12 @@ for_init
 
 /*** FOR UPDATE STATEMENT PRODUCTION ****/
 for_update
-    : nest_variable ABREV_PLUS         #ForUpdateIncrement
-    | nest_variable ABREV_MINUS        #ForUpdateDecrement
-    | ABREV_PLUS nest_variable         #ForUpdatePrefixIncrement
-    | ABREV_MINUS nest_variable        #ForUpdatePrefixDecrement
-    | nest_variable EQUAL expression   #ForUpdateAssign
-    | compound_assignment               # ComPoundAssingment
+    : nest_variable ABREV_PLUS         # ForUpdateIncrement
+    | nest_variable ABREV_MINUS        # ForUpdateDecrement
+    | ABREV_PLUS nest_variable         # ForUpdatePrefixIncrement
+    | ABREV_MINUS nest_variable        # ForUpdatePrefixDecrement
+    | nest_variable EQUAL expression   # ForUpdateAssign
+    | compound_assignment              # ComPoundAssingment
     ;
 
 /*** BREAK FLOW PRODUCTIONS ****/
@@ -174,11 +174,11 @@ abbreviated_operation
 /*---*******---- COMPOUND ASSIGNMENT PRODUCTIONS ----*******---*/
 /*------ COMPOUND ASSIGNMENT PRODUCTIONS ------*/
 compound_assignment
-    : nest_variable BY_ONE_ADD expression DOT_COMMA                 # CompoundAddAssignment
-    | nest_variable BY_ONE_MINUS expression DOT_COMMA               # CompoundSubAssignment
-    | nest_variable BY_ONE_MULTIPLICATION expression DOT_COMMA      # CompoundMulAssignment
-    | nest_variable BY_ONE_DIVISION expression DOT_COMMA            # CompoundDivAssignment
-    | nest_variable BY_ONE_PERCENT expression DOT_COMMA             # CompoundModAssignment
+    : nest_variable BY_ONE_ADD expression                 # CompoundAddAssignment
+    | nest_variable BY_ONE_MINUS expression               # CompoundSubAssignment
+    | nest_variable BY_ONE_MULTIPLICATION expression      # CompoundMulAssignment
+    | nest_variable BY_ONE_DIVISION expression            # CompoundDivAssignment
+    | nest_variable BY_ONE_PERCENT expression             # CompoundModAssignment
     ;
 
 /*** ASSIGNMENT DECLARATIONS ****/
