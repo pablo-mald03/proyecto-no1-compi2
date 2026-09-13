@@ -353,6 +353,30 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterForUpdatePrefixIncrement(PigLatinParser.ForUpdatePrefixIncrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitForUpdatePrefixIncrement(PigLatinParser.ForUpdatePrefixIncrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterForUpdatePrefixDecrement(PigLatinParser.ForUpdatePrefixDecrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitForUpdatePrefixDecrement(PigLatinParser.ForUpdatePrefixDecrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterForUpdateAssign(PigLatinParser.ForUpdateAssignContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -360,6 +384,18 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitForUpdateAssign(PigLatinParser.ForUpdateAssignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComPoundAssingment(PigLatinParser.ComPoundAssingmentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComPoundAssingment(PigLatinParser.ComPoundAssingmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

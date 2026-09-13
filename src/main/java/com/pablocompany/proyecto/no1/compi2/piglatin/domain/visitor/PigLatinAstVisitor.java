@@ -13,14 +13,12 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expr
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.instances.ExpressionStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.StructInstanceNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructPropertyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.TypeNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.values.ArrayCallExpressionNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.values.FunctionCallExpressionNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.values.IdentifierExpressionNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.values.LiteralExpressionNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.VariableDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.breakpoints.BreakStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.breakpoints.ContinueStatementNodePigLatin;
@@ -34,14 +32,13 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.stat
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.functions.ProcedureDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.iostreams.PrintStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.iostreams.ReadStatementNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.DoWhileStatementNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.ForStatementNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.WhileStatementNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.*;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.BodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.CodeBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.MaiorSectionNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.VariablesSectionNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesBodyNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesSectionNodePigLatin;
 
 /**
  * This interface is the principal to generate the different compiler phases
@@ -55,6 +52,8 @@ public interface PigLatinAstVisitor<T> {
     T visit(BodyNodePigLatin node);
 
     T visit(CodeBodyNodePigLatin node);
+
+    T visit(VariablesBodyNodePigLatin node);
 
 
     //=======Principal sections
@@ -90,7 +89,10 @@ public interface PigLatinAstVisitor<T> {
 
     //======Struct values and eclarations
 
+    T visit(StructBodyNodePigLatin node);
+
     T visit(StructDeclarationNodePigLatin node);
+
 
     T visit(StructAttributeNodePigLatin node);
 
@@ -145,6 +147,13 @@ public interface PigLatinAstVisitor<T> {
 
     T visit(ForStatementNodePigLatin node);
 
+    T visit(ForInitDeclarationNodePigLatin node);
+
+    T visit(ForInitAssignmentNodePigLatin node);
+
+    T visit(ForUpdateNodePigLatin node);
+
+
     //IO stetements
     T visit(PrintStatementNodePigLatin node);
 
@@ -162,6 +171,8 @@ public interface PigLatinAstVisitor<T> {
     T visit(FunctionDeclarationNodePigLatin node);
 
     T visit(ProcedureDeclarationNodePigLatin node);
+
+    T visit(ArgumentsNodePigLatin node);
 
     T visit(ParameterNodePigLatin node);
 

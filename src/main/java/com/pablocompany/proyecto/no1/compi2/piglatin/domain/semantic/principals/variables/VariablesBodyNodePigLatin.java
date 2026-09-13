@@ -1,23 +1,25 @@
-package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals;
+package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables;
 
-
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
 
 import java.util.List;
 
-//This class is the principal variable seciton node
+/**
+ * Variables body representation class
+ *
+ */
 @Getter
-public class VariablesSectionNodePigLatin extends PigLatinAstNode {
+public class VariablesBodyNodePigLatin extends PigLatinAstNode {
 
-    private final List<PigLatinAstNode> declarations;
+    private final List<AstNode> declarations;
 
-    public VariablesSectionNodePigLatin(int line, int column, List<PigLatinAstNode> declarations) {
+    public VariablesBodyNodePigLatin(int line, int column, List<AstNode> declarations) {
         super(line, column);
         this.declarations = declarations;
     }
-
 
     @Override
     public <T> T accept(PigLatinAstVisitor<T> visitor) {

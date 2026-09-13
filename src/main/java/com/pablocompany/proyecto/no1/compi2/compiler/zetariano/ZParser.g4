@@ -158,9 +158,12 @@ for_init
 
 /*------ FOR UPDATE STATEMENT PRODUCTION------*/
 for_update
-    : ID ABREV_PLUS        # ForUpdateIncrement
-    | ID ABREV_MINUS       # ForUpdateDecrement
-    | ID EQUAL expression  # ForUpdateAssign
+    : nest_variable ABREV_PLUS         #ForUpdateIncrement
+    | nest_variable ABREV_MINUS        #ForUpdateDecrement
+    | ABREV_PLUS nest_variable         #ForUpdatePrefixIncrement
+    | ABREV_MINUS nest_variable        #ForUpdatePrefixDecrement
+    | nest_variable EQUAL expression   #ForUpdateAssign
+    | compound_assignment               # ComPoundAssingment
     ;
 
 /*===*****===== VARIABLES AND ASSIGNMENT SECTION =====*****===*/

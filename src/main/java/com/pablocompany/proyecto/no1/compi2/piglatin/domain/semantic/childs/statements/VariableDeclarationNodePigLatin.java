@@ -12,14 +12,18 @@ import lombok.Getter;
 public class VariableDeclarationNodePigLatin extends StatementNodePigLatin {
 
     private final String identifier;
+    //If type is null this is an object
     private final TypeNodePigLatin dataType;
     private final ExpressionNodePigLatin initializer;
+
+    private final boolean isObject;
 
     public VariableDeclarationNodePigLatin(int line, int column, TypeNodePigLatin dataType, String identifier, ExpressionNodePigLatin initializer) {
         super(line, column);
         this.dataType = dataType;
         this.identifier = identifier;
         this.initializer = initializer;
+        this.isObject = dataType == null;
     }
 
     //This is the principal generate the final code

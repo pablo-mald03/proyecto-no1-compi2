@@ -205,12 +205,33 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitForUpdateDecrement(PigLatinParser.ForUpdateDecrementContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ForUpdatePrefixIncrement}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForUpdatePrefixIncrement(PigLatinParser.ForUpdatePrefixIncrementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ForUpdatePrefixDecrement}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForUpdatePrefixDecrement(PigLatinParser.ForUpdatePrefixDecrementContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ForUpdateAssign}
 	 * labeled alternative in {@link PigLatinParser#for_update}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitForUpdateAssign(PigLatinParser.ForUpdateAssignContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComPoundAssingment(PigLatinParser.ComPoundAssingmentContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link PigLatinParser#return_control}.

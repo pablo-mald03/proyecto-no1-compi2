@@ -510,6 +510,18 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitForUpdateAssign(YParser.ForUpdateAssignContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link YParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void enterComPoundAssingment(YParser.ComPoundAssingmentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link YParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void exitComPoundAssingment(YParser.ComPoundAssingmentContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code LoopContinue}
 	 * labeled alternative in {@link YParser#loop_control}.
 	 * @param ctx the parse tree

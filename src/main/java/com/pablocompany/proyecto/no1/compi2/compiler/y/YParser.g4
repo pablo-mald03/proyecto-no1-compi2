@@ -143,6 +143,7 @@ for_update
     | ABREV_PLUS nest_variable         #ForUpdatePrefixIncrement
     | ABREV_MINUS nest_variable        #ForUpdatePrefixDecrement
     | nest_variable EQUAL expression   #ForUpdateAssign
+    | compound_assignment               # ComPoundAssingment
     ;
 
 /*** BREAK FLOW PRODUCTIONS ****/

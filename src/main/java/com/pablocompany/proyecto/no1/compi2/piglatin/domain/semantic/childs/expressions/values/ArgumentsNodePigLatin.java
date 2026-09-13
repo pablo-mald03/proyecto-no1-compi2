@@ -1,20 +1,23 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.values;
 
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
-import lombok.Setter;
 
-//This class is the principal who represents an identifier expression
+import java.util.List;
+
+/**
+ * Principal class to define the arguments node
+ *
+ */
 @Getter
-@Setter
-public class IdentifierExpressionNodePigLatin extends ExpressionNodePigLatin {
+public class ArgumentsNodePigLatin extends PigLatinAstNode {
+    private final List<ExpressionNodePigLatin> arguments;
 
-    private final String identifier;
-
-    public IdentifierExpressionNodePigLatin(int line, int column, String identifier) {
+    public ArgumentsNodePigLatin(int line, int column, List<ExpressionNodePigLatin> arguments) {
         super(line, column);
-        this.identifier = identifier;
+        this.arguments = arguments;
     }
 
     @Override

@@ -345,12 +345,33 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitForUpdateDecrement(ZParser.ForUpdateDecrementContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ForUpdatePrefixIncrement}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForUpdatePrefixIncrement(ZParser.ForUpdatePrefixIncrementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ForUpdatePrefixDecrement}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForUpdatePrefixDecrement(ZParser.ForUpdatePrefixDecrementContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ForUpdateAssign}
 	 * labeled alternative in {@link ZParser#for_update}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitForUpdateAssign(ZParser.ForUpdateAssignContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComPoundAssingment(ZParser.ComPoundAssingmentContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code VariableDeclaration}
 	 * labeled alternative in {@link ZParser#variable_declaration}.

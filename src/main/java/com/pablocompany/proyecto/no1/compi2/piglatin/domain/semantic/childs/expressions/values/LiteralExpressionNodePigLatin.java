@@ -9,17 +9,15 @@ import lombok.Getter;
 @Getter
 public class LiteralExpressionNodePigLatin extends ExpressionNodePigLatin {
 
-    private final String value;
     private final DataType valueType;
 
     //This is the original value of the literal
     private final Object dataValue;
 
 
-    public LiteralExpressionNodePigLatin(int line, int column, String value, DataType valueType, Object dataValue) {
+    public LiteralExpressionNodePigLatin(int line, int column, DataType valueType, Object dataValue) {
         super(line, column);
         this.dataValue = dataValue;
-        this.value = value;
         this.valueType = valueType;
     }
 

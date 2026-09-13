@@ -593,6 +593,30 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterForUpdatePrefixIncrement(ZParser.ForUpdatePrefixIncrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitForUpdatePrefixIncrement(ZParser.ForUpdatePrefixIncrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterForUpdatePrefixDecrement(ZParser.ForUpdatePrefixDecrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitForUpdatePrefixDecrement(ZParser.ForUpdatePrefixDecrementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterForUpdateAssign(ZParser.ForUpdateAssignContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -600,6 +624,18 @@ public class ZParserBaseListener implements ZParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitForUpdateAssign(ZParser.ForUpdateAssignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterComPoundAssingment(ZParser.ComPoundAssingmentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComPoundAssingment(ZParser.ComPoundAssingmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -580,6 +580,30 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitForUpdateDecrement(ZParser.ForUpdateDecrementContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ForUpdatePrefixIncrement}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void enterForUpdatePrefixIncrement(ZParser.ForUpdatePrefixIncrementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ForUpdatePrefixIncrement}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void exitForUpdatePrefixIncrement(ZParser.ForUpdatePrefixIncrementContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ForUpdatePrefixDecrement}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void enterForUpdatePrefixDecrement(ZParser.ForUpdatePrefixDecrementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ForUpdatePrefixDecrement}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void exitForUpdatePrefixDecrement(ZParser.ForUpdatePrefixDecrementContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ForUpdateAssign}
 	 * labeled alternative in {@link ZParser#for_update}.
 	 * @param ctx the parse tree
@@ -591,6 +615,18 @@ public interface ZParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitForUpdateAssign(ZParser.ForUpdateAssignContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void enterComPoundAssingment(ZParser.ComPoundAssingmentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link ZParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void exitComPoundAssingment(ZParser.ComPoundAssingmentContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code VariableDeclaration}
 	 * labeled alternative in {@link ZParser#variable_declaration}.

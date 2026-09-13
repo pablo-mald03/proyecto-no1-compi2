@@ -5,7 +5,7 @@ public enum UnaryOperator {
 
     //RELATIONAL OPERATORS
     NEGATE("-"),
-    NOT("non");
+    NOT("!");
 
     private final String operation;
 

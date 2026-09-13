@@ -304,6 +304,13 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitForUpdateAssign(YParser.ForUpdateAssignContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link YParser#for_update}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitComPoundAssingment(YParser.ComPoundAssingmentContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code LoopContinue}
 	 * labeled alternative in {@link YParser#loop_control}.
 	 * @param ctx the parse tree

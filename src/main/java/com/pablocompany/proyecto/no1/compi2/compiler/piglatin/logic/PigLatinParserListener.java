@@ -340,6 +340,30 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitForUpdateDecrement(PigLatinParser.ForUpdateDecrementContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ForUpdatePrefixIncrement}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void enterForUpdatePrefixIncrement(PigLatinParser.ForUpdatePrefixIncrementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ForUpdatePrefixIncrement}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void exitForUpdatePrefixIncrement(PigLatinParser.ForUpdatePrefixIncrementContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ForUpdatePrefixDecrement}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void enterForUpdatePrefixDecrement(PigLatinParser.ForUpdatePrefixDecrementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ForUpdatePrefixDecrement}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void exitForUpdatePrefixDecrement(PigLatinParser.ForUpdatePrefixDecrementContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ForUpdateAssign}
 	 * labeled alternative in {@link PigLatinParser#for_update}.
 	 * @param ctx the parse tree
@@ -351,6 +375,18 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitForUpdateAssign(PigLatinParser.ForUpdateAssignContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void enterComPoundAssingment(PigLatinParser.ComPoundAssingmentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ComPoundAssingment}
+	 * labeled alternative in {@link PigLatinParser#for_update}.
+	 * @param ctx the parse tree
+	 */
+	void exitComPoundAssingment(PigLatinParser.ComPoundAssingmentContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link PigLatinParser#return_control}.

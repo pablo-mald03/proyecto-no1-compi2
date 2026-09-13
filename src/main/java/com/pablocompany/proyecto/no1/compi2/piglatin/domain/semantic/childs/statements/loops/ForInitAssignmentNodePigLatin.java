@@ -1,23 +1,25 @@
-package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.iostreams;
-
+package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops;
 
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.StatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
 
-//This is the principal read statement node
+/**
+ * Class to manage the init assignment node
+ * */
 @Getter
-public class ReadStatementNodePigLatin extends StatementNodePigLatin {
+public class ForInitAssignmentNodePigLatin extends StatementNodePigLatin {
 
-    //When its null it wait for any key
-    private final ExpressionNodePigLatin target;
 
-    public ReadStatementNodePigLatin(int line, int column, ExpressionNodePigLatin target) {
+    private final String id;
+    private final ExpressionNodePigLatin expr;
+
+    public ForInitAssignmentNodePigLatin(int line, int column, String id, ExpressionNodePigLatin expr) {
         super(line, column);
-        this.target = target;
+        this.id = id;
+        this.expr = expr;
     }
-
 
     @Override
     public <T> T accept(PigLatinAstVisitor<T> visitor) {

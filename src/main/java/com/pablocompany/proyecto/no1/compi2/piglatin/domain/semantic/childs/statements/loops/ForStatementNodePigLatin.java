@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.sta
 
 
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.CodeBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.StatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
@@ -15,9 +16,9 @@ public class ForStatementNodePigLatin extends StatementNodePigLatin {
     private final PigLatinAstNode init; //Could be a variable declaration or assignment node
     private final ExpressionNodePigLatin condition;
     private final PigLatinAstNode update; //Could be an assigment or incrementable variable
-    private final List<PigLatinAstNode> body;
+    private final CodeBodyNodePigLatin body;
 
-    public ForStatementNodePigLatin(int line, int column, List<PigLatinAstNode> body, PigLatinAstNode init, ExpressionNodePigLatin condition, PigLatinAstNode update) {
+    public ForStatementNodePigLatin(int line, int column, CodeBodyNodePigLatin body, PigLatinAstNode init, ExpressionNodePigLatin condition, PigLatinAstNode update) {
         super(line, column);
         this.body = body;
         this.init = init;

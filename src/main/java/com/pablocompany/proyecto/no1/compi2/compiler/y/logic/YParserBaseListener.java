@@ -521,6 +521,18 @@ public class YParserBaseListener implements YParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterComPoundAssingment(YParser.ComPoundAssingmentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitComPoundAssingment(YParser.ComPoundAssingmentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterLoopContinue(YParser.LoopContinueContext ctx) { }
 	/**
 	 * {@inheritDoc}

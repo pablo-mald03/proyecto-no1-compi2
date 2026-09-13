@@ -8,6 +8,7 @@ public enum BinaryOperator {
     MINUS("-"),
     MULTIPLICATION("*"),
     DIVIDE("/"),
+    MODULE("%"),
 
     //RELATIONAL OPERATORS
     EQUALS("=="),
