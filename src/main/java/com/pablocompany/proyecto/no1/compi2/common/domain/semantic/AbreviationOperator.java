@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.assignation.enums;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic;
 
 //This enum represents an abreviated operation
 public enum AbreviationOperator {

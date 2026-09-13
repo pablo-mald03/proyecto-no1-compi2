@@ -6,20 +6,22 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.St
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public class ArrayDeclarationNodeY extends StatementNodeY {
 
     private final String identifier;
-    private final ExpressionNodeY size;
     private final TypeNodeY dataType;
-    private final ArrayInitExpressionNodeY initializer;
+    private final List<ExpressionNodeY> dimensions;
+    private final ExpressionNodeY initializer;
 
 
-    public ArrayDeclarationNodeY(int line, int column, TypeNodeY dataType, String identifier, ExpressionNodeY size, ArrayInitExpressionNodeY initializer) {
+    public ArrayDeclarationNodeY(int line, int column, String identifier, TypeNodeY dataType, List<ExpressionNodeY> dimensions, ExpressionNodeY initializer) {
         super(line, column);
-        this.dataType = dataType;
         this.identifier = identifier;
-        this.size = size;
+        this.dataType = dataType;
+        this.dimensions = dimensions;
         this.initializer = initializer;
     }
 

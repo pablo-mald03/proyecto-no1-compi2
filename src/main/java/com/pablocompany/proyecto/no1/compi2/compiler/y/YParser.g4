@@ -247,7 +247,7 @@ type
 expression
     : INIT_PARENT expression FINAL_PARENT                                           # ExpressionParents
     | op=(NOT | MINUS) expression                                                   # ExpressionUnary
-    | expression op=(MULTIPLICATION | DIVIDE) expression                            # ExpressionMultDiv
+    | expression op=(MULTIPLICATION | DIVIDE | PERCENT) expression                  # ExpressionMultDiv
     | expression op=(PLUS | MINUS) expression                                       # ExpressionAddSub
     | expression op=(LESS | GREATER | LESS_EQUALS | GREATER_EQUALS) expression      # ExpressionRelational
     | expression op=(EQUALS | DIFERENCE) expression                                 # ExpressionEquality
@@ -275,11 +275,6 @@ boolean_values
     | FALSE    # BoolFalse
     ;
 
-/*** EXPRESSION LIST ****/
-
-expression_list
-    : expression (COMMA expression)*        #ExpressionList
-    ;
 
 /*** NEW LINE PRODUCTION ****/
 skip_lines

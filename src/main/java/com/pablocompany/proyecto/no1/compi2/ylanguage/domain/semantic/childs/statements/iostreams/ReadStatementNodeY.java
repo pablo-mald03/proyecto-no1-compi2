@@ -1,7 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams;
 
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
@@ -10,14 +9,10 @@ import lombok.Getter;
 @Getter
 public class ReadStatementNodeY extends StatementNodeY {
 
-    //When its null it wait for any key
-    private final ExpressionNodeY target;
 
-    public ReadStatementNodeY(int line, int column, ExpressionNodeY target) {
+    public ReadStatementNodeY(int line, int column) {
         super(line, column);
-        this.target = target;
     }
-
 
     @Override
     public <T> T accept(YAstVisitor<T> visitor) {

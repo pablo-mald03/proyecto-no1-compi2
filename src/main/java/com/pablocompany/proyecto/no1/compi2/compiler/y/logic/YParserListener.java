@@ -1146,18 +1146,6 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitBoolFalse(YParser.BoolFalseContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code ExpressionList}
-	 * labeled alternative in {@link YParser#expression_list}.
-	 * @param ctx the parse tree
-	 */
-	void enterExpressionList(YParser.ExpressionListContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ExpressionList}
-	 * labeled alternative in {@link YParser#expression_list}.
-	 * @param ctx the parse tree
-	 */
-	void exitExpressionList(YParser.ExpressionListContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link YParser#skip_lines}.
 	 * @param ctx the parse tree
 	 */

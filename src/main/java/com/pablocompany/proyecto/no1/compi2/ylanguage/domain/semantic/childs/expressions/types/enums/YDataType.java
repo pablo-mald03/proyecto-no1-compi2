@@ -1,19 +1,19 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.enums;
 
 //This enum is the principal variable types
-public enum DataType {
+public enum YDataType {
 
-    INT("numerus"),
-    DECIMAL("decimalis"),
-    STRING("textum"),
-    CHAR("littera"),
+    INT("entero"),
+    FLOAT("flotante"),
+    STRING("cadena"),
+    CHAR("caracter"),
     BOOLEAN("bool"),
-    VOID("actio"),
+    DEF("definir"),
     CUSTOM("custom");
 
     private final String operation;
 
-    DataType(String operation) {
+    YDataType(String operation) {
         this.operation = operation;
     }
 

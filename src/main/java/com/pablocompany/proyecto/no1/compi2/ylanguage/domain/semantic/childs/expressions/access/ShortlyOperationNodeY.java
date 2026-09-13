@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access;
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.enums.ShortlyOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;

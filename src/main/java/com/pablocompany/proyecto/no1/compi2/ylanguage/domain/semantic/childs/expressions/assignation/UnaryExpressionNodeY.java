@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.assignation;
 
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.operators.enums.UnaryOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;

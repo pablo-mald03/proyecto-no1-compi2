@@ -1,5 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals;
-
+package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches;
 
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
@@ -9,16 +8,21 @@ import lombok.Getter;
 
 import java.util.List;
 
-//This is the principal else if node
+/**
+ * Represents a single case inside a switch statement.
+ *
+ */
 @Getter
-public class ElseIfNodeY extends StatementNodeY {
+public class SwitchCaseNodeY extends YAstNode {
 
-    private final ExpressionNodeY condition;
-    private final List<YAstNode> body;
+    private final ExpressionNodeY value;
+    private final List<StatementNodeY> body;
 
-    public ElseIfNodeY(int line, int column, ExpressionNodeY condition, List<YAstNode> body) {
+    public SwitchCaseNodeY(int line, int column,
+                           ExpressionNodeY value,
+                           List<StatementNodeY> body) {
         super(line, column);
-        this.condition = condition;
+        this.value = value;
         this.body = body;
     }
 

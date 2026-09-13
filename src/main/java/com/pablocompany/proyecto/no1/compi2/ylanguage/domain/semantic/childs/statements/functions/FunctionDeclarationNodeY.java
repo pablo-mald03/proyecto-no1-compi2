@@ -17,16 +17,14 @@ public class FunctionDeclarationNodeY extends StatementNodeY {
     private final String name;
     private final TypeNodeY returnType;
     private final List<ParameterNodeY> parameters;
-    private final List<YAstNode> localVariables;
     private final List<YAstNode> body;
 
-    public FunctionDeclarationNodeY(int line, int column, List<YAstNode> body, String name, TypeNodeY returnType, List<ParameterNodeY> parameters, List<YAstNode> localVariables) {
+    public FunctionDeclarationNodeY(int line, int column, List<YAstNode> body, String name, TypeNodeY returnType, List<ParameterNodeY> parameters) {
         super(line, column);
         this.body = body;
         this.name = name;
         this.returnType = returnType;
         this.parameters = parameters;
-        this.localVariables = localVariables;
     }
 
     @Override

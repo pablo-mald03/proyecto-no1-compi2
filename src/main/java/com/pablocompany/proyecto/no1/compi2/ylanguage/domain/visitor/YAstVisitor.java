@@ -7,6 +7,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.exp
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.imports.AccessorNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.imports.ImportNodeY;
@@ -33,12 +34,14 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops.*;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.DefaultCaseNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.BodyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.CodeBodyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.MaiorSectionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.variables.VariablesBodyNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.variables.VariablesSectionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.FunctionsRegionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
 
 /**
  * This interface is the principal to generate the different compiler phases
@@ -53,7 +56,7 @@ public interface YAstVisitor<T> {
 
     T visit(CodeBodyNodeY node);
 
-    T visit(VariablesBodyNodeY node);
+    T visit(StructuresRegionNodeY node);
 
 
     //=======Principal sections
@@ -87,6 +90,9 @@ public interface YAstVisitor<T> {
 
     T visit(ArrayDeclarationNodeY node);
 
+    T visit(ArrayValuesNodeY node);
+    
+
     //======Struct values and eclarations
 
     T visit(StructBodyNodeY node);
@@ -108,7 +114,7 @@ public interface YAstVisitor<T> {
 
     T visit(MemberArrayAccessExpressionNodeY node);
 
-    T visit(VariablesSectionNodeY node);
+    T visit(FunctionsRegionNodeY node);
 
     T visit(ShortlyOperationNodeY node);
 
@@ -138,6 +144,14 @@ public interface YAstVisitor<T> {
     T visit(ElseIfNodeY node);
 
     T visit(ElseBlockNodeY node);
+
+    //Switch
+
+    T visit(SwitchStatementNodeY node);
+
+    T visit(SwitchCaseNodeY node);
+
+    T visit(DefaultCaseNodeY node);
 
 
     //Loops

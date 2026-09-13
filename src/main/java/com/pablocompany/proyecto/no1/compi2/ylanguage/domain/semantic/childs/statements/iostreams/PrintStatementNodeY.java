@@ -5,17 +5,15 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.St
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
-import java.util.List;
-
 //This class is the principal print statement
 @Getter
 public class PrintStatementNodeY extends StatementNodeY {
 
-    private final List<ExpressionNodeY> expressionList;
+    private final ExpressionNodeY expression;
 
-    public PrintStatementNodeY(int line, int column, List<ExpressionNodeY> expressionList) {
+    public PrintStatementNodeY(int line, int column, ExpressionNodeY expression) {
         super(line, column);
-        this.expressionList = expressionList;
+        this.expression = expression;
     }
 
     @Override

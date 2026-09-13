@@ -2,7 +2,12 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.builder;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AbreviationOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ForUpdateOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinLexer;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinParser;
 import com.pablocompany.proyecto.no1.compi2.compiler.piglatin.logic.PigLatinParserBaseVisitor;
@@ -12,17 +17,13 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expr
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.ShortlyOperationNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.enums.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.arrays.ArrayDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.assignation.*;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.assignation.enums.AbreviationOperator;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.imports.AccessorNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.imports.ImportNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.imports.ImportType;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.instances.ExpressionStatementNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.operators.enums.BinaryOperator;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.operators.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.StructInstanceNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodePigLatin;
@@ -44,7 +45,6 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.stat
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.iostreams.PrintStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.iostreams.ReadStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.*;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.loops.enums.ForUpdateOperator;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.BodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.CodeBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
@@ -61,12 +61,8 @@ import java.util.List;
  */
 public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> implements AstBuilder {
 
-    private EditorContext context;
-
     @Override
     public PigLatinAstNode build(EditorContext context) {
-        this.context = context;
-
         if (context.getParseTree() == null) {
             return null;
         }

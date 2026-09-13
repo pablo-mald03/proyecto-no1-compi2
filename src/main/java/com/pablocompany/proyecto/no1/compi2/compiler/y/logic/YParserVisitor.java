@@ -675,13 +675,6 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBoolFalse(YParser.BoolFalseContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code ExpressionList}
-	 * labeled alternative in {@link YParser#expression_list}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExpressionList(YParser.ExpressionListContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link YParser#skip_lines}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

@@ -1,25 +1,26 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops;
 
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.CodeBodyNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
+
+import java.util.List;
 
 //This is the principal while statement representation
 @Getter
 public class WhileStatementNodeY extends StatementNodeY {
 
     private final ExpressionNodeY condition;
-    private final CodeBodyNodeY body;
+    private final List<YAstNode> body;
 
-    public WhileStatementNodeY(int line, int column, CodeBodyNodeY body, ExpressionNodeY condition) {
+    public WhileStatementNodeY(int line, int column, ExpressionNodeY condition, List<YAstNode> body) {
         super(line, column);
-        this.body = body;
         this.condition = condition;
+        this.body = body;
     }
-
 
     @Override
     public <T> T accept( YAstVisitor<T> visitor) {

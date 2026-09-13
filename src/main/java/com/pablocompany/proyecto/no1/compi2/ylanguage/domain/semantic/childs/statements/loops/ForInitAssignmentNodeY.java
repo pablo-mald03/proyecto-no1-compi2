@@ -13,10 +13,10 @@ import lombok.Getter;
 public class ForInitAssignmentNodeY extends StatementNodeY {
 
 
-    private final String id;
+    private final ExpressionNodeY id;
     private final ExpressionNodeY expr;
 
-    public ForInitAssignmentNodeY(int line, int column, String id, ExpressionNodeY expr) {
+    public ForInitAssignmentNodeY(int line, int column, ExpressionNodeY id, ExpressionNodeY expr) {
         super(line, column);
         this.id = id;
         this.expr = expr;

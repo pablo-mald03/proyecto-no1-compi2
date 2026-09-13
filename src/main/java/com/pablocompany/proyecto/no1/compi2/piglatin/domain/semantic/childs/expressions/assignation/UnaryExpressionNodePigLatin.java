@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.assignation;
 
 
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.operators.enums.UnaryOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;

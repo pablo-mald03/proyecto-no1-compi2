@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ForUpdateOperator;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops.enums.ForUpdateOperator;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;

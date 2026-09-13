@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values;
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.enums.DataType;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.enums.YDataType;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
@@ -9,13 +9,13 @@ import lombok.Getter;
 @Getter
 public class LiteralExpressionNodeY extends ExpressionNodeY {
 
-    private final DataType valueType;
+    private final YDataType valueType;
 
     //This is the original value of the literal
     private final Object dataValue;
 
 
-    public LiteralExpressionNodeY(int line, int column, DataType valueType, Object dataValue) {
+    public LiteralExpressionNodeY(int line, int column, YDataType valueType, Object dataValue) {
         super(line, column);
         this.dataValue = dataValue;
         this.valueType = valueType;

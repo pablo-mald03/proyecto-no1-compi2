@@ -18,12 +18,12 @@ public class VariableDeclarationNodeY extends StatementNodeY {
 
     private final boolean isObject;
 
-    public VariableDeclarationNodeY(int line, int column, TypeNodeY dataType, String identifier, ExpressionNodeY initializer) {
+    public VariableDeclarationNodeY(int line, int column, String identifier, TypeNodeY dataType, ExpressionNodeY initializer, boolean isObject) {
         super(line, column);
-        this.dataType = dataType;
         this.identifier = identifier;
+        this.dataType = dataType;
         this.initializer = initializer;
-        this.isObject = dataType == null;
+        this.isObject = isObject;
     }
 
     //This is the principal generate the final code

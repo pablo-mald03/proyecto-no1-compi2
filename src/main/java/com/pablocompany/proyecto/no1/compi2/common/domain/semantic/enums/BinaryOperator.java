@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.operators.enums;
+package com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums;
 
 //This is the principal type operator
 public enum BinaryOperator {
