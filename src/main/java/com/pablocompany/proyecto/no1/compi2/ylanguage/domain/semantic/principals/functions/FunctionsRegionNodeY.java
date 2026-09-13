@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs;
+package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions;
 
 
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;

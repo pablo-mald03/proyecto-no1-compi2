@@ -9,8 +9,6 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.exp
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.assignation.*;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.imports.AccessorNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.imports.ImportNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.StructInstanceNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodeY;
@@ -37,10 +35,8 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.DefaultCaseNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.BodyNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.CodeBodyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.FunctionsRegionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions.FunctionsRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
 
 /**
@@ -52,16 +48,10 @@ public interface YAstVisitor<T> {
     //======Top node values
     T visit(ProgramNodeY node);
 
-    T visit(BodyNodeY node);
-
-    T visit(CodeBodyNodeY node);
-
     T visit(StructuresRegionNodeY node);
 
 
     //=======Principal sections
-
-    T visit(MaiorSectionNodeY node);
 
     T visit(VariableAssignmentNodeY node);
 
@@ -119,10 +109,6 @@ public interface YAstVisitor<T> {
     T visit(ShortlyOperationNodeY node);
 
     T visit(ExpressionNodeY node);
-
-    T visit(ImportNodeY node);
-
-    T visit(AccessorNodeY node);
 
     T visit(ExpressionStatementNodeY node);
 

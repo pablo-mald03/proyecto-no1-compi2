@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic;
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.FunctionsRegionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions.FunctionsRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;

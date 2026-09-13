@@ -48,7 +48,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.FunctionsRegionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions.FunctionsRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
 import org.antlr.v4.runtime.ParserRuleContext;
 
@@ -976,37 +976,27 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new BinaryExpressionNodeY(line, column, left, right, op);
     }
 
+    /**
+     * Auxiliary method to map the binary operators
+     *
+     */
     private BinaryOperator mapBinaryOperator(int tokenType) {
-        switch (tokenType) {
-            case YLexer.PLUS:
-                return BinaryOperator.PLUS;
-            case YLexer.MINUS:
-                return BinaryOperator.MINUS;
-            case YLexer.MULTIPLICATION:
-                return BinaryOperator.MULTIPLICATION;
-            case YLexer.DIVIDE:
-                return BinaryOperator.DIVIDE;
-            case YLexer.PERCENT:
-                return BinaryOperator.MODULE;
-            case YLexer.EQUALS:
-                return BinaryOperator.EQUALS;
-            case YLexer.DIFERENCE:
-                return BinaryOperator.DIFFERENT;
-            case YLexer.LESS:
-                return BinaryOperator.LESS;
-            case YLexer.GREATER:
-                return BinaryOperator.GREATER;
-            case YLexer.LESS_EQUALS:
-                return BinaryOperator.LESS_EQUALS;
-            case YLexer.GREATER_EQUALS:
-                return BinaryOperator.GREATER_EQUALS;
-            case YLexer.AND:
-                return BinaryOperator.AND;
-            case YLexer.OR:
-                return BinaryOperator.OR;
-            default:
-                throw new IllegalArgumentException("Unknown binary op: " + tokenType);
-        }
+        return switch (tokenType) {
+            case YLexer.PLUS -> BinaryOperator.PLUS;
+            case YLexer.MINUS -> BinaryOperator.MINUS;
+            case YLexer.MULTIPLICATION -> BinaryOperator.MULTIPLICATION;
+            case YLexer.DIVIDE -> BinaryOperator.DIVIDE;
+            case YLexer.PERCENT -> BinaryOperator.MODULE;
+            case YLexer.EQUALS -> BinaryOperator.EQUALS;
+            case YLexer.DIFERENCE -> BinaryOperator.DIFFERENT;
+            case YLexer.LESS -> BinaryOperator.LESS;
+            case YLexer.GREATER -> BinaryOperator.GREATER;
+            case YLexer.LESS_EQUALS -> BinaryOperator.LESS_EQUALS;
+            case YLexer.GREATER_EQUALS -> BinaryOperator.GREATER_EQUALS;
+            case YLexer.AND -> BinaryOperator.AND;
+            case YLexer.OR -> BinaryOperator.OR;
+            default -> throw new IllegalArgumentException("Unknown binary op: " + tokenType);
+        };
     }
 
     private UnaryOperator mapUnaryOperator(int tokenType) {
