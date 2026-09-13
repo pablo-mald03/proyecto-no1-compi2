@@ -240,6 +240,15 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     //========================
 
     @Override
+    public PigLatinAstNode visitForUpdateAssign(PigLatinParser.ForUpdateAssignContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        ExpressionNodePigLatin target = (ExpressionNodePigLatin) ctx.nest_variable().accept(this);
+        ExpressionNodePigLatin value = (ExpressionNodePigLatin) ctx.expression().accept(this);
+        return new ForUpdateNodePigLatin(line, column, target, value, ForUpdateOperator.ASSIGN);
+    }
+
+    @Override
     public PigLatinAstNode visitIfStatement(PigLatinParser.IfStatementContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
@@ -836,6 +845,13 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     //========================
     // EXPRESSSIONS AND TYPE VARIABLES
     //========================
+
+
+    @Override
+    public PigLatinAstNode visitComPoundAssingment(PigLatinParser.ComPoundAssingmentContext ctx) {
+        return ctx.compound_assignment().accept(this);
+    }
+
     @Override
     public PigLatinAstNode visitExpressionParents(PigLatinParser.ExpressionParentsContext ctx) {
         return ctx.expression().accept(this);
