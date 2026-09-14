@@ -287,8 +287,7 @@ public class FileTreePanel extends JPanel {
         DefaultMutableTreeNode node = getSelectedNode();
         if (node != null) {
             Object userObject = node.getUserObject();
-            if (userObject instanceof FileNode) {
-                FileNode fileNode = (FileNode) userObject;
+            if (userObject instanceof FileNode fileNode) {
                 if (fileNode.isDirectory()) {
                     return node;
                 } else {

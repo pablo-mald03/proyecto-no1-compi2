@@ -5,6 +5,8 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.ParserFactory;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.imports.DependencyGraph;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.importResolver.DependencyAnalyzer;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHighlightListenerFactory;
@@ -49,9 +51,12 @@ public class WorkspacePanel extends JPanel {
     //Principal reference for the file Contexts
     private final Map<String, EditorContext> fileContexts;
 
-    // NEW: Main class reference
+    // Main class reference
     private String mainClassPath;
     private FileNode mainClassNode;
+
+    // Dependency graph reference
+    private DependencyGraph dependencyGraph;
 
     /**
      * Constructor with custom project name
@@ -249,6 +254,23 @@ public class WorkspacePanel extends JPanel {
         //VERIFY STEPS
 
         notifier.logWarning("Verificando importacion de paquetes...");
+
+        DependencyAnalyzer dependencyAnalyzer = new DependencyAnalyzer();
+        DependencyGraph dependencyGraph = dependencyAnalyzer.analyze(this.fileContexts);
+        this.dependencyGraph = dependencyGraph;
+
+        if (dependencyGraph.hasErrors()) {
+            for (CompilerError error : dependencyGraph.getErrors()) {
+                EditorContext ctx = fileContexts.get(error.getFilePath());
+                if (ctx != null) {
+                    ctx.getSemanticErrors().add(error);
+                }
+            }
+            this.verifyErrors("Error de importaciones: se encontraron: ");
+            return false;
+        }
+
+        notifier.logSuccess("Verificacion de importaciones completada");
 
 
         notifier.logInfo("Analisis semantico en curso...");
