@@ -31,7 +31,6 @@ public class ManagementScreen extends JPanel {
             Runnable onOpenProject,
             Runnable onCloseProject,
             Runnable onSave,
-            Runnable onSaveAs,
             Runnable onCompile,
             Runnable onExecute,
             Runnable onExit,
@@ -40,7 +39,6 @@ public class ManagementScreen extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND_DARK.getColorSet());
 
-        // Create top panel with all actions
         this.topPanel = new TopPanel(
                 workspaceNotifier,
                 onNewProject,
@@ -80,6 +78,15 @@ public class ManagementScreen extends JPanel {
     public void updateProjectName(String newName) {
         if (workspacePanel != null) {
             workspacePanel.updateProjectName(newName);
+        }
+    }
+
+    /**
+     * Update the main class display
+     */
+    public void updateMainClass(String mainClassName) {
+        if (topPanel != null) {
+            topPanel.updateMainClass(mainClassName);
         }
     }
 

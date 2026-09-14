@@ -30,12 +30,17 @@ public class FileNode {
         this.content = "";
         this.isModified = false;
         this.editorContext = new EditorContext();
+        this.editorContext.setDirectory(isDirectory);
     }
 
     public boolean isFile() {
         return !isDirectory;
     }
 
+    /**
+     * Principal method to get the extension of the file or directory
+     *
+     */
     public String getExtension() {
         if (isDirectory) {
             return "";
@@ -44,6 +49,7 @@ public class FileNode {
         return lastDot > 0 ? name.substring(lastDot) : "";
     }
 
+    /**Principal method to get the filename without extension*/
     public String getNameWithoutExtension() {
         if (isDirectory) {
             return name;
@@ -69,7 +75,7 @@ public class FileNode {
 
 
     public void addAllCompilationErrors(List<CompilerError> errors) {
-        this.editorContext.getAllCompilerErrors();
+        this.editorContext.getAllCompilerErrors().addAll(errors);
     }
 
     @Override

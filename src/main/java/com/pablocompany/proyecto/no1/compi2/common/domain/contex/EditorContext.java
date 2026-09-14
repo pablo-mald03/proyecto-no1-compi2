@@ -5,6 +5,7 @@
 package com.pablocompany.proyecto.no1.compi2.common.domain.contex;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import lombok.Data;
 import org.antlr.v4.runtime.Token;
@@ -20,7 +21,11 @@ import java.util.List;
 @Data
 public class EditorContext {
 
-    private String graphvizCode;
+    /*File properties*/
+    private String filePath;
+    private String fileName;
+    private String fileExtension;
+    private boolean isDirectory;
 
     private String sourceCode;
 
@@ -34,13 +39,13 @@ public class EditorContext {
 
     private ParseTree parseTree;
 
-    /*   private com.pablocompany.practica.no1.compi2.domain.semantic.AstNode ast;*/
-
     private String compiledCode;
 
     private boolean isParsed;
 
     private boolean isCompiled;
+
+    private AstNode astNode;
 
  /*   private Environment globalEnvironment;
 
@@ -53,6 +58,8 @@ public class EditorContext {
 
     public EditorContext() {
         this.tokens = new ArrayList<>();
+        this.filePath = "";
+        this.fileName = "";
         this.compiledCode = "";
         this.isParsed = false;
         this.isCompiled = false;

@@ -233,7 +233,9 @@ public class FileTreePanel extends JPanel {
         boolean isDirectory = selectedFileNode != null && selectedFileNode.isDirectory();
         boolean isFile = selectedFileNode != null && !selectedFileNode.isDirectory();
 
-        popupMenu.showPopup(fileTree, e, isRoot, isDirectory, isFile);
+        boolean isPigFile = isFile && selectedFileNode.getExtension().equals(".pig");
+
+        popupMenu.showPopup(fileTree, e, isRoot, isDirectory, isFile, isPigFile);
     }
 
     /**
@@ -334,8 +336,7 @@ public class FileTreePanel extends JPanel {
 
     private DefaultMutableTreeNode findNodeByPath(DefaultMutableTreeNode node, String path) {
         Object userObj = node.getUserObject();
-        if (userObj instanceof FileNode) {
-            FileNode fileNode = (FileNode) userObj;
+        if (userObj instanceof FileNode fileNode) {
             if (path.equals(fileNode.getFilePath())) {
                 return node;
             }
