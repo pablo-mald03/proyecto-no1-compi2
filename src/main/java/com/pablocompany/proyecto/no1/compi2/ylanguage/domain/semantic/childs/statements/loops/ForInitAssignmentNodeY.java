@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops;
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
@@ -10,7 +10,7 @@ import lombok.Getter;
  *
  */
 @Getter
-public class ForInitAssignmentNodeY extends YAstNode {
+public class ForInitAssignmentNodeY extends StatementNodeY {
 
 
     private final ExpressionNodeY id;

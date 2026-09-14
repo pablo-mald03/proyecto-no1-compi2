@@ -1,13 +1,13 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.assignation;
 
 
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.StatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
 
 @Getter
-public class VariableAssignmentNodePigLatin extends PigLatinAstNode {
+public class VariableAssignmentNodePigLatin extends StatementNodePigLatin {
 
     private final ExpressionNodePigLatin identifier;
     private final ExpressionNodePigLatin expressionNode;

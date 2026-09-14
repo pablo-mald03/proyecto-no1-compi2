@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.exp
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.ExpressionNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.StatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
 
@@ -10,7 +11,7 @@ import lombok.Getter;
  *
  */
 @Getter
-public class ShortlyOperationNodePigLatin extends ExpressionNodePigLatin {
+public class ShortlyOperationNodePigLatin extends StatementNodePigLatin {
 
     private final ExpressionNodePigLatin target;
     private final ExpressionNodePigLatin value;
