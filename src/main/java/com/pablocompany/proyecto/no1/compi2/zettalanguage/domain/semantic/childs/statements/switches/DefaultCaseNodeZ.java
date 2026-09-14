@@ -14,9 +14,9 @@ import java.util.List;
 @Getter
 public class DefaultCaseNodeZ extends StatementNodeZ {
 
-    private final List<StatementNodeZ> body;
+    private final List<ZAstNode> body;
 
-    public DefaultCaseNodeZ(int line, int column, List<StatementNodeZ> body) {
+    public DefaultCaseNodeZ(int line, int column, List<ZAstNode> body) {
         super(line, column);
         this.body = body;
     }

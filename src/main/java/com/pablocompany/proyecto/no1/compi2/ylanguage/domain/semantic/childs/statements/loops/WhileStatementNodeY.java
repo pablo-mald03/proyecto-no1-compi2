@@ -1,7 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops;
 
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
@@ -14,9 +13,9 @@ import java.util.List;
 public class WhileStatementNodeY extends StatementNodeY {
 
     private final ExpressionNodeY condition;
-    private final List<YAstNode> body;
+    private final List<StatementNodeY> body;
 
-    public WhileStatementNodeY(int line, int column, ExpressionNodeY condition, List<YAstNode> body) {
+    public WhileStatementNodeY(int line, int column, ExpressionNodeY condition, List<StatementNodeY> body) {
         super(line, column);
         this.condition = condition;
         this.body = body;

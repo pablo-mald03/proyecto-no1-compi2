@@ -11,15 +11,15 @@ import java.util.List;
 
 //This is the representation for a function
 @Getter
-public class FunctionDeclarationNodeY extends StatementNodeY {
+public class FunctionDeclarationNodeY extends YAstNode {
 
 
     private final String name;
     private final TypeNodeY returnType;
     private final List<ParameterNodeY> parameters;
-    private final List<YAstNode> body;
+    private final List<StatementNodeY> body;
 
-    public FunctionDeclarationNodeY(int line, int column, List<YAstNode> body, String name, TypeNodeY returnType, List<ParameterNodeY> parameters) {
+    public FunctionDeclarationNodeY(int line, int column, List<StatementNodeY> body, String name, TypeNodeY returnType, List<ParameterNodeY> parameters) {
         super(line, column);
         this.body = body;
         this.name = name;

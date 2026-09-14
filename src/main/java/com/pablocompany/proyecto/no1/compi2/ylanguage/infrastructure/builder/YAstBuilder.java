@@ -60,14 +60,11 @@ import java.util.List;
  */
 public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuilder {
 
-
     @Override
     public YAstNode build(EditorContext context) {
-
         if (context.getParseTree() == null) {
             return null;
         }
-
         YParser.ProgramContext program = (YParser.ProgramContext) context.getParseTree();
         return visitProgram(program);
     }
@@ -80,6 +77,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     //========================
     // PROGRAM NODE
     //========================
+
     @Override
     public YAstNode visitProgram(YParser.ProgramContext ctx) {
         int line = ctx.getStart().getLine();
@@ -99,7 +97,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // BODY STRUCTS REGION FOR THE PROGRAM
+    // STRUCTS REGION
     //========================
 
     @Override
@@ -125,7 +123,10 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         for (YParser.Struct_fieldContext fCtx : ctx.struct_field()) {
             fields.add((StructAttributeNodeY) fCtx.accept(this));
         }
-        return new StructDeclarationNodeY(line, column, new StructBodyNodeY(line, column, fields), name);
+        return new StructDeclarationNodeY(
+                line, column,
+                new StructBodyNodeY(line, column, fields),
+                name);
     }
 
     @Override
@@ -152,7 +153,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // BODY FUNCTIONS REGION FOR THE PROGRAM
+    // FUNCTIONS REGION
     //========================
 
     @Override
@@ -185,9 +186,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
             returnType = (TypeNodeY) ctx.type().accept(this);
         }
 
-        List<YAstNode> body = new ArrayList<>();
+        List<StatementNodeY> body = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            body.add(sCtx.accept(this));
+            body.add((StatementNodeY) sCtx.accept(this));
         }
 
         return new FunctionDeclarationNodeY(line, column, body, name, returnType, params);
@@ -233,11 +234,13 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         String structName = ctx.ID(0).getText();
         String varName = ctx.ID(1).getText();
 
-        return new ParameterNodeY(line, column, varName, new TypeNodeY(line, column, YDataType.CUSTOM, structName), false, ParameterKind.STRUCT);
+        return new ParameterNodeY(line, column, varName,
+                new TypeNodeY(line, column, YDataType.CUSTOM, structName),
+                false, ParameterKind.STRUCT);
     }
 
     //========================
-    // BODY FUNCTIONS STATEMENTS
+    // STATEMENT DISPATCH
     //========================
 
     @Override
@@ -293,7 +296,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // BLOCK STATEMENTS
+    // BLOCK DISPATCH
     //========================
 
     @Override
@@ -322,7 +325,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // LOOPS STATEMENTS
+    // IF / ELSE IF / ELSE
     //========================
 
     @Override
@@ -332,9 +335,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
         ExpressionNodeY condition = (ExpressionNodeY) ctx.expression().accept(this);
 
-        List<YAstNode> thenBody = new ArrayList<>();
+        List<StatementNodeY> thenBody = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            thenBody.add(sCtx.accept(this));
+            thenBody.add((StatementNodeY) sCtx.accept(this));
         }
 
         List<ElseIfNodeY> elseIfs = new ArrayList<>();
@@ -370,9 +373,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
         ExpressionNodeY condition = (ExpressionNodeY) ctx.expression().accept(this);
 
-        List<YAstNode> body = new ArrayList<>();
+        List<StatementNodeY> body = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            body.add(sCtx.accept(this));
+            body.add((StatementNodeY) sCtx.accept(this));
         }
         return new ElseIfNodeY(line, column, condition, body);
     }
@@ -382,15 +385,15 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        List<YAstNode> body = new ArrayList<>();
+        List<StatementNodeY> body = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            body.add(sCtx.accept(this));
+            body.add((StatementNodeY) sCtx.accept(this));
         }
         return new ElseBlockNodeY(line, column, body);
     }
 
     //========================
-    // SWITCH CASE STATEMENTS
+    // SWITCH
     //========================
 
     @Override
@@ -438,8 +441,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         }
         return new DefaultCaseNodeY(line, column, body);
     }
+
     //========================
-    // LOOPS STATEMENTS
+    // LOOPS
     //========================
 
     @Override
@@ -449,9 +453,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
         ExpressionNodeY condition = (ExpressionNodeY) ctx.expression().accept(this);
 
-        List<YAstNode> body = new ArrayList<>();
+        List<StatementNodeY> body = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            body.add(sCtx.accept(this));
+            body.add((StatementNodeY) sCtx.accept(this));
         }
         return new WhileStatementNodeY(line, column, condition, body);
     }
@@ -461,9 +465,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        List<YAstNode> body = new ArrayList<>();
+        List<StatementNodeY> body = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            body.add(sCtx.accept(this));
+            body.add((StatementNodeY) sCtx.accept(this));
         }
 
         ExpressionNodeY condition = (ExpressionNodeY) ctx.expression().accept(this);
@@ -521,10 +525,6 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new ForInitAssignmentNodeY(line, column, target, value);
     }
 
-    //========================
-    // FOR STATEMENTS
-    //========================
-
     @Override
     public YAstNode visitForUpdateIncrement(YParser.ForUpdateIncrementContext ctx) {
         int line = ctx.getStart().getLine();
@@ -572,20 +572,23 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // CONTROL STRUCTURES STATEMENTS
+    // LOOP CONTROL
     //========================
+
     @Override
     public YAstNode visitLoopContinue(YParser.LoopContinueContext ctx) {
-        return new ContinueStatementNodeY(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+        return new ContinueStatementNodeY(
+                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
     public YAstNode visitLoopBreak(YParser.LoopBreakContext ctx) {
-        return new BreakStatementNodeY(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+        return new BreakStatementNodeY(
+                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     //========================
-    // CONSOLE ACTIONS STATEMENTS
+    // CONSOLE ACTIONS
     //========================
 
     @Override
@@ -609,11 +612,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new ReadStatementNodeY(line, column);
     }
 
-
     //========================
     // ABBREVIATED OPERATIONS
     //========================
-
 
     @Override
     public YAstNode visitIncSufixOperation(YParser.IncSufixOperationContext ctx) {
@@ -648,7 +649,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // COMPOUND OPERATIONS
+    // COMPOUND ASSIGNMENTS
     //========================
 
     @Override
@@ -693,13 +694,13 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         int column = ctx.getStart().getCharPositionInLine();
         ExpressionNodeY target = (ExpressionNodeY) ctx.nest_variable().accept(this);
         ExpressionNodeY value = (ExpressionNodeY) ctx.expression().accept(this);
-
         return new ShortlyOperationNodeY(line, column, target, value, ShortlyOperator.MODULO_ASSIGN);
     }
 
     //========================
-    // ASSIGNMENT NODE
+    // ASSIGNMENT
     //========================
+
     @Override
     public YAstNode visitAssingmentStatement(YParser.AssingmentStatementContext ctx) {
         int line = ctx.getStart().getLine();
@@ -712,8 +713,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // NESTED VARIABLES
+    // NESTED VARIABLE
     //========================
+
     @Override
     public YAstNode visitNestedVariable(YParser.NestedVariableContext ctx) {
         return ctx.object_values().accept(this);
@@ -777,9 +779,8 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new ArgumentsNodeY(line, column, args);
     }
 
-
     //========================
-    // ARRAY VALUES
+    // ARRAY LITERAL
     //========================
 
     @Override
@@ -808,7 +809,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     //========================
-    // VARIABLE VALUES
+    // VARIABLE DECLARATIONS
     //========================
 
     @Override
@@ -874,9 +875,8 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new ArrayDeclarationNodeY(line, column, name, type, dimensions, initializer);
     }
 
-
     //========================
-    // TYPE NODES
+    // TYPES
     //========================
 
     @Override
@@ -906,12 +906,12 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
     @Override
     public YAstNode visitCustomTypeValue(YParser.CustomTypeValueContext ctx) {
-        return new TypeNodeY(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(), YDataType.CUSTOM, ctx.ID().getText());
+        return new TypeNodeY(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine(),
+                YDataType.CUSTOM, ctx.ID().getText());
     }
 
-
     //========================
-    // VARIABLE VALUES
+    // EXPRESSIONS
     //========================
 
     @Override
@@ -966,7 +966,8 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
     private BinaryExpressionNodeY buildBinary(YParser.ExpressionContext l,
                                               YParser.ExpressionContext r,
-                                              int tokenType, ParserRuleContext ctx) {
+                                              int tokenType,
+                                              ParserRuleContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
@@ -976,10 +977,6 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new BinaryExpressionNodeY(line, column, left, right, op);
     }
 
-    /**
-     * Auxiliary method to map the binary operators
-     *
-     */
     private BinaryOperator mapBinaryOperator(int tokenType) {
         return switch (tokenType) {
             case YLexer.PLUS -> BinaryOperator.PLUS;
@@ -1000,14 +997,11 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     }
 
     private UnaryOperator mapUnaryOperator(int tokenType) {
-        switch (tokenType) {
-            case YLexer.MINUS:
-                return UnaryOperator.NEGATE;
-            case YLexer.NOT:
-                return UnaryOperator.NOT;
-            default:
-                throw new IllegalArgumentException("Unknown unary op: " + tokenType);
-        }
+        return switch (tokenType) {
+            case YLexer.MINUS -> UnaryOperator.NEGATE;
+            case YLexer.NOT -> UnaryOperator.NOT;
+            default -> throw new IllegalArgumentException("Unknown unary op: " + tokenType);
+        };
     }
 
     //========================
@@ -1016,12 +1010,12 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
     @Override
     public YAstNode visitValArrayLiteral(YParser.ValArrayLiteralContext ctx) {
-        return super.visitValArrayLiteral(ctx);
+        return ctx.array_literal().accept(this);
     }
 
     @Override
     public YAstNode visitValReadCall(YParser.ValReadCallContext ctx) {
-        return super.visitValReadCall(ctx);
+        return ctx.read_call().accept(this);
     }
 
     @Override
@@ -1061,7 +1055,6 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     public YAstNode visitValObjectAccess(YParser.ValObjectAccessContext ctx) {
         return ctx.object_values().accept(this);
     }
-
 
     @Override
     public YAstNode visitBoolTrue(YParser.BoolTrueContext ctx) {

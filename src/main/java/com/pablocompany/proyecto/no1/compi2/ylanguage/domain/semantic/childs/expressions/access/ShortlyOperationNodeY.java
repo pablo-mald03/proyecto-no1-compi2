@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.ex
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
@@ -10,7 +11,7 @@ import lombok.Getter;
  *
  */
 @Getter
-public class ShortlyOperationNodeY extends ExpressionNodeY {
+public class ShortlyOperationNodeY extends StatementNodeY {
 
     private final ExpressionNodeY target;
     private final ExpressionNodeY value;

@@ -1,13 +1,13 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration;
 
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
 //This class represents a declaration structure
 @Getter
-public class StructDeclarationNodeY extends StatementNodeY {
+public class StructDeclarationNodeY extends YAstNode {
     private final String structName;
     private final StructBodyNodeY attributes;
 

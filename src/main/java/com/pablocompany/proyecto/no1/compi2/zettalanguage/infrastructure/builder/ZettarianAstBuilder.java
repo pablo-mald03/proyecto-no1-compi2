@@ -53,16 +53,16 @@ import java.util.List;
 /**
  * AST builder for the Z language
  */
+/**
+ * AST builder for the Z language (Zettaradian)
+ */
 public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements AstBuilder {
-
 
     @Override
     public ZAstNode build(EditorContext context) {
-
         if (context.getParseTree() == null) {
             return null;
         }
-
         ZParser.ProgramContext program = (ZParser.ProgramContext) context.getParseTree();
         return visitProgram(program);
     }
@@ -72,16 +72,17 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         return ".z";
     }
 
-
     //========================
     // PROGRAM NODE
     //========================
+
     @Override
     public ZAstNode visitProgram(ZParser.ProgramContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        ClassDeclarationNodeZ classDecl = (ClassDeclarationNodeZ) ctx.class_declaration().accept(this);
+        ClassDeclarationNodeZ classDecl =
+                (ClassDeclarationNodeZ) ctx.class_declaration().accept(this);
         return new ProgramNodeZ(line, column, classDecl);
     }
 
@@ -103,6 +104,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     //========================
     // MEMBER NODES
     //========================
+
     @Override
     public ZAstNode visitClassFieldMember(ZParser.ClassFieldMemberContext ctx) {
         return ctx.variable_declaration().accept(this);
@@ -119,7 +121,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // METHODS OR CONSTRUCTOR NODES
+    // CONSTRUCTOR AND METHOD NODES
     //========================
 
     @Override
@@ -137,7 +139,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
 
         List<ZAstNode> body = new ArrayList<>();
         for (ZParser.StatementContext sCtx : ctx.statement()) {
-            body.add( sCtx.accept(this));
+            body.add(sCtx.accept(this));
         }
 
         return new ConstructorDeclarationNodeZ(line, column, name, params, body);
@@ -157,14 +159,13 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
             params = list.getParameters();
         }
 
-        List<StatementNodeZ> body = new ArrayList<>();
+        List<ZAstNode> body = new ArrayList<>();
         for (ZParser.StatementContext sCtx : ctx.statement()) {
-            body.add((StatementNodeZ) sCtx.accept(this));
+            body.add(sCtx.accept(this));
         }
 
         return new MethodDeclarationNodeZ(line, column, name, returnType, params, body);
     }
-
 
     //========================
     // PARAMETER NODES
@@ -191,16 +192,14 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         String name = ctx.ID().getText();
 
         int dimensions = ctx.INIT_BRACKET().size();
-
         boolean isArray = dimensions > 0;
-
         ParameterKind kind = (isArray) ? ParameterKind.ARRAY : ParameterKind.NORMAL;
 
         return new ParameterNodeZ(line, column, name, type, isArray, dimensions, kind);
     }
 
     //========================
-    // STATEMENT NODES
+    // STATEMENT DISPATCH
     //========================
 
     @Override
@@ -238,7 +237,6 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         return ctx.nested_variables_usage().accept(this);
     }
 
-
     @Override
     public ZAstNode visitStatementVariableDeclaration(ZParser.StatementVariableDeclarationContext ctx) {
         return ctx.variable_declaration().accept(this);
@@ -253,9 +251,8 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         return new ExpressionStatementNodeZ(line, column, obj);
     }
 
-
     //========================
-    // LOOP CONTROL STATEMENT NODES
+    // RETURN AND LOOP CONTROL
     //========================
 
     @Override
@@ -272,16 +269,18 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
 
     @Override
     public ZAstNode visitLoopContinue(ZParser.LoopContinueContext ctx) {
-        return new ContinueStatementNodeZ(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+        return new ContinueStatementNodeZ(
+                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     @Override
     public ZAstNode visitLoopBreak(ZParser.LoopBreakContext ctx) {
-        return new BreakStatementNodeZ(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+        return new BreakStatementNodeZ(
+                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     //========================
-    // CONSOLE ACTIONS (I/O) STATEMENT NODES
+    // CONSOLE ACTIONS
     //========================
 
     @Override
@@ -307,11 +306,12 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
 
     @Override
     public ZAstNode visitReadCall(ZParser.ReadCallContext ctx) {
-        return new ReadStatementNodeZ(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+        return new ReadStatementNodeZ(
+                ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
     }
 
     //========================
-    // BLOCK CODE NODES
+    // BLOCK DISPATCH
     //========================
 
     @Override
@@ -340,8 +340,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // STATEMENT SCOPES NODE
+    // STATEMENT BODIES (WRAPPER)
     //========================
+
     @Override
     public ZAstNode visitBracedStatementBody(ZParser.BracedStatementBodyContext ctx) {
         int line = ctx.getStart().getLine();
@@ -359,14 +360,14 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        StatementNodeZ stmt = (StatementNodeZ) ctx.statement().accept(this);
+        ZAstNode stmt = ctx.statement().accept(this);
         List<ZAstNode> body = new ArrayList<>();
         body.add(stmt);
         return new CodeBodyNodeZ(line, column, body);
     }
 
     //========================
-    // IF STATEMENTS
+    // IF / ELSE IF / ELSE
     //========================
 
     @Override
@@ -375,7 +376,6 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int column = ctx.getStart().getCharPositionInLine();
 
         ExpressionNodeZ condition = (ExpressionNodeZ) ctx.expression().accept(this);
-
         CodeBodyNodeZ thenBody = (CodeBodyNodeZ) ctx.statement_body().accept(this);
 
         List<ElseIfNodeZ> elseIfs = new ArrayList<>();
@@ -389,7 +389,8 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
             elseBlock = (ElseBlockNodeZ) ctx.else_block().accept(this);
         }
 
-        return new IfStatementNodeZ(line, column, condition, thenBody.getStatements(), elseIfs, elseBlock);
+        return new IfStatementNodeZ(
+                line, column, condition, thenBody.getStatements(), elseIfs, elseBlock);
     }
 
     @Override
@@ -425,8 +426,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // SWITCH CASE STATEMENTS
+    // SWITCH
     //========================
+
     @Override
     public ZAstNode visitSwitchStatement(ZParser.SwitchStatementContext ctx) {
         int line = ctx.getStart().getLine();
@@ -454,9 +456,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
 
         ExpressionNodeZ value = (ExpressionNodeZ) ctx.expression().accept(this);
 
-        List<StatementNodeZ> body = new ArrayList<>();
+        List<ZAstNode> body = new ArrayList<>();
         for (ZParser.StatementContext sCtx : ctx.statement()) {
-            body.add((StatementNodeZ) sCtx.accept(this));
+            body.add(sCtx.accept(this));
         }
         return new SwitchCaseNodeZ(line, column, value, body);
     }
@@ -466,16 +468,17 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        List<StatementNodeZ> body = new ArrayList<>();
+        List<ZAstNode> body = new ArrayList<>();
         for (ZParser.StatementContext sCtx : ctx.statement()) {
-            body.add((StatementNodeZ) sCtx.accept(this));
+            body.add(sCtx.accept(this));
         }
         return new DefaultCaseNodeZ(line, column, body);
     }
 
     //========================
-    // LOOP STATEMENTS
+    // LOOPS
     //========================
+
     @Override
     public ZAstNode visitWhileStatement(ZParser.WhileStatementContext ctx) {
         int line = ctx.getStart().getLine();
@@ -524,7 +527,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // FOR INIT STATEMENTS
+    // FOR INIT / UPDATE
     //========================
 
     @Override
@@ -541,9 +544,6 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         return new ForInitDeclarationNodeZ(line, column, name, type, value, dimensions);
     }
 
-    //========================
-    // FOR OPERATION STATEMENTS
-    //========================
     @Override
     public ZAstNode visitForInitAssign(ZParser.ForInitAssignContext ctx) {
         int line = ctx.getStart().getLine();
@@ -602,8 +602,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // VARIABLES DECLARATION STATEMENTS
+    // VARIABLE DECLARATION AND ASSIGNMENT
     //========================
+
     @Override
     public ZAstNode visitVariableDeclaration(ZParser.VariableDeclarationContext ctx) {
         int line = ctx.getStart().getLine();
@@ -634,7 +635,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // COMPOUND VARIABLES DECLARATION STATEMENTS
+    // COMPOUND ASSIGNMENTS
     //========================
 
     @Override
@@ -683,8 +684,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // ABBREVIATED OPERATION STATEMENTS
+    // ABBREVIATED OPERATIONS
     //========================
+
     @Override
     public ZAstNode visitIncSufixOperation(ZParser.IncSufixOperationContext ctx) {
         int line = ctx.getStart().getLine();
@@ -720,15 +722,16 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     //========================
     // NESTED VARIABLE WRAPPER
     //========================
+
     @Override
     public ZAstNode visitNestedVariable(ZParser.NestedVariableContext ctx) {
         return ctx.object_values().accept(this);
     }
 
+    //========================
+    // OBJECT VALUES
+    //========================
 
-    //========================
-    // EXPRESSIONS VARIABLE NODE
-    //========================
     @Override
     public ZAstNode visitBaseIdentifier(ZParser.BaseIdentifierContext ctx) {
         int line = ctx.getStart().getLine();
@@ -800,7 +803,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // INSTANTIATION VARIABLE NODES
+    // INSTANTIATION
     //========================
 
     @Override
@@ -833,8 +836,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // ARRAY LITERAL VARIABLE NODES
+    // ARRAY LITERAL
     //========================
+
     @Override
     public ZAstNode visitArrayLiteralValue(ZParser.ArrayLiteralValueContext ctx) {
         int line = ctx.getStart().getLine();
@@ -861,7 +865,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // EXPRESSION VARIABLE NODES
+    // EXPRESSIONS
     //========================
 
     @Override
@@ -928,7 +932,8 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
 
     private BinaryExpressionNodeZ buildBinary(ZParser.ExpressionContext l,
                                               ZParser.ExpressionContext r,
-                                              int tokenType, ParserRuleContext ctx) {
+                                              int tokenType,
+                                              ParserRuleContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
@@ -966,7 +971,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // TYPE VARIABLE NODES
+    // TYPES
     //========================
 
     @Override
@@ -1007,7 +1012,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     }
 
     //========================
-    // NORMAL VALUES OF VARIABLE NODES
+    // NORMAL VALUES
     //========================
 
     @Override

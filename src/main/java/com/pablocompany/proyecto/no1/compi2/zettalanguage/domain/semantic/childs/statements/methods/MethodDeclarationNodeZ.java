@@ -3,7 +3,6 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.child
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.ParameterNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.StatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
 
@@ -19,9 +18,9 @@ public class MethodDeclarationNodeZ extends ZAstNode {
     private final String name;
     private final TypeNodeZ type;
     private final List<ParameterNodeZ> params;
-    private final List<StatementNodeZ> body;
+    private final List<ZAstNode> body;
 
-    public MethodDeclarationNodeZ(int line, int column, String name, TypeNodeZ type, List<ParameterNodeZ> params, List<StatementNodeZ> body) {
+    public MethodDeclarationNodeZ(int line, int column, String name, TypeNodeZ type, List<ParameterNodeZ> params, List<ZAstNode> body) {
         super(line, column);
         this.name = name;
         this.type = type;

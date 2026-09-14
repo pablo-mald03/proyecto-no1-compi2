@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions;
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
@@ -11,7 +11,7 @@ import java.util.List;
  *
  */
 @Getter
-public class ParameterListNodeY extends StatementNodeY {
+public class ParameterListNodeY extends YAstNode {
 
     private final List<ParameterNodeY> parameters;
 

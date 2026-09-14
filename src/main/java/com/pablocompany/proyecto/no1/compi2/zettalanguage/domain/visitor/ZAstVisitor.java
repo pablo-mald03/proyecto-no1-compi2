@@ -10,12 +10,6 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.structs.StructInstanceNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.structs.declaration.StructBodyNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.structs.properties.StructPropertyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -98,21 +92,6 @@ public interface ZAstVisitor<T> {
 
     T visit(ArrayValuesNodeZ node);
 
-
-    //======Struct values and eclarations
-
-    T visit(StructBodyNodeZ node);
-
-    T visit(StructDeclarationNodeZ node);
-
-
-    T visit(StructAttributeNodeZ node);
-
-    T visit(StructPropertyNodeZ node);
-
-    T visit(StructLiteralExpressionNodeZ node);
-
-    T visit(StructInstanceNodeZ node);
 
     //Nested and properties
 
