@@ -17,7 +17,7 @@ structures_region
 
 /*** STRUCT DECLARATION ****/
 struct_declaration
-    : STRUCT ID TWO_POINTS NEWLINE INDENT struct_field* DEDENT skip_lines?      #StructDeclaration
+    : STRUCT ID TWO_POINTS NEWLINE skip_lines? INDENT struct_field* DEDENT skip_lines?      #StructDeclaration
     ;
 
 /*** STRUCT FIELDS ****/
@@ -36,7 +36,7 @@ functions_region
 /*** FUNCION DECLARATION FIELDS ****/
 
 function_declaration
-    : DEFINE ID INIT_PARENT parameter_list? FINAL_PARENT (LAMBDA type)? TWO_POINTS NEWLINE INDENT statement* DEDENT skip_lines?     #FunctionDeclaration
+    : DEFINE ID INIT_PARENT parameter_list? FINAL_PARENT (LAMBDA type)? TWO_POINTS NEWLINE skip_lines? INDENT statement* DEDENT skip_lines?     #FunctionDeclaration
     ;
 
 /*** PARAMETER FIELDS ****/
@@ -80,7 +80,7 @@ block_statement
 
 /*** IF PRODUCTIONS ****/
 if_statement
-    : IF INIT_PARENT expression FINAL_PARENT SO NEWLINE INDENT statement* DEDENT else_if_list? else_block?   #IfStatement
+    : IF INIT_PARENT expression FINAL_PARENT SO NEWLINE skip_lines? INDENT statement* DEDENT else_if_list? else_block?   #IfStatement
     ;
 
 /*** ELSE-IF LIST PRODUCTION ****/
@@ -90,44 +90,44 @@ else_if_list
 
 /*** ELSE-IF CLAUSULE PRODUCTION ****/
 else_if_clause
-    : ELSE_IF INIT_PARENT expression FINAL_PARENT SO NEWLINE INDENT statement* DEDENT   #ElseIfClause
+    : ELSE_IF INIT_PARENT expression FINAL_PARENT SO NEWLINE skip_lines? INDENT statement* DEDENT   #ElseIfClause
     ;
 
 /*** ELSE PRODUCTION ****/
 else_block
-    : ELSE NEWLINE INDENT statement* DEDENT     #ElseBlock
+    : ELSE NEWLINE skip_lines? INDENT statement* DEDENT     #ElseBlock
     ;
 
 /*** SWITCH PRODUCTIONS ****/
 switch_statement
-    : SWITCH INIT_PARENT expression FINAL_PARENT TWO_POINTS NEWLINE INDENT switch_case* always_case? DEDENT   #SwitchStatement
+    : SWITCH INIT_PARENT expression FINAL_PARENT TWO_POINTS NEWLINE skip_lines? INDENT switch_case* always_case? DEDENT   #SwitchStatement
     ;
 
 /*** CASE PRODUCTION ****/
 switch_case
-    : CASE expression TWO_POINTS NEWLINE INDENT statement* DEDENT   #SwitchCase
+    : CASE expression TWO_POINTS NEWLINE skip_lines? INDENT statement* DEDENT   #SwitchCase
     ;
 
 /*** DEFAULT PRODUCTION ****/
 always_case
-    : ALWAYS TWO_POINTS NEWLINE INDENT statement* DEDENT   #AlwaysCase
+    : ALWAYS TWO_POINTS NEWLINE skip_lines? INDENT statement* DEDENT   #AlwaysCase
     ;
 
 /*** LOOPS PRODUCTIONS ****/
 
 while_statement
-    : WHILE INIT_PARENT expression FINAL_PARENT DO NEWLINE INDENT statement* DEDENT   #WhileStatement
+    : WHILE INIT_PARENT expression FINAL_PARENT DO NEWLINE skip_lines? INDENT statement* DEDENT   #WhileStatement
     ;
 
 /*** DO WHILE PRODUCTION ****/
 
 do_while_statement
-    : DO TWO_POINTS NEWLINE INDENT statement* DEDENT WHILE INIT_PARENT expression FINAL_PARENT NEWLINE+   #DoWhileStatement
+    : DO TWO_POINTS NEWLINE skip_lines? INDENT statement* DEDENT WHILE INIT_PARENT expression FINAL_PARENT NEWLINE+   #DoWhileStatement
     ;
 
 /*** FOR PRODUCTIONS STATEMENTS ****/
 for_statement
-    : FOR INIT_PARENT for_init? DOT_COMMA expression? DOT_COMMA for_update? FINAL_PARENT TWO_POINTS NEWLINE INDENT statement* DEDENT   #ForStatement
+    : FOR INIT_PARENT for_init? DOT_COMMA expression? DOT_COMMA for_update? FINAL_PARENT TWO_POINTS NEWLINE skip_lines? INDENT statement* DEDENT   #ForStatement
     ;
 
 /*** FOR INIT STATEMENT PRODUCTION ****/
@@ -206,9 +206,6 @@ object_values
 arguments_list
     : expression (COMMA expression)*            #ArgumentsList
     ;
-
-/*--------****--- OPERATIONS WITH ARRAY VALUES---****--------*/
-
 
 /*--------****--- ARRAY VALUES ---****--------*/
 array_literal

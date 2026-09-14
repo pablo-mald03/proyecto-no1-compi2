@@ -24,12 +24,13 @@ public class IndentationProcessorService {
 
     /**
      * Processes raw lexer tokens to inject virtual INDENT and DEDENT tokens based in line indentation.
+     * so the file may start at any column and still be processed correctly.
      */
     public List<Token> processTokens(List<Token> rawTokens, List<CompilerError> errorList) {
         List<Token> result = new ArrayList<>();
         Stack<Integer> indentStack = new Stack<>();
-        indentStack.push(0); // Base indentation level (column 0)
 
+        boolean baseInitialized = false;
         boolean isStartOfLine = true;
 
         for (Token token : rawTokens) {
@@ -59,6 +60,16 @@ public class IndentationProcessorService {
             // Evaluate indentation level on the first default channel token of a line
             if (isStartOfLine) {
                 int currentColumn = token.getCharPositionInLine();
+
+                // Initialize the base indentation with the first real token of the file
+                if (!baseInitialized) {
+                    indentStack.push(currentColumn);
+                    baseInitialized = true;
+                    isStartOfLine = false;
+                    result.add(token);
+                    continue;
+                }
+
                 int previousColumn = indentStack.peek();
 
                 if (currentColumn > previousColumn) {
