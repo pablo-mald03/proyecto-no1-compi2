@@ -16,12 +16,14 @@ public class ForInitDeclarationNodeZ extends StatementNodeZ {
     private final String id;
     private final TypeNodeZ type;
     private final ExpressionNodeZ expr;
+    private final int dimensions;
 
-    public ForInitDeclarationNodeZ(int line, int column, String id, TypeNodeZ type, ExpressionNodeZ expr) {
+    public ForInitDeclarationNodeZ(int line, int column, String id, TypeNodeZ type, ExpressionNodeZ expr, int dimensions) {
         super(line, column);
         this.id = id;
         this.type = type;
         this.expr = expr;
+        this.dimensions = dimensions;
     }
 
     @Override

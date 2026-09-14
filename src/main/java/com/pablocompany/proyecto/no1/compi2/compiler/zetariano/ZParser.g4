@@ -53,8 +53,6 @@ statement
     | abbreviated_operation             # StatementAbbreviatedOperation
     | compound_assignment DOT_COMMA     # StatementCompoundAssignment
     | nested_variables_usage            # StatementNestedAssignment
-    | array_redefined_ussage            # StatementArrayAssignment
-    | variable_ussage                   # StatementVariableAssignment
     | variable_declaration              # StatementVariableDeclaration
     | object_values DOT_COMMA           # StatementObjectPropertyCalling
     ;
@@ -105,7 +103,7 @@ if_statement
 
 /*------ ELSE IF LIST STATEMENT PRODUCTION ------*/
 else_if_list
-    : else_if_clause+
+    : else_if_clause+ # ElseIfList
     ;
 
 /*------ ELSE IF STATEMENT PRODUCTION ------*/
@@ -153,7 +151,7 @@ for_statement
 /*------ FOR INITIAL STATEMENT PRODUCTION (INITIAL ITERATOR VALUE) ------*/
 for_init
     : type (INIT_BRACKET FINAL_BRACKET)* ID EQUAL expression   # ForInitVarDecl
-    | ID EQUAL expression                                       # ForInitAssign
+    | nest_variable EQUAL expression                                       # ForInitAssign
     ;
 
 /*------ FOR UPDATE STATEMENT PRODUCTION------*/
@@ -173,17 +171,8 @@ variable_declaration
     : type (INIT_BRACKET FINAL_BRACKET)* ID (EQUAL expression)? DOT_COMMA   # VariableDeclaration
     ;
 
-/*------ ASSIGNMENT PRODUCTIONS ------*/
-variable_ussage
-    : ID EQUAL expression DOT_COMMA   # NormalVariableAssignment
-    ;
 
-/*------ REDEFINIED PRODUCTION OF ARRAY USSAGE ------*/
-array_redefined_ussage
-    : ID INIT_BRACKET expression FINAL_BRACKET EQUAL expression DOT_COMMA   # ArrayIndexAssignment
-    ;
-
-/*------ NESTED VALUES PRODUCTIONS------*/
+/*------ NESTED ASSIGNMENT VALUES PRODUCTIONS------*/
 nested_variables_usage
     : object_values EQUAL expression DOT_COMMA   # NestedObjectAssignment
     ;

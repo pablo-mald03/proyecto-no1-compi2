@@ -32,14 +32,15 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.loops.*;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.methods.ConstructorDeclarationNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.methods.MethodDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.DefaultCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.BodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.functions.FunctionsRegionNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.structs.StructuresRegionNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 
 /**
  * This interface is the principal to generate the different compiler phases
@@ -54,7 +55,16 @@ public interface ZAstVisitor<T> {
 
     T visit(CodeBodyNodeZ node);
 
-    T visit(StructuresRegionNodeZ node);
+
+    T visit(MethodDeclarationNodeZ node);
+
+    T visit(ConstructorDeclarationNodeZ node);
+
+    T visit(ObjectInstantiationNodeZ node);
+
+    T visit(ArrayInstantiationNodeZ node);
+
+    T visit(TernaryExpressionNodeZ node);
 
 
     //=======Principal sections
@@ -110,7 +120,7 @@ public interface ZAstVisitor<T> {
 
     T visit(MemberArrayAccessExpressionNodeZ node);
 
-    T visit(FunctionsRegionNodeZ node);
+    T visit(ClassDeclarationNodeZ node);
 
     T visit(ShortlyOperationNodeZ node);
 

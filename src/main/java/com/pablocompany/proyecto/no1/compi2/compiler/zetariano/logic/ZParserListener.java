@@ -198,30 +198,6 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitStatementNestedAssignment(ZParser.StatementNestedAssignmentContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code StatementArrayAssignment}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void enterStatementArrayAssignment(ZParser.StatementArrayAssignmentContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StatementArrayAssignment}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void exitStatementArrayAssignment(ZParser.StatementArrayAssignmentContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code StatementVariableAssignment}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void enterStatementVariableAssignment(ZParser.StatementVariableAssignmentContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StatementVariableAssignment}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 */
-	void exitStatementVariableAssignment(ZParser.StatementVariableAssignmentContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code StatementVariableDeclaration}
 	 * labeled alternative in {@link ZParser#statement}.
 	 * @param ctx the parse tree
@@ -426,15 +402,17 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitIfStatement(ZParser.IfStatementContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ZParser#else_if_list}.
+	 * Enter a parse tree produced by the {@code ElseIfList}
+	 * labeled alternative in {@link ZParser#else_if_list}.
 	 * @param ctx the parse tree
 	 */
-	void enterElse_if_list(ZParser.Else_if_listContext ctx);
+	void enterElseIfList(ZParser.ElseIfListContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ZParser#else_if_list}.
+	 * Exit a parse tree produced by the {@code ElseIfList}
+	 * labeled alternative in {@link ZParser#else_if_list}.
 	 * @param ctx the parse tree
 	 */
-	void exitElse_if_list(ZParser.Else_if_listContext ctx);
+	void exitElseIfList(ZParser.ElseIfListContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ElseIfClause}
 	 * labeled alternative in {@link ZParser#else_if_clause}.
@@ -639,30 +617,6 @@ public interface ZParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitVariableDeclaration(ZParser.VariableDeclarationContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code NormalVariableAssignment}
-	 * labeled alternative in {@link ZParser#variable_ussage}.
-	 * @param ctx the parse tree
-	 */
-	void enterNormalVariableAssignment(ZParser.NormalVariableAssignmentContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code NormalVariableAssignment}
-	 * labeled alternative in {@link ZParser#variable_ussage}.
-	 * @param ctx the parse tree
-	 */
-	void exitNormalVariableAssignment(ZParser.NormalVariableAssignmentContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code ArrayIndexAssignment}
-	 * labeled alternative in {@link ZParser#array_redefined_ussage}.
-	 * @param ctx the parse tree
-	 */
-	void enterArrayIndexAssignment(ZParser.ArrayIndexAssignmentContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ArrayIndexAssignment}
-	 * labeled alternative in {@link ZParser#array_redefined_ussage}.
-	 * @param ctx the parse tree
-	 */
-	void exitArrayIndexAssignment(ZParser.ArrayIndexAssignmentContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code NestedObjectAssignment}
 	 * labeled alternative in {@link ZParser#nested_variables_usage}.

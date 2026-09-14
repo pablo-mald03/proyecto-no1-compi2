@@ -10,10 +10,13 @@ import lombok.Getter;
 public class PrintStatementNodeZ extends StatementNodeZ {
 
     private final ExpressionNodeZ expression;
+    //IF ITS TRUE IS PRINTLN
+    private final boolean isEndless;
 
-    public PrintStatementNodeZ(int line, int column, ExpressionNodeZ expression) {
+    public PrintStatementNodeZ(int line, int column, ExpressionNodeZ expression, boolean isEndless) {
         super(line, column);
         this.expression = expression;
+        this.isEndless = isEndless;
     }
 
     @Override

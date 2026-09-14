@@ -15,9 +15,9 @@ public class ForStatementNodeZ extends StatementNodeZ {
     private final ZAstNode init; //Could be a variable declaration or assignment node
     private final ExpressionNodeZ condition;
     private final ZAstNode update; //Could be an assigment or incrementable variable
-    private final List<StatementNodeZ> body;
+    private final List<ZAstNode> body;
 
-    public ForStatementNodeZ(int line, int column, ZAstNode init, ExpressionNodeZ condition, ZAstNode update, List<StatementNodeZ> body) {
+    public ForStatementNodeZ(int line, int column, ZAstNode init, ExpressionNodeZ condition, ZAstNode update, List<ZAstNode> body) {
         super(line, column);
         this.init = init;
         this.condition = condition;

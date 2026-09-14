@@ -15,15 +15,14 @@ public class VariableDeclarationNodeZ extends StatementNodeZ {
     //If type is null this is an object
     private final TypeNodeZ dataType;
     private final ExpressionNodeZ initializer;
+    private final int dimensions;
 
-    private final boolean isObject;
-
-    public VariableDeclarationNodeZ(int line, int column, String identifier, TypeNodeZ dataType, ExpressionNodeZ initializer, boolean isObject) {
+    public VariableDeclarationNodeZ(int line, int column, String identifier, TypeNodeZ dataType, ExpressionNodeZ initializer, int dimensions) {
         super(line, column);
         this.identifier = identifier;
         this.dataType = dataType;
         this.initializer = initializer;
-        this.isObject = isObject;
+        this.dimensions = dimensions;
     }
 
     //This is the principal generate the final code

@@ -9,6 +9,7 @@ public enum ZDataType {
     CHAR("char"),
     BOOLEAN("boolean"),
     VOID("void"),
+    NULL("null"),
     CLASS("clase");
 
     private final String operation;

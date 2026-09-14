@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions;
 
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.StatementNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
 
@@ -11,7 +11,7 @@ import java.util.List;
  *
  */
 @Getter
-public class ParameterListNodeZ extends StatementNodeZ {
+public class ParameterListNodeZ extends ZAstNode {
 
     private final List<ParameterNodeZ> parameters;
 

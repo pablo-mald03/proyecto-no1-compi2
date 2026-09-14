@@ -11,17 +11,18 @@ import lombok.Getter;
 @Getter
 public class ParameterNodeZ extends ZAstNode {
 
-    private final String structName;
+    private final String name;
     private final TypeNodeZ type;
     private final boolean isArray;
-
+    private final int dimensions;
     private final ParameterKind kind;
 
-    public ParameterNodeZ(int line, int column, String structName, TypeNodeZ type, boolean isArray, ParameterKind kind) {
+    public ParameterNodeZ(int line, int column, String name, TypeNodeZ type, boolean isArray, int dimensions, ParameterKind kind) {
         super(line, column);
-        this.structName = structName;
+        this.name = name;
         this.type = type;
         this.isArray = isArray;
+        this.dimensions = dimensions;
         this.kind = kind;
     }
 

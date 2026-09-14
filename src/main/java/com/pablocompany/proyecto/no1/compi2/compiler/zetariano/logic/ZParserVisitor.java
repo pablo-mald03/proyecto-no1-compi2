@@ -122,20 +122,6 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatementNestedAssignment(ZParser.StatementNestedAssignmentContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code StatementArrayAssignment}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatementArrayAssignment(ZParser.StatementArrayAssignmentContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StatementVariableAssignment}
-	 * labeled alternative in {@link ZParser#statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatementVariableAssignment(ZParser.StatementVariableAssignmentContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code StatementVariableDeclaration}
 	 * labeled alternative in {@link ZParser#statement}.
 	 * @param ctx the parse tree
@@ -255,11 +241,12 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitIfStatement(ZParser.IfStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link ZParser#else_if_list}.
+	 * Visit a parse tree produced by the {@code ElseIfList}
+	 * labeled alternative in {@link ZParser#else_if_list}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitElse_if_list(ZParser.Else_if_listContext ctx);
+	T visitElseIfList(ZParser.ElseIfListContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ElseIfClause}
 	 * labeled alternative in {@link ZParser#else_if_clause}.
@@ -379,20 +366,6 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariableDeclaration(ZParser.VariableDeclarationContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code NormalVariableAssignment}
-	 * labeled alternative in {@link ZParser#variable_ussage}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNormalVariableAssignment(ZParser.NormalVariableAssignmentContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ArrayIndexAssignment}
-	 * labeled alternative in {@link ZParser#array_redefined_ussage}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitArrayIndexAssignment(ZParser.ArrayIndexAssignmentContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code NestedObjectAssignment}
 	 * labeled alternative in {@link ZParser#nested_variables_usage}.

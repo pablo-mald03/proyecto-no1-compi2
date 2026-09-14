@@ -11,7 +11,7 @@ import java.util.List;
  *
  */
 @Getter
-public class CodeBodyNodeZ extends ZAstNode {
+public class CodeBodyNodeZ extends StatementNodeZ {
 
     private final List<ZAstNode> statements;
 

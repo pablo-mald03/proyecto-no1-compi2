@@ -2,8 +2,8 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.child
 
 
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.TypeNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,20 +12,20 @@ import java.util.List;
 //This class is the principal funcion call representation
 @Getter
 @Setter
-public class FunctionCallExpressionNodeZ extends ExpressionNodeY {
+public class FunctionCallExpressionNodeZ extends ExpressionNodeZ {
 
-    private final ExpressionNodeY target;
+    private final ExpressionNodeZ target;
 
     private final String functionName;
 
-    private final List<ExpressionNodeY> arguments;
+    private final List<ExpressionNodeZ> arguments;
 
     private TypeNodeY inferredType;
 
     public FunctionCallExpressionNodeZ(int line, int column,
-                                       ExpressionNodeY target,
+                                       ExpressionNodeZ target,
                                        String functionName,
-                                       List<ExpressionNodeY> arguments) {
+                                       List<ExpressionNodeZ> arguments) {
         super(line, column);
         this.target = target;
         this.functionName = functionName;
@@ -33,7 +33,7 @@ public class FunctionCallExpressionNodeZ extends ExpressionNodeY {
     }
 
     @Override
-    public <T> T accept(YAstVisitor<T> visitor) {
+    public <T> T accept(ZAstVisitor<T> visitor) {
         return visitor.visit(this);
     }
 }

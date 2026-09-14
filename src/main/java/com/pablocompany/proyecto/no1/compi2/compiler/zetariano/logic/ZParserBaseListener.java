@@ -209,30 +209,6 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStatementArrayAssignment(ZParser.StatementArrayAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStatementArrayAssignment(ZParser.StatementArrayAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStatementVariableAssignment(ZParser.StatementVariableAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStatementVariableAssignment(ZParser.StatementVariableAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterStatementVariableDeclaration(ZParser.StatementVariableDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -437,13 +413,13 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterElse_if_list(ZParser.Else_if_listContext ctx) { }
+	@Override public void enterElseIfList(ZParser.ElseIfListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitElse_if_list(ZParser.Else_if_listContext ctx) { }
+	@Override public void exitElseIfList(ZParser.ElseIfListContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -648,30 +624,6 @@ public class ZParserBaseListener implements ZParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitVariableDeclaration(ZParser.VariableDeclarationContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterNormalVariableAssignment(ZParser.NormalVariableAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitNormalVariableAssignment(ZParser.NormalVariableAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterArrayIndexAssignment(ZParser.ArrayIndexAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitArrayIndexAssignment(ZParser.ArrayIndexAssignmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

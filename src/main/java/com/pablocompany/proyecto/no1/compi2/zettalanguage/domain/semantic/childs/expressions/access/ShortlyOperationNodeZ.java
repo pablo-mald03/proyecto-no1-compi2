@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.child
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.StatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
 
@@ -10,7 +11,7 @@ import lombok.Getter;
  *
  */
 @Getter
-public class ShortlyOperationNodeZ extends ExpressionNodeZ {
+public class ShortlyOperationNodeZ extends StatementNodeZ {
 
     private final ExpressionNodeZ target;
     private final ExpressionNodeZ value;

@@ -4,5 +4,6 @@ public enum ParameterKind {
 
     STRUCT,
     PRIMITIVE,
-    ARRAY
+    ARRAY,
+    NORMAL
 }

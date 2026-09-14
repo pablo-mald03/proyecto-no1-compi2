@@ -1,13 +1,13 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation;
 
 
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.StatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
 
 @Getter
-public class VariableAssignmentNodeZ extends ZAstNode {
+public class VariableAssignmentNodeZ extends StatementNodeZ {
 
     private final ExpressionNodeZ identifier;
     private final ExpressionNodeZ expressionNode;

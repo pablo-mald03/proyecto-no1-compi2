@@ -12,7 +12,7 @@ import java.util.List;
  *
  */
 @Getter
-public class DefaultCaseNodeZ extends ZAstNode {
+public class DefaultCaseNodeZ extends StatementNodeZ {
 
     private final List<StatementNodeZ> body;
 

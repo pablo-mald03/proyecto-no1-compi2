@@ -1,7 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic;
 
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.functions.FunctionsRegionNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.structs.StructuresRegionNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
 
@@ -11,13 +10,11 @@ import lombok.Getter;
 @Getter
 public class ProgramNodeZ extends ZAstNode {
 
-    private final StructuresRegionNodeZ structures;
-    private final FunctionsRegionNodeZ functions;
+    private final ClassDeclarationNodeZ classNode;
 
-    public ProgramNodeZ(int line, int column, StructuresRegionNodeZ structures, FunctionsRegionNodeZ functions) {
+    public ProgramNodeZ(int line, int column, ClassDeclarationNodeZ classNode) {
         super(line, column);
-        this.structures = structures;
-        this.functions = functions;
+        this.classNode = classNode;
     }
 
     @Override
