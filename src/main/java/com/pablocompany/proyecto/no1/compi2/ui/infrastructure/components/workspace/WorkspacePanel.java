@@ -13,6 +13,7 @@ import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHi
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs.CustomInputDialog;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.validator.ClassFileNameValidator;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -271,6 +272,18 @@ public class WorkspacePanel extends JPanel {
         }
 
         notifier.logSuccess("Verificacion de importaciones completada");
+
+        notifier.logWarning("Validando nombres de archivos .z...");
+
+        ClassFileNameValidator classFileNameValidator = new ClassFileNameValidator();
+        classFileNameValidator.validate(this.fileContexts);
+
+        boolean classFileNameErrors = this.verifyErrors("Error de nombres de archivo: se encontraron: ");
+        if (classFileNameErrors) {
+            return false;
+        }
+
+        notifier.logSuccess("Validacion de nombres .z completada");
 
 
         notifier.logInfo("Analisis semantico en curso...");
