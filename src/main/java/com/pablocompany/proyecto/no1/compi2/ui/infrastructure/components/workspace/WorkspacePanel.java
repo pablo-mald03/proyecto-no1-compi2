@@ -1,7 +1,10 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.CompilationContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.SymbolCollectorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.ParserFactory;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
@@ -43,7 +46,7 @@ public class WorkspacePanel extends JPanel {
     private final JSplitPane splitPane;
     private final JPanel welcomePanel;
     private String projectName;
-
+    private CompilationContext compilationContext;
 
     //Compiled code
     private String compiledOutput;
@@ -55,9 +58,6 @@ public class WorkspacePanel extends JPanel {
     // Main class reference
     private String mainClassPath;
     private FileNode mainClassNode;
-
-    // Dependency graph reference
-    private DependencyGraph dependencyGraph;
 
     /**
      * Constructor with custom project name
@@ -230,6 +230,7 @@ public class WorkspacePanel extends JPanel {
             return false;
         }
 
+        this.compilationContext = new CompilationContext();
         this.clearAllCompilationData();
         compiledOutput = "";
         isCompiled = false;
@@ -253,12 +254,10 @@ public class WorkspacePanel extends JPanel {
         //AST BUILDING PHASE
 
         //VERIFY STEPS
-
-        notifier.logWarning("Verificando importacion de paquetes...");
-
         DependencyAnalyzer dependencyAnalyzer = new DependencyAnalyzer();
         DependencyGraph dependencyGraph = dependencyAnalyzer.analyze(this.fileContexts);
-        this.dependencyGraph = dependencyGraph;
+
+        this.compilationContext.setDependencyGraph(dependencyGraph);
 
         if (dependencyGraph.hasErrors()) {
             for (CompilerError error : dependencyGraph.getErrors()) {
@@ -272,6 +271,18 @@ public class WorkspacePanel extends JPanel {
         }
 
         notifier.logSuccess("Verificacion de importaciones completada");
+
+        notifier.logInfo("Recolectando simbolos...");
+
+        SymbolCollectorOrchestrator symbolCollector = new SymbolCollectorOrchestrator();
+        GlobalSymbolTable symbolTable = symbolCollector.collectAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder()
+        );
+        this.compilationContext.setSymbolTable(symbolTable);
+
+
+        notifier.logSuccess("Recoleccion de simbolos completada");
 
         notifier.logWarning("Validando nombres de archivos .z...");
 

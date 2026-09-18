@@ -11,15 +11,15 @@ import lombok.Getter;
 @Getter
 public class ParameterNodeY extends YAstNode {
 
-    private final String structName;
+    private final String name;
     private final TypeNodeY type;
     private final boolean isArray;
 
     private final ParameterKind kind;
 
-    public ParameterNodeY(int line, int column, String structName, TypeNodeY type, boolean isArray, ParameterKind kind) {
+    public ParameterNodeY(int line, int column, String name, TypeNodeY type, boolean isArray, ParameterKind kind) {
         super(line, column);
-        this.structName = structName;
+        this.name = name;
         this.type = type;
         this.isArray = isArray;
         this.kind = kind;

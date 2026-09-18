@@ -11,13 +11,13 @@ import java.util.List;
 //This is the principal do while representation class
 @Getter
 public class DoWhileStatementNodeY extends StatementNodeY {
-    private final ExpressionNodeY condion;
+    private final ExpressionNodeY condition;
     private final List<StatementNodeY> body;
 
-    public DoWhileStatementNodeY(int line, int column, List<StatementNodeY> body, ExpressionNodeY condion) {
+    public DoWhileStatementNodeY(int line, int column, List<StatementNodeY> body, ExpressionNodeY condition) {
         super(line, column);
         this.body = body;
-        this.condion = condion;
+        this.condition = condition;
     }
 
 
