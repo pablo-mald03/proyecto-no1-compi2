@@ -12,6 +12,9 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.collect
 public class SymbolCollectorFactory {
 
     public static SymbolCollector create(String extension) {
+        if (extension == null) {
+            return null;
+        }
         return switch (extension) {
             case ".y" -> new YSymbolCollector();
             case ".z" -> new ZSymbolCollector();

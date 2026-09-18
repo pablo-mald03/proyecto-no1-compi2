@@ -92,11 +92,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(VariableAssignmentNodeY node) {
-        return null;
-    }
-
-    @Override
     public Void visit(FunctionsRegionNodeY node) {
         if (node.getFunctions() != null) {
             for (FunctionDeclarationNodeY function : node.getFunctions()) {
@@ -105,6 +100,441 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
                 }
             }
         }
+        return null;
+    }
+
+    // ============================================================
+    // STRUCTS
+    // ============================================================
+
+    @Override
+    public Void visit(StructDeclarationNodeY node) {
+        Symbol structSymbol = buildSymbol(
+                node.getStructName(),
+                SymbolKind.STRUCT,
+                null,
+                node
+        );
+        structSymbol.setQualifiedName(node.getStructName());
+
+        if (!table.declare(structSymbol)) {
+            reportDuplicate(node.getStructName(), "struct", node);
+            return null;
+        }
+
+        table.enterScope(SymbolScopeKind.STRUCT, context.getFilePath());
+
+        if (node.getAttributes() != null) {
+            node.getAttributes().accept(this);
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(StructBodyNodeY node) {
+        if (node.getAttributes() != null) {
+            for (StructAttributeNodeY attribute : node.getAttributes()) {
+                if (attribute != null) {
+                    attribute.accept(this);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(StructAttributeNodeY node) {
+        String typeName = resolveTypeName(node.getType());
+
+        Symbol attribute = buildSymbol(
+                node.getIdentifier(),
+                SymbolKind.ATTRIBUTE,
+                typeName,
+                node
+        );
+
+        if (!table.declare(attribute)) {
+            reportDuplicate(node.getIdentifier(), "atributo", node);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(StructPropertyNodeY node) {
+        // StructProperty is a field initializer inside a struct literal, not a declaration.
+        return null;
+    }
+
+    // ============================================================
+    // FUNCTIONS AND PROCEDURES
+    // ============================================================
+
+    @Override
+    public Void visit(FunctionDeclarationNodeY node) {
+        Symbol functionSymbol = buildSymbol(
+                node.getName(),
+                SymbolKind.FUNCTION,
+                null,
+                node
+        );
+
+        if (node.getParameters() != null) {
+            for (ParameterNodeY param : node.getParameters()) {
+                if (param != null) {
+                    functionSymbol.getParameterTypes().add(resolveParameterType(param));
+                }
+            }
+        }
+
+        if (!table.declare(functionSymbol)) {
+            reportDuplicate(node.getName(), "funcion", node);
+            return null;
+        }
+
+        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+
+        if (node.getParameters() != null) {
+            for (ParameterNodeY param : node.getParameters()) {
+                if (param != null) {
+                    param.accept(this);
+                }
+            }
+        }
+
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ProcedureDeclarationNodeY node) {
+        Symbol procedureSymbol = buildSymbol(
+                node.getName(),
+                SymbolKind.FUNCTION,
+                null,
+                node
+        );
+
+        if (node.getParameters() != null) {
+            for (ParameterNodeY param : node.getParameters()) {
+                if (param != null) {
+                    procedureSymbol.getParameterTypes().add(resolveParameterType(param));
+                }
+            }
+        }
+
+        if (!table.declare(procedureSymbol)) {
+            reportDuplicate(node.getName(), "procedimiento", node);
+            return null;
+        }
+
+        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+
+        if (node.getParameters() != null) {
+            for (ParameterNodeY param : node.getParameters()) {
+                if (param != null) {
+                    param.accept(this);
+                }
+            }
+        }
+
+        if (node.getBody() != null) {
+            for (YAstNode statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ParameterNodeY node) {
+        Symbol parameter = buildSymbol(
+                node.getName(),
+                SymbolKind.PARAMETER,
+                resolveParameterType(node),
+                node
+        );
+
+        if (!table.declare(parameter)) {
+            reportDuplicate(node.getName(), "parametro", node);
+        }
+        return null;
+    }
+
+    // ============================================================
+    // VARIABLE DECLARATIONS
+    // ============================================================
+
+    @Override
+    public Void visit(VariableDeclarationNodeY node) {
+        String typeName = resolveTypeName(node.getDataType());
+
+        Symbol variable = buildSymbol(
+                node.getIdentifier(),
+                SymbolKind.LOCAL_VARIABLE,
+                typeName,
+                node
+        );
+
+        if (!table.declare(variable)) {
+            reportDuplicate(node.getIdentifier(), "variable", node);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(ArrayDeclarationNodeY node) {
+        String typeName = resolveTypeName(node.getDataType());
+
+        Symbol array = buildSymbol(
+                node.getIdentifier(),
+                SymbolKind.LOCAL_VARIABLE,
+                typeName,
+                node
+        );
+
+        if (!table.declare(array)) {
+            reportDuplicate(node.getIdentifier(), "arreglo", node);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(StructInstanceNodeY node) {
+        Symbol instance = buildSymbol(
+                node.getIdentifier(),
+                SymbolKind.LOCAL_VARIABLE,
+                node.getStructType(),
+                node
+        );
+
+        if (!table.declare(instance)) {
+            reportDuplicate(node.getIdentifier(), "instancia de struct", node);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(ForInitDeclarationNodeY node) {
+        String typeName = resolveTypeName(node.getType());
+
+        Symbol variable = buildSymbol(
+                node.getId(),
+                SymbolKind.LOCAL_VARIABLE,
+                typeName,
+                node
+        );
+
+        if (!table.declare(variable)) {
+            reportDuplicate(node.getId(), "variable de for", node);
+        }
+        return null;
+    }
+
+    // ============================================================
+    // CONTROL FLOW BLOCKS
+    // ============================================================
+
+    @Override
+    public Void visit(IfStatementNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getThenBody() != null) {
+            for (StatementNodeY statement : node.getThenBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+        if (node.getElseIfs() != null) {
+            for (ElseIfNodeY elseIf : node.getElseIfs()) {
+                if (elseIf != null) {
+                    elseIf.accept(this);
+                }
+            }
+        }
+        if (node.getElseBlockNode() != null) {
+            node.getElseBlockNode().accept(this);
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ElseIfNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ElseBlockNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileStatementNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(DoWhileStatementNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ForStatementNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getInit() != null) {
+            node.getInit().accept(this);
+        }
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getUpdate() != null) {
+            node.getUpdate().accept(this);
+        }
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(SwitchStatementNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getSelector() != null) {
+            node.getSelector().accept(this);
+        }
+        if (node.getCases() != null) {
+            for (SwitchCaseNodeY caseNode : node.getCases()) {
+                if (caseNode != null) {
+                    caseNode.accept(this);
+                }
+            }
+        }
+        if (node.getDefaultCase() != null) {
+            node.getDefaultCase().accept(this);
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(SwitchCaseNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(DefaultCaseNodeY node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (StatementNodeY statement : node.getBody()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    // ============================================================
+    // NON-DECLARING NODES (no-op)
+    // ============================================================
+
+    @Override
+    public Void visit(VariableAssignmentNodeY node) {
         return null;
     }
 
@@ -148,77 +578,8 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    // ============================================================
-    // STRUCTS
-    // ============================================================
-
-    @Override
-    public Void visit(StructDeclarationNodeY node) {
-        Symbol structSymbol = buildSymbol(
-                node.getStructName(),
-                SymbolKind.STRUCT,
-                null,
-                node
-        );
-        structSymbol.setQualifiedName(node.getStructName());
-
-        if (!table.declare(structSymbol)) {
-            reportDuplicate(node.getStructName(), "struct", node);
-            return null;
-        }
-
-        // Enter struct scope to declare its attributes
-        table.enterScope(SymbolScopeKind.STRUCT, context.getFilePath());
-
-        if (node.getAttributes() != null) {
-            node.getAttributes().accept(this);
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(StructBodyNodeY node) {
-        if (node.getAttributes() != null) {
-            for (StructAttributeNodeY attribute : node.getAttributes()) {
-                if (attribute != null) {
-                    attribute.accept(this);
-                }
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(StructAttributeNodeY node) {
-        String typeName = resolveTypeName(node.getType());
-
-        Symbol attribute = buildSymbol(
-                node.getIdentifier(),
-                SymbolKind.ATTRIBUTE,
-                typeName,
-                node
-        );
-
-        if (!table.declare(attribute)) {
-            reportDuplicate(node.getIdentifier(), "atributo", node);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(StructPropertyNodeY node) {
-        return null;
-    }
-
     @Override
     public Void visit(StructLiteralExpressionNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructInstanceNodeY node) {
         return null;
     }
 
@@ -229,115 +590,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodeY node) {
-        return null;
-    }
-
-    // ============================================================
-    // FUNCTIONS
-    // ============================================================
-
-    @Override
-    public Void visit(FunctionDeclarationNodeY node) {
-        Symbol functionSymbol = buildSymbol(
-                node.getName(),
-                SymbolKind.FUNCTION,
-                null,
-                node
-        );
-
-        // Build signature from parameters (types only, order matters)
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null && param.getType() != null) {
-                    functionSymbol.getParameterTypes().add(param.getType().toString());
-                } else {
-                    functionSymbol.getParameterTypes().add("?");
-                }
-            }
-        }
-
-        if (!table.declare(functionSymbol)) {
-            reportDuplicate(node.getName(), "funcion", node);
-            return null;
-        }
-
-        // Enter function scope for parameters and body locals
-        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
-
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null) {
-                    param.accept(this);
-                }
-            }
-        }
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(ProcedureDeclarationNodeY node) {
-        Symbol procedureSymbol = buildSymbol(
-                node.getName(),
-                SymbolKind.FUNCTION,
-                null,
-                node
-        );
-
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null && param.getType() != null) {
-                    procedureSymbol.getParameterTypes().add(param.getType().toString());
-                } else {
-                    procedureSymbol.getParameterTypes().add("?");
-                }
-            }
-        }
-
-        if (!table.declare(procedureSymbol)) {
-            reportDuplicate(node.getName(), "procedimiento", node);
-            return null;
-        }
-
-        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
-
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null) {
-                    param.accept(this);
-                }
-            }
-        }
-
-        if (node.getBody() != null) {
-            for (YAstNode statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(ParameterNodeY node) {
-        Symbol parameter = buildSymbol(
-                node.getName(),
-                SymbolKind.PARAMETER,
-                resolveParameterType(node),
-                node
-        );
-
-        if (!table.declare(parameter)) {
-            reportDuplicate(node.getName(), "parametro", node);
-        }
         return null;
     }
 
@@ -368,27 +620,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ArgumentsNodeY node) {
-        return null;
-    }
-
-    // ============================================================
-    // VARIABLES AND BLOCKS
-    // ============================================================
-
-    @Override
-    public Void visit(VariableDeclarationNodeY node) {
-        String typeName = resolveTypeName(node.getDataType());
-
-        Symbol variable = buildSymbol(
-                node.getIdentifier(),
-                SymbolKind.LOCAL_VARIABLE,
-                typeName,
-                node
-        );
-
-        if (!table.declare(variable)) {
-            reportDuplicate(node.getIdentifier(), "variable", node);
-        }
         return null;
     }
 
@@ -433,155 +664,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(ArrayDeclarationNodeY node) {
-        String typeName = resolveTypeName(node.getDataType());
-
-        Symbol array = buildSymbol(
-                node.getIdentifier(),
-                SymbolKind.LOCAL_VARIABLE,
-                typeName,
-                node
-        );
-
-        if (!table.declare(array)) {
-            reportDuplicate(node.getIdentifier(), "arreglo", node);
-        }
-        return null;
-    }
-
-    @Override
     public Void visit(ArrayValuesNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(IfStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getThenBody() != null) {
-            for (StatementNodeY statementNodeY : node.getThenBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-        if (node.getElseIfs() != null) {
-            for (ElseIfNodeY elseIfNodeY : node.getElseIfs()) {
-                elseIfNodeY.accept(this);
-            }
-        }
-
-        if (node.getElseBlockNode() != null) {
-            node.getElseBlockNode().accept(this);
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(ElseIfNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                statement.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(ElseBlockNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(WhileStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getBody() != null) {
-            for (StatementNodeY statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(DoWhileStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(ForStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getInit() != null) {
-            node.getInit().accept(this);
-        }
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getUpdate() != null) {
-            node.getUpdate().accept(this);
-        }
-        if (node.getBody() != null) {
-            for (StatementNodeY statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(ForInitDeclarationNodeY node) {
-        String typeName = resolveTypeName(node.getType());
-
-        Symbol variable = buildSymbol(
-                node.getId(),
-                SymbolKind.LOCAL_VARIABLE,
-                typeName,
-                node
-        );
-
-        if (!table.declare(variable)) {
-            reportDuplicate(node.getId(), "variable de for", node);
-        }
         return null;
     }
 
@@ -595,64 +678,10 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visit(SwitchStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getSelector() != null) {
-            node.getSelector().accept(this);
-        }
-        if (node.getCases() != null) {
-            for (SwitchCaseNodeY caseNode : node.getCases()) {
-                if (caseNode != null) {
-                    caseNode.accept(this);
-                }
-            }
-        }
-        if (node.getDefaultCase() != null) {
-            node.getDefaultCase().accept(this);
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(SwitchCaseNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
-    @Override
-    public Void visit(DefaultCaseNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statementNodeY : node.getBody()) {
-                statementNodeY.accept(this);
-            }
-        }
-
-        table.exitScope();
-        return null;
-    }
-
     // ============================================================
     // HELPERS
     // ============================================================
 
-    /**
-     * Build a symbol
-     *
-     */
     private Symbol buildSymbol(String name, SymbolKind kind, String type, YAstNode node) {
         Symbol symbol = new Symbol();
         symbol.setName(name);
@@ -665,10 +694,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return symbol;
     }
 
-    /**
-     * Report duplicate identifier
-     *
-     */
     private void reportDuplicate(String name, String kindLabel, YAstNode node) {
         CompilerError error = new CompilerError();
         error.setLexeme(name);
@@ -681,9 +706,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         context.getSemanticErrors().add(error);
     }
 
-    /**
-     * Type resolver helper
-     */
     private String resolveTypeName(TypeNodeY typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) {
@@ -695,10 +717,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    /**
-     * Parameter resolver helper
-     *
-     */
     private String resolveParameterType(ParameterNodeY node) {
         String fromType = resolveTypeName(node.getType());
         if (fromType != null) return fromType;

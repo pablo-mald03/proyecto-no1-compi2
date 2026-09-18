@@ -44,13 +44,19 @@ public class SymbolCollectorOrchestrator {
     /**
      * Principal method to collect the symbols in the tree order
      */
-    private void collectOne(String filePath, Map<String, EditorContext> allContexts, GlobalSymbolTable table) {
+    private void collectOne(String filePath, Map<String, EditorContext> allContexts,
+                            GlobalSymbolTable table) {
         EditorContext context = allContexts.get(filePath);
         if (context == null) {
             return;
         }
 
-        SymbolCollector collector = SymbolCollectorFactory.create(context.getFileExtension());
+        String extension = context.getFileExtension();
+        if (extension == null) {
+            return;
+        }
+
+        SymbolCollector collector = SymbolCollectorFactory.create(extension);
         if (collector == null) {
             return;
         }
