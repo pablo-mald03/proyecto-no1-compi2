@@ -43,16 +43,12 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.StatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * AST builder for the Z language
- */
 /**
  * AST builder for the Z language (Zettaradian)
  */
@@ -151,6 +147,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int column = ctx.getStart().getCharPositionInLine();
 
         TypeNodeZ returnType = (TypeNodeZ) ctx.type().accept(this);
+        int returnDimensions = ctx.INIT_BRACKET().size();
         String name = ctx.ID().getText();
 
         List<ParameterNodeZ> params = new ArrayList<>();
@@ -164,7 +161,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
             body.add(sCtx.accept(this));
         }
 
-        return new MethodDeclarationNodeZ(line, column, name, returnType, params, body);
+        return new MethodDeclarationNodeZ(line, column, name, returnType, params, body, returnDimensions);
     }
 
     //========================

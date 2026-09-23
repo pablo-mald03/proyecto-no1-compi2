@@ -25,7 +25,6 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expr
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.imports.ImportType;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.instances.ExpressionStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.StructInstanceNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructPropertyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.TypeNodePigLatin;
@@ -55,6 +54,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * AST builder for the Pig Latin language (orchestrator)
@@ -667,7 +667,11 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         int column = ctx.getStart().getCharPositionInLine();
 
         String id = ctx.ID().getText();
-        ExpressionNodePigLatin size = (ExpressionNodePigLatin) ctx.expression().accept(this);
+
+        List<ExpressionNodePigLatin> dimensions = ctx.expression().stream()
+                .map(e -> (ExpressionNodePigLatin) e.accept(this))
+                .collect(Collectors.toList());
+
         TypeNodePigLatin type = (TypeNodePigLatin) ctx.variable_type().accept(this);
 
         ArrayInitExpressionNodePigLatin init = null;
@@ -675,7 +679,7 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
             init = (ArrayInitExpressionNodePigLatin) ctx.array_initialization().accept(this);
         }
 
-        return new ArrayDeclarationNodePigLatin(line, column, type, id, size, init);
+        return new ArrayDeclarationNodePigLatin(line, column, type, id, dimensions, init);
     }
 
     @Override
@@ -690,39 +694,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         return new ArrayInitExpressionNodePigLatin(line, column, values);
     }
 
-    //========================
-    // STRUCT OPERATIONS
-    //========================
-
-    @Override
-    public PigLatinAstNode visitNormalVariableStruct(PigLatinParser.NormalVariableStructContext ctx) {
-        return ctx.variable_without_value().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitArrayVariableStruct(PigLatinParser.ArrayVariableStructContext ctx) {
-        return ctx.array_variable_struct().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitInternalStructNormalVariable(PigLatinParser.InternalStructNormalVariableContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String id = ctx.ID().getText();
-        TypeNodePigLatin type = (TypeNodePigLatin) ctx.variable_type().accept(this);
-        return new StructAttributeNodePigLatin(line, column, id, type, false);
-    }
-
-    @Override
-    public PigLatinAstNode visitInternalStructArray(PigLatinParser.InternalStructArrayContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String id = ctx.ID().getText();
-        TypeNodePigLatin type = (TypeNodePigLatin) ctx.variable_type().accept(this);
-        return new StructAttributeNodePigLatin(line, column, id, type, true);
-    }
 
     @Override
     public PigLatinAstNode visitStructInstance(PigLatinParser.StructInstanceContext ctx) {

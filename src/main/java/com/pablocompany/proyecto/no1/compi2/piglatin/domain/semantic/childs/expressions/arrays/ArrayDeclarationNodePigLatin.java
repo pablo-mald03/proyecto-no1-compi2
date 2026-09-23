@@ -6,21 +6,29 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.parents.Sta
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 public class ArrayDeclarationNodePigLatin extends StatementNodePigLatin {
 
     private final String identifier;
-    private final ExpressionNodePigLatin size;
-    private final TypeNodePigLatin dataType;
+    // order = declaration order [0]: 0 position
+    private final List<ExpressionNodePigLatin> dimensions;
+    private final TypeNodePigLatin dataType;                // BASE type (the element)
     private final ArrayInitExpressionNodePigLatin initializer;
 
-
-    public ArrayDeclarationNodePigLatin(int line, int column, TypeNodePigLatin dataType, String identifier, ExpressionNodePigLatin size, ArrayInitExpressionNodePigLatin initializer) {
+    public ArrayDeclarationNodePigLatin(int line, int column, TypeNodePigLatin dataType, String identifier,
+                                        List<ExpressionNodePigLatin> dimensions,
+                                        ArrayInitExpressionNodePigLatin initializer) {
         super(line, column);
         this.dataType = dataType;
         this.identifier = identifier;
-        this.size = size;
+        this.dimensions = dimensions;
         this.initializer = initializer;
+    }
+
+    public int getDimensionCount() {
+        return dimensions.size();
     }
 
     @Override

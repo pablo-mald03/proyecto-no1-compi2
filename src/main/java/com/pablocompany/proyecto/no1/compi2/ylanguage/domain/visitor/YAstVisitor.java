@@ -26,9 +26,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfListNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.IfStatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.FunctionDeclarationNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.ParameterNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.ProcedureDeclarationNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops.*;
@@ -157,8 +155,11 @@ public interface YAstVisitor<T> {
 
     T visit(ProcedureDeclarationNodeY node);
 
-    T visit(ParameterNodeY node);
+    T visit(StructParameterNodeY node);
 
+    T visit(PrimitiveParameterNodeY node);
+
+    T visit(ArrayParameterNodeY node);
 
     //IO statements
     T visit(PrintStatementNodeY node);

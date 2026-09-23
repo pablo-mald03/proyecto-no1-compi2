@@ -1,8 +1,14 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -32,7 +38,6 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.DefaultCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.BodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
@@ -44,7 +49,6 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVis
  */
 public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
-
     private final GlobalSymbolTable table;
     private final EditorContext context;
 
@@ -53,30 +57,410 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         this.context = context;
     }
 
+    // ============================================================
+    // PROGRAM INIT VISIT NODE
+    // ============================================================
+
     @Override
     public Void visit(ProgramNodeZ node) {
+        if (node.getClassNode() != null) {
+            node.getClassNode().accept(this);
+        }
         return null;
     }
 
+    // ============================================================
+    // CLASS NODE
+    // ============================================================
+
     @Override
-    public Void visit(BodyNodeZ node) {
+    public Void visit(ClassDeclarationNodeZ node) {
+        Symbol classSymbol = buildSymbol(
+                node.getClassName(),
+                SymbolKind.CLASS,
+                null,
+                node
+        );
+        classSymbol.setQualifiedName(node.getClassName());
+
+        if (!table.declare(classSymbol)) {
+            reportDuplicate(node.getClassName(), "clase", node);
+            return null;
+        }
+
+        table.enterScope(SymbolScopeKind.CLASS, context.getFilePath());
+
+        for (ZAstNode astNode : node.getMembers()) {
+            astNode.accept(this);
+        }
+
+        table.exitScope();
         return null;
     }
 
-    @Override
-    public Void visit(CodeBodyNodeZ node) {
-        return null;
-    }
+    // ============================================================
+    // METHODS AND CONSTRUCTORS
+    // ============================================================
 
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
+        Symbol methodSymbol = buildSymbol(
+                node.getName(),
+                SymbolKind.METHOD,
+                null,
+                node
+        );
+
+        if (node.getParams() != null) {
+            for (ParameterNodeZ param : node.getParams()) {
+                if (param != null) {
+                    methodSymbol.getParameterTypes().add(resolveParameterType(param));
+                }
+            }
+        }
+
+        if (!table.declare(methodSymbol)) {
+            reportDuplicate(node.getName(), "metodo", node);
+            return null;
+        }
+
+        table.enterScope(SymbolScopeKind.METHOD, context.getFilePath());
+
+        if (node.getParams() != null) {
+            for (ParameterNodeZ param : node.getParams()) {
+                if (param != null) {
+                    param.accept(this);
+                }
+            }
+        }
+
+        for (ZAstNode astNode : node.getBody()) {
+            astNode.accept(this);
+        }
+
+        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
+        String constructorName = node.getName() != null
+                ? node.getName()
+                : currentClassName();
+
+        Symbol constructorSymbol = buildSymbol(
+                constructorName,
+                SymbolKind.CONSTRUCTOR,
+                null,
+                node
+        );
+
+        if (node.getParams() != null) {
+            for (ParameterNodeZ param : node.getParams()) {
+                if (param != null) {
+                    constructorSymbol.getParameterTypes().add(resolveParameterType(param));
+                }
+            }
+        }
+
+        if (!table.declare(constructorSymbol)) {
+            reportDuplicate(constructorName, "constructor", node);
+            return null;
+        }
+
+        table.enterScope(SymbolScopeKind.CONSTRUCTOR, context.getFilePath());
+
+        if (node.getParams() != null) {
+            for (ParameterNodeZ param : node.getParams()) {
+                if (param != null) {
+                    param.accept(this);
+                }
+            }
+        }
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+
+        table.exitScope();
         return null;
     }
+
+    @Override
+    public Void visit(ParameterNodeZ node) {
+        Symbol parameter = buildSymbol(
+                node.getName(),
+                SymbolKind.PARAMETER,
+                resolveParameterType(node),
+                node
+        );
+        parameter.setDimensions(node.getDimensions());
+        parameter.setArray(node.isArray());
+
+        if (!table.declare(parameter)) {
+            reportDuplicate(node.getName(), "parametro", node);
+        }
+        return null;
+    }
+
+    // ============================================================
+    // CODE BODY (method/constructor body)
+    // ============================================================
+
+    @Override
+    public Void visit(CodeBodyNodeZ node) {
+        if (node.getStatements() != null) {
+            for (ZAstNode statement : node.getStatements()) {
+                if (statement != null) {
+                    statement.accept(this);
+                }
+            }
+        }
+        return null;
+    }
+
+    // ============================================================
+    // VARIABLE DECLARATIONS
+    // ============================================================
+
+    @Override
+    public Void visit(VariableDeclarationNodeZ node) {
+        String typeName = resolveTypeName(node.getDataType());
+
+        SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.CLASS
+                ? SymbolKind.ATTRIBUTE
+                : SymbolKind.LOCAL_VARIABLE;
+
+        Symbol variable = buildSymbol(
+                node.getIdentifier(),
+                kind,
+                typeName,
+                node
+        );
+
+        variable.setDimensions(node.getDimensions());
+        variable.setArray(node.getDimensions() > 0);
+
+        if (!table.declare(variable)) {
+            String label = kind == SymbolKind.ATTRIBUTE ? "atributo" : "variable";
+            reportDuplicate(node.getIdentifier(), label, node);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(ArrayDeclarationNodeZ node) {
+        String typeName = resolveTypeName(node.getDataType());
+
+        SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.CLASS
+                ? SymbolKind.ATTRIBUTE
+                : SymbolKind.LOCAL_VARIABLE;
+
+        Symbol array = buildSymbol(
+                node.getIdentifier(),
+                kind,
+                typeName,
+                node
+        );
+        array.setArray(true);
+
+        if (!table.declare(array)) {
+            String label = kind == SymbolKind.ATTRIBUTE ? "arreglo atributo" : "arreglo";
+            reportDuplicate(node.getIdentifier(), label, node);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(ForInitDeclarationNodeZ node) {
+        String typeName = resolveTypeName(node.getType());
+
+        Symbol variable = buildSymbol(
+                node.getId(),
+                SymbolKind.LOCAL_VARIABLE,
+                typeName,
+                node
+        );
+
+        if (!table.declare(variable)) {
+            reportDuplicate(node.getId(), "variable de for", node);
+        }
+        return null;
+    }
+
+    // ============================================================
+    // CONTROL FLOW BLOCKS
+    // ============================================================
+
+    @Override
+    public Void visit(IfStatementNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getThenBody() != null) {
+            for (ZAstNode astNode : node.getThenBody()) {
+                astNode.accept(this);
+            }
+        }
+        if (node.getElseIfs() != null) {
+            for (ElseIfNodeZ elseIf : node.getElseIfs()) {
+                if (elseIf != null) {
+                    elseIf.accept(this);
+                }
+            }
+        }
+        if (node.getElseBlockNode() != null) {
+            node.getElseBlockNode().accept(this);
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ElseIfNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ElseBlockNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileStatementNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(DoWhileStatementNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(ForStatementNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getInit() != null) {
+            node.getInit().accept(this);
+        }
+        if (node.getCondition() != null) {
+            node.getCondition().accept(this);
+        }
+        if (node.getUpdate() != null) {
+            node.getUpdate().accept(this);
+        }
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(SwitchStatementNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getSelector() != null) {
+            node.getSelector().accept(this);
+        }
+        if (node.getCases() != null) {
+            for (SwitchCaseNodeZ caseNode : node.getCases()) {
+                if (caseNode != null) {
+                    caseNode.accept(this);
+                }
+            }
+        }
+        if (node.getDefaultCase() != null) {
+            node.getDefaultCase().accept(this);
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(SwitchCaseNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(DefaultCaseNodeZ node) {
+        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+
+        if (node.getBody() != null) {
+            for (ZAstNode astNode : node.getBody()) {
+                astNode.accept(this);
+            }
+        }
+
+        table.exitScope();
+        return null;
+    }
+
+    // ============================================================
+    // NON-DECLARING NODES
+    // ============================================================
 
     @Override
     public Void visit(ObjectInstantiationNodeZ node) {
@@ -95,11 +479,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(VariableAssignmentNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(VariableDeclarationNodeZ node) {
         return null;
     }
 
@@ -144,11 +523,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(ArrayDeclarationNodeZ node) {
-        return null;
-    }
-
-    @Override
     public Void visit(ArrayValuesNodeZ node) {
         return null;
     }
@@ -160,11 +534,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ClassDeclarationNodeZ node) {
         return null;
     }
 
@@ -209,56 +578,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(IfStatementNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ElseIfNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ElseBlockNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SwitchStatementNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SwitchCaseNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(DefaultCaseNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(WhileStatementNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(DoWhileStatementNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ForStatementNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ForInitDeclarationNodeZ node) {
-        return null;
-    }
-
-    @Override
     public Void visit(ForInitAssignmentNodeZ node) {
         return null;
     }
@@ -275,11 +594,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProcedureDeclarationNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ParameterNodeZ node) {
         return null;
     }
 
@@ -310,6 +624,77 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArgumentsNodeZ node) {
+        return null;
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+
+    /**
+     * Principal method helper to build a symbol for the .z
+     *
+     */
+    private Symbol buildSymbol(String name, SymbolKind kind, String type, ZAstNode node) {
+        Symbol symbol = new Symbol();
+        symbol.setName(name);
+        symbol.setKind(kind);
+        symbol.setType(type);
+        symbol.setFilePath(context.getFilePath());
+        symbol.setFileName(context.getFileName());
+        symbol.setLine(node.getLine());
+        symbol.setColumn(node.getColumn());
+        return symbol;
+    }
+
+    /**
+     * Report duplicate symbol helper
+     *
+     */
+    private void reportDuplicate(String name, String kindLabel, ZAstNode node) {
+        CompilerError error = new CompilerError();
+        error.setLexeme(name);
+        error.setLine(node.getLine());
+        error.setColumn(node.getColumn());
+        error.setErrorType(ErrorType.SEMANTIC);
+        error.setDescription("Ya existe un " + kindLabel + " con el nombre '" + name + "' en este ambito");
+        error.setFilePath(context.getFilePath());
+        error.setFileName(context.getFileName());
+        context.getSemanticErrors().add(error);
+    }
+
+    /**
+     * Method to resolve the typename
+     *
+     */
+    private String resolveTypeName(TypeNodeZ typeNode) {
+        if (typeNode == null) return null;
+        if (typeNode.getCustomTypeName() != null) {
+            return typeNode.getCustomTypeName();
+        }
+        if (typeNode.getDataType() != null) {
+            return typeNode.getDataType().getValue();
+        }
+        return null;
+    }
+
+    /**
+     * Method to resolve the parameter type
+     *
+     */
+    private String resolveParameterType(ParameterNodeZ node) {
+        String fromType = resolveTypeName(node.getType());
+        if (fromType != null) return fromType;
+        return "?";
+    }
+
+    /**
+     * Returns the name of the class currently being collected.
+     * Used as fallback for constructors that do not carry a name.
+     */
+    private String currentClassName() {
+        // Walk up the current scope to find the CLASS scope's owning name.
+        // For simplicity, we rely on the AST passing the class name to the constructor visit.
         return null;
     }
 }

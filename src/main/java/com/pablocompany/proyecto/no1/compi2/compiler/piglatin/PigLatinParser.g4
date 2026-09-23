@@ -176,8 +176,9 @@ compound_assignment
 /*-----ARRAY PRODUCTIONS-----*/
 
 array_declaration
-    : SERIES ID INIT_BRACKET expression FINAL_BRACKET TWO_POINTS variable_type array_initialization? DOT_COMMA      # NormalArrayDeclaration
+    : SERIES ID (INIT_BRACKET expression FINAL_BRACKET)+ TWO_POINTS variable_type array_initialization? DOT_COMMA      # NormalArrayDeclaration
     ;
+
 
 array_initialization
     : INIT_BRACE values_array_list FINAL_BRACE      # ArrayInitWithValues
@@ -185,21 +186,6 @@ array_initialization
 
 values_array_list
     : expression (COMMA expression)*
-    ;
-
-/*---****------****--- STRUCT VARIABLES DECLARATION DEFINITION SECTION ---****------****---*/
-
-struct_attribute
-    : variable_without_value            # NormalVariableStruct
-    | array_variable_struct             # ArrayVariableStruct
-    ;
-
-variable_without_value
-    : ESTO ID TWO_POINTS variable_type      # InternalStructNormalVariable
-    ;
-
-array_variable_struct
-    : SERIES ID TWO_POINTS variable_type           # InternalStructArray
     ;
 
 /*-----STRUCT INSTANCE PRODUCTIONS-----*/

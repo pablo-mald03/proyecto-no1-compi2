@@ -29,7 +29,7 @@ constructor_declaration
 
 /*------ METHOD PRODUCTION ------*/
 method_declaration
-    : PUBLIC type ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
+    : PUBLIC type (INIT_BRACKET FINAL_BRACKET)* ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
     ;
 
 /*------ PARAMETER LIST PRODUCTIONS ------*/

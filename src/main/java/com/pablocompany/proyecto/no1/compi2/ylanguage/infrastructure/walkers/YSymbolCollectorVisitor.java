@@ -33,9 +33,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfListNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.IfStatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.FunctionDeclarationNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.ParameterNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.ProcedureDeclarationNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops.*;
@@ -154,6 +152,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
                 typeName,
                 node
         );
+        attribute.setArray(node.isArray());
 
         if (!table.declare(attribute)) {
             reportDuplicate(node.getIdentifier(), "atributo", node);
@@ -183,7 +182,11 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
                 if (param != null) {
-                    functionSymbol.getParameterTypes().add(resolveParameterType(param));
+                    String type = resolveParameterType(param);
+                    if (param.isArray()) {
+                        type = type + "[]".repeat(param.getDimensions());
+                    }
+                    functionSymbol.getParameterTypes().add(type);
                 }
             }
         }
@@ -227,7 +230,11 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
                 if (param != null) {
-                    procedureSymbol.getParameterTypes().add(resolveParameterType(param));
+                    String type = resolveParameterType(param);
+                    if (param.isArray()) {
+                        type = type + "[]".repeat(param.getDimensions());
+                    }
+                    procedureSymbol.getParameterTypes().add(type);
                 }
             }
         }
@@ -260,19 +267,32 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(ParameterNodeY node) {
+    public Void visit(StructParameterNodeY node) {
         Symbol parameter = buildSymbol(
-                node.getName(),
+                node.getIdentifier(),
                 SymbolKind.PARAMETER,
                 resolveParameterType(node),
                 node
         );
+        parameter.setArray(node.isArray());
+        parameter.setParameterKind(node.getKind());
 
         if (!table.declare(parameter)) {
-            reportDuplicate(node.getName(), "parametro", node);
+            reportDuplicate(node.getIdentifier(), "parametro", node);
         }
         return null;
     }
+
+    @Override
+    public Void visit(PrimitiveParameterNodeY node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ArrayParameterNodeY node) {
+        return null;
+    }
+
 
     // ============================================================
     // VARIABLE DECLARATIONS
@@ -305,6 +325,11 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
                 typeName,
                 node
         );
+
+        if (node.getDimensions() != null) {
+            array.setDimensions(node.getDimensions().size());
+        }
+        array.setArray(true);
 
         if (!table.declare(array)) {
             reportDuplicate(node.getIdentifier(), "arreglo", node);
@@ -682,6 +707,10 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
     // HELPERS
     // ============================================================
 
+    /**
+     * Principal build symbol helper
+     *
+     */
     private Symbol buildSymbol(String name, SymbolKind kind, String type, YAstNode node) {
         Symbol symbol = new Symbol();
         symbol.setName(name);
@@ -694,6 +723,10 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return symbol;
     }
 
+    /**
+     * Principal report duplicate name helper
+     *
+     */
     private void reportDuplicate(String name, String kindLabel, YAstNode node) {
         CompilerError error = new CompilerError();
         error.setLexeme(name);
@@ -706,6 +739,9 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         context.getSemanticErrors().add(error);
     }
 
+    /**
+     * Principal resolve type name method helper
+     * */
     private String resolveTypeName(TypeNodeY typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) {
@@ -717,10 +753,12 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
+    /**
+     * Principal resolver parameter type method
+     * */
     private String resolveParameterType(ParameterNodeY node) {
         String fromType = resolveTypeName(node.getType());
         if (fromType != null) return fromType;
-        if (node.getName() != null) return node.getName();
-        return null;
+        return "?";
     }
 }

@@ -36,9 +36,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfListNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.IfStatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.FunctionDeclarationNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.ParameterListNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.ParameterNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.enums.ParameterKind;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeY;
@@ -147,9 +145,13 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
         TypeNodeY type = (TypeNodeY) ctx.type().accept(this);
         String name = ctx.ID().getText();
-        ExpressionNodeY size = (ExpressionNodeY) ctx.expression().accept(this);
 
-        return new StructAttributeNodeY(line, column, name, type, true, size);
+        List<ExpressionNodeY> dimensions = new ArrayList<>();
+        for (YParser.ExpressionContext eCtx : ctx.expression()) {
+            dimensions.add((ExpressionNodeY) eCtx.accept(this));
+        }
+
+        return new StructAttributeNodeY(line, column, name, type, true, dimensions);
     }
 
     //========================
@@ -213,7 +215,7 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
         TypeNodeY type = (TypeNodeY) ctx.type().accept(this);
         String name = ctx.ID().getText();
-        return new ParameterNodeY(line, column, name, type, false, ParameterKind.PRIMITIVE);
+        return new PrimitiveParameterNodeY(line, column, name, 0, type, false, ParameterKind.PRIMITIVE);
     }
 
     @Override
@@ -221,9 +223,11 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        TypeNodeY type = (TypeNodeY) ctx.type().accept(this);
-        String name = ctx.ID().getText();
-        return new ParameterNodeY(line, column, name, type, true, ParameterKind.ARRAY);
+        int dims = ctx.INIT_BRACKET().size();
+        TypeNodeY elementType = (TypeNodeY) ctx.type().accept(this);
+        String id = ctx.ID().getText();
+
+        return new ArrayParameterNodeY(line, column, id, dims, elementType, true, ParameterKind.ARRAY, elementType);
     }
 
     @Override
@@ -231,12 +235,13 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
+        int dims = ctx.INIT_BRACKET().size();
         String structName = ctx.ID(0).getText();
         String varName = ctx.ID(1).getText();
 
-        return new ParameterNodeY(line, column, varName,
-                new TypeNodeY(line, column, YDataType.CUSTOM, structName),
-                false, ParameterKind.STRUCT);
+        TypeNodeY structType = new TypeNodeY(line, column, YDataType.CUSTOM, structName);
+
+        return new StructParameterNodeY(line, column, varName, dims, structType, dims > 0, ParameterKind.STRUCT, structType);
     }
 
     //========================
@@ -841,17 +846,12 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         TypeNodeY type = (TypeNodeY) ctx.type().accept(this);
         String name = ctx.ID().getText();
 
-        List<YParser.ExpressionContext> exprCtxs = ctx.expression();
-        int last = exprCtxs.size() - 1;
-
         List<ExpressionNodeY> dimensions = new ArrayList<>();
-        for (int i = 0; i < last; i++) {
-            dimensions.add((ExpressionNodeY) exprCtxs.get(i).accept(this));
+        for (YParser.ExpressionContext eCtx : ctx.expression()) {
+            dimensions.add((ExpressionNodeY) eCtx.accept(this));
         }
 
-        ExpressionNodeY initializer = (ExpressionNodeY) exprCtxs.get(last).accept(this);
-
-        return new ArrayDeclarationNodeY(line, column, name, type, dimensions, initializer);
+        return new ArrayDeclarationNodeY(line, column, name, type, dimensions, null);
     }
 
     @Override

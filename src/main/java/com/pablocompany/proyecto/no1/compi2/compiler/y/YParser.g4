@@ -22,10 +22,9 @@ struct_declaration
 
 /*** STRUCT FIELDS ****/
 struct_field
-    : type ID NEWLINE+                                              #StructNormalProperty
-    | type ID INIT_BRACKET expression FINAL_BRACKET NEWLINE+        #StructArrayProperty
+    : type ID NEWLINE+                                                       #StructNormalProperty
+    | type ID (INIT_BRACKET expression FINAL_BRACKET)+ NEWLINE+              #StructArrayProperty
     ;
-
 
 /*---*******---- FUNCTIONS PRODUCTIONS ----*******---*/
 
@@ -47,9 +46,9 @@ parameter_list
 /*** FUNCTION PARAMETER FIELDS ****/
 
 parameter
-    : type ID                                   #PrimitiveParameter
-    | INIT_BRACKET FINAL_BRACKET type ID        #ArrayParameter
-    | INIT_BRACE FINAL_BRACE ID ID              #StructParameter
+    : type ID                                                        #PrimitiveParameter
+    | (INIT_BRACKET FINAL_BRACKET)+ type ID                          #ArrayParameter
+    | INIT_BRACE FINAL_BRACE (INIT_BRACKET FINAL_BRACKET)* ID ID     #StructParameter
     ;
 
 

@@ -414,34 +414,6 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitValues_array_list(PigLatinParser.Values_array_listContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code NormalVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNormalVariableStruct(PigLatinParser.NormalVariableStructContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ArrayVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitArrayVariableStruct(PigLatinParser.ArrayVariableStructContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code InternalStructNormalVariable}
-	 * labeled alternative in {@link PigLatinParser#variable_without_value}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInternalStructNormalVariable(PigLatinParser.InternalStructNormalVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code InternalStructArray}
-	 * labeled alternative in {@link PigLatinParser#array_variable_struct}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInternalStructArray(PigLatinParser.InternalStructArrayContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code StructInstance}
 	 * labeled alternative in {@link PigLatinParser#struct_instance}.
 	 * @param ctx the parse tree
