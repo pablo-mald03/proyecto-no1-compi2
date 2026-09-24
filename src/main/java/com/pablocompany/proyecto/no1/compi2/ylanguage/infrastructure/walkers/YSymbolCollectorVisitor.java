@@ -271,9 +271,10 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         Symbol parameter = buildSymbol(
                 node.getIdentifier(),
                 SymbolKind.PARAMETER,
-                resolveParameterType(node),
+                resolveTypeName(node.getDataType()),
                 node
         );
+        parameter.setDimensions(node.getDimensions());
         parameter.setArray(node.isArray());
         parameter.setParameterKind(node.getKind());
 
@@ -285,14 +286,39 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(PrimitiveParameterNodeY node) {
+        Symbol parameter = buildSymbol(
+                node.getIdentifier(),
+                SymbolKind.PARAMETER,
+                resolveTypeName(node.getType()),
+                node
+        );
+        parameter.setDimensions(node.getDimensions());
+        parameter.setArray(node.isArray());
+        parameter.setParameterKind(node.getKind());
+
+        if (!table.declare(parameter)) {
+            reportDuplicate(node.getIdentifier(), "parametro", node);
+        }
         return null;
     }
 
     @Override
     public Void visit(ArrayParameterNodeY node) {
+        Symbol parameter = buildSymbol(
+                node.getIdentifier(),
+                SymbolKind.PARAMETER,
+                resolveTypeName(node.getElementType()),
+                node
+        );
+        parameter.setDimensions(node.getDimensions());
+        parameter.setArray(node.isArray());
+        parameter.setParameterKind(node.getKind());
+
+        if (!table.declare(parameter)) {
+            reportDuplicate(node.getIdentifier(), "parametro", node);
+        }
         return null;
     }
-
 
     // ============================================================
     // VARIABLE DECLARATIONS
@@ -757,8 +783,15 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
      * Principal resolver parameter type method
      * */
     private String resolveParameterType(ParameterNodeY node) {
-        String fromType = resolveTypeName(node.getType());
-        if (fromType != null) return fromType;
-        return "?";
+        if (node instanceof StructParameterNodeY structParam) {
+            return resolveTypeName(structParam.getDataType());
+        }
+        if (node instanceof ArrayParameterNodeY arrayParam) {
+            return resolveTypeName(arrayParam.getElementType());
+        }
+        if (node instanceof PrimitiveParameterNodeY primitiveParam) {
+            return resolveTypeName(primitiveParam.getType());
+        }
+        return resolveTypeName(node.getType());
     }
 }

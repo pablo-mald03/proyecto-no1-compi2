@@ -52,6 +52,8 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     private final GlobalSymbolTable table;
     private final EditorContext context;
 
+    private String currentClassName;
+
     public ZSymbolCollectorVisitor(GlobalSymbolTable table, EditorContext context) {
         this.table = table;
         this.context = context;
@@ -82,6 +84,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
                 node
         );
         classSymbol.setQualifiedName(node.getClassName());
+        this.currentClassName = node.getClassName();
 
         if (!table.declare(classSymbol)) {
             reportDuplicate(node.getClassName(), "clase", node);
@@ -114,7 +117,11 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
                 if (param != null) {
-                    methodSymbol.getParameterTypes().add(resolveParameterType(param));
+                    String type = resolveParameterType(param);
+                    if (param.isArray()) {
+                        type = type + "[]".repeat(param.getDimensions());
+                    }
+                    methodSymbol.getParameterTypes().add(type);
                 }
             }
         }
@@ -146,7 +153,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     public Void visit(ConstructorDeclarationNodeZ node) {
         String constructorName = node.getName() != null
                 ? node.getName()
-                : currentClassName();
+                : currentClassName;
 
         Symbol constructorSymbol = buildSymbol(
                 constructorName,
@@ -158,7 +165,11 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
                 if (param != null) {
-                    constructorSymbol.getParameterTypes().add(resolveParameterType(param));
+                    String type = resolveParameterType(param);
+                    if (param.isArray()) {
+                        type = type + "[]".repeat(param.getDimensions());
+                    }
+                    constructorSymbol.getParameterTypes().add(type);
                 }
             }
         }
@@ -263,6 +274,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
                 typeName,
                 node
         );
+        array.setDimensions(node.getDimensions().size());
         array.setArray(true);
 
         if (!table.declare(array)) {
@@ -693,8 +705,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
      * Used as fallback for constructors that do not carry a name.
      */
     private String currentClassName() {
-        // Walk up the current scope to find the CLASS scope's owning name.
-        // For simplicity, we rely on the AST passing the class name to the constructor visit.
         return null;
     }
 }
