@@ -19,12 +19,14 @@ public class DependencyGraph {
     private List<String> topologicalOrder;
     private List<CompilerError> errors;
 
+    private Map<String, String> importResolutionMap;
+
     public DependencyGraph() {
         this.adjacency = new HashMap<>();
         this.topologicalOrder = new ArrayList<>();
         this.errors = new ArrayList<>();
+        this.importResolutionMap = new HashMap<>();
     }
-
     /**
      * Method to add another dependency
      *
@@ -48,6 +50,7 @@ public class DependencyGraph {
     public void addError(CompilerError error) {
         errors.add(error);
     }
+
 
     /**
      * Flag to verify if the list has errors

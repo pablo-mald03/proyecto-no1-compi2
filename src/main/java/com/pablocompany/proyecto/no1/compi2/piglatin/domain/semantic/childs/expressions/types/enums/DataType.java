@@ -9,7 +9,8 @@ public enum DataType {
     CHAR("littera"),
     BOOLEAN("bool"),
     VOID("actio"),
-    CUSTOM("custom");
+    CUSTOM("custom"),
+    OBJECT("objeto");
 
     private final String operation;
 

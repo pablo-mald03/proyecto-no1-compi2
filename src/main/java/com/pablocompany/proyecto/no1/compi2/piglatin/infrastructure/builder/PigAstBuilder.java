@@ -525,7 +525,7 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        List<AstNode> decls = new ArrayList<>();
+        List<PigLatinAstNode> decls = new ArrayList<>();
         for (PigLatinParser.DeclarationContext dCtx : ctx.declaration()) {
             decls.add(dCtx.accept(this));
         }

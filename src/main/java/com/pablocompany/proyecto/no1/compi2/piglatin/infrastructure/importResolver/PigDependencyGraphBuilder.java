@@ -81,6 +81,7 @@ public class PigDependencyGraphBuilder implements DependencyGraphBuilder {
         }
 
         importNode.setResolvedPath(target.getFilePath());
+        graph.getImportResolutionMap().put(importNode.getRawPath(), target.getFilePath());
     }
 
     /**

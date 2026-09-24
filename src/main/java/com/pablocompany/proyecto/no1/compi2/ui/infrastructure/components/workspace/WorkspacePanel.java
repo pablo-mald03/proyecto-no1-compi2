@@ -274,7 +274,8 @@ public class WorkspacePanel extends JPanel {
 
         notifier.logInfo("Recolectando simbolos...");
 
-        SymbolCollectorOrchestrator symbolCollector = new SymbolCollectorOrchestrator();
+        SymbolCollectorOrchestrator symbolCollector =
+                new SymbolCollectorOrchestrator(this.compilationContext.getDependencyGraph());
         GlobalSymbolTable symbolTable = symbolCollector.collectAll(
                 this.fileContexts,
                 this.compilationContext.getDependencyGraph().getTopologicalOrder()
