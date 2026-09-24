@@ -329,23 +329,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         rootPanel.repaint();
     }
 
-    /**
-     * Add a default project structure for new projects
-     */
-    private void addDefaultProjectStructure() {
-        if (managementScreen != null) {
-            var fileTree = managementScreen.getWorkspacePanel().getFileTreePanel();
-
-            // Create default folders
-            fileTree.createNewFile("src", true);
-            fileTree.createNewFile("main", true, "src");
-            fileTree.createNewFile("Main.z", false, "src/main");
-            fileTree.createNewFile("utils", true, "src");
-            fileTree.createNewFile("Helper.z", false, "src/utils");
-            fileTree.createNewFile("config.y", false, "");
-        }
-    }
-
     // ==========================================
     // WORKSPACE NOTIFIER IMPLEMENTATION
     // ==========================================

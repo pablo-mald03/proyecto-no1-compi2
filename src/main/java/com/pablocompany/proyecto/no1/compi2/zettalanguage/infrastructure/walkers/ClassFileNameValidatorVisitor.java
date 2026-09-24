@@ -156,12 +156,7 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
     public Void visit(IdentifierExpressionNodeZ node) {
         return null;
     }
-
-    @Override
-    public Void visit(ArrayCallExpressionNodeZ node) {
-        return null;
-    }
-
+    
     @Override
     public Void visit(FunctionCallExpressionNodeZ node) {
         return null;

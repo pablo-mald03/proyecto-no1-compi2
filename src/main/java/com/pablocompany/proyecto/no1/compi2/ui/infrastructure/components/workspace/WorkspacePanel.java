@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.Compilatio
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.SymbolCollectorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.domain.resolver.ReferenceResolverOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.ParserFactory;
@@ -284,6 +285,22 @@ public class WorkspacePanel extends JPanel {
 
 
         notifier.logSuccess("Recoleccion de simbolos completada");
+
+        notifier.logInfo("Resolviendo referencias...");
+
+        ReferenceResolverOrchestrator referenceResolver = new ReferenceResolverOrchestrator();
+        referenceResolver.resolveAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
+                this.compilationContext.getSymbolTable()
+        );
+
+        boolean referenceErrors = this.verifyErrors("Error de referencias: se encontraron: ");
+        if (referenceErrors) {
+            return false;
+        }
+
+        notifier.logSuccess("Resolucion de referencias completada");
 
         notifier.logWarning("Validando nombres de archivos .z...");
 

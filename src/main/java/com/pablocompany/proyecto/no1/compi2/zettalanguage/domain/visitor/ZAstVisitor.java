@@ -78,8 +78,6 @@ public interface ZAstVisitor<T> {
 
     T visit(IdentifierExpressionNodeZ node);
 
-    T visit(ArrayCallExpressionNodeZ node);
-
     T visit(FunctionCallExpressionNodeZ node);
 
 

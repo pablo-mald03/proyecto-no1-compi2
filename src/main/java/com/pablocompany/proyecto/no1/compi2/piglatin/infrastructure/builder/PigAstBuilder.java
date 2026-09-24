@@ -183,6 +183,12 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     // BLOCK CODE ACTIONS
     //========================
 
+
+    @Override
+    public PigLatinAstNode visitLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx) {
+        return ctx.declaration().accept(this);
+    }
+
     @Override
     public PigLatinAstNode visitBlockCode(PigLatinParser.BlockCodeContext ctx) {
         return ctx.block_code().accept(this);

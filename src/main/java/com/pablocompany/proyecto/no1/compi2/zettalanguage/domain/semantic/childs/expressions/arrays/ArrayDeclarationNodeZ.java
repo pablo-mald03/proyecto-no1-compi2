@@ -1,6 +1,5 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.arrays;
 
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.StatementNodeZ;
@@ -15,10 +14,10 @@ public class ArrayDeclarationNodeZ extends StatementNodeZ {
     private final String identifier;
     private final TypeNodeZ dataType;
     private final List<ExpressionNodeZ> dimensions;
-    private final ExpressionNodeY initializer;
+    private final ExpressionNodeZ initializer;
 
 
-    public ArrayDeclarationNodeZ(int line, int column, String identifier, TypeNodeZ dataType, List<ExpressionNodeZ> dimensions, ExpressionNodeY initializer) {
+    public ArrayDeclarationNodeZ(int line, int column, String identifier, TypeNodeZ dataType, List<ExpressionNodeZ> dimensions, ExpressionNodeZ initializer) {
         super(line, column);
         this.identifier = identifier;
         this.dataType = dataType;

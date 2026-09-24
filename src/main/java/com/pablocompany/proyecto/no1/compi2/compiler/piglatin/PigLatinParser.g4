@@ -45,6 +45,7 @@ statement
     | abbreviated_operation                 # LocalAbbreviatedOperation
     | assignment                            # LocalAssignment
     | object_values DOT_COMMA               # StatementObjectPropertyCalling
+    | declaration                           # LocalDeclaration
     ;
 
 /*===*****===== COMMON CODE SECTION =====*****===*/

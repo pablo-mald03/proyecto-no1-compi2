@@ -160,6 +160,18 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitStatementObjectPropertyCalling(PigLatinParser.StatementObjectPropertyCallingContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code LocalDeclaration}
+	 * labeled alternative in {@link PigLatinParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code LocalDeclaration}
+	 * labeled alternative in {@link PigLatinParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code CodeBlockIf}
 	 * labeled alternative in {@link PigLatinParser#block_code}.
 	 * @param ctx the parse tree

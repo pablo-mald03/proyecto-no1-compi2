@@ -173,6 +173,18 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterCodeBlockIf(PigLatinParser.CodeBlockIfContext ctx) { }
 	/**
 	 * {@inheritDoc}
