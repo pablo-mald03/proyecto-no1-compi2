@@ -4,7 +4,6 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
@@ -72,7 +71,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ClassDeclarationNodeZ node) {
-        table.enterScope(SymbolScopeKind.CLASS, context.getFilePath());
 
         if (node.getMembers() != null) {
             for (ZAstNode member : node.getMembers()) {
@@ -82,7 +80,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
@@ -92,7 +89,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
-        table.enterScope(SymbolScopeKind.METHOD, context.getFilePath());
 
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
@@ -110,13 +106,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
-        table.enterScope(SymbolScopeKind.CONSTRUCTOR, context.getFilePath());
 
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
@@ -134,7 +128,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
@@ -147,15 +140,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     // EXPRESSIONS (references)
     // ============================================================
 
+    // En ZReferenceResolverVisitor
     @Override
     public Void visit(IdentifierExpressionNodeZ node) {
         String name = node.getIdentifier();
-        List<Symbol> found = table.resolveByName(name);
+        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
         if (found.isEmpty()) {
             reportUndeclared(name, node);
         }
         return null;
     }
+
 
     @Override
     public Void visit(FunctionCallExpressionNodeZ node) {
@@ -163,17 +158,14 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getTarget().accept(this);
         } else {
             String name = node.getFunctionName();
-            List<Symbol> found = table.resolveByName(name);
+            List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
             if (found.isEmpty()) {
                 reportUndeclared(name, node);
             }
         }
-
         if (node.getArguments() != null) {
             for (ExpressionNodeZ arg : node.getArguments()) {
-                if (arg != null) {
-                    arg.accept(this);
-                }
+                if (arg != null) arg.accept(this);
             }
         }
         return null;
@@ -445,7 +437,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(IfStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -468,13 +459,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getElseBlockNode().accept(this);
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseIfNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -487,13 +476,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -503,13 +490,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -522,13 +507,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -541,13 +524,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getCondition().accept(this);
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getInit() != null) {
             node.getInit().accept(this);
@@ -566,7 +547,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
@@ -594,7 +574,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getSelector() != null) {
             node.getSelector().accept(this);
@@ -610,13 +589,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getDefaultCase().accept(this);
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(SwitchCaseNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -626,13 +603,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -642,7 +617,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 

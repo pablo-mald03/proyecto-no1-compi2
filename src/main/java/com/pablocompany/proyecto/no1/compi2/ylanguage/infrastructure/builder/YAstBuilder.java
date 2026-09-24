@@ -717,6 +717,11 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new VariableAssignmentNodeY(line, column, target, value);
     }
 
+    @Override
+    public YAstNode visitStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx) {
+        return ctx.object_values().accept(this);
+    }
+
     //========================
     // NESTED VARIABLE
     //========================

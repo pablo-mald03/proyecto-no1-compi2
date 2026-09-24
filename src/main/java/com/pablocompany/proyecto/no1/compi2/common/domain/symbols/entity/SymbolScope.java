@@ -19,9 +19,11 @@ public class SymbolScope {
     private SymbolScope parent;
     private String ownerPath;        // filePath that owns this scope (null for global)
     private Map<String, List<Symbol>> symbols;
+    private List<SymbolScope> children;
 
     public SymbolScope() {
         this.symbols = new HashMap<>();
+        this.children = new ArrayList<>();
     }
 
     public SymbolScope(SymbolScopeKind kind, SymbolScope parent, String ownerPath) {
@@ -29,12 +31,13 @@ public class SymbolScope {
         this.parent = parent;
         this.ownerPath = ownerPath;
         this.symbols = new HashMap<>();
+        this.children = new ArrayList<>();
+        if (parent != null) {
+            parent.getChildren().add(this);
+        }
     }
-
     /**
      * Declares a symbol in this scope.
-     * If a symbol with the same signature already exists, it is replaced
-     * Returns false if a duplicate signature was found.
      */
     public boolean declare(Symbol symbol) {
         String key = symbol.getSignatureKey();
@@ -61,8 +64,18 @@ public class SymbolScope {
     }
 
     /**
+     * Deep search: this scope + all descendants.
+     */
+    public List<Symbol> resolveDeepByName(String name) {
+        List<Symbol> result = new ArrayList<>(resolveLocalByName(name));
+        for (SymbolScope child : children) {
+            result.addAll(child.resolveDeepByName(name));
+        }
+        return result;
+    }
+
+    /**
      * Looks up a symbol by simple name in this scope only.
-     * Useful when we don't care about overload yet.
      */
     public List<Symbol> resolveLocalByName(String name) {
         List<Symbol> result = new ArrayList<>();

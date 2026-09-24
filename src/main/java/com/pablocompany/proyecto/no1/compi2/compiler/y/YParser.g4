@@ -59,11 +59,12 @@ statement
     : block_statement                           #StatementBlock
     | console_actions                           #StatementConsoleAction
     | loop_control                              #StatementLoopControl
-    | abbreviated_operation                     #StatementAbbreviatedOperation
-    | compound_assignment DOT_COMMA             #StatementCompoundAssignment
+    | abbreviated_operation NEWLINE+            #StatementAbbreviatedOperation
+    | compound_assignment NEWLINE+              #StatementCompoundAssignment
     | struct_declaration                        #StatementStructDeclaration
     | variable_declaration NEWLINE+             #VariableDeclarationStatement
     | assignment NEWLINE+                       #AssignmentVariableStatement
+    | object_values NEWLINE+                    #StatementObjectPropertyCalling
     | RETURN expression? NEWLINE+               #ReturnStatement
     ;
 
@@ -131,8 +132,8 @@ for_statement
 
 /*** FOR INIT STATEMENT PRODUCTION ****/
 for_init
-    : type ID EQUAL expression   #ForInitVarDecl
-    | nest_variable EQUAL expression  #ForInitAssign
+    : type ID EQUAL expression          #ForInitVarDecl
+    | nest_variable EQUAL expression    #ForInitAssign
     ;
 
 /*** FOR UPDATE STATEMENT PRODUCTION ****/
@@ -164,10 +165,10 @@ read_call
 
 /*------ INCREMENT / DECREMENT PRODUCTIONS (PREFIX AND SUFIX) ------*/
 abbreviated_operation
-    : nest_variable ABREV_PLUS DOT_COMMA    # IncSufixOperation
-    | nest_variable ABREV_MINUS DOT_COMMA   # DecSufixOperation
-    | ABREV_PLUS nest_variable  DOT_COMMA   # IncPrefixOperation
-    | ABREV_MINUS nest_variable  DOT_COMMA   # DecPrefixOperation
+    : nest_variable ABREV_PLUS     # IncSufixOperation
+    | nest_variable ABREV_MINUS    # DecSufixOperation
+    | ABREV_PLUS nest_variable     # IncPrefixOperation
+    | ABREV_MINUS nest_variable    # DecPrefixOperation
     ;
 
 /*---*******---- COMPOUND ASSIGNMENT PRODUCTIONS ----*******---*/

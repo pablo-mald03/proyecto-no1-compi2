@@ -143,6 +143,13 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAssignmentVariableStatement(YParser.AssignmentVariableStatementContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code StatementObjectPropertyCalling}
+	 * labeled alternative in {@link YParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link YParser#statement}.
 	 * @param ctx the parse tree

@@ -4,7 +4,6 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
@@ -105,13 +104,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(StructDeclarationNodeY node) {
-        table.enterScope(SymbolScopeKind.STRUCT, context.getFilePath());
 
         if (node.getAttributes() != null) {
             node.getAttributes().accept(this);
         }
 
-        table.exitScope();
         return null;
     }
 
@@ -146,7 +143,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(FunctionDeclarationNodeY node) {
-        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
 
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
@@ -164,13 +160,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ProcedureDeclarationNodeY node) {
-        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
 
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
@@ -188,7 +182,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
@@ -262,7 +255,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(IdentifierExpressionNodeY node) {
         String name = node.getIdentifier();
-        List<Symbol> found = table.resolveByName(name);
+        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
         if (found.isEmpty()) {
             reportUndeclared(name, node);
         }
@@ -275,7 +268,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getTarget().accept(this);
         } else {
             String name = node.getFunctionName();
-            List<Symbol> found = table.resolveByName(name);
+            List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
             if (found.isEmpty()) {
                 reportUndeclared(name, node);
             }
@@ -498,7 +491,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(IfStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -521,13 +513,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getElseBlockNode().accept(this);
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseIfNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -540,13 +530,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -556,13 +544,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -575,13 +561,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -594,13 +578,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getCondition().accept(this);
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getInit() != null) {
             node.getInit().accept(this);
@@ -619,7 +601,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
@@ -647,7 +628,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getSelector() != null) {
             node.getSelector().accept(this);
@@ -663,13 +643,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getDefaultCase().accept(this);
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(SwitchCaseNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -679,13 +657,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -695,7 +671,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
-        table.exitScope();
         return null;
     }
 

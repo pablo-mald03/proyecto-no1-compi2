@@ -3,7 +3,6 @@ package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.resolver;
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.ReferenceResolver;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.walkers.YReferenceResolverVisitor;
 
@@ -22,13 +21,8 @@ public class YReferenceResolver implements ReferenceResolver {
             return;
         }
 
-        SymbolScope fileScope = table.getOrCreateFileScope(context.getFilePath());
-        table.setCurrentScope(fileScope);
-
         YReferenceResolverVisitor visitor = new YReferenceResolverVisitor(table, context);
         yAst.accept(visitor);
-
-        table.resetToGlobal();
     }
 
 }

@@ -3,7 +3,6 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.resolv
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.ReferenceResolver;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers.ZReferenceResolverVisitor;
 
@@ -18,13 +17,8 @@ public class ZReferenceResolver implements ReferenceResolver {
             return;
         }
 
-        SymbolScope fileScope = table.getOrCreateFileScope(context.getFilePath());
-        table.setCurrentScope(fileScope);
-
         ZReferenceResolverVisitor visitor = new ZReferenceResolverVisitor(table, context);
         zAst.accept(visitor);
-
-        table.resetToGlobal();
     }
 
 }

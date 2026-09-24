@@ -33,6 +33,12 @@ public class GlobalSymbolTable {
                 new SymbolScope(SymbolScopeKind.FILE, globalScope, filePath)
         );
     }
+    
+    public List<Symbol> resolveDeepInFile(String filePath, String name) {
+        SymbolScope fileScope = fileScopes.get(filePath);
+        if (fileScope == null) return new ArrayList<>();
+        return fileScope.resolveDeepByName(name);
+    }
 
     /**
      * Enters a new scope of the given kind as a child of the current scope.

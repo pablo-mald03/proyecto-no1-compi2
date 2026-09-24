@@ -234,6 +234,18 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitAssignmentVariableStatement(YParser.AssignmentVariableStatementContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code StatementObjectPropertyCalling}
+	 * labeled alternative in {@link YParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code StatementObjectPropertyCalling}
+	 * labeled alternative in {@link YParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link YParser#statement}.
 	 * @param ctx the parse tree
