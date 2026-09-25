@@ -162,7 +162,20 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
     @Override
     public Type visit(StructAttributeNodeY node) {
-        Type type = mapTypeNode(node.getType());
+        TypeNodeY typeNode = node.getType();
+
+        if (typeNode != null && typeNode.getDataType() == YDataType.CUSTOM) {
+            String customName = typeNode.getCustomTypeName();
+            if (customName != null) {
+                Symbol referenced = findStructSymbolGlobal(customName);
+                if (referenced == null) {
+                    reportTypeError(node.getIdentifier(),
+                            "El tipo '" + customName + "' del atributo no existe", node);
+                }
+            }
+        }
+
+        Type type = mapTypeNode(typeNode);
         if (node.isArray()) {
             int dims = node.getDimensions() != null ? node.getDimensions().size() : 1;
             type = Type.arrayType(type, dims);
@@ -278,7 +291,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         }
 
         if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
+            for (YAstNode statement : node.getBody()) {
                 if (statement != null) {
                     statement.accept(this);
                 }
@@ -402,6 +415,18 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     public Type visit(ArrayDeclarationNodeY node) {
         Type elementType = mapTypeNode(node.getDataType());
         Type arrayType = Type.arrayType(elementType, node.getDimensions().size());
+
+        if (node.getDimensions() != null) {
+            for (ExpressionNodeY dimExpr : node.getDimensions()) {
+                if (dimExpr != null) {
+                    Type dimType = dimExpr.accept(this);
+                    if (!isIntLike(dimType) && !dimType.isUnknown()) {
+                        reportTypeError(node.getIdentifier(),
+                                "Las dimensiones del arreglo deben ser enteras", node);
+                    }
+                }
+            }
+        }
 
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
@@ -1023,8 +1048,8 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
         if (node.getIndexExpression() != null) {
             Type indexType = node.getIndexExpression().accept(this);
-            if (!indexType.isNumeric() && !indexType.isUnknown()) {
-                reportTypeError(arrayName, "El indice de un arreglo debe ser numerico", node);
+            if (!isIntLike(indexType) && !indexType.isUnknown()) {
+                reportTypeError(arrayName, "El indice de un arreglo debe ser entero", node);
             }
         }
 
@@ -1113,18 +1138,19 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     public Type visit(MemberArrayAccessExpressionNodeY node) {
         Type targetType = node.getTarget().accept(this);
 
-        String arrayName = targetType.getCustomName();
         if (!targetType.isArray()) {
             if (!targetType.isUnknown()) {
-                reportTypeError(arrayName, "El target del acceso por indice no es un arreglo", node);
+                reportTypeError("[]",
+                        "El target del acceso por indice no es un arreglo", node);
             }
             return Type.unknown();
         }
 
         if (node.getIndex() != null) {
             Type indexType = node.getIndex().accept(this);
-            if (!indexType.isNumeric() && !indexType.isUnknown()) {
-                reportTypeError(arrayName, "El indice de un arreglo debe ser numerico", node);
+            if (!isIntLike(indexType) && !indexType.isUnknown()) {
+                reportTypeError("[]",
+                        "El indice de un arreglo debe ser entero", node);
             }
         }
 
@@ -1137,6 +1163,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         annotate(node, result);
         return result;
     }
+
 
     @Override
     public Type visit(ArgumentsNodeY node) {
@@ -1428,5 +1455,33 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         }
         return resolveTypeName(rt);
     }
-    
+
+    private Symbol findStructSymbolGlobal(String structName) {
+        if (structName == null) return null;
+
+        Symbol local = findStructSymbol(structName);
+        if (local != null) return local;
+
+        for (SymbolScope fileScope : table.getFileScopes().values()) {
+            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
+                for (Symbol symbol : bucket) {
+                    if (symbol.getKind() == SymbolKind.STRUCT
+                            && symbol.getName().equals(structName)) {
+                        return symbol;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+
+    private boolean isIntLike(Type t) {
+        if (t == null) return false;
+        TypeKind k = t.getKind();
+        return k == TypeKind.INT
+                || k == TypeKind.CHAR
+                || k == TypeKind.BOOLEAN;
+    }
+
 }

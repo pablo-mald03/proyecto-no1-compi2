@@ -163,9 +163,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        List<YAstNode> functions = new ArrayList<>();
+        List<StatementNodeY> functions = new ArrayList<>();
         for (YParser.Function_declarationContext fCtx : ctx.function_declaration()) {
-            functions.add(fCtx.accept(this));
+            functions.add((StatementNodeY)fCtx.accept(this));
         }
         return new FunctionsRegionNodeY(line, column, functions);
     }
@@ -188,9 +188,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
             returnType = (TypeNodeY) ctx.type().accept(this);
         }
 
-        List<StatementNodeY> body = new ArrayList<>();
+        List<YAstNode> body = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            body.add((StatementNodeY) sCtx.accept(this));
+            body.add((YAstNode) sCtx.accept(this));
         }
 
         if (returnType == null) {

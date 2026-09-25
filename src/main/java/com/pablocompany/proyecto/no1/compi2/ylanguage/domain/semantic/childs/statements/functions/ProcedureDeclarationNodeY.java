@@ -10,13 +10,13 @@ import java.util.List;
 
 //This is the principal procedure declaration node
 @Getter
-public class ProcedureDeclarationNodeY extends YAstNode {
+public class ProcedureDeclarationNodeY extends StatementNodeY {
 
     private final String name;
     private final List<ParameterNodeY> parameters;
-    private final List<StatementNodeY> body;
+    private final List<YAstNode> body;
 
-    public ProcedureDeclarationNodeY(int line, int column, String name, List<ParameterNodeY> parameters, List<StatementNodeY> body) {
+    public ProcedureDeclarationNodeY(int line, int column, String name, List<ParameterNodeY> parameters, List<YAstNode> body) {
         super(line, column);
         this.name = name;
         this.parameters = parameters;

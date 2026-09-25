@@ -238,7 +238,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         }
 
         if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
+            for (YAstNode statement : node.getBody()) {
                 if (statement != null) {
                     statement.accept(this);
                 }
