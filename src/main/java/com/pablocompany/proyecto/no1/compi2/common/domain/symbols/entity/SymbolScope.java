@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A lexical scope. Holds symbols declared in this scope.
  * Symbols are stored in a map keyed by signatureKey, allowing overloads.
  */
 @Data
@@ -63,6 +62,8 @@ public class SymbolScope {
         return bucket.get(0);
     }
 
+
+    //TODO
     /**
      * Deep search: this scope + all descendants.
      */

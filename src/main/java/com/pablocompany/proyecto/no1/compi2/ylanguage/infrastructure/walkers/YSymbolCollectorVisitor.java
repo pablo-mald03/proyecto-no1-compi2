@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
@@ -120,7 +121,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
             return null;
         }
 
-        table.enterScope(SymbolScopeKind.STRUCT, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.STRUCT, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getAttributes() != null) {
             node.getAttributes().accept(this);
@@ -162,7 +170,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(StructPropertyNodeY node) {
-        // StructProperty is a field initializer inside a struct literal, not a declaration.
         return null;
     }
 
@@ -196,7 +203,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
             return null;
         }
 
-        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
@@ -244,7 +258,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
             return null;
         }
 
-        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
@@ -401,7 +422,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(IfStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -430,7 +458,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -449,7 +484,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ElseBlockNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -465,7 +507,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(WhileStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -484,7 +533,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(DoWhileStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -503,7 +559,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ForStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getInit() != null) {
             node.getInit().accept(this);
@@ -528,7 +591,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getSelector() != null) {
             node.getSelector().accept(this);
@@ -550,7 +620,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchCaseNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -566,7 +643,14 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(DefaultCaseNodeY node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -733,10 +817,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
     // HELPERS
     // ============================================================
 
-    /**
-     * Principal build symbol helper
-     *
-     */
     private Symbol buildSymbol(String name, SymbolKind kind, String type, YAstNode node) {
         Symbol symbol = new Symbol();
         symbol.setName(name);
@@ -749,10 +829,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return symbol;
     }
 
-    /**
-     * Principal report duplicate name helper
-     *
-     */
     private void reportDuplicate(String name, String kindLabel, YAstNode node) {
         CompilerError error = new CompilerError();
         error.setLexeme(name);
@@ -765,9 +841,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         context.getSemanticErrors().add(error);
     }
 
-    /**
-     * Principal resolve type name method helper
-     * */
     private String resolveTypeName(TypeNodeY typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) {
@@ -779,9 +852,6 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    /**
-     * Principal resolver parameter type method
-     * */
     private String resolveParameterType(ParameterNodeY node) {
         if (node instanceof StructParameterNodeY structParam) {
             return resolveTypeName(structParam.getDataType());

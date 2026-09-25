@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import lombok.Data;
 
@@ -10,7 +11,6 @@ import java.util.Map;
 
 /**
  * The central symbol table shared across all files in the project.
- * Holds a global scope plus one file scope per source file.
  */
 @Data
 public class GlobalSymbolTable {
@@ -25,17 +25,47 @@ public class GlobalSymbolTable {
         this.globalScope = new SymbolScope(SymbolScopeKind.GLOBAL, null, null);
         this.fileScopes = new HashMap<>();
         this.currentScope = this.globalScope;
+        this.scopeRegistry = new HashMap<>();
     }
 
     /**
-     * Returns (or creates) the file scope for a given filePath.
+     * Registers a scope under a key derived from the AST node that created it.
+     */
+    public void registerScope(String scopeKey, SymbolScope scope) {
+        scopeRegistry.put(scopeKey, scope);
+    }
+
+    /**
+     * Retrieves a scope previously registered by a collector.
+     */
+    public SymbolScope getRegisteredScope(String scopeKey) {
+        return scopeRegistry.get(scopeKey);
+    }
+
+    /**
+     * Builds the canonical key for a scope created by an AST node.
+     */
+    public static String buildScopeKey(String filePath, String nodeType, int line, int column) {
+        return filePath + ":" + nodeType + ":" + line + ":" + column;
+    }
+
+    /**
+     * Clears the scope registry. Called between compilation runs.
+     */
+    public void clearScopeRegistry() {
+        scopeRegistry.clear();
+    }
+
+    /**
+     * Returns the file scope for a given filePath.
      */
     public SymbolScope getOrCreateFileScope(String filePath) {
         return fileScopes.computeIfAbsent(filePath, k ->
                 new SymbolScope(SymbolScopeKind.FILE, globalScope, filePath)
         );
     }
-    
+
+    //TODO
     public List<Symbol> resolveDeepInFile(String filePath, String name) {
         SymbolScope fileScope = fileScopes.get(filePath);
         if (fileScope == null) return new ArrayList<>();
@@ -62,15 +92,29 @@ public class GlobalSymbolTable {
 
     /**
      * Declares a symbol in the current scope.
-     * Returns false if a duplicate signature exists.
      */
     public boolean declare(Symbol symbol) {
+        if (symbol.getKind() == SymbolKind.LOCAL_VARIABLE
+                || symbol.getKind() == SymbolKind.PARAMETER) {
+
+            SymbolScope scope = currentScope.getParent();
+            while (scope != null) {
+                List<Symbol> found = scope.resolveLocalByName(symbol.getName());
+                for (Symbol existing : found) {
+                    if (existing.getKind() == SymbolKind.LOCAL_VARIABLE
+                            || existing.getKind() == SymbolKind.PARAMETER) {
+                        return false;
+                    }
+                }
+                scope = scope.getParent();
+            }
+        }
+
         return currentScope.declare(symbol);
     }
 
     /**
      * Resolves a symbol by signatureKey, walking up from the current scope
-     * all the way to the global scope.
      */
     public Symbol resolve(String signatureKey) {
         SymbolScope scope = currentScope;
@@ -101,7 +145,6 @@ public class GlobalSymbolTable {
 
     /**
      * Looks up a file scope directly by filePath.
-     * Used to bridge imports: the .pig's ImportSymbol points to the target file scope.
      */
     public SymbolScope getFileScope(String filePath) {
         return fileScopes.get(filePath);
@@ -109,7 +152,6 @@ public class GlobalSymbolTable {
 
     /**
      * Resets the dynamic pointer back to the global scope.
-     * Useful at the start of each visitor run.
      */
     public void resetToGlobal() {
         this.currentScope = this.globalScope;

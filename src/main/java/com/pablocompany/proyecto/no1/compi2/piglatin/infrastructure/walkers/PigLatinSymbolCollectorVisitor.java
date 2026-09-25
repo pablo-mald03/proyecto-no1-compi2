@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
@@ -101,7 +102,14 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(MaiorSectionNodePigLatin node) {
-        table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getStatements() != null) {
             node.getStatements().accept(this);
@@ -161,7 +169,6 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
     @Override
     public Void visit(VariablesSectionNodePigLatin node) {
         if (node.getDeclarations() != null) {
-
             node.getDeclarations().accept(this);
         }
         return null;
@@ -229,11 +236,10 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(StructInstanceNodePigLatin node) {
-        
+
         SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.FILE
                 ? SymbolKind.GLOBAL_VARIABLE
                 : SymbolKind.LOCAL_VARIABLE;
-
 
         Symbol instance = buildSymbol(
                 node.getIdentifier(),
@@ -266,14 +272,20 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(IfStatementNodePigLatin node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
         }
 
         if (node.getThenBody() != null) {
-
             for (PigLatinAstNode thenBody : node.getThenBody()) {
                 if (thenBody != null) {
                     thenBody.accept(this);
@@ -298,14 +310,20 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(ElseIfNodePigLatin node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
         }
 
         if (node.getBody() != null) {
-
             for (PigLatinAstNode body : node.getBody()) {
                 if (body != null) {
                     body.accept(this);
@@ -319,7 +337,14 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(ElseBlockNodePigLatin node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (PigLatinAstNode body : node.getBody()) {
@@ -335,7 +360,14 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(WhileStatementNodePigLatin node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -350,7 +382,14 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(DoWhileStatementNodePigLatin node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             node.getBody().accept(this);
@@ -365,7 +404,14 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(ForStatementNodePigLatin node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getInit() != null) {
             node.getInit().accept(this);
@@ -400,7 +446,6 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
         }
         return null;
     }
-
 
     // ============================================================
     // NON-DECLARING NODES
@@ -580,10 +625,6 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
     // HELPERS
     // ============================================================
 
-    /**
-     * Build symbol helper
-     *
-     */
     private Symbol buildSymbol(String name, SymbolKind kind, String type, PigLatinAstNode node) {
         Symbol symbol = new Symbol();
         symbol.setName(name);
@@ -596,10 +637,6 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
         return symbol;
     }
 
-    /**
-     * Report duplicate helper
-     *
-     */
     private void reportDuplicate(String name, String kindLabel, PigLatinAstNode node) {
         CompilerError error = new CompilerError();
         error.setLexeme(name);
@@ -612,10 +649,6 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
         context.getSemanticErrors().add(error);
     }
 
-    /**
-     * Resolve type name helper method
-     *
-     */
     private String resolveTypeName(TypeNodePigLatin typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) {

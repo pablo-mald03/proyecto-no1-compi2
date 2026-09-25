@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
@@ -91,7 +92,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             return null;
         }
 
-        table.enterScope(SymbolScopeKind.CLASS, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.CLASS, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         for (ZAstNode astNode : node.getMembers()) {
             astNode.accept(this);
@@ -131,7 +139,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             return null;
         }
 
-        table.enterScope(SymbolScopeKind.METHOD, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.METHOD, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
@@ -179,7 +194,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             return null;
         }
 
-        table.enterScope(SymbolScopeKind.CONSTRUCTOR, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.CONSTRUCTOR, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
@@ -307,7 +329,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(IfStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -334,7 +363,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -351,7 +387,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ElseBlockNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (ZAstNode astNode : node.getBody()) {
@@ -365,7 +408,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(WhileStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -382,7 +432,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(DoWhileStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (ZAstNode astNode : node.getBody()) {
@@ -399,7 +456,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ForStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getInit() != null) {
             node.getInit().accept(this);
@@ -422,7 +486,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getSelector() != null) {
             node.getSelector().accept(this);
@@ -444,7 +515,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchCaseNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (ZAstNode astNode : node.getBody()) {
@@ -458,7 +536,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(DefaultCaseNodeZ node) {
-        table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
+        String scopeKey = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        table.registerScope(scopeKey, scope);
 
         if (node.getBody() != null) {
             for (ZAstNode astNode : node.getBody()) {
@@ -518,7 +603,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     public Void visit(IdentifierExpressionNodeZ node) {
         return null;
     }
-    
+
     @Override
     public Void visit(FunctionCallExpressionNodeZ node) {
         return null;
@@ -638,10 +723,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     // HELPERS
     // ============================================================
 
-    /**
-     * Principal method helper to build a symbol for the .z
-     *
-     */
     private Symbol buildSymbol(String name, SymbolKind kind, String type, ZAstNode node) {
         Symbol symbol = new Symbol();
         symbol.setName(name);
@@ -654,10 +735,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         return symbol;
     }
 
-    /**
-     * Report duplicate symbol helper
-     *
-     */
     private void reportDuplicate(String name, String kindLabel, ZAstNode node) {
         CompilerError error = new CompilerError();
         error.setLexeme(name);
@@ -670,10 +747,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         context.getSemanticErrors().add(error);
     }
 
-    /**
-     * Method to resolve the typename
-     *
-     */
     private String resolveTypeName(TypeNodeZ typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) {
@@ -685,20 +758,12 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         return null;
     }
 
-    /**
-     * Method to resolve the parameter type
-     *
-     */
     private String resolveParameterType(ParameterNodeZ node) {
         String fromType = resolveTypeName(node.getType());
         if (fromType != null) return fromType;
         return "?";
     }
 
-    /**
-     * Returns the name of the class currently being collected.
-     * Used as fallback for constructors that do not carry a name.
-     */
     private String currentClassName() {
         return null;
     }

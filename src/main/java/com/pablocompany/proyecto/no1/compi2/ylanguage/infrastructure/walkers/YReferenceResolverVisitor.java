@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
@@ -104,11 +105,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(StructDeclarationNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getAttributes() != null) {
             node.getAttributes().accept(this);
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -143,6 +150,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(FunctionDeclarationNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
@@ -160,11 +172,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ProcedureDeclarationNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
@@ -182,9 +200,9 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
-
 
     @Override
     public Void visit(StructParameterNodeY node) {
@@ -207,7 +225,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(VariableDeclarationNodeY node) {
-        // The initializer is a reference, if present.
         if (node.getInitializer() != null) {
             node.getInitializer().accept(this);
         }
@@ -216,7 +233,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayDeclarationNodeY node) {
-        // Dimensions are expressions; initializer is an expression.
         if (node.getDimensions() != null) {
             for (ExpressionNodeY dim : node.getDimensions()) {
                 if (dim != null) {
@@ -232,7 +248,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(StructInstanceNodeY node) {
-        // The struct literal initializer contains property expressions.
         if (node.getLiteral() != null) {
             node.getLiteral().accept(this);
         }
@@ -241,7 +256,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ForInitDeclarationNodeY node) {
-        // The expression (initializer) is a reference.
         if (node.getExpr() != null) {
             node.getExpr().accept(this);
         }
@@ -255,7 +269,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(IdentifierExpressionNodeY node) {
         String name = node.getIdentifier();
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
+        List<Symbol> found = table.resolveByName(name);
         if (found.isEmpty()) {
             reportUndeclared(name, node);
         }
@@ -268,7 +282,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getTarget().accept(this);
         } else {
             String name = node.getFunctionName();
-            List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
+            List<Symbol> found = table.resolveByName(name);
             if (found.isEmpty()) {
                 reportUndeclared(name, node);
             }
@@ -286,7 +300,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayCallExpressionNodeY node) {
-
         if (node.getIndexExpression() != null) {
             node.getIndexExpression().accept(this);
         }
@@ -384,12 +397,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(TypeNodeY node) {
-        // Type references are validated in TypeChecker, not here.
         return null;
     }
 
     // ============================================================
-    // STATEMENTS (references + block scoping)
+    // STATEMENTS
     // ============================================================
 
     @Override
@@ -486,11 +498,16 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
     }
 
     // ============================================================
-    // CONTROL FLOW BLOCKS (same scoping as the collector)
+    // CONTROL FLOW BLOCKS (with scope lookup)
     // ============================================================
 
     @Override
     public Void visit(IfStatementNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -513,11 +530,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getElseBlockNode().accept(this);
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ElseIfNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -530,11 +553,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -544,11 +573,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -561,11 +596,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -578,11 +619,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getCondition().accept(this);
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getInit() != null) {
             node.getInit().accept(this);
@@ -601,6 +648,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -628,6 +676,11 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getSelector() != null) {
             node.getSelector().accept(this);
@@ -643,11 +696,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getDefaultCase().accept(this);
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(SwitchCaseNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -657,11 +716,17 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeY node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (StatementNodeY statement : node.getBody()) {
@@ -671,6 +736,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -691,6 +757,20 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
     // ============================================================
     // HELPERS
     // ============================================================
+
+    /**
+     * Looks up the scope registered by the collector for this node.
+     * Returns null if not found (e.g. if the collector did not register it).
+     */
+    private SymbolScope lookupRegisteredScope(YAstNode node) {
+        String key = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        return table.getRegisteredScope(key);
+    }
 
     private void reportUndeclared(String name, YAstNode node) {
         CompilerError error = new CompilerError();

@@ -88,9 +88,17 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(MaiorSectionNodePigLatin node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
+
         if (node.getStatements() != null) {
             node.getStatements().accept(this);
         }
+
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -127,7 +135,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     }
 
     // ============================================================
-    // IMPORTS (nothing to resolve: already validated in phase 1)
+    // IMPORTS
     // ============================================================
 
     @Override
@@ -142,7 +150,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     @Override
     public Void visit(IdentifierExpressionNodePigLatin node) {
         String name = node.getIdentifier();
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
+        List<Symbol> found = table.resolveByName(name);
         if (found.isEmpty()) {
             reportUndeclared(name, node);
         }
@@ -152,17 +160,13 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     @Override
     public Void visit(FunctionCallExpressionNodePigLatin node) {
         if (node.getTarget() != null) {
-            // Instance call: p.calcular() or Persona.calcular()
             Symbol importTarget = resolveImportTarget(node.getTarget());
             if (importTarget != null) {
-                // Persona.calcular(): validate that the function exists in the imported file.
                 validateMemberOfImport(importTarget, node.getFunctionName(), node);
             } else {
-                // p.calcular(): only resolve the target. The member is validated in TypeChecker.
                 node.getTarget().accept(this);
             }
         } else {
-            // Direct call: method(). Search in all imported .y files.
             validateDirectCallInImports(node.getFunctionName(), node);
         }
 
@@ -181,10 +185,8 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         if (node.getTarget() != null) {
             Symbol importTarget = resolveImportTarget(node.getTarget());
             if (importTarget != null) {
-                // Persona.atributo: validate the member exists in the imported file.
                 validateMemberOfImport(importTarget, node.getPropertyName(), node);
             } else {
-                // p.atributo: only resolve the target.
                 node.getTarget().accept(this);
             }
         }
@@ -205,7 +207,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     @Override
     public Void visit(ArrayCallExpressionNodePigLatin node) {
         String name = node.getArrayName();
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
+        List<Symbol> found = table.resolveByName(name);
         if (found.isEmpty()) {
             reportUndeclared(name, node);
         }
@@ -214,7 +216,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         }
         return null;
     }
-    
+
     @Override
     public Void visit(BinaryExpressionNodePigLatin node) {
         if (node.getLeft() != null) {
@@ -242,7 +244,6 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     @Override
     public Void visit(ArrayInitExpressionNodePigLatin node) {
         if (node.getElements() != null) {
-
             for (ExpressionNodePigLatin expressionNodePigLatin : node.getElements()) {
                 expressionNodePigLatin.accept(this);
             }
@@ -312,7 +313,6 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(VariableDeclarationNodePigLatin node) {
-        // The initializer is a reference.
         if (node.getInitializer() != null) {
             node.getInitializer().accept(this);
         }
@@ -336,7 +336,6 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(StructInstanceNodePigLatin node) {
-        // The struct type must be an import of the .pig.
         validateImportExists(node.getStructType(), node);
 
         if (node.getLiteral() != null) {
@@ -410,7 +409,6 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     @Override
     public Void visit(PrintStatementNodePigLatin node) {
         if (node.getExpressionList() != null) {
-
             for (ExpressionNodePigLatin nodePigLatin : node.getExpressionList()) {
                 nodePigLatin.accept(this);
             }
@@ -452,7 +450,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     @Override
     public Void visit(ForInitAssignmentNodePigLatin node) {
         String name = node.getId();
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
+        List<Symbol> found = table.resolveByName(name);
         if (found.isEmpty()) {
             reportUndeclared(name, node);
         }
@@ -461,7 +459,6 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         }
         return null;
     }
-
 
     @Override
     public Void visit(ForUpdateNodePigLatin node) {
@@ -475,11 +472,17 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     }
 
     // ============================================================
-    // CONTROL FLOW
+    // CONTROL FLOW (with scope lookup)
     // ============================================================
 
     @Override
     public Void visit(IfStatementNodePigLatin node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
+
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
         }
@@ -500,11 +503,19 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         if (node.getElseBlockNode() != null) {
             node.getElseBlockNode().accept(this);
         }
+
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ElseIfNodePigLatin node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
+
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
         }
@@ -515,11 +526,19 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
                 }
             }
         }
+
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodePigLatin node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
+
         if (node.getBody() != null) {
             for (PigLatinAstNode statement : node.getBody()) {
                 if (statement != null) {
@@ -527,33 +546,57 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
                 }
             }
         }
+
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodePigLatin node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
+
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
         }
         if (node.getBody() != null) {
             node.getBody().accept(this);
         }
+
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodePigLatin node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
+
         if (node.getBody() != null) {
             node.getBody().accept(this);
         }
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
         }
+
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodePigLatin node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
+
         if (node.getInit() != null) {
             node.getInit().accept(this);
         }
@@ -566,6 +609,8 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         if (node.getBody() != null) {
             node.getBody().accept(this);
         }
+
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -602,10 +647,16 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     // HELPERS
     // ============================================================
 
-    /**
-     * If the target expression is an identifier that resolves to an IMPORT symbol,
-     * returns that symbol. Otherwise returns null.
-     */
+    private SymbolScope lookupRegisteredScope(PigLatinAstNode node) {
+        String key = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        return table.getRegisteredScope(key);
+    }
+
     private Symbol resolveImportTarget(ExpressionNodePigLatin target) {
         if (!(target instanceof IdentifierExpressionNodePigLatin idNode)) {
             return null;
@@ -638,21 +689,15 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         }
     }
 
-    /**
-     * Validates that a direct call (no target) can be found in any imported .y file.
-     */
     private void validateDirectCallInImports(String functionName, PigLatinAstNode node) {
         List<Symbol> allInFile = table.resolveDeepInFile(context.getFilePath(), functionName);
         for (Symbol symbol : allInFile) {
             if (symbol.getKind() == SymbolKind.IMPORT) {
                 continue;
             }
-            // Found something with that name in the current file.
             return;
         }
 
-        // Search in all .y imports.
-        List<Symbol> imports = table.resolveDeepInFile(context.getFilePath(), functionName);
         List<Symbol> importedFiles = findImportSymbols();
 
         for (Symbol importedFile : importedFiles) {
@@ -691,7 +736,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     }
 
     /**
-     * Recursively collects all symbols from a scope and its descendants.
+     * Helper for recursively collects all symbols from a scope and its descendants.
      */
     private List<Symbol> collectAllSymbols(SymbolScope scope) {
         List<Symbol> result = new ArrayList<>();
@@ -705,7 +750,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
     }
 
     /**
-     * Validates that a class or struct name exists as an import.
+     * Helper validates that a class or struct name exists as an import.
      */
     private void validateImportExists(String typeName, PigLatinAstNode node) {
         List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), typeName);
@@ -717,6 +762,10 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         reportUndeclared(typeName, node);
     }
 
+    /**
+     * Helper to report a new error
+     *
+     */
     private void reportUndeclared(String name, PigLatinAstNode node) {
         CompilerError error = new CompilerError();
         error.setLexeme(name);

@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
@@ -71,6 +72,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ClassDeclarationNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getMembers() != null) {
             for (ZAstNode member : node.getMembers()) {
@@ -80,6 +86,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -89,6 +96,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
@@ -106,11 +118,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
@@ -128,6 +146,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -140,17 +159,15 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     // EXPRESSIONS (references)
     // ============================================================
 
-    // En ZReferenceResolverVisitor
     @Override
     public Void visit(IdentifierExpressionNodeZ node) {
         String name = node.getIdentifier();
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
+        List<Symbol> found = table.resolveByName(name);
         if (found.isEmpty()) {
             reportUndeclared(name, node);
         }
         return null;
     }
-
 
     @Override
     public Void visit(FunctionCallExpressionNodeZ node) {
@@ -158,7 +175,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getTarget().accept(this);
         } else {
             String name = node.getFunctionName();
-            List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), name);
+            List<Symbol> found = table.resolveByName(name);
             if (found.isEmpty()) {
                 reportUndeclared(name, node);
             }
@@ -231,11 +248,9 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     @Override
     public Void visit(ArrayInitExpressionNodeZ node) {
         if (node.getElements() != null) {
-
             for (ExpressionNodeZ expressionNodeZ : node.getElements()) {
                 expressionNodeZ.accept(this);
             }
-
         }
         return null;
     }
@@ -266,7 +281,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
-        // new int[expr]: visit the size expression(s).
         if (node.getDimensions() != null) {
             for (ExpressionNodeZ dim : node.getDimensions()) {
                 if (dim != null) {
@@ -323,7 +337,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     }
 
     // ============================================================
-    // STATEMENTS (references + block scoping)
+    // STATEMENTS
     // ============================================================
 
     @Override
@@ -432,11 +446,16 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     }
 
     // ============================================================
-    // CONTROL FLOW BLOCKS
+    // CONTROL FLOW BLOCKS (with scope lookup)
     // ============================================================
 
     @Override
     public Void visit(IfStatementNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -459,11 +478,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getElseBlockNode().accept(this);
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ElseIfNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -476,11 +501,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -490,11 +521,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getCondition() != null) {
             node.getCondition().accept(this);
@@ -507,11 +544,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -524,11 +567,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getCondition().accept(this);
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getInit() != null) {
             node.getInit().accept(this);
@@ -547,6 +596,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -574,6 +624,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getSelector() != null) {
             node.getSelector().accept(this);
@@ -589,11 +644,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             node.getDefaultCase().accept(this);
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(SwitchCaseNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -603,11 +664,17 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeZ node) {
+        SymbolScope previous = table.getCurrentScope();
+        SymbolScope scope = lookupRegisteredScope(node);
+        if (scope != null) {
+            table.setCurrentScope(scope);
+        }
 
         if (node.getBody() != null) {
             for (ZAstNode statement : node.getBody()) {
@@ -617,6 +684,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        table.setCurrentScope(previous);
         return null;
     }
 
@@ -647,6 +715,16 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     // ============================================================
     // HELPERS
     // ============================================================
+
+    private SymbolScope lookupRegisteredScope(ZAstNode node) {
+        String key = GlobalSymbolTable.buildScopeKey(
+                context.getFilePath(),
+                node.getClass().getSimpleName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        return table.getRegisteredScope(key);
+    }
 
     private void reportUndeclared(String name, ZAstNode node) {
         CompilerError error = new CompilerError();
