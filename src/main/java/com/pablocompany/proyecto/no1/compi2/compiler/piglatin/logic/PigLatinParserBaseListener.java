@@ -569,18 +569,6 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterVariableAssignment(PigLatinParser.VariableAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitVariableAssignment(PigLatinParser.VariableAssignmentContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterNormalArrayInstance(PigLatinParser.NormalArrayInstanceContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -593,13 +581,13 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx) { }
+	@Override public void enterVariableAssignment(PigLatinParser.VariableAssignmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx) { }
+	@Override public void exitVariableAssignment(PigLatinParser.VariableAssignmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -744,54 +732,6 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitValues_array_list(PigLatinParser.Values_array_listContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStructInstance(PigLatinParser.StructInstanceContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStructInstance(PigLatinParser.StructInstanceContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStructLiteralValue(PigLatinParser.StructLiteralValueContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStructLiteralValue(PigLatinParser.StructLiteralValueContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStructDataList(PigLatinParser.StructDataListContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStructDataList(PigLatinParser.StructDataListContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStructDataNormal(PigLatinParser.StructDataNormalContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStructDataNormal(PigLatinParser.StructDataNormalContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -1128,18 +1068,6 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitValStructNestValue(PigLatinParser.ValStructNestValueContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterValStructPropertyLiteral(PigLatinParser.ValStructPropertyLiteralContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitValStructPropertyLiteral(PigLatinParser.ValStructPropertyLiteralContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

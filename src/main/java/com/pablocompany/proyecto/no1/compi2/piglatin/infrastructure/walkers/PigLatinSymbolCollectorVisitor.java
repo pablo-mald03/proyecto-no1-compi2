@@ -48,6 +48,7 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -142,6 +143,8 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
         if (!table.declare(importSymbol)) {
             reportDuplicate(logicalName, "import", node);
         }
+
+        bringImportedSymbols(resolvedPath, node);
         return null;
     }
 
@@ -658,5 +661,42 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
             return typeNode.getDataType().getValue();
         }
         return null;
+    }
+
+
+    private void bringImportedSymbols(String resolvedPath, PigLatinAstNode node) {
+        if (resolvedPath == null) {
+            return;
+        }
+        SymbolScope importedScope = table.getFileScope(resolvedPath);
+        if (importedScope == null) {
+            return;
+        }
+
+        for (Symbol symbol : importedScope.getSymbols().values().stream()
+                .flatMap(List::stream).toList()) {
+
+            if (symbol.getKind() != SymbolKind.STRUCT
+                    && symbol.getKind() != SymbolKind.FUNCTION
+                    && symbol.getKind() != SymbolKind.CLASS) {
+                continue;
+            }
+
+            Symbol imported = buildSymbol(
+                    symbol.getName(),
+                    symbol.getKind(),
+                    symbol.getType(),
+                    node
+            );
+            imported.setQualifiedName(symbol.getQualifiedName());
+            imported.setFilePath(symbol.getFilePath());
+            imported.setFileName(symbol.getFileName());
+            imported.setLine(symbol.getLine());
+            imported.setColumn(symbol.getColumn());
+            imported.setParameterTypes(symbol.getParameterTypes());
+
+
+            table.declareOrReplace(imported);
+        }
     }
 }

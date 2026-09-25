@@ -588,11 +588,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     }
 
     @Override
-    public PigLatinAstNode visitStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx) {
-        return ctx.struct_instance().accept(this);
-    }
-
-    @Override
     public PigLatinAstNode visitGlobalAbbreviatedOperation(PigLatinParser.GlobalAbbreviatedOperationContext ctx) {
         return ctx.abbreviated_operation().accept(this);
     }
@@ -620,7 +615,42 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
 
         ExpressionNodePigLatin expr = (ExpressionNodePigLatin) ctx.expression().accept(this);
 
+        if (type != null
+                && type.getDataType() == DataType.CUSTOM
+                && expr instanceof ArrayInitExpressionNodePigLatin arrayInit) {
+            StructLiteralExpressionNodePigLatin structLiteral =
+                    reinterpretAsStructLiteral(arrayInit);
+            return new StructInstanceNodePigLatin(
+                    line, column,
+                    id,
+                    type.getCustomTypeName(),
+                    structLiteral
+            );
+        }
+
         return new VariableDeclarationNodePigLatin(line, column, type, id, expr);
+    }
+
+    private StructLiteralExpressionNodePigLatin reinterpretAsStructLiteral(
+            ArrayInitExpressionNodePigLatin arrayInit) {
+
+        List<StructPropertyNodePigLatin> properties = new ArrayList<>();
+
+        for (ExpressionNodePigLatin element : arrayInit.getElements()) {
+            StructPropertyNodePigLatin property = new StructPropertyNodePigLatin(
+                    arrayInit.getLine(),
+                    arrayInit.getColumn(),
+                    null,
+                    element
+            );
+            properties.add(property);
+        }
+
+        return new StructLiteralExpressionNodePigLatin(
+                arrayInit.getLine(),
+                arrayInit.getColumn(),
+                properties
+        );
     }
 
     @Override
@@ -730,45 +760,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         }
         return new ArrayInitExpressionNodePigLatin(line, column, values);
     }
-
-
-    @Override
-    public PigLatinAstNode visitStructInstance(PigLatinParser.StructInstanceContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String varName = ctx.ID(0).getText();
-        String structName = ctx.ID(1).getText();
-        StructLiteralExpressionNodePigLatin literal = (StructLiteralExpressionNodePigLatin) ctx.struct_literal().accept(this);
-
-        return new StructInstanceNodePigLatin(line, column, varName, structName, literal);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructLiteralValue(PigLatinParser.StructLiteralValueContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        PigLatinParser.StructDataListContext dataList =
-                (PigLatinParser.StructDataListContext) ctx.struct_data_list();
-
-        List<StructPropertyNodePigLatin> values = new ArrayList<>();
-        for (PigLatinParser.Struct_data_valueContext vCtx : dataList.struct_data_value()) {
-            values.add((StructPropertyNodePigLatin) vCtx.accept(this));
-        }
-        return new StructLiteralExpressionNodePigLatin(line, column, values);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructDataNormal(PigLatinParser.StructDataNormalContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String key = ctx.ID().getText();
-        ExpressionNodePigLatin val = (ExpressionNodePigLatin) ctx.expression().accept(this);
-        return new StructPropertyNodePigLatin(line, column, key, val);
-    }
-
 
     //========================
     // NESTED VARIABLES
@@ -998,11 +989,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     @Override
     public PigLatinAstNode visitValStructNestValue(PigLatinParser.ValStructNestValueContext ctx) {
         return ctx.object_values().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitValStructPropertyLiteral(PigLatinParser.ValStructPropertyLiteralContext ctx) {
-        return ctx.struct_literal().accept(this);
     }
 
     @Override

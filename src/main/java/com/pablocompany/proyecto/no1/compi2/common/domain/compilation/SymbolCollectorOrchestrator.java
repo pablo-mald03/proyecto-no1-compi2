@@ -31,9 +31,21 @@ public class SymbolCollectorOrchestrator {
         GlobalSymbolTable table = SymbolTableFactory.create();
         Set<String> processed = new HashSet<>();
 
+        for (String filePath : allContexts.keySet()) {
+            EditorContext ctx = allContexts.get(filePath);
+            if (ctx == null) continue;
+            String ext = ctx.getFileExtension();
+            if (".y".equals(ext) || ".z".equals(ext)) {
+                collectOne(filePath, allContexts, table);
+                processed.add(filePath);
+            }
+        }
+
         for (String filePath : topologicalOrder) {
-            collectOne(filePath, allContexts, table);
-            processed.add(filePath);
+            if (!processed.contains(filePath)) {
+                collectOne(filePath, allContexts, table);
+                processed.add(filePath);
+            }
         }
 
         for (String filePath : allContexts.keySet()) {
@@ -45,6 +57,10 @@ public class SymbolCollectorOrchestrator {
         return table;
     }
 
+    /**
+     * Method to collect one file
+     *
+     */
     private void collectOne(String filePath, Map<String, EditorContext> allContexts,
                             GlobalSymbolTable table) {
         EditorContext context = allContexts.get(filePath);

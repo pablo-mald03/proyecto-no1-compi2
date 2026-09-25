@@ -16,10 +16,8 @@ public class PigLatinReferenceResolver implements ReferenceResolver {
         if (!(context.getAstNode() instanceof PigLatinAstNode pigAst)) {
             return;
         }
-
         PigLatinReferenceResolverVisitor visitor =
                 new PigLatinReferenceResolverVisitor(table, context);
         pigAst.accept(visitor);
     }
-
 }

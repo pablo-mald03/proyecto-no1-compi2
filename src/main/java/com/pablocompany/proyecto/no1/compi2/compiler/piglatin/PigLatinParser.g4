@@ -153,12 +153,13 @@ variabiles_body
 
 declaration
     : variable_declaration          # VariableInstance
-    | assignment                    # VariableAssignment
     | array_declaration             # NormalArrayInstance
-    | struct_instance               # StructVariableInstance
+    | assignment                    # VariableAssignment
     | abbreviated_operation         # GlobalAbbreviatedOperation
-    | compound_assignment DOT_COMMA          # CompoundAssignment
+    | compound_assignment DOT_COMMA # CompoundAssignment
     ;
+
+
 
 /*-----VARIABLE PRODUCTIONS-----*/
 
@@ -196,23 +197,6 @@ values_array_list
     : expression (COMMA expression)*
     ;
 
-/*-----STRUCT INSTANCE PRODUCTIONS-----*/
-
-struct_instance
-    : ESTO ID TWO_POINTS ID struct_literal DOT_COMMA # StructInstance
-    ;
-
-struct_literal
-    : INIT_BRACE struct_data_list FINAL_BRACE  # StructLiteralValue
-    ;
-
-struct_data_list
-    : struct_data_value (COMMA struct_data_value)*      #StructDataList
-    ;
-
-struct_data_value
-    : ID TWO_POINTS expression                 # StructDataNormal
-    ;
 
 /*-----STRUCT PROPERTY ACCESS -----*/
 
@@ -268,7 +252,6 @@ normal_values
     | INT                                               # ValInt
     | boolean_values                                    # ValBool
     | object_values                                     # ValStructNestValue
-    | struct_literal                                    # ValStructPropertyLiteral
     | array_initialization                              # ValArrayInitialLiteral
     | NOVUS ID INIT_PARENT arguments_list? FINAL_PARENT # ValNewInstance
     ;

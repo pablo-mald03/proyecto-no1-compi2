@@ -254,6 +254,19 @@ public class WorkspacePanel extends JPanel {
 
         //AST BUILDING PHASE
 
+        notifier.logWarning("Validando nombres de archivos .z...");
+
+        ClassFileNameValidator classFileNameValidator = new ClassFileNameValidator();
+        classFileNameValidator.validate(this.fileContexts);
+
+        boolean classFileNameErrors = this.verifyErrors("Error de nombres de archivo: se encontraron: ");
+        if (classFileNameErrors) {
+            return false;
+        }
+
+        notifier.logSuccess("Validacion de nombres .z completada");
+        
+
         //VERIFY STEPS
         DependencyAnalyzer dependencyAnalyzer = new DependencyAnalyzer();
         DependencyGraph dependencyGraph = dependencyAnalyzer.analyze(this.fileContexts);
@@ -288,7 +301,8 @@ public class WorkspacePanel extends JPanel {
 
         notifier.logInfo("Resolviendo referencias...");
 
-        ReferenceResolverOrchestrator referenceResolver = new ReferenceResolverOrchestrator();
+        ReferenceResolverOrchestrator referenceResolver =
+                new ReferenceResolverOrchestrator(this.compilationContext.getDependencyGraph());
         referenceResolver.resolveAll(
                 this.fileContexts,
                 this.compilationContext.getDependencyGraph().getTopologicalOrder(),
@@ -301,18 +315,6 @@ public class WorkspacePanel extends JPanel {
         }
 
         notifier.logSuccess("Resolucion de referencias completada");
-
-        notifier.logWarning("Validando nombres de archivos .z...");
-
-        ClassFileNameValidator classFileNameValidator = new ClassFileNameValidator();
-        classFileNameValidator.validate(this.fileContexts);
-
-        boolean classFileNameErrors = this.verifyErrors("Error de nombres de archivo: se encontraron: ");
-        if (classFileNameErrors) {
-            return false;
-        }
-
-        notifier.logSuccess("Validacion de nombres .z completada");
 
 
         notifier.logInfo("Analisis semantico en curso...");

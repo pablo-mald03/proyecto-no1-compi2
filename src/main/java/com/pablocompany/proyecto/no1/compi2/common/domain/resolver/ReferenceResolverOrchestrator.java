@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.ReferenceR
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.factory.ReferenceResolverFactory;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.imports.DependencyGraph;
 
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,12 @@ import java.util.Set;
  * Principal class for the reference resolution pass over all files in topological order.
  */
 public class ReferenceResolverOrchestrator {
+
+    private final DependencyGraph dependencyGraph;
+
+    public ReferenceResolverOrchestrator(DependencyGraph dependencyGraph) {
+        this.dependencyGraph = dependencyGraph;
+    }
 
     /**
      * Principal gateway to resolve all files
