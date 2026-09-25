@@ -90,7 +90,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(FunctionsRegionNodeY node) {
         if (node.getFunctions() != null) {
-            for (FunctionDeclarationNodeY function : node.getFunctions()) {
+            for (YAstNode function : node.getFunctions()) {
                 if (function != null) {
                     function.accept(this);
                 }

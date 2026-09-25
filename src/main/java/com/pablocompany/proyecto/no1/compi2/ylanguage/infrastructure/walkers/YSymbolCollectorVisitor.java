@@ -98,7 +98,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(FunctionsRegionNodeY node) {
         if (node.getFunctions() != null) {
-            for (FunctionDeclarationNodeY function : node.getFunctions()) {
+            for (YAstNode function : node.getFunctions()) {
                 if (function != null) {
                     function.accept(this);
                 }
@@ -245,6 +245,12 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
             }
         }
 
+        if (node.getReturnType() != null) {
+            functionSymbol.setReturnType(resolveTypeName(node.getReturnType()));
+        } else {
+            functionSymbol.setReturnType("void");
+        }
+
         table.exitScope();
         return null;
     }
@@ -269,6 +275,8 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
                 }
             }
         }
+
+        procedureSymbol.setReturnType("void");
 
         if (!table.declare(procedureSymbol)) {
             reportDuplicate(node.getName(), "procedimiento", node);

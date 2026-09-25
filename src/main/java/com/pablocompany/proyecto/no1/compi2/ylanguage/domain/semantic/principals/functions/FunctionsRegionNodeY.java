@@ -2,7 +2,6 @@ package com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principal
 
 
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.FunctionDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
@@ -12,9 +11,9 @@ import java.util.List;
 @Getter
 public class FunctionsRegionNodeY extends YAstNode {
 
-    private final List<FunctionDeclarationNodeY> functions;
+    private final List<YAstNode> functions;
 
-    public FunctionsRegionNodeY(int line, int column, List<FunctionDeclarationNodeY> functions) {
+    public FunctionsRegionNodeY(int line, int column, List<YAstNode> functions) {
         super(line, column);
         this.functions = functions;
     }

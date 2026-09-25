@@ -5,6 +5,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.checker.TypeChecker;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.walkers.YTypeCheckerVisitor;
 
@@ -22,7 +23,12 @@ public class YTypeChecker implements TypeChecker {
                       Map<AstNode, Type> typeAnnotations) {
         if (!(context.getAstNode() instanceof YAstNode yAst)) return;
 
+        SymbolScope fileScope = table.getOrCreateFileScope(context.getFilePath());
+        table.setCurrentScope(fileScope);
+
         YTypeCheckerVisitor visitor = new YTypeCheckerVisitor(table, context, typeAnnotations);
         yAst.accept(visitor);
+
+        table.resetToGlobal();
     }
 }

@@ -135,6 +135,10 @@ public class Type {
             return true;
         }
 
+        if (this.kind == TypeKind.VOID || other.kind == TypeKind.VOID) {
+            return false;
+        }
+
         if (this.equals(other)) return true;
 
         if (this.kind == TypeKind.INT && other.kind == TypeKind.FLOAT) {

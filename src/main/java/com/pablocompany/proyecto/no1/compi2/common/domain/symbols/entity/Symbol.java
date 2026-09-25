@@ -34,6 +34,8 @@ public class Symbol {
     //Struct attributes
     private List<Symbol> members;
 
+    private String returnType;
+
     public Symbol() {
         this.parameterTypes = new ArrayList<>();
     }

@@ -695,7 +695,7 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
             imported.setColumn(symbol.getColumn());
             imported.setParameterTypes(symbol.getParameterTypes());
             imported.setMembers(symbol.getMembers());
-
+            imported.setReturnType(symbol.getReturnType());
 
             table.declareOrReplace(imported);
         }
