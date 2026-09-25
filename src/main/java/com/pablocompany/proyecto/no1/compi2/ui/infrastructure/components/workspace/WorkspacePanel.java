@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.worksp
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.CompilationContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.SymbolCollectorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.orchestator.TypeCheckerOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
 import com.pablocompany.proyecto.no1.compi2.common.domain.resolver.ReferenceResolverOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
@@ -265,7 +266,7 @@ public class WorkspacePanel extends JPanel {
         }
 
         notifier.logSuccess("Validacion de nombres .z completada");
-        
+
 
         //VERIFY STEPS
         DependencyAnalyzer dependencyAnalyzer = new DependencyAnalyzer();
@@ -315,6 +316,23 @@ public class WorkspacePanel extends JPanel {
         }
 
         notifier.logSuccess("Resolucion de referencias completada");
+
+        notifier.logInfo("Verificando tipos...");
+
+        TypeCheckerOrchestrator typeChecker = new TypeCheckerOrchestrator();
+        typeChecker.checkAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
+                this.compilationContext.getSymbolTable(),
+                this.compilationContext.getTypeAnnotations()
+        );
+
+        boolean typeErrors = this.verifyErrors("Error de tipos: se encontraron: ");
+        if (typeErrors) {
+            return false;
+        }
+
+        notifier.logSuccess("Verificacion de tipos completada");
 
 
         notifier.logInfo("Analisis semantico en curso...");

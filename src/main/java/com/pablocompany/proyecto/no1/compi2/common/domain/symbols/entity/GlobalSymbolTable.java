@@ -65,7 +65,6 @@ public class GlobalSymbolTable {
         );
     }
 
-    //TODO
     public List<Symbol> resolveDeepInFile(String filePath, String name) {
         SymbolScope fileScope = fileScopes.get(filePath);
         if (fileScope == null) return new ArrayList<>();

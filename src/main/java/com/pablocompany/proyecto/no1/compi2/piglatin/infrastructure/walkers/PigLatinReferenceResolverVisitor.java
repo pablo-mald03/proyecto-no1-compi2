@@ -346,7 +346,6 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(StructInstanceNodePigLatin node) {
-        System.out.println("VISIT StructInstance: " + node.getStructType());
         validateImportExists(node.getStructType(), node);
         if (node.getLiteral() != null) {
             node.getLiteral().accept(this);
@@ -763,31 +762,15 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
      * Helper validates that a class or struct name exists as an import.
      */
     private void validateImportExists(String typeName, PigLatinAstNode node) {
-        System.out.println("=== validateImportExists for '" + typeName + "' ===");
-        System.out.println("  context.getFilePath() = '" + context.getFilePath() + "'");
-
-        SymbolScope fs = table.getFileScope(context.getFilePath());
-        System.out.println("  fileScope = " + (fs == null ? "NULL" : "OK"));
-        if (fs != null) {
-            System.out.println("  symbols in fileScope (top-level): " + fs.getSymbols().size());
-            for (List<Symbol> bucket : fs.getSymbols().values()) {
-                for (Symbol s : bucket) {
-                    System.out.println("    -> " + s.getName() + " kind=" + s.getKind());
-                }
-            }
-        }
-
+        
         List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), typeName);
-        System.out.println("validateImportExists for '" + typeName + "' found: " + found.size());
         for (Symbol symbol : found) {
             if (symbol.getKind() == SymbolKind.IMPORT
                     || symbol.getKind() == SymbolKind.STRUCT
                     || symbol.getKind() == SymbolKind.CLASS) {
-                System.out.println("  -> accepted: " + symbol.getName() + " kind=" + symbol.getKind());
                 return;
             }
         }
-        System.out.println("  -> reporting undeclared");
         reportUndeclared(typeName, node);
     }
 

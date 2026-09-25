@@ -31,6 +31,9 @@ public class Symbol {
 
     private String qualifiedName;
 
+    //Struct attributes
+    private List<Symbol> members;
+
     public Symbol() {
         this.parameterTypes = new ArrayList<>();
     }

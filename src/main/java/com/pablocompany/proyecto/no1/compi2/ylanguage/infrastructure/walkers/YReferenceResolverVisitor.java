@@ -760,7 +760,6 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
 
     /**
      * Looks up the scope registered by the collector for this node.
-     * Returns null if not found (e.g. if the collector did not register it).
      */
     private SymbolScope lookupRegisteredScope(YAstNode node) {
         String key = GlobalSymbolTable.buildScopeKey(

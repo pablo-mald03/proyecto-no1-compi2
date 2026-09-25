@@ -48,6 +48,9 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Principal symbol collector visitor
  *
@@ -57,6 +60,8 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     private final GlobalSymbolTable table;
     private final EditorContext context;
+
+    private List<Symbol> currentStructMembers;
 
     public YSymbolCollectorVisitor(GlobalSymbolTable table, EditorContext context) {
         this.table = table;
@@ -121,6 +126,9 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
             return null;
         }
 
+        List<Symbol> previousMembers = currentStructMembers;
+        currentStructMembers = new ArrayList<>();
+
         SymbolScope scope = table.enterScope(SymbolScopeKind.STRUCT, context.getFilePath());
         String scopeKey = GlobalSymbolTable.buildScopeKey(
                 context.getFilePath(),
@@ -135,6 +143,10 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         }
 
         table.exitScope();
+
+        structSymbol.setMembers(currentStructMembers);
+        currentStructMembers = previousMembers;
+
         return null;
     }
 
@@ -165,6 +177,11 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         if (!table.declare(attribute)) {
             reportDuplicate(node.getIdentifier(), "atributo", node);
         }
+
+        if (currentStructMembers != null) {
+            currentStructMembers.add(attribute);
+        }
+
         return null;
     }
 
@@ -794,12 +811,12 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(ArrayInitExpressionNodeY node) {
+    public Void visit(ArrayValuesNodeY node) {
         return null;
     }
 
     @Override
-    public Void visit(ArrayValuesNodeY node) {
+    public Void visit(ArrayInitExpressionNodeY node) {
         return null;
     }
 

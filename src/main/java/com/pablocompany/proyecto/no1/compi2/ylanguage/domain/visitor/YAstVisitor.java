@@ -73,13 +73,12 @@ public interface YAstVisitor<T> {
 
     T visit(FunctionCallExpressionNodeY node);
 
-
-    T visit(ArrayInitExpressionNodeY node);
-
     T visit(ArrayDeclarationNodeY node);
 
     T visit(ArrayValuesNodeY node);
     
+    T visit(ArrayInitExpressionNodeY node);
+
 
     //======Struct values and eclarations
 
