@@ -19,6 +19,8 @@ public class GlobalSymbolTable {
     private Map<String, SymbolScope> fileScopes;
     private SymbolScope currentScope;
 
+    private Map<String, SymbolScope> scopeRegistry;
+
     public GlobalSymbolTable() {
         this.globalScope = new SymbolScope(SymbolScopeKind.GLOBAL, null, null);
         this.fileScopes = new HashMap<>();

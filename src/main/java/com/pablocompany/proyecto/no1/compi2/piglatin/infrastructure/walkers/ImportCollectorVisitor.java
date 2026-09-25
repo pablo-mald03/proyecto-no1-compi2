@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers;
 
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.imports.ImportNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.ShortlyOperationNodePigLatin;
@@ -332,6 +333,11 @@ public class ImportCollectorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ArgumentsNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodePigLatin node) {
         return null;
     }
 }

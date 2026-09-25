@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.common.domain.factory;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.ReferenceResolver;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.resolver.PigLatinReferenceResolver;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.resolver.YReferenceResolver;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.resolver.ZReferenceResolver;
 
@@ -19,7 +20,7 @@ public class ReferenceResolverFactory {
         return switch (extension) {
             case ".y" -> new YReferenceResolver();
             case ".z" -> new ZReferenceResolver();
-            /*  case ".pig" -> new PigLatinReferenceResolver();*/
+            case ".pig" -> new PigLatinReferenceResolver();
             default -> null;
         };
     }

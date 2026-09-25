@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor;
 
 
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.ShortlyOperationNodePigLatin;
@@ -165,5 +166,7 @@ public interface PigLatinAstVisitor<T> {
     T visit(ContinueStatementNodePigLatin node);
 
     T visit(ArgumentsNodePigLatin node);
+
+    T visit(InstanceCreationExpressionNodePigLatin node);
 
 }

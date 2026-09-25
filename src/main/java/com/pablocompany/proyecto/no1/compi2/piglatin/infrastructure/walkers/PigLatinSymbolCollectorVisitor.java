@@ -9,6 +9,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolSc
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.ShortlyOperationNodePigLatin;
@@ -567,6 +568,11 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(ArgumentsNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodePigLatin node) {
         return null;
     }
 
