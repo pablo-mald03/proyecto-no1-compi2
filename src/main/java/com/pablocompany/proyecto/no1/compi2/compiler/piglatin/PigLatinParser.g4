@@ -44,9 +44,16 @@ statement
     | return_control                        # ReturnControlAction
     | abbreviated_operation                 # LocalAbbreviatedOperation
     | assignment                            # LocalAssignment
-    | object_values DOT_COMMA               # StatementObjectPropertyCalling
+    | call_statement DOT_COMMA              # StatementObjectPropertyCalling
     | declaration                           # LocalDeclaration
     ;
+
+/*------ CALL AS STATEMENT (solo llamadas, nunca acceso plano) ------*/
+call_statement
+    : object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT   # ChainedCallStatement
+    | ID INIT_PARENT arguments_list? FINAL_PARENT                     # DirectCallStatement
+    ;
+
 
 /*===*****===== COMMON CODE SECTION =====*****===*/
 

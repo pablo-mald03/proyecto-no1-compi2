@@ -107,6 +107,20 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ChainedCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitChainedCallStatement(PigLatinParser.ChainedCallStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code DirectCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDirectCallStatement(PigLatinParser.DirectCallStatementContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code CodeBlockIf}
 	 * labeled alternative in {@link PigLatinParser#block_code}.
 	 * @param ctx the parse tree

@@ -64,7 +64,7 @@ statement
     | struct_declaration                        #StatementStructDeclaration
     | variable_declaration NEWLINE+             #VariableDeclarationStatement
     | assignment NEWLINE+                       #AssignmentVariableStatement
-    | object_values NEWLINE+                    #StatementObjectPropertyCalling
+    | function_call NEWLINE+                    #StatementFunctionCall
     | RETURN expression? NEWLINE+               #ReturnStatement
     ;
 
@@ -197,10 +197,13 @@ nest_variable
 object_values
     : object_values DOT ID                                                  # ObjectPropertyChain
     | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
-    | ID INIT_PARENT arguments_list? FINAL_PARENT                           # BaseFunctionCall
+    | function_call                                                         #BaseFunctionCall
     | ID                                                                    # BaseIdentifier
     ;
 
+function_call:
+    ID INIT_PARENT arguments_list? FINAL_PARENT                           # FunctionCall
+    ;
 /*--------****--- ARGUMENTS FOR FUNCTIONS LIST---****--------*/
 
 arguments_list

@@ -717,10 +717,27 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         return new VariableAssignmentNodeY(line, column, target, value);
     }
 
+
     @Override
-    public YAstNode visitStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx) {
-        return ctx.object_values().accept(this);
+    public YAstNode visitStatementFunctionCall(YParser.StatementFunctionCallContext ctx) {
+        return ctx.function_call().accept(this);
     }
+
+    @Override
+    public YAstNode visitFunctionCall(YParser.FunctionCallContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodeY> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodeY argsNode = (ArgumentsNodeY) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodeY(line, column, null, name, args);
+    }
+
 
     //========================
     // NESTED VARIABLE
@@ -740,21 +757,6 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new IdentifierExpressionNodeY(line, column, ctx.ID().getText());
-    }
-
-    @Override
-    public YAstNode visitBaseFunctionCall(YParser.BaseFunctionCallContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String name = ctx.ID().getText();
-
-        List<ExpressionNodeY> args = new ArrayList<>();
-        if (ctx.arguments_list() != null) {
-            ArgumentsNodeY argsNode = (ArgumentsNodeY) ctx.arguments_list().accept(this);
-            args = argsNode.getArguments();
-        }
-        return new FunctionCallExpressionNodeY(line, column, null, name, args);
     }
 
     @Override

@@ -245,13 +245,13 @@ public class YParserBaseListener implements YParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx) { }
+	@Override public void enterStatementFunctionCall(YParser.StatementFunctionCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx) { }
+	@Override public void exitStatementFunctionCall(YParser.StatementFunctionCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -780,6 +780,18 @@ public class YParserBaseListener implements YParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitBaseIdentifier(YParser.BaseIdentifierContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFunctionCall(YParser.FunctionCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctionCall(YParser.FunctionCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

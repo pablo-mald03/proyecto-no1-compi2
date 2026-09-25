@@ -136,6 +136,20 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatementObjectPropertyCalling(ZParser.StatementObjectPropertyCallingContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ChainedCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitChainedCallStatement(ZParser.ChainedCallStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code DirectCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDirectCallStatement(ZParser.DirectCallStatementContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link ZParser#return_statement}.
 	 * @param ctx the parse tree

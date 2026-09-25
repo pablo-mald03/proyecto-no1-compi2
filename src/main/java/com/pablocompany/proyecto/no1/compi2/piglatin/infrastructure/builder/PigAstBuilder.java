@@ -214,8 +214,39 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        ExpressionNodePigLatin obj = (ExpressionNodePigLatin) ctx.object_values().accept(this);
-        return new ExpressionStatementNodePigLatin(line, column, obj);
+        ExpressionNodePigLatin callExpr = (ExpressionNodePigLatin) ctx.call_statement().accept(this);
+        return new ExpressionStatementNodePigLatin(line, column, callExpr);
+    }
+
+    @Override
+    public PigLatinAstNode visitChainedCallStatement(PigLatinParser.ChainedCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        ExpressionNodePigLatin target = (ExpressionNodePigLatin) ctx.object_values().accept(this);
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodePigLatin> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodePigLatin argsNode = (ArgumentsNodePigLatin) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodePigLatin(line, column, target, name, args);
+    }
+
+    @Override
+    public PigLatinAstNode visitDirectCallStatement(PigLatinParser.DirectCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodePigLatin> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodePigLatin argsNode = (ArgumentsNodePigLatin) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodePigLatin(line, column, null, name, args);
     }
 
     @Override

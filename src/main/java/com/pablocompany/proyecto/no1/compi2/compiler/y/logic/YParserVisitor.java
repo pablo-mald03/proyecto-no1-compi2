@@ -143,12 +143,12 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAssignmentVariableStatement(YParser.AssignmentVariableStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code StatementObjectPropertyCalling}
+	 * Visit a parse tree produced by the {@code StatementFunctionCall}
 	 * labeled alternative in {@link YParser#statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitStatementObjectPropertyCalling(YParser.StatementObjectPropertyCallingContext ctx);
+	T visitStatementFunctionCall(YParser.StatementFunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link YParser#statement}.
@@ -457,6 +457,13 @@ public interface YParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBaseIdentifier(YParser.BaseIdentifierContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FunctionCall}
+	 * labeled alternative in {@link YParser#function_call}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionCall(YParser.FunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ArgumentsList}
 	 * labeled alternative in {@link YParser#arguments_list}.

@@ -244,8 +244,39 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        ExpressionNodeZ obj = (ExpressionNodeZ) ctx.object_values().accept(this);
-        return new ExpressionStatementNodeZ(line, column, obj);
+        ExpressionNodeZ callExpr = (ExpressionNodeZ) ctx.call_statement().accept(this);
+        return new ExpressionStatementNodeZ(line, column, callExpr);
+    }
+
+    @Override
+    public ZAstNode visitChainedCallStatement(ZParser.ChainedCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        ExpressionNodeZ target = (ExpressionNodeZ) ctx.object_values().accept(this);
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodeZ> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodeZ argsNode = (ArgumentsNodeZ) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodeZ(line, column, target, name, args);
+    }
+
+    @Override
+    public ZAstNode visitDirectCallStatement(ZParser.DirectCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodeZ> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodeZ argsNode = (ArgumentsNodeZ) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodeZ(line, column, null, name, args);
     }
 
     //========================
