@@ -61,8 +61,6 @@ public interface YAstVisitor<T> {
 
     T visit(TypeNodeY node);
 
-    T visit(UnaryExpressionNodeY node);
-
     //=======Values
 
     T visit(LiteralExpressionNodeY node);
@@ -78,6 +76,8 @@ public interface YAstVisitor<T> {
     T visit(ArrayValuesNodeY node);
     
     T visit(ArrayInitExpressionNodeY node);
+
+    T visit(UnaryExpressionNodeY node);
 
 
     //======Struct values and eclarations

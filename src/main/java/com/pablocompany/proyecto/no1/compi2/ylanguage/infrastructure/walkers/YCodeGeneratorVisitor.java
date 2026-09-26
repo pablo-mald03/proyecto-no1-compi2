@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
@@ -78,6 +79,11 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     private String lastExpr;
 
+    private final Map<String, List<String>> structLayouts = new HashMap<>();
+
+    private final Map<String, StructInfo> structVariables = new HashMap<>();
+
+
     public YCodeGeneratorVisitor(GlobalSymbolTable table,
                                  EditorContext context,
                                  Map<AstNode, Type> typeAnnotations,
@@ -105,6 +111,11 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(StructuresRegionNodeY node) {
+        if (node.getStructs() != null) {
+            for (StructDeclarationNodeY s : node.getStructs()) {
+                if (s != null) s.accept(this);
+            }
+        }
         return null;
     }
 
@@ -115,6 +126,22 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
                 if (fn != null) fn.accept(this);
             }
         }
+        return null;
+    }
+
+    // ============================================================
+    // STRUCTS
+    // ============================================================
+    @Override
+    public Void visit(StructDeclarationNodeY node) {
+        List<String> fields = new ArrayList<>();
+        if (node.getAttributes() != null && node.getAttributes().getAttributes() != null) {
+            for (StructAttributeNodeY attr : node.getAttributes().getAttributes()) {
+                if (attr != null) fields.add(attr.getIdentifier());
+            }
+        }
+        structLayouts.put(node.getStructName(), fields);
+        System.out.println("STRUCT LAYOUT: " + node.getStructName() + " -> " + fields);
         return null;
     }
 
@@ -132,20 +159,11 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         emitPrologue(numArgs);
         resetFunctionState();
 
-        for (ParameterNodeY param : node.getParameters()) {
-            if (param != null) {
-                String pname = param.getIdentifier();
-                paramOffsets.put(pname, nextOffset);
-                TypeKind kind = TypeKind.INT;
-                if (param instanceof PrimitiveParameterNodeY p && p.getType() != null) {
-                    kind = mapTypeNodeToType(p.getType()).getKind();
-                } else if (param instanceof StructParameterNodeY sp && sp.getDataType() != null) {
-                    kind = mapTypeNodeToType(sp.getDataType()).getKind();
-                } else if (param instanceof ArrayParameterNodeY ap && ap.getElementType() != null) {
-                    kind = mapTypeNodeToType(ap.getElementType()).getKind();
+        if (node.getParameters() != null) {
+            for (ParameterNodeY param : node.getParameters()) {
+                if (param != null) {
+                    registerParameter(param.getIdentifier(), param);
                 }
-                localTypes.put(pname, kind);
-                nextOffset++;
             }
         }
 
@@ -173,11 +191,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         if (node.getParameters() != null) {
             for (ParameterNodeY param : node.getParameters()) {
                 if (param != null) {
-                    String pname = param.getIdentifier();
-                    paramOffsets.put(pname, nextOffset);
-                    Type t = typeAnnotations.get(param);
-                    localTypes.put(pname, t != null ? t.getKind() : TypeKind.INT);
-                    nextOffset++;
+                    registerParameter(param.getIdentifier(), param);
                 }
             }
         }
@@ -207,6 +221,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         localOffsets.clear();
         paramOffsets.clear();
         localTypes.clear();
+        structVariables.clear();
         nextOffset = 1;
     }
 
@@ -314,40 +329,25 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    @Override
+
     public Void visit(IncrementStatementNodeY node) {
-        String targetRef = exprToString(node.getTargetVariable());
-        int oneOffset = nextOffset++;
-        output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
-        String oneRef = "stackinteger[fp + " + oneOffset + "]";
-        loadRegister(targetRef, "AX_INT");
-        loadRegister(oneRef, "BX_INT");
-        output.emit("+", "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
+        emitIncDec(exprToString(node.getTargetVariable()), "+");
         return null;
     }
 
-    @Override
     public Void visit(DecrementStatementNodeY node) {
-        String targetRef = exprToString(node.getTargetVariable());
-        int oneOffset = nextOffset++;
-        output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
-        String oneRef = "stackinteger[fp + " + oneOffset + "]";
-        loadRegister(targetRef, "AX_INT");
-        loadRegister(oneRef, "BX_INT");
-        output.emit("-", "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
+        emitIncDec(exprToString(node.getTargetVariable()), "-");
         return null;
     }
 
-    @Override
     public Void visit(IncrementPrevStatementNodeY node) {
-        return visit((IncrementStatementNodeY) null);
+        emitIncDec(exprToString(node.getTargetVariable()), "+");
+        return null;
     }
 
-    @Override
     public Void visit(DecrementPrevStatementNodeY node) {
-        return visit((DecrementStatementNodeY) null);
+        emitIncDec(exprToString(node.getTargetVariable()), "-");
+        return null;
     }
 
     @Override
@@ -756,8 +756,30 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(PropertyAccessExpressionNodeY node) {
+        ExpressionNodeY target = node.getTarget();
+        String fieldName = node.getPropertyName();
+
+        if (target instanceof IdentifierExpressionNodeY id) {
+            StructInfo info = structVariables.get(id.getIdentifier());
+            System.out.println("PROP ACCESS: " + id.getIdentifier() + "." + fieldName
+                    + " structInfo=" + info);
+            if (info != null) {
+                List<String> layout = structLayouts.get(info.getStructTypeName());
+                if (layout != null) {
+                    int fieldOffset = layout.indexOf(fieldName);
+                    if (fieldOffset >= 0) {
+                        Type fieldType = typeAnnotations.get(node);
+                        TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
+                        String arrayName = stackArrayForKind(kind);
+                        lastExpr = arrayName + "[fp + " + (info.getBaseOffset() + fieldOffset) + "]";
+                        return null;
+                    }
+                }
+            }
+        }
         return null;
     }
+
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodeY node) {
@@ -774,10 +796,6 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visit(StructDeclarationNodeY node) {
-        return null;
-    }
 
     @Override
     public Void visit(StructBodyNodeY node) {
@@ -1037,4 +1055,42 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         }
         return bareName;
     }
+
+    private void emitIncDec(String targetRef, String op) {
+        int oneOffset = nextOffset++;
+        output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
+        loadRegister(targetRef, "AX_INT");
+        loadRegister("stackinteger[fp + " + oneOffset + "]", "BX_INT");
+        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
+        storeRegisterBack("CX_INT", targetRef);
+    }
+
+    /**
+     * Parameters setter helper
+     *
+     */
+    private int registerParameter(String pname, ParameterNodeY param) {
+        TypeKind kind = TypeKind.INT;
+        int slots = 1;
+
+        if (param instanceof PrimitiveParameterNodeY p && p.getType() != null) {
+            kind = mapTypeNodeToType(p.getType()).getKind();
+        } else if (param instanceof StructParameterNodeY sp && sp.getDataType() != null) {
+            String structTypeName = sp.getDataType().getCustomTypeName();
+            kind = TypeKind.CUSTOM;
+            List<String> layout = structLayouts.get(structTypeName);
+            slots = (layout != null) ? layout.size() : 1;
+            structVariables.put(pname, new StructInfo(structTypeName, nextOffset));
+        } else if (param instanceof ArrayParameterNodeY ap && ap.getElementType() != null) {
+            kind = mapTypeNodeToType(ap.getElementType()).getKind();
+            // TODO: array params (size?)
+        }
+
+        localTypes.put(pname, kind);
+        paramOffsets.put(pname, nextOffset);
+        nextOffset += slots;
+        return slots;
+    }
+
+
 }
