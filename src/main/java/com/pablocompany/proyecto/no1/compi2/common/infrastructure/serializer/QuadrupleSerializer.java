@@ -176,9 +176,18 @@ public class QuadrupleSerializer {
                 break;
             }
 
+            case "call":
+                sb.append("  ").append(a1).append("();\n");
+                break;
+
+            case "fp_set_offset":
+                sb.append("  fp = sptr - ").append(a1).append(";\n");
+                break;
+
             case "strcat":
                 sb.append("  ").append(res).append(" = strcat(").append(a1).append(", ").append(a2).append(");\n");
                 break;
+
 
             case "read_int":
                 sb.append("  scanf(\"%d\", &").append(res).append(");\n");
@@ -244,8 +253,9 @@ public class QuadrupleSerializer {
 
             case "fp_pop":
                 sb.append("  sptr = fp;\n");
-                sb.append("  sptr = sptr - 1;\n");
+                sb.append("  sptr = sptr + ").append(a1).append(";\n");
                 sb.append("  fp = stackinteger[sptr];\n");
+                sb.append("  sptr = sptr - ").append(a1).append(";\n");
                 break;
 
             default:

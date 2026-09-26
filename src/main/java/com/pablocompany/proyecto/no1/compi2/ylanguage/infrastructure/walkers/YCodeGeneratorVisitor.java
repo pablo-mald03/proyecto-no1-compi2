@@ -50,10 +50,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -131,7 +128,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         output.getFunctionNames().add(funcName);
         output.emit("function_start", funcName, null, null);
 
-        emitPrologue();
+        int numArgs = node.getParameters() != null ? node.getParameters().size() : 0;
+        emitPrologue(numArgs);
         resetFunctionState();
 
         for (ParameterNodeY param : node.getParameters()) {
@@ -157,7 +155,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             }
         }
 
-        emitEpilogue();
+        emitEpilogue(numArgs);
         output.emit("return", null, null, null);
         return null;
     }
@@ -168,7 +166,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         output.getFunctionNames().add(funcName);
         output.emit("function_start", funcName, null, null);
 
-        emitPrologue();
+        int numArgs = node.getParameters() != null ? node.getParameters().size() : 0;
+        emitPrologue(numArgs);
         resetFunctionState();
 
         if (node.getParameters() != null) {
@@ -189,19 +188,20 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             }
         }
 
-        emitEpilogue();
+        emitEpilogue(numArgs);
         output.emit("return", null, null, null);
         return null;
     }
 
-    private void emitPrologue() {
+    private void emitPrologue(int numArgs) {
         output.emit("fp_push", null, null, null);
-        output.emit("fp_set", null, null, null);
+        output.emit("fp_set_offset", String.valueOf(numArgs + 1), null, null);
     }
 
-    private void emitEpilogue() {
-        output.emit("fp_pop", null, null, null);
+    private void emitEpilogue(int numArgs) {
+        output.emit("fp_pop", String.valueOf(numArgs + 1), null, null);
     }
+
 
     private void resetFunctionState() {
         localOffsets.clear();
@@ -683,6 +683,44 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(FunctionCallExpressionNodeY node) {
+        String funcName = node.getFunctionName();
+        List<ExpressionNodeY> args = node.getArguments();
+        int numArgs = args != null ? args.size() : 0;
+
+        output.emit("sptr_inc", "1", null, null);
+
+        if (args != null) {
+            for (ExpressionNodeY arg : args) {
+                String argRef = exprToString(arg);
+                Type t = typeAnnotations.get(arg);
+                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
+                String suffix = kindToSuffix(kind);
+                String axReg = "AX_" + suffix.toUpperCase();
+
+                loadRegister(argRef, axReg);
+                output.emit("store_" + suffix, "sptr", null, axReg);
+                output.emit("sptr_inc", "1", null, null);
+            }
+        }
+
+        String targetFunc = resolveFunctionName(funcName);
+        output.emit("call", targetFunc, null, null);
+
+        Type returnType = typeAnnotations.get(node);
+        TypeKind returnKind = returnType != null ? returnType.getKind() : TypeKind.INT;
+        String returnSuffix = kindToSuffix(returnKind);
+        String returnArray = stackArrayForKind(returnKind);
+        String cxReg = "CX_" + returnSuffix.toUpperCase();
+
+        output.emit("load_" + returnSuffix, "sptr", null, cxReg);
+
+        int destOffset = nextOffset++;
+        output.emit("store_" + returnSuffix, String.valueOf(destOffset), null, cxReg);
+
+        output.emit("sptr_dec", String.valueOf(numArgs + 1), null, null);
+
+        String dest = returnArray + "[fp + " + destOffset + "]";
+        lastExpr = dest;
         return null;
     }
 
@@ -989,5 +1027,14 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             case BOOLEAN -> "boolean";
             default -> "int";
         };
+    }
+
+    private String resolveFunctionName(String bareName) {
+        for (String fname : output.getFunctionNames()) {
+            if (fname.startsWith(bareName + "_")) {
+                return fname;
+            }
+        }
+        return bareName;
     }
 }
