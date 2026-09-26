@@ -1,9 +1,11 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.symbols;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 /**
  *
@@ -28,9 +30,9 @@ public class SymbolTablePanel extends JPanel {
     }
 
     //This method load the symbols to the table
-   /* public void loadSymbols(List<Symbol> symbols) {
+    public void loadSymbols(List<Symbol> symbols) {
         symbolsTable.loadSymbols(symbols);
-    }*/
+    }
 
     //This method clears the table
     public void clear() {

@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.console.ConsolePanel;
@@ -94,18 +95,24 @@ public class BottomTabbedPanel extends JPanel {
         return errorsTable;
     }
 
-    /*SECTION OF METHODS TO SET THE ERRORS TO THE ERROR PANEL*/
+    /**
+     * SECTION OF METHODS TO SET THE ERRORS TO THE ERROR PANEL
+     */
     public void setCompilerErrors(List<CompilerError> compilerErrors) {
         errorsTable.loadErrors(compilerErrors);
     }
 
-    /*SECTION OF METHODS TO SET THE TABLE TO THE SYMBOL TABLE*/
-   /* public void setSymbols(List<Symbol> symbols) {
+    /**
+     * SECTION OF METHODS TO SET THE TABLE TO THE SYMBOL TABLE
+     */
+    public void setSymbols(List<Symbol> symbols) {
         symbolTablePanel.loadSymbols(symbols);
     }
 
-    /*SECTION OF METHODS TO SET THE TABLE TO THE TYPES TABLE
-    public void setTypes(List<TypeInfo> symbols) {
+    /**
+     * SECTION OF METHODS TO SET THE TABLE TO THE TYPES TABLE
+     */
+    public void setTypes(List<Symbol> symbols) {
         typesTablePanel.loadSymbols(symbols);
-    }*/
+    }
 }

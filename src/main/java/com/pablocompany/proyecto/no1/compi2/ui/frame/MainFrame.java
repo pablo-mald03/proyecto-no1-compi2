@@ -4,6 +4,7 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.frame;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
@@ -366,6 +367,16 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         } else {
             System.out.println("[ERROR] " + message);
         }
+    }
+
+    @Override
+    public void loadSymbolsTable(List<Symbol> symbols) {
+        this.managementScreen.getBottomPanel().setSymbols(symbols);
+    }
+
+    @Override
+    public void loadTypesTable(List<Symbol> symbols) {
+        this.managementScreen.getBottomPanel().setTypes(symbols);
     }
 
     @Override

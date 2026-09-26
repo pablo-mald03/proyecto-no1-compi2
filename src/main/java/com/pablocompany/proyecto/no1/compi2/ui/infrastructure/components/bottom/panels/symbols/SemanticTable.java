@@ -4,6 +4,7 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.symbols;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 
 import javax.swing.*;
@@ -11,6 +12,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.util.List;
 
 /**
  *
@@ -22,7 +24,7 @@ public class SemanticTable extends JTable {
     private final DefaultTableModel tableModel;
 
     public SemanticTable() {
-        String[] columnNames = {"Nombre", "Tipo de Símbolo", "Tipo de Dato", "Numero de parametros", "Ámbito", "Línea", "Columna"};
+        String[] columnNames = {"Nombre", "Tipo de Símbolo", "Tipo de Dato", "Es Arreglo", "Dimensiones", "Parámetros", "Archivo", "Línea", "Columna"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -94,20 +96,25 @@ public class SemanticTable extends JTable {
 
                 if (!isSelected) {
                     switch (column) {
-                        case 0:
+                        case 0: // Nombre
                             c.setForeground(new Color(86, 182, 194));
                             break;
-                        case 1:
+                        case 1: // Tipo de Símbolo
                             c.setForeground(new Color(229, 192, 123));
                             break;
-                        case 2:
+                        case 2: // Tipo de Dato
                             c.setForeground(new Color(152, 195, 121));
                             break;
-                        case 3:
+                        case 3: // Es Arreglo
+                        case 4: // Dimensiones
+                            c.setForeground(new Color(224, 108, 117));
+                            break;
+                        case 5: // Parámetros
                             c.setForeground(new Color(198, 120, 221));
                             break;
-                        case 4:
-                        case 5:
+                        case 6: // Archivo
+                        case 7: // Línea
+                        case 8: // Columna
                             c.setForeground(new Color(171, 178, 191));
                             break;
                         default:
@@ -124,19 +131,19 @@ public class SemanticTable extends JTable {
     }
 
     private void setupColumnWidths() {
-        getColumnModel().getColumn(0).setPreferredWidth(180);
+        getColumnModel().getColumn(0).setPreferredWidth(160);
         getColumnModel().getColumn(1).setPreferredWidth(120);
-        getColumnModel().getColumn(2).setPreferredWidth(120);
-        getColumnModel().getColumn(3).setPreferredWidth(100);
-        getColumnModel().getColumn(4).setPreferredWidth(150);
-
-        getColumnModel().getColumn(5).setPreferredWidth(80);
-
-        getColumnModel().getColumn(6).setPreferredWidth(80);
+        getColumnModel().getColumn(2).setPreferredWidth(110);
+        getColumnModel().getColumn(3).setPreferredWidth(90);
+        getColumnModel().getColumn(4).setPreferredWidth(100);
+        getColumnModel().getColumn(5).setPreferredWidth(90);
+        getColumnModel().getColumn(6).setPreferredWidth(140);
+        getColumnModel().getColumn(7).setPreferredWidth(70);
+        getColumnModel().getColumn(8).setPreferredWidth(70);
     }
 
     //Method to load the symbols to the table
-   /* public void loadSymbols(List<Symbol> symbols) {
+    public void loadSymbols(List<Symbol> symbols) {
 
         clear();
 
@@ -145,19 +152,9 @@ public class SemanticTable extends JTable {
         }
 
         for (Symbol symbol : symbols) {
-
-            TypeNode customType = symbol.getType();
-            tableModel.addRow(new Object[]{
-                    symbol.getId(),
-                    symbol.getKind().getValue(),
-                    (customType == null) ? "structura" : customType.getCustomTypeName(),
-                    symbol.getParameters().size(),
-                    symbol.getScope(),
-                    symbol.getLine(),
-                    symbol.getColumn()
-            });
+            tableModel.addRow(symbol.toTableRow());
         }
-    }*/
+    }
 
     public void clear() {
         tableModel.setRowCount(0);

@@ -58,4 +58,39 @@ public class Symbol {
         return kind == SymbolKind.METHOD || kind == SymbolKind.FUNCTION || kind == SymbolKind.CONSTRUCTOR;
     }
 
+    /**
+     * Builds a dimensions label
+     */
+    private String formatDimensions() {
+        if (dimensionSizes == null || dimensionSizes.isEmpty()) {
+            return dimensions + "D";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < dimensionSizes.size(); i++) {
+            if (i > 0) sb.append("x");
+            sb.append(dimensionSizes.get(i));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Method to pulls every column value needed to render this symbol as a row in the
+     */
+    public Object[] toTableRow() {
+        String dataType = isCallable()
+                ? (returnType != null ? returnType : "void")
+                : type;
+
+        return new Object[]{
+                name,
+                kind,
+                dataType,
+                isArray ? "Sí" : "No",
+                isArray ? formatDimensions() : "-",
+                isCallable() ? parameterTypes.size() : "-",
+                fileName,
+                line,
+                column
+        };
+    }
 }

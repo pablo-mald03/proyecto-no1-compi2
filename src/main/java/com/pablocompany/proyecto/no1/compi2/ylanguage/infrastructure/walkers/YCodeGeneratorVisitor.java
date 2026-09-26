@@ -29,6 +29,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.exp
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructPropertyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.TypeNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.enums.YDataType;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.VariableDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.breakpoints.BreakStatementNodeY;
@@ -115,8 +116,10 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(FunctionDeclarationNodeY node) {
         output.getFunctionNames().add(node.getName());
-
-        output.emit("label", node.getName(), null, null);
+        String returnType = node.getReturnType() != null
+                ? typeToString(mapTypeNode(node.getReturnType()))
+                : "void";
+        output.emit("function_start", node.getName(), returnType, null);
 
         if (node.getBody() != null) {
             for (YAstNode s : node.getBody()) {
@@ -131,7 +134,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(ProcedureDeclarationNodeY node) {
         output.getFunctionNames().add(node.getName());
-        output.emit("label", node.getName(), null, null);
+        output.emit("function_start", node.getName(), "void", null);
 
         if (node.getBody() != null) {
             for (YAstNode s : node.getBody()) {
@@ -275,9 +278,24 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     public Void visit(PrintStatementNodeY node) {
         if (node.getExpression() != null) {
             String value = exprToString(node.getExpression());
-            output.emit("print", value, null, null);
+            Type type = typeAnnotations.get(node.getExpression());
+            String typeName = typeToString(type);
+            output.emit("print", value, typeName, null);
         }
         return null;
+    }
+
+    private String typeToString(Type t) {
+        if (t == null) return "void";
+        return switch (t.getKind()) {
+            case INT -> "int";
+            case FLOAT -> "double";
+            case STRING -> "char*";
+            case CHAR -> "char";
+            case BOOLEAN -> "int";
+            case VOID -> "void";
+            default -> "void";
+        };
     }
 
     @Override
@@ -775,5 +793,38 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             case DIVIDE_ASSIGN -> "/";
             case MODULO_ASSIGN -> "%";
         };
+    }
+
+    /**
+     * Helper for typenode
+     *
+     */
+    private Type mapTypeNode(TypeNodeY typeNode) {
+        if (typeNode == null) return Type.unknown();
+        return mapYDataType(typeNode.getDataType(), typeNode.getCustomTypeName());
+    }
+
+    /**
+     * Principal mapper for data type
+     *
+     */
+    private Type mapYDataType(YDataType dt, String customName) {
+        if (dt == null) return Type.unknown();
+        switch (dt) {
+            case INT:
+                return Type.intType();
+            case FLOAT:
+                return Type.floatType();
+            case STRING:
+                return Type.stringType();
+            case CHAR:
+                return Type.charType();
+            case BOOLEAN:
+                return Type.booleanType();
+            case CUSTOM:
+                return Type.customType(customName);
+            default:
+                return Type.unknown();
+        }
     }
 }

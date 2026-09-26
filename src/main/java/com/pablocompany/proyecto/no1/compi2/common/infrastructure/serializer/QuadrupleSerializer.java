@@ -29,7 +29,7 @@ public class QuadrupleSerializer {
     }
 
     // ============================================================
-    // PRELUDE
+    // HEADER (no function context)
     // ============================================================
 
     private void emitPrelude() {
@@ -39,8 +39,6 @@ public class QuadrupleSerializer {
     }
 
     private void emitStructDefinitions() {
-        // Not implemented yet. Structs in .y are user-defined.
-        // For the first version, we skip this.
         // TODO: emit struct definitions from the StructDeclaration nodes.
     }
 
@@ -56,7 +54,7 @@ public class QuadrupleSerializer {
     }
 
     private void emitGlobals() {
-        // For now, nothing. Variables are declared inside functions.
+        // TODO: emit global variables.
     }
 
     // ============================================================
@@ -64,22 +62,37 @@ public class QuadrupleSerializer {
     // ============================================================
 
     private void emitFunctions() {
+        // insideFunction tells us if we are currently inside a function body.
+        // It is initially false (we are in the "header" of the file).
         boolean insideFunction = false;
 
         for (Quadruple q : output.getQuadruples()) {
-            if ("label".equals(q.getOp()) && output.getFunctionNames().contains(q.getArg1())) {
-                if (insideFunction) sb.append("}\n\n");
-                sb.append("void ").append(q.getArg1()).append("() {\n");
+            String op = q.getOp();
+
+            // Handle function boundaries BEFORE dispatching to emitQuadruple.
+            if ("function_start".equals(op)) {
+                // Close the previous function if there was one.
+                if (insideFunction) {
+                    sb.append("}\n\n");
+                }
+
+                // Open the new function.
+                String returnType = q.getArg2() != null ? q.getArg2() : "void";
+                sb.append(returnType).append(" ").append(q.getArg1()).append("() {\n");
                 insideFunction = true;
                 continue;
             }
 
+            // Skip anything that is outside a function context.
             if (!insideFunction) continue;
 
             emitQuadruple(q);
         }
 
-        if (insideFunction) sb.append("}\n");
+        // Close the last function if we opened one.
+        if (insideFunction) {
+            sb.append("}\n");
+        }
     }
 
     private void emitQuadruple(Quadruple q) {
@@ -92,6 +105,7 @@ public class QuadrupleSerializer {
             case "=":
                 sb.append("  ").append(res).append(" = ").append(a1).append(";\n");
                 break;
+
             case "+":
             case "-":
             case "*":
@@ -108,34 +122,52 @@ public class QuadrupleSerializer {
                 sb.append("  ").append(res).append(" = ")
                         .append(a1).append(" ").append(op).append(" ").append(a2).append(";\n");
                 break;
+
             case "!":
                 sb.append("  ").append(res).append(" = !").append(a1).append(";\n");
                 break;
+
             case "goto":
                 sb.append("  goto ").append(res).append(";\n");
                 break;
+
             case "ifFalse":
                 sb.append("  if (!").append(a1).append(") goto ").append(res).append(";\n");
                 break;
+
             case "ifTrue":
                 sb.append("  if (").append(a1).append(") goto ").append(res).append(";\n");
                 break;
+
             case "label":
-                sb.append(res).append(":;\n");
+                // Internal labels are always in arg1.
+                sb.append(a1).append(":;\n");
                 break;
-            case "print":
-                sb.append("  printf(\"%d\\n\", ").append(a1).append(");\n");
+
+            case "print": {
+                String format = switch (a2 != null ? a2 : "int") {
+                    case "string" -> "%s";
+                    case "float" -> "%f";
+                    case "char" -> "%c";
+                    default -> "%d";
+                };
+                sb.append("  printf(\"").append(format).append("\\n\", ")
+                        .append(a1).append(");\n");
                 break;
+            }
+
             case "read":
                 sb.append("  scanf(\"%d\", &").append(res).append(");\n");
                 break;
+
             case "param":
                 sb.append("  // param ").append(a1).append("\n");
                 break;
+
             case "call":
-                sb.append("  ").append(res).append(" = ")
-                        .append(a1).append("();\n");
+                sb.append("  ").append(res).append(" = ").append(a1).append("();\n");
                 break;
+
             case "return":
                 if (a1 != null) {
                     sb.append("  return ").append(a1).append(";\n");
@@ -143,26 +175,32 @@ public class QuadrupleSerializer {
                     sb.append("  return;\n");
                 }
                 break;
+
             case "array_get":
                 sb.append("  ").append(res).append(" = ")
                         .append(a1).append("[").append(a2).append("];\n");
                 break;
+
             case "array_set":
                 sb.append("  ").append(a1).append("[").append(a2).append("] = ")
                         .append(res).append(";\n");
                 break;
+
             case "get_field":
                 sb.append("  ").append(res).append(" = ")
                         .append(a1).append(".").append(a2).append(";\n");
                 break;
+
             case "set_field":
                 sb.append("  ").append(a1).append(".").append(a2)
                         .append(" = ").append(res).append(";\n");
                 break;
+
             case "alloc_struct":
                 sb.append("  // TODO: alloc struct ").append(a1)
                         .append(" -> ").append(res).append("\n");
                 break;
+
             default:
                 sb.append("  // unknown op: ").append(op).append("\n");
         }

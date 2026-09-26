@@ -2,7 +2,6 @@ package com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums;
 
 /**
  * Discriminates the kind of symbol stored in the symbol table.
- * Using an enum keeps the model simple and avoids a class hierarchy explosion.
  */
 public enum SymbolKind {
     CLASS,

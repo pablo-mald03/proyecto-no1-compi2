@@ -4,6 +4,8 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.types;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 
 import javax.swing.*;
@@ -11,6 +13,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -134,31 +140,50 @@ public class TypesTable extends JTable {
 
     }
 
-    //Method to load the types to the table
-    /*public void loadSymbols(List<TypeInfo> types) {
+    //Method to load the type symbols to the table.
+    public void loadSymbols(List<Symbol> symbols) {
 
-       /* clear();
+        clear();
 
-        if (types == null || types.isEmpty()) {
+        if (symbols == null || symbols.isEmpty()) {
             return;
         }
 
-        for (TypeInfo type : types) {
+        Set<String> alreadyAdded = new HashSet<>();
 
-            String fieldNames = String.join(", ", type.getFieldNames());
-            String fieldTypes = String.join(", ", type.getFieldTypes());
+        for (Symbol symbol : symbols) {
+
+            boolean isTypeDefinition = symbol.getKind() == SymbolKind.CLASS
+                    || symbol.getKind() == SymbolKind.STRUCT;
+
+            if (!isTypeDefinition) {
+                continue;
+            }
+
+            if (!alreadyAdded.add(symbol.getName())) {
+                continue;
+            }
+
+            List<Symbol> members = symbol.getMembers();
+            int fieldCount = (members == null) ? 0 : members.size();
+
+            String fieldNames = (members == null || members.isEmpty())
+                    ? "-"
+                    : members.stream().map(Symbol::getName).collect(Collectors.joining(", "));
+
+            String fieldTypes = (members == null || members.isEmpty())
+                    ? "-"
+                    : members.stream().map(Symbol::getType).collect(Collectors.joining(", "));
 
             tableModel.addRow(new Object[]{
-                    type.getName(),
-                    type.getKind(),
-                    type.getFieldCount(),
+                    symbol.getName(),
+                    symbol.getKind(),
+                    fieldCount,
                     fieldNames,
                     fieldTypes
             });
         }
-    }*/
-
-
+    }
 
     public void clear() {
         tableModel.setRowCount(0);

@@ -338,6 +338,9 @@ public class WorkspacePanel extends JPanel {
 
         notifier.logSuccess("Verificacion de tipos completada");
 
+        this.notifier.loadSymbolsTable(symbolTable.getAllSymbols());
+        this.notifier.loadTypesTable(symbolTable.getAllSymbols());
+
         //3D CODE PHASE
 
         notifier.logInfo("Generacion de codigo 3D en curso...");

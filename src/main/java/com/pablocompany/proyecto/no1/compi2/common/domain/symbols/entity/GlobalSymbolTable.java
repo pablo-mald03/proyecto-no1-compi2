@@ -143,6 +143,29 @@ public class GlobalSymbolTable {
     }
 
     /**
+     * Principal method to get all symbols
+     *
+     */
+    public List<Symbol> getAllSymbols() {
+        List<Symbol> all = new ArrayList<>();
+        collectAllFromScope(globalScope, all);
+        return all;
+    }
+
+    /**
+     * Principal method to collect all symbols
+     *
+     */
+    private void collectAllFromScope(SymbolScope scope, List<Symbol> acc) {
+        for (List<Symbol> bucket : scope.getSymbols().values()) {
+            acc.addAll(bucket);
+        }
+        for (SymbolScope child : scope.getChildren()) {
+            collectAllFromScope(child, acc);
+        }
+    }
+
+    /**
      * Looks up a file scope directly by filePath.
      */
     public SymbolScope getFileScope(String filePath) {

@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ui.application.mediator;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.excecution.ExecutionResult;
 
@@ -28,7 +29,10 @@ public interface WorkspaceNotifier {
 
     void logError(String message);
 
-    
+    void loadSymbolsTable(List<Symbol> symbols);
+
+    void loadTypesTable(List<Symbol> symbols);
+
     /*SECTION OF ALERTS*/
     
     void alertToast(String message, boolean isError);
