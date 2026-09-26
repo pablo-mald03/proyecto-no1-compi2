@@ -1,0 +1,40 @@
+package com.pablocompany.proyecto.no1.compi2.common.domain.code3D;
+
+import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Principal class to manage the pool of string literals. Each literal gets a unique id
+ */
+@Data
+public class StringPool {
+
+    private final Map<String, String> literalToId;
+    private final List<String> literalsInOrder;
+    private int counter = 0;
+
+    public StringPool() {
+        this.literalToId = new LinkedHashMap<>();
+        this.literalsInOrder = new ArrayList<>();
+    }
+
+    public String intern(String literal) {
+        if (literalToId.containsKey(literal)) {
+            return literalToId.get(literal);
+        }
+        counter++;
+        String id = "str" + counter;
+        literalToId.put(literal, id);
+        literalsInOrder.add(literal);
+        return id;
+    }
+
+    public String getId(String literal) {
+        return literalToId.get(literal);
+    }
+
+}

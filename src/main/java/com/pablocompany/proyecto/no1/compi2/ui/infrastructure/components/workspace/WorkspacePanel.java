@@ -1,5 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.CompilationContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.SymbolCollectorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
@@ -8,7 +10,9 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer
 import com.pablocompany.proyecto.no1.compi2.common.domain.resolver.ReferenceResolverOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.orchestator.CodeGeneratorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.ParserFactory;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.serializer.QuadrupleSerializer;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.imports.DependencyGraph;
 import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.importResolver.DependencyAnalyzer;
@@ -334,42 +338,36 @@ public class WorkspacePanel extends JPanel {
 
         notifier.logSuccess("Verificacion de tipos completada");
 
-
-        notifier.logInfo("Analisis semantico en curso...");
-
-        //SEMANTIC PHASE
-
-        notifier.logSuccess("Analisis semantico completado");
-
+        //3D CODE PHASE
 
         notifier.logInfo("Generacion de codigo 3D en curso...");
 
+        CodeGeneratorOrchestrator codeGen = new CodeGeneratorOrchestrator();
+        CodeGeneratorOutput codeOutput = codeGen.generateAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
+                this.compilationContext.getSymbolTable(),
+                this.compilationContext.getTypeAnnotations()
+        );
 
-        String finalCompiledCode =
-                "#include <stdio.h>\n\n" +
-                        "int main() {\n" +
-                        "    int numero;\n" +
-                        "    printf(\"Ingrese un numero: \");\n" +
-                        "    scanf(\"%d\", &numero);\n" +
-                        "    printf(\"El numero ingresado fue: %d\\n\", numero);\n" +
-                        "    return 0;\n" +
-                        "}";
+        String finalCompiledCode = "";
 
+        if (codeOutput != null) {
+            QuadrupleSerializer serializer = new QuadrupleSerializer(codeOutput, new StringPool());
+            finalCompiledCode = serializer.serialize();
+        }
 
         notifier.logSuccess("Generacion de codigo 3D completado");
 
         if (!finalCompiledCode.isEmpty()) {
             this.compiledOutput = finalCompiledCode;
             this.isCompiled = true;
-
             generateCompiledFile(finalCompiledCode);
         } else {
             notifier.logError("No se genero codigo compilado");
-
             return false;
         }
 
-        notifier.logSuccess("Compilacion exitosa");
         return true;
     }
 
