@@ -197,6 +197,53 @@ public class QuadrupleSerializer {
                 sb.append("  sptr = sptr - ").append(a1).append(";\n");
                 break;
 
+            case "load_int":
+                sb.append("  ").append(res).append(" = stackinteger[").append(a1).append("];\n");
+                break;
+            case "load_string":
+                sb.append("  ").append(res).append(" = stackstring[").append(a1).append("];\n");
+                break;
+            case "load_float":
+                sb.append("  ").append(res).append(" = stackfloat[").append(a1).append("];\n");
+                break;
+            case "load_char":
+                sb.append("  ").append(res).append(" = stackchar[").append(a1).append("];\n");
+                break;
+            case "load_boolean":
+                sb.append("  ").append(res).append(" = stackboolean[").append(a1).append("];\n");
+                break;
+
+            case "store_int":
+                sb.append("  stackinteger[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "store_string":
+                sb.append("  stackstring[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "store_float":
+                sb.append("  stackfloat[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "store_char":
+                sb.append("  stackchar[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "store_boolean":
+                sb.append("  stackboolean[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+
+            case "fp_push":
+                sb.append("  stackinteger[sptr] = fp;\n");
+                sb.append("  sptr = sptr + 1;\n");
+                break;
+
+            case "fp_set":
+                sb.append("  fp = sptr;\n");
+                break;
+
+            case "fp_pop":
+                sb.append("  sptr = fp;\n");
+                sb.append("  sptr = sptr - 1;\n");
+                sb.append("  fp = stackinteger[sptr];\n");
+                break;
+
             default:
                 sb.append("  // unknown op: ").append(op).append("\n");
         }
