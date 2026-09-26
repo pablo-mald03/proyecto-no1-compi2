@@ -173,6 +173,18 @@ public class QuadrupleSerializer {
                     case "char" -> "%c";
                     default -> "%d";
                 };
+                sb.append("  printf(\"").append(fmt).append("\", ").append(a1).append(");\n");
+                sb.append("  fflush(stdout);\n");
+                break;
+            }
+
+            case "println": {
+                String fmt = switch (a2 != null ? a2 : "int") {
+                    case "string" -> "%s";
+                    case "float" -> "%f";
+                    case "char" -> "%c";
+                    default -> "%d";
+                };
                 sb.append("  printf(\"").append(fmt).append("\\n\", ").append(a1).append(");\n");
                 sb.append("  fflush(stdout);\n");
                 break;
@@ -287,6 +299,42 @@ public class QuadrupleSerializer {
                 sb.append("  fp = sptr;\n");
                 break;
 
+            case "heap_alloc":
+                sb.append("  ").append(res).append(" = hptr;\n");
+                sb.append("  hptr = hptr + ").append(a1).append(";\n");
+                break;
+
+            case "heap_load_int":
+                sb.append("  ").append(res).append(" = heapinteger[").append(a1).append("];\n");
+                break;
+            case "heap_load_string":
+                sb.append("  ").append(res).append(" = heapstring[").append(a1).append("];\n");
+                break;
+            case "heap_load_float":
+                sb.append("  ").append(res).append(" = heapfloat[").append(a1).append("];\n");
+                break;
+            case "heap_load_char":
+                sb.append("  ").append(res).append(" = heapchar[").append(a1).append("];\n");
+                break;
+            case "heap_load_boolean":
+                sb.append("  ").append(res).append(" = heapboolean[").append(a1).append("];\n");
+                break;
+
+            case "heap_store_int":
+                sb.append("  heapinteger[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "heap_store_string":
+                sb.append("  heapstring[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "heap_store_float":
+                sb.append("  heapfloat[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "heap_store_char":
+                sb.append("  heapchar[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+            case "heap_store_boolean":
+                sb.append("  heapboolean[").append(a1).append("] = ").append(res).append(";\n");
+                break;
 
             default:
                 sb.append("  // unknown op: ").append(op).append("\n");

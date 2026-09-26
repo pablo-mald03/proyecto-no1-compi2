@@ -20,7 +20,6 @@ public class CodeGeneratorOrchestrator {
 
     /**
      * Principal method to generate all 3D code
-     *
      */
     public String generateAll(Map<String, EditorContext> allContexts,
                               GlobalSymbolTable table,
@@ -30,7 +29,7 @@ public class CodeGeneratorOrchestrator {
         CodeGeneratorOutput combined = new CodeGeneratorOutput("<combined>");
         StringPool stringPool = new StringPool();
 
-        // --- .y ---
+        /*
         for (String filePath : allContexts.keySet()) {
             EditorContext ctx = allContexts.get(filePath);
             if (ctx == null) continue;
@@ -42,9 +41,25 @@ public class CodeGeneratorOrchestrator {
             CodeGeneratorOutput out = gen.generate(ctx, table, typeAnnotations, stringPool);
             combined.getQuadruples().addAll(out.getQuadruples());
             combined.getFunctionNames().addAll(out.getFunctionNames());
+        }
+        */
 
+        for (String filePath : allContexts.keySet()) {
+            EditorContext ctx = allContexts.get(filePath);
+            if (ctx == null) continue;
+            if (!".z".equals(ctx.getFileExtension())) continue;
+
+            CodeGenerator gen = CodeGeneratorFactory.create(".z");
+            if (gen == null) continue;
+
+            CodeGeneratorOutput out = gen.generate(ctx, table, typeAnnotations, stringPool);
+            combined.getQuadruples().addAll(out.getQuadruples());
+            combined.getFunctionNames().addAll(out.getFunctionNames());
         }
 
+        // ============================================================
+        // --- .pig (main entry) ---
+        // ============================================================
         EditorContext mainCtx = allContexts.get(mainClassPath);
         if (mainCtx != null) {
             CodeGenerator gen = CodeGeneratorFactory.create(".pig");

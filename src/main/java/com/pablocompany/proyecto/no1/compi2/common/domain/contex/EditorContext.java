@@ -47,15 +47,6 @@ public class EditorContext {
 
     private AstNode astNode;
 
- /*   private Environment globalEnvironment;
-
-    //Pointer to the current enviroment in runtime
-    private Environment currentEnvironment;
-*/
-
-    //This is the pointer to the scoped registry
-    /*    private Map<String, Environment> scopeRegistry;*/
-
     public EditorContext() {
         this.tokens = new ArrayList<>();
         this.filePath = "";
@@ -66,9 +57,6 @@ public class EditorContext {
         this.lexicalErrors = new ArrayList<>();
         this.parserErrors = new ArrayList<>();
         this.semanticErrors = new ArrayList<>();
-
-/*        this.globalEnvironment = new Environment("Global");
-        this.currentEnvironment = this.globalEnvironment;*/
     }
 
     //This method add a new error to the list
@@ -101,20 +89,6 @@ public class EditorContext {
 
         return errors;
     }
-
-    //This method create a new scope into the global enviroment
-/*
-    public void enterScope(String scopeName) {
-        currentEnvironment = new Environment(currentEnvironment, scopeName);
-    }
-
-    //This method closes the pointer to the current enviroment and returns up to the principal scope
-    public void exitScope() {
-        if (currentEnvironment.getParent() != null) {
-            currentEnvironment = currentEnvironment.getParent();
-        }
-    }
-*/
 
     //This method clears the compilated code
     public void clearCompilatedCode() {

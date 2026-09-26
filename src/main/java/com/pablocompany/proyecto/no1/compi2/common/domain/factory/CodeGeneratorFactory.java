@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.common.domain.factory;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.models.CodeGenerator;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.codegen.YCodeGenerator;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.codegenerator.ZCodeGenerator;
 
 /**
  * Principal factory to manage the code generation
@@ -13,9 +14,9 @@ public class CodeGeneratorFactory {
         switch (extension) {
             case ".y":
                 return new YCodeGenerator();
-/*            case ".z":
+            case ".z":
                 return new ZCodeGenerator();
-            case ".pig":
+/*            case ".pig":
                 return new PigLatinCodeGenerator();*/
             default:
                 return null;
