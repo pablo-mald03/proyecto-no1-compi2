@@ -134,15 +134,20 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         emitPrologue();
         resetFunctionState();
 
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null) {
-                    String pname = param.getIdentifier();
-                    paramOffsets.put(pname, nextOffset);
-                    Type t = typeAnnotations.get(param);
-                    localTypes.put(pname, t != null ? t.getKind() : TypeKind.INT);
-                    nextOffset++;
+        for (ParameterNodeY param : node.getParameters()) {
+            if (param != null) {
+                String pname = param.getIdentifier();
+                paramOffsets.put(pname, nextOffset);
+                TypeKind kind = TypeKind.INT;
+                if (param instanceof PrimitiveParameterNodeY p && p.getType() != null) {
+                    kind = mapTypeNodeToType(p.getType()).getKind();
+                } else if (param instanceof StructParameterNodeY sp && sp.getDataType() != null) {
+                    kind = mapTypeNodeToType(sp.getDataType()).getKind();
+                } else if (param instanceof ArrayParameterNodeY ap && ap.getElementType() != null) {
+                    kind = mapTypeNodeToType(ap.getElementType()).getKind();
                 }
+                localTypes.put(pname, kind);
+                nextOffset++;
             }
         }
 
@@ -628,15 +633,29 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         String leftRef = exprToString(node.getLeft());
         String rightRef = exprToString(node.getRight());
 
-        loadRegister(leftRef, "AX_INT");
-        loadRegister(rightRef, "BX_INT");
+        // Determine the type of the result.
+        Type resultType = typeAnnotations.get(node);
+        TypeKind kind = resultType != null ? resultType.getKind() : TypeKind.INT;
+        String suffix = kindToSuffix(kind);
+        String aReg = "AX_" + suffix.toUpperCase();
+        String bReg = "BX_" + suffix.toUpperCase();
+        String cReg = "CX_" + suffix.toUpperCase();
 
-        String op = binaryOpToSymbol(node.getOperator());
-        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
+        loadRegister(leftRef, aReg);
+        loadRegister(rightRef, bReg);
+
+        String op;
+        if (kind == TypeKind.STRING && node.getOperator() == BinaryOperator.PLUS) {
+            op = "strcat";
+        } else {
+            op = binaryOpToSymbol(node.getOperator());
+        }
+        output.emit(op, aReg, bReg, cReg);
 
         int offset = nextOffset++;
-        String dest = "stackinteger[fp + " + offset + "]";
-        output.emit("store_int", String.valueOf(offset), null, "CX_INT");
+        String dest = stackArrayForKind(kind) + "[fp + " + offset + "]";
+        String storeSuffix = suffix;
+        output.emit("store_" + storeSuffix, String.valueOf(offset), null, cReg);
 
         lastExpr = dest;
         return null;
@@ -769,14 +788,41 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         int offset = nextOffset++;
         localOffsets.put(name, offset);
 
-        Type t = typeAnnotations.get(node);
-        localTypes.put(name, t != null ? t.getKind() : TypeKind.INT);
+        TypeKind kind = TypeKind.INT;
+        if (node instanceof VariableDeclarationNodeY decl) {
+            Type t = mapTypeNodeToType(decl.getDataType());
+            if (t != null) kind = t.getKind();
+        } else if (node instanceof ArrayDeclarationNodeY arr) {
+            Type t = mapTypeNodeToType(arr.getDataType());
+            if (t != null) kind = t.getKind();
+        } else if (node instanceof ForInitDeclarationNodeY forInit) {
+            Type t = mapTypeNodeToType(forInit.getType());
+            if (t != null) kind = t.getKind();
+        }
+        if (kind == TypeKind.INT) {
+            Type t = typeAnnotations.get(node);
+            if (t != null) kind = t.getKind();
+        }
+
+        localTypes.put(name, kind);
         return offset;
+    }
+
+    private Type mapTypeNodeToType(TypeNodeY typeNode) {
+        if (typeNode == null) return null;
+        return switch (typeNode.getDataType()) {
+            case INT -> Type.intType();
+            case FLOAT -> Type.floatType();
+            case STRING -> Type.stringType();
+            case CHAR -> Type.charType();
+            case BOOLEAN -> Type.booleanType();
+            case CUSTOM -> Type.customType(typeNode.getCustomTypeName());
+            default -> null;
+        };
     }
 
     /**
      * Returns a stack reference string like "stackinteger[fp + 5]"
-     * for a variable or parameter name.
      */
     private String getStackRefByName(String name) {
         Integer offset = localOffsets.get(name);
@@ -790,7 +836,6 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     /**
      * Loads a value (either a stack reference, a register, or a literal)
-     * into the given register.
      */
     private void loadRegister(String operandRef, String register) {
         if (operandRef == null) return;
@@ -828,12 +873,13 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         String arrayName = destRef.substring(0, bs);
         String offsetExpr = destRef.substring(bs + 1, be);
         String suffix = suffixForArray(arrayName);
+        String cxRegister = "CX_" + suffix.toUpperCase();
 
         if (isRegister(valueRef)) {
             output.emit("store_" + suffix, offsetExpr, null, valueRef);
         } else if (valueRef != null && valueRef.startsWith("stack")) {
-            loadRegister(valueRef, "CX_INT");
-            output.emit("store_" + suffix, offsetExpr, null, "CX_INT");
+            loadRegister(valueRef, cxRegister);
+            output.emit("store_" + suffix, offsetExpr, null, cxRegister);
         } else {
             output.emit("=", valueRef, null, destRef);
         }
@@ -930,6 +976,17 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             case FLOAT -> "float";
             case CHAR -> "char";
             case BOOLEAN -> "int";
+            default -> "int";
+        };
+    }
+
+    private String kindToSuffix(TypeKind kind) {
+        if (kind == null) return "int";
+        return switch (kind) {
+            case STRING -> "string";
+            case FLOAT -> "float";
+            case CHAR -> "char";
+            case BOOLEAN -> "boolean";
             default -> "int";
         };
     }

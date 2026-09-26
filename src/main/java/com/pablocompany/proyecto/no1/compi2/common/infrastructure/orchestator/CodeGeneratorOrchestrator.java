@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.common.infrastructure.orchestator;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.factory.CodeGeneratorFactory;
 import com.pablocompany.proyecto.no1.compi2.common.domain.models.CodeGenerator;
@@ -17,12 +18,17 @@ import java.util.Map;
  */
 public class CodeGeneratorOrchestrator {
 
+    /**
+     * Principal method to generate all 3D code
+     *
+     */
     public String generateAll(Map<String, EditorContext> allContexts,
                               GlobalSymbolTable table,
                               Map<AstNode, Type> typeAnnotations,
                               String mainClassPath) {
 
         CodeGeneratorOutput combined = new CodeGeneratorOutput("<combined>");
+        StringPool stringPool = new StringPool();
 
         // --- .y ---
         for (String filePath : allContexts.keySet()) {
@@ -33,7 +39,7 @@ public class CodeGeneratorOrchestrator {
             CodeGenerator gen = CodeGeneratorFactory.create(".y");
             if (gen == null) continue;
 
-            CodeGeneratorOutput out = gen.generate(ctx, table, typeAnnotations);
+            CodeGeneratorOutput out = gen.generate(ctx, table, typeAnnotations, stringPool);
             combined.getQuadruples().addAll(out.getQuadruples());
             combined.getFunctionNames().addAll(out.getFunctionNames());
 
@@ -43,7 +49,7 @@ public class CodeGeneratorOrchestrator {
         if (mainCtx != null) {
             CodeGenerator gen = CodeGeneratorFactory.create(".pig");
             if (gen != null) {
-                CodeGeneratorOutput out = gen.generate(mainCtx, table, typeAnnotations);
+                CodeGeneratorOutput out = gen.generate(mainCtx, table, typeAnnotations, stringPool);
                 combined.getQuadruples().addAll(out.getQuadruples());
                 combined.getFunctionNames().addAll(out.getFunctionNames());
             }
@@ -51,10 +57,9 @@ public class CodeGeneratorOrchestrator {
             System.out.println("MAIN CTX NOT FOUND: " + mainClassPath);
         }
 
-        QuadrupleSerializer serializer = new QuadrupleSerializer(combined, combined.getStringPool());
+        QuadrupleSerializer serializer = new QuadrupleSerializer(combined, stringPool);
         String finalC = serializer.serialize();
 
-        System.out.println("=== C FINAL ===");
         System.out.println(finalC);
 
         return finalC;

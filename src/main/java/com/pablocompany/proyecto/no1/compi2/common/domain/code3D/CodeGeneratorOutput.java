@@ -19,9 +19,17 @@ public class CodeGeneratorOutput {
         this.filePath = filePath;
         this.quadruples = new ArrayList<>();
         this.functionNames = new ArrayList<>();
-        this.stringPool = new StringPool();
+        this.stringPool = new StringPool(filePrefix(filePath));
     }
 
+    private static String filePrefix(String filePath) {
+        if (filePath == null || filePath.isEmpty()) return "str";
+        String base = filePath.substring(filePath.lastIndexOf('/') + 1);
+        int dot = base.lastIndexOf('.');
+        if (dot > 0) base = base.substring(0, dot);
+        if (base.isEmpty()) return "str";
+        return base.substring(0, 1) + "_str";
+    }
     /**
      * Principal emit quadruple generation
      *

@@ -65,7 +65,7 @@ public class QuadrupleSerializer {
     private void emitStringConstants() {
         for (String literal : stringPool.getLiteralsInOrder()) {
             String id = stringPool.getId(literal);
-            sb.append("const char* ").append(id)
+            sb.append("char* ").append(id)
                     .append(" = \"").append(escapeCString(literal)).append("\";\n");
         }
         if (!stringPool.getLiteralsInOrder().isEmpty()) {
@@ -175,6 +175,10 @@ public class QuadrupleSerializer {
                 sb.append("  printf(\"").append(fmt).append("\\n\", ").append(a1).append(");\n");
                 break;
             }
+
+            case "strcat":
+                sb.append("  ").append(res).append(" = strcat(").append(a1).append(", ").append(a2).append(");\n");
+                break;
 
             case "read_int":
                 sb.append("  scanf(\"%d\", &").append(res).append(");\n");

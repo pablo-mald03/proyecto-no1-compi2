@@ -12,19 +12,25 @@ import java.util.Map;
  */
 @Data
 public class StringPool {
+    private final String prefix;
     private final Map<String, String> literalToId;
     private final List<String> literalsInOrder;
     private int counter = 0;
 
-    public StringPool() {
+    public StringPool(String prefix) {
+        this.prefix = prefix;
         this.literalToId = new LinkedHashMap<>();
         this.literalsInOrder = new ArrayList<>();
+    }
+
+    public StringPool() {
+        this("str");
     }
 
     public String intern(String literal) {
         if (literalToId.containsKey(literal)) return literalToId.get(literal);
         counter++;
-        String id = "str" + counter;
+        String id = prefix + counter;
         literalToId.put(literal, id);
         literalsInOrder.add(literal);
         return id;
@@ -32,9 +38,5 @@ public class StringPool {
 
     public String getId(String literal) {
         return literalToId.get(literal);
-    }
-
-    public List<String> getLiteralsInOrder() {
-        return literalsInOrder;
     }
 }
