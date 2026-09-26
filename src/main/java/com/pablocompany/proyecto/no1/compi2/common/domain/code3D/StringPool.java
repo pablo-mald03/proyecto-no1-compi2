@@ -12,7 +12,6 @@ import java.util.Map;
  */
 @Data
 public class StringPool {
-
     private final Map<String, String> literalToId;
     private final List<String> literalsInOrder;
     private int counter = 0;
@@ -23,9 +22,7 @@ public class StringPool {
     }
 
     public String intern(String literal) {
-        if (literalToId.containsKey(literal)) {
-            return literalToId.get(literal);
-        }
+        if (literalToId.containsKey(literal)) return literalToId.get(literal);
         counter++;
         String id = "str" + counter;
         literalToId.put(literal, id);
@@ -37,4 +34,7 @@ public class StringPool {
         return literalToId.get(literal);
     }
 
+    public List<String> getLiteralsInOrder() {
+        return literalsInOrder;
+    }
 }

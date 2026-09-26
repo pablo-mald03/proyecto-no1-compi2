@@ -9,6 +9,9 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
  */
 public class QuadrupleSerializer {
 
+    private static final int STACK_SIZE = 65536;
+    private static final int HEAP_SIZE = 65536;
+
     private final CodeGeneratorOutput output;
     private final StringPool stringPool;
     private final StringBuilder sb;
@@ -20,26 +23,43 @@ public class QuadrupleSerializer {
     }
 
     public String serialize() {
-        emitPrelude();
-        emitStructDefinitions();
+        emitHeader();
         emitStringConstants();
-        emitGlobals();
         emitFunctions();
+        emitMainCall();
         return sb.toString();
     }
 
     // ============================================================
-    // HEADER (no function context)
+    // HEADER
     // ============================================================
 
-    private void emitPrelude() {
+    private void emitHeader() {
         sb.append("#include <stdio.h>\n");
         sb.append("#include <stdlib.h>\n");
         sb.append("#include <string.h>\n\n");
-    }
 
-    private void emitStructDefinitions() {
-        // TODO: emit struct definitions from the StructDeclaration nodes.
+        sb.append("int sptr = 0;\n");
+        sb.append("int hptr = 0;\n");
+        sb.append("int fp = 0;\n\n");
+
+        sb.append("int stackinteger[" + STACK_SIZE + "];\n");
+        sb.append("char* stackstring[" + STACK_SIZE + "];\n");
+        sb.append("float stackfloat[" + STACK_SIZE + "];\n");
+        sb.append("char stackchar[" + STACK_SIZE + "];\n");
+        sb.append("int stackboolean[" + STACK_SIZE + "];\n\n");
+
+        sb.append("int heapinteger[" + HEAP_SIZE + "];\n");
+        sb.append("char* heapstring[" + HEAP_SIZE + "];\n");
+        sb.append("float heapfloat[" + HEAP_SIZE + "];\n");
+        sb.append("char heapchar[" + HEAP_SIZE + "];\n");
+        sb.append("int heapboolean[" + HEAP_SIZE + "];\n\n");
+
+        sb.append("int AX_INT, BX_INT, CX_INT;\n");
+        sb.append("char* AX_STRING, *BX_STRING, *CX_STRING;\n");
+        sb.append("float AX_FLOAT, BX_FLOAT, CX_FLOAT;\n");
+        sb.append("char AX_CHAR, BX_CHAR, CX_CHAR;\n");
+        sb.append("int AX_BOOLEAN, BX_BOOLEAN, CX_BOOLEAN;\n\n");
     }
 
     private void emitStringConstants() {
@@ -53,47 +73,49 @@ public class QuadrupleSerializer {
         }
     }
 
-    private void emitGlobals() {
-        // TODO: emit global variables.
-    }
-
     // ============================================================
     // FUNCTIONS
     // ============================================================
 
     private void emitFunctions() {
-        // insideFunction tells us if we are currently inside a function body.
-        // It is initially false (we are in the "header" of the file).
         boolean insideFunction = false;
 
         for (Quadruple q : output.getQuadruples()) {
             String op = q.getOp();
 
-            // Handle function boundaries BEFORE dispatching to emitQuadruple.
             if ("function_start".equals(op)) {
-                // Close the previous function if there was one.
-                if (insideFunction) {
-                    sb.append("}\n\n");
-                }
-
-                // Open the new function.
-                String returnType = q.getArg2() != null ? q.getArg2() : "void";
-                sb.append(returnType).append(" ").append(q.getArg1()).append("() {\n");
+                if (insideFunction) sb.append("}\n\n");
+                sb.append("void ").append(q.getArg1()).append("() {\n");
                 insideFunction = true;
                 continue;
             }
 
-            // Skip anything that is outside a function context.
             if (!insideFunction) continue;
-
             emitQuadruple(q);
         }
 
-        // Close the last function if we opened one.
-        if (insideFunction) {
+        if (insideFunction) sb.append("}\n");
+    }
+
+    private void emitMainCall() {
+        String mainFunc = null;
+        for (String name : output.getFunctionNames()) {
+            if (name.startsWith("main_") || name.equals("main")) {
+                mainFunc = name;
+                break;
+            }
+        }
+        if (mainFunc != null) {
+            sb.append("\nint main() {\n");
+            sb.append("  ").append(mainFunc).append("();\n");
+            sb.append("  return 0;\n");
             sb.append("}\n");
         }
     }
+
+    // ============================================================
+    // QUADRUPLE EMISSION
+    // ============================================================
 
     private void emitQuadruple(Quadruple q) {
         String op = q.getOp();
@@ -140,65 +162,39 @@ public class QuadrupleSerializer {
                 break;
 
             case "label":
-                // Internal labels are always in arg1.
                 sb.append(a1).append(":;\n");
                 break;
 
             case "print": {
-                String format = switch (a2 != null ? a2 : "int") {
+                String fmt = switch (a2 != null ? a2 : "int") {
                     case "string" -> "%s";
                     case "float" -> "%f";
                     case "char" -> "%c";
                     default -> "%d";
                 };
-                sb.append("  printf(\"").append(format).append("\\n\", ")
-                        .append(a1).append(");\n");
+                sb.append("  printf(\"").append(fmt).append("\\n\", ").append(a1).append(");\n");
                 break;
             }
 
-            case "read":
+            case "read_int":
                 sb.append("  scanf(\"%d\", &").append(res).append(");\n");
                 break;
 
-            case "param":
-                sb.append("  // param ").append(a1).append("\n");
-                break;
-
-            case "call":
-                sb.append("  ").append(res).append(" = ").append(a1).append("();\n");
+            case "read_string":
+                sb.append("  ").append(res).append(" = (char*)malloc(1024);\n");
+                sb.append("  scanf(\"%s\", ").append(res).append(");\n");
                 break;
 
             case "return":
-                if (a1 != null) {
-                    sb.append("  return ").append(a1).append(";\n");
-                } else {
-                    sb.append("  return;\n");
-                }
+                sb.append("  return;\n");
                 break;
 
-            case "array_get":
-                sb.append("  ").append(res).append(" = ")
-                        .append(a1).append("[").append(a2).append("];\n");
+            case "sptr_inc":
+                sb.append("  sptr = sptr + ").append(a1).append(";\n");
                 break;
 
-            case "array_set":
-                sb.append("  ").append(a1).append("[").append(a2).append("] = ")
-                        .append(res).append(";\n");
-                break;
-
-            case "get_field":
-                sb.append("  ").append(res).append(" = ")
-                        .append(a1).append(".").append(a2).append(";\n");
-                break;
-
-            case "set_field":
-                sb.append("  ").append(a1).append(".").append(a2)
-                        .append(" = ").append(res).append(";\n");
-                break;
-
-            case "alloc_struct":
-                sb.append("  // TODO: alloc struct ").append(a1)
-                        .append(" -> ").append(res).append("\n");
+            case "sptr_dec":
+                sb.append("  sptr = sptr - ").append(a1).append(";\n");
                 break;
 
             default:

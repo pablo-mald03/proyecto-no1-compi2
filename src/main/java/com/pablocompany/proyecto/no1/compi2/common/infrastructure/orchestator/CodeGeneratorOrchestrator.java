@@ -2,8 +2,6 @@ package com.pablocompany.proyecto.no1.compi2.common.infrastructure.orchestator;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.Quadruple;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.factory.CodeGeneratorFactory;
 import com.pablocompany.proyecto.no1.compi2.common.domain.models.CodeGenerator;
@@ -11,51 +9,54 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.serializer.QuadrupleSerializer;
 
-import java.util.List;
 import java.util.Map;
 
+/**
+ * Principal code generator orchestator
+ *
+ */
 public class CodeGeneratorOrchestrator {
 
-    public CodeGeneratorOutput generateAll(Map<String, EditorContext> allContexts,
-                                           List<String> topologicalOrder,
-                                           GlobalSymbolTable table,
-                                           Map<AstNode, Type> typeAnnotations) {
+    public String generateAll(Map<String, EditorContext> allContexts,
+                              GlobalSymbolTable table,
+                              Map<AstNode, Type> typeAnnotations,
+                              String mainClassPath) {
 
-        // For the first version, we only generate code for the Main Class (.pig).
-        // And we only generate for .y and .z as needed.
-        // For now: generate for the Main Class only.
-/*
+        CodeGeneratorOutput combined = new CodeGeneratorOutput("<combined>");
+
+        // --- .y ---
         for (String filePath : allContexts.keySet()) {
             EditorContext ctx = allContexts.get(filePath);
             if (ctx == null) continue;
-            if (".pig".equals(ctx.getFileExtension())) {
-                CodeGenerator gen = CodeGeneratorFactory.create(".pig");
-                if (gen != null) {
-                    return gen.generate(ctx, table, typeAnnotations);
-                }
-            }
-        }*/
+            if (!".y".equals(ctx.getFileExtension())) continue;
 
+            CodeGenerator gen = CodeGeneratorFactory.create(".y");
+            if (gen == null) continue;
 
-        for (String filePath : allContexts.keySet()) {
-            EditorContext ctx = allContexts.get(filePath);
-            if (ctx != null && ".y".equals(ctx.getFileExtension())) {
-                CodeGenerator gen = CodeGeneratorFactory.create(".y");
-                if (gen != null) {
-                    CodeGeneratorOutput codeOutput = gen.generate(ctx, table, typeAnnotations);
-                    QuadrupleSerializer serializer = new QuadrupleSerializer(codeOutput, new StringPool());
-                    String finalCompiledCode = serializer.serialize();
-                    System.out.println("=== CUARTETAS ===");
-                    for (Quadruple q : codeOutput.getQuadruples()) {
-                        System.out.println(q);
-                    }
-                    System.out.println("=== C ===");
-                    System.out.println(finalCompiledCode);
-                    return null;
-                }
-            }
+            CodeGeneratorOutput out = gen.generate(ctx, table, typeAnnotations);
+            combined.getQuadruples().addAll(out.getQuadruples());
+            combined.getFunctionNames().addAll(out.getFunctionNames());
+
         }
 
-        return null;
+        EditorContext mainCtx = allContexts.get(mainClassPath);
+        if (mainCtx != null) {
+            CodeGenerator gen = CodeGeneratorFactory.create(".pig");
+            if (gen != null) {
+                CodeGeneratorOutput out = gen.generate(mainCtx, table, typeAnnotations);
+                combined.getQuadruples().addAll(out.getQuadruples());
+                combined.getFunctionNames().addAll(out.getFunctionNames());
+            }
+        } else {
+            System.out.println("MAIN CTX NOT FOUND: " + mainClassPath);
+        }
+
+        QuadrupleSerializer serializer = new QuadrupleSerializer(combined, combined.getStringPool());
+        String finalC = serializer.serialize();
+
+        System.out.println("=== C FINAL ===");
+        System.out.println(finalC);
+
+        return finalC;
     }
 }

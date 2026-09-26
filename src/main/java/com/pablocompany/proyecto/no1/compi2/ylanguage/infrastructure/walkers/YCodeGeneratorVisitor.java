@@ -1,10 +1,9 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.walkers;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.LabelGenerator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.TemporaryGenerator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
@@ -29,7 +28,6 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.exp
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructPropertyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.TypeNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.enums.YDataType;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.VariableDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.breakpoints.BreakStatementNodeY;
@@ -51,33 +49,51 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.St
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions.FunctionsRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
+import lombok.Getter;
 
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * Principal visitor to excecute the code generator
+ */
+@Getter
 public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     private final GlobalSymbolTable table;
     private final EditorContext context;
     private final Map<AstNode, Type> typeAnnotations;
     private final CodeGeneratorOutput output;
-    private final TemporaryGenerator tempGen;
-    private final LabelGenerator labelGen;
+    private final CodeGenContext ctx;
     private final StringPool stringPool;
+
+    private int nextOffset = 1;
+
+    private final Map<String, Integer> localOffsets = new HashMap<>();
+
+    private final Map<String, Integer> paramOffsets = new HashMap<>();
+
+    private final Map<String, TypeKind> localTypes = new HashMap<>();
+
+    private final Deque<String> breakLabels = new ArrayDeque<>();
+    private final Deque<String> continueLabels = new ArrayDeque<>();
+
+    private String lastExpr;
 
     public YCodeGeneratorVisitor(GlobalSymbolTable table,
                                  EditorContext context,
                                  Map<AstNode, Type> typeAnnotations,
                                  CodeGeneratorOutput output,
-                                 TemporaryGenerator tempGen,
-                                 LabelGenerator labelGen,
+                                 CodeGenContext ctx,
                                  StringPool stringPool) {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
         this.output = output;
-        this.tempGen = tempGen;
-        this.labelGen = labelGen;
+        this.ctx = ctx;
         this.stringPool = stringPool;
     }
 
@@ -94,8 +110,6 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(StructuresRegionNodeY node) {
-        // Structs are handled by the serializer (they become C structs).
-        // No quadruples to emit.
         return null;
     }
 
@@ -110,17 +124,32 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     }
 
     // ============================================================
-    // FUNCTIONS AND PROCEDURES
+    // FUNCTIONS
     // ============================================================
 
     @Override
     public Void visit(FunctionDeclarationNodeY node) {
-        output.getFunctionNames().add(node.getName());
-        String returnType = node.getReturnType() != null
-                ? typeToString(mapTypeNode(node.getReturnType()))
-                : "void";
-        output.emit("function_start", node.getName(), returnType, null);
+        String funcName = uniqueFunctionName(node.getName(), node);
+        output.getFunctionNames().add(funcName);
+        output.emit("function_start", funcName, null, null);
 
+        localOffsets.clear();
+        paramOffsets.clear();
+        localTypes.clear();
+        nextOffset = 1;
+
+        // Parameters at offsets 1, 2, 3...
+        if (node.getParameters() != null) {
+            for (ParameterNodeY param : node.getParameters()) {
+                if (param != null) {
+                    String pname = param.getIdentifier();
+                    paramOffsets.put(pname, nextOffset);
+                    nextOffset++;
+                }
+            }
+        }
+
+        // Body.
         if (node.getBody() != null) {
             for (YAstNode s : node.getBody()) {
                 if (s != null) s.accept(this);
@@ -133,8 +162,24 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ProcedureDeclarationNodeY node) {
-        output.getFunctionNames().add(node.getName());
-        output.emit("function_start", node.getName(), "void", null);
+        String funcName = uniqueFunctionName(node.getName(), node);
+        output.getFunctionNames().add(funcName);
+        output.emit("function_start", funcName, null, null);
+
+        localOffsets.clear();
+        paramOffsets.clear();
+        localTypes.clear();
+        nextOffset = 1;
+
+        if (node.getParameters() != null) {
+            for (ParameterNodeY param : node.getParameters()) {
+                if (param != null) {
+                    String pname = param.getIdentifier();
+                    paramOffsets.put(pname, nextOffset);
+                    nextOffset++;
+                }
+            }
+        }
 
         if (node.getBody() != null) {
             for (YAstNode s : node.getBody()) {
@@ -152,38 +197,37 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(VariableDeclarationNodeY node) {
+        String localName = node.getIdentifier();
+        int offset = allocateLocal(localName, node);
+
         if (node.getInitializer() != null) {
             String value = exprToString(node.getInitializer());
-            output.emit("=", value, null, node.getIdentifier());
+            storeToStack(localName, value);
         }
         return null;
     }
 
     @Override
     public Void visit(ArrayDeclarationNodeY node) {
-
-        if (node.getInitializer() != null) {
-            node.getInitializer().accept(this);
-            String temp = lastResult();
-            output.emit("array_init", node.getIdentifier(), temp, null);
-        }
+        // TODO: arrays.
+        allocateLocal(node.getIdentifier(), node);
         return null;
     }
 
     @Override
     public Void visit(ForInitDeclarationNodeY node) {
+        String localName = node.getId();
+        allocateLocal(localName, node);
+
         if (node.getExpr() != null) {
             String value = exprToString(node.getExpr());
-            output.emit("=", value, null, node.getId());
+            storeToStack(localName, value);
         }
         return null;
     }
 
     @Override
     public Void visit(ForInitAssignmentNodeY node) {
-        String target = exprToString(node.getId());
-        String value = exprToString(node.getExpr());
-        output.emit("=", value, null, target);
         return null;
     }
 
@@ -192,17 +236,21 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         String target = exprToString(node.getTarget());
         switch (node.getOperator()) {
             case INCREMENT:
-            case PREFIX_INCREMENT:
-                output.emit("+", target, "1", target);
+            case PREFIX_INCREMENT: {
+                String addr = getStackRef(node.getTarget());
+                output.emit("+", addr, "1", addr);
                 break;
+            }
             case DECREMENT:
-            case PREFIX_DECREMENT:
-                output.emit("-", target, "1", target);
+            case PREFIX_DECREMENT: {
+                String addr = getStackRef(node.getTarget());
+                output.emit("-", addr, "1", addr);
                 break;
+            }
             case ASSIGN:
                 if (node.getValue() != null) {
                     String value = exprToString(node.getValue());
-                    output.emit("=", value, null, target);
+                    storeToStackFromExpr(node.getTarget(), value);
                 }
                 break;
         }
@@ -215,17 +263,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(VariableAssignmentNodeY node) {
-        String target = exprToString(node.getIdentifier());
         String value = exprToString(node.getExpressionNode());
-
-        // If the target is a field access (e.g. p.x), use set_field.
-        if (node.getIdentifier() instanceof PropertyAccessExpressionNodeY prop) {
-            String obj = exprToString(prop.getTarget());
-            String valueForField = exprToString(node.getExpressionNode());
-            output.emit("set_field", obj, prop.getPropertyName(), valueForField);
-        } else {
-            output.emit("=", value, null, target);
-        }
+        storeToStackFromExpr(node.getIdentifier(), value);
         return null;
     }
 
@@ -234,43 +273,38 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         String target = exprToString(node.getTarget());
         String value = exprToString(node.getValue());
         String op = shortlyOpToBinary(node.getOperator());
-        output.emit(op, target, value, target);
+        String addr = getStackRef(node.getTarget());
+        output.emit(op, addr, value, addr);
         return null;
     }
 
     @Override
     public Void visit(IncrementStatementNodeY node) {
-        String target = exprToString(node.getTargetVariable());
-        output.emit("+", target, "1", target);
+        String addr = getStackRef(node.getTargetVariable());
+        output.emit("+", addr, "1", addr);
         return null;
     }
 
     @Override
     public Void visit(DecrementStatementNodeY node) {
-        String target = exprToString(node.getTargetVariable());
-        output.emit("-", target, "1", target);
+        String addr = getStackRef(node.getTargetVariable());
+        output.emit("-", addr, "1", addr);
         return null;
     }
 
     @Override
     public Void visit(IncrementPrevStatementNodeY node) {
-        String target = exprToString(node.getTargetVariable());
-        output.emit("+", target, "1", target);
-        return null;
+        return visit((IncrementStatementNodeY) null);
     }
 
     @Override
     public Void visit(DecrementPrevStatementNodeY node) {
-        String target = exprToString(node.getTargetVariable());
-        output.emit("-", target, "1", target);
-        return null;
+        return visit((DecrementStatementNodeY) null);
     }
 
     @Override
     public Void visit(ExpressionStatementNodeY node) {
-        if (node.getExpression() != null) {
-            node.getExpression().accept(this);
-        }
+        if (node.getExpression() != null) node.getExpression().accept(this);
         return null;
     }
 
@@ -278,32 +312,25 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     public Void visit(PrintStatementNodeY node) {
         if (node.getExpression() != null) {
             String value = exprToString(node.getExpression());
-            Type type = typeAnnotations.get(node.getExpression());
-            String typeName = typeToString(type);
+            Type t = typeAnnotations.get(node.getExpression());
+            String typeName = typeToString(t);
             output.emit("print", value, typeName, null);
         }
         return null;
     }
 
-    private String typeToString(Type t) {
-        if (t == null) return "void";
-        return switch (t.getKind()) {
-            case INT -> "int";
-            case FLOAT -> "double";
-            case STRING -> "char*";
-            case CHAR -> "char";
-            case BOOLEAN -> "int";
-            case VOID -> "void";
-            default -> "void";
-        };
-    }
-
     @Override
     public Void visit(ReadStatementNodeY node) {
-        // read is an expression: emit read into a new temp.
-        String temp = tempGen.next();
-        output.emit("read", null, null, temp);
-        lastExpr = temp;
+        // read returns a value, stored in a new stack slot.
+        int offset = nextOffset++;
+        String addr = "stackinteger[" + offset + "]";
+        Type t = typeAnnotations.get(node);
+        if (t != null && t.getKind() == TypeKind.STRING) {
+            output.emit("read_string", null, null, addr);
+        } else {
+            output.emit("read_int", null, null, addr);
+        }
+        lastExpr = addr;
         return null;
     }
 
@@ -311,16 +338,16 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     public Void visit(ReturnStatementNodeY node) {
         if (node.getValue() != null) {
             String value = exprToString(node.getValue());
-            output.emit("return", value, null, null);
-        } else {
-            output.emit("return", null, null, null);
+            // Return value at offset 0.
+            String typeName = stackArrayNameForExprType(node.getValue());
+            output.emit("=", value, null, typeName + "[0]");
         }
+        output.emit("return", null, null, null);
         return null;
     }
 
     @Override
     public Void visit(BreakStatementNodeY node) {
-        // break labels are handled by the enclosing loop.
         if (!breakLabels.isEmpty()) {
             output.emit("goto", null, null, breakLabels.peek());
         }
@@ -339,15 +366,11 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     // CONTROL FLOW
     // ============================================================
 
-    private final java.util.Deque<String> breakLabels = new java.util.ArrayDeque<>();
-    private final java.util.Deque<String> continueLabels = new java.util.ArrayDeque<>();
-
     @Override
     public Void visit(IfStatementNodeY node) {
         String cond = exprToString(node.getCondition());
-
-        String elseLabel = labelGen.next();
-        String endLabel = labelGen.next();
+        String elseLabel = ctx.nextLabel();
+        String endLabel = ctx.nextLabel();
 
         output.emit("ifFalse", cond, null, elseLabel);
 
@@ -375,10 +398,9 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfNodeY node) {
-        // Handled as part of the if-chain.
         String cond = exprToString(node.getCondition());
-        String nextLabel = labelGen.next();
-        String endLabel = labelGen.next();
+        String nextLabel = ctx.nextLabel();
+        String endLabel = ctx.nextLabel();
 
         output.emit("ifFalse", cond, null, nextLabel);
 
@@ -405,8 +427,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(WhileStatementNodeY node) {
-        String startLabel = labelGen.next();
-        String endLabel = labelGen.next();
+        String startLabel = ctx.nextLabel();
+        String endLabel = ctx.nextLabel();
 
         output.emit("label", startLabel, null, null);
         String cond = exprToString(node.getCondition());
@@ -431,9 +453,9 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(DoWhileStatementNodeY node) {
-        String startLabel = labelGen.next();
-        String condLabel = labelGen.next();
-        String endLabel = labelGen.next();
+        String startLabel = ctx.nextLabel();
+        String condLabel = ctx.nextLabel();
+        String endLabel = ctx.nextLabel();
 
         output.emit("label", startLabel, null, null);
 
@@ -458,8 +480,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ForStatementNodeY node) {
-        String startLabel = labelGen.next();
-        String endLabel = labelGen.next();
+        String startLabel = ctx.nextLabel();
+        String endLabel = ctx.nextLabel();
 
         if (node.getInit() != null) node.getInit().accept(this);
 
@@ -491,7 +513,6 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeY node) {
-        // For now, not implemented. Just visit the body.
         if (node.getCases() != null) {
             for (SwitchCaseNodeY c : node.getCases()) if (c != null) c.accept(this);
         }
@@ -516,28 +537,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     }
 
     // ============================================================
-    // EXPRESSIONS — these produce a value into a temporary.
+    // EXPRESSIONS
     // ============================================================
-
-    /**
-     * Keeps the last produced expression result (temp/var/literal).
-     */
-    private String lastExpr;
-
-    /**
-     * Returns the current value of lastExpr.
-     */
-    private String lastResult() {
-        return lastExpr;
-    }
-
-    /**
-     * Evaluates an expression, returns the "value" (temp/var/literal).
-     */
-    private String exprToString(ExpressionNodeY node) {
-        node.accept(this);
-        return lastExpr;
-    }
 
     @Override
     public Void visit(ExpressionNodeY node) {
@@ -550,8 +551,9 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         Object value = node.getDataValue();
 
         if (t != null && t.getKind() == TypeKind.STRING) {
-            String strId = stringPool.intern(String.valueOf(value));
-            lastExpr = strId;
+            lastExpr = stringPool.intern(String.valueOf(value));
+        } else if (t != null && t.getKind() == TypeKind.BOOLEAN) {
+            lastExpr = Boolean.TRUE.equals(value) ? "1" : "0";
         } else {
             lastExpr = String.valueOf(value);
         }
@@ -560,7 +562,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(IdentifierExpressionNodeY node) {
-        lastExpr = node.getIdentifier();
+        lastExpr = getStackRef(node);
         return null;
     }
 
@@ -568,146 +570,80 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     public Void visit(BinaryExpressionNodeY node) {
         String left = exprToString(node.getLeft());
         String right = exprToString(node.getRight());
-        String temp = tempGen.next();
+
+        int offset = nextOffset++;
+        String res = stackArrayForExpr(node) + "[" + offset + "]";
 
         String op = binaryOpToSymbol(node.getOperator());
-        output.emit(op, left, right, temp);
-        lastExpr = temp;
+        output.emit(op, left, right, res);
+        lastExpr = res;
         return null;
     }
 
     @Override
     public Void visit(UnaryExpressionNodeY node) {
         String operand = exprToString(node.getExpressionNode());
-        String temp = tempGen.next();
+
+        int offset = nextOffset++;
+        String res = stackArrayForExpr(node) + "[" + offset + "]";
 
         String op = unaryOpToSymbol(node.getOperator());
-        output.emit(op, operand, null, temp);
-        lastExpr = temp;
+        output.emit(op, operand, null, res);
+        lastExpr = res;
         return null;
     }
 
+    // ============================================================
+    // STUBS
+    // ============================================================
+
     @Override
     public Void visit(FunctionCallExpressionNodeY node) {
-        // Visit arguments and emit param quadruples.
-        if (node.getArguments() != null) {
-            for (ExpressionNodeY arg : node.getArguments()) {
-                String argVal = exprToString(arg);
-                output.emit("param", argVal, null, null);
-            }
-        }
-
-        int argCount = node.getArguments() != null ? node.getArguments().size() : 0;
-        String temp = tempGen.next();
-        output.emit("call", node.getFunctionName(), String.valueOf(argCount), temp);
-        lastExpr = temp;
         return null;
     }
 
     @Override
     public Void visit(ArrayCallExpressionNodeY node) {
-        String index = exprToString(node.getIndexExpression());
-        String temp = tempGen.next();
-        output.emit("array_get", node.getArrayName(), index, temp);
-        lastExpr = temp;
         return null;
     }
 
     @Override
     public Void visit(ArrayInitExpressionNodeY node) {
-        // Each element is emitted as a separate "array_element" quadruple.
-        String temp = tempGen.next();
-        if (node.getElements() != null) {
-            for (int i = 0; i < node.getElements().size(); i++) {
-                String value = exprToString(node.getElements().get(i));
-                output.emit("array_element", value, String.valueOf(i), temp);
-            }
-        }
-        lastExpr = temp;
         return null;
     }
 
     @Override
     public Void visit(ArrayValuesNodeY node) {
-        if (node.getValues() != null) {
-            for (ExpressionNodeY v : node.getValues()) {
-                if (v != null) v.accept(this);
-            }
-        }
         return null;
     }
 
     @Override
     public Void visit(StructInstanceNodeY node) {
-        // Allocate struct, then set fields.
-        String temp = tempGen.next();
-        output.emit("alloc_struct", node.getStructType(), null, temp);
-
-        if (node.getLiteral() != null) {
-            List<StructPropertyNodeY> props = node.getLiteral().getProperties();
-            for (int i = 0; i < props.size(); i++) {
-                StructPropertyNodeY prop = props.get(i);
-                String value = exprToString(prop.getValue());
-                output.emit("set_field", temp, String.valueOf(i), value);
-            }
-        }
-
-        output.emit("=", temp, null, node.getIdentifier());
-        lastExpr = temp;
         return null;
     }
 
     @Override
     public Void visit(StructLiteralExpressionNodeY node) {
-        // Standalone struct literal (e.g. as function argument).
-        String temp = tempGen.next();
-        output.emit("alloc_struct", "?", null, temp);
-        if (node.getProperties() != null) {
-            for (int i = 0; i < node.getProperties().size(); i++) {
-                StructPropertyNodeY prop = node.getProperties().get(i);
-                String value = exprToString(prop.getValue());
-                output.emit("set_field", temp, String.valueOf(i), value);
-            }
-        }
-        lastExpr = temp;
         return null;
     }
 
     @Override
     public Void visit(StructPropertyNodeY node) {
-        if (node.getValue() != null) {
-            lastExpr = exprToString(node.getValue());
-        }
         return null;
     }
 
     @Override
     public Void visit(PropertyAccessExpressionNodeY node) {
-        String obj = exprToString(node.getTarget());
-        String temp = tempGen.next();
-        output.emit("get_field", obj, node.getPropertyName(), temp);
-        lastExpr = temp;
         return null;
     }
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodeY node) {
-        String target = exprToString(node.getTarget());
-        String index = exprToString(node.getIndex());
-        String temp = tempGen.next();
-        output.emit("array_get_dyn", target, index, temp);
-        lastExpr = temp;
         return null;
     }
 
     @Override
     public Void visit(ArgumentsNodeY node) {
-        if (node.getArguments() != null) {
-            for (ExpressionNodeY arg : node.getArguments()) {
-                String argVal = exprToString(arg);
-                output.emit("param", argVal, null, null);
-            }
-        }
         return null;
     }
 
@@ -715,10 +651,6 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     public Void visit(TypeNodeY node) {
         return null;
     }
-
-    // ============================================================
-    // NO-OP
-    // ============================================================
 
     @Override
     public Void visit(StructDeclarationNodeY node) {
@@ -755,10 +687,94 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-
     // ============================================================
     // HELPERS
     // ============================================================
+
+    private String exprToString(ExpressionNodeY node) {
+        node.accept(this);
+        return lastExpr;
+    }
+
+    private String uniqueFunctionName(String baseName, YAstNode node) {
+        return baseName + "_" + node.getLine() + "_" + node.getColumn();
+    }
+
+    private int allocateLocal(String name, YAstNode node) {
+        int offset = nextOffset++;
+        localOffsets.put(name, offset);
+
+        // Store type for later (which stack array to use).
+        Type t = typeAnnotations.get(node);
+        if (t != null) {
+            localTypes.put(name, t.getKind());
+        } else {
+            localTypes.put(name, TypeKind.INT);
+        }
+        return offset;
+    }
+
+    /**
+     * Returns the C expression that references a variable on the stack.
+     * E.g. "stackinteger[5]" or "stackstring[3]".
+     */
+    private String getStackRef(ExpressionNodeY expr) {
+        if (expr instanceof IdentifierExpressionNodeY id) {
+            String name = id.getIdentifier();
+            Integer offset = localOffsets.get(name);
+            TypeKind kind = localTypes.get(name);
+            if (offset == null) {
+                offset = paramOffsets.get(name);
+            }
+            if (offset == null) {
+                return "0";
+            }
+            if (kind == null) kind = TypeKind.INT;
+            return stackArrayFor(kind) + "[" + offset + "]";
+        }
+        return "0";
+    }
+
+    private void storeToStack(String name, String value) {
+        Integer offset = localOffsets.get(name);
+        TypeKind kind = localTypes.get(name);
+        if (offset == null) {
+            offset = paramOffsets.get(name);
+        }
+        if (offset == null) return;
+        if (kind == null) kind = TypeKind.INT;
+
+        String target = stackArrayFor(kind) + "[" + offset + "]";
+        output.emit("=", value, null, target);
+    }
+
+    private void storeToStackFromExpr(ExpressionNodeY target, String value) {
+        String ref = getStackRef(target);
+        output.emit("=", value, null, ref);
+    }
+
+    private String stackArrayFor(TypeKind kind) {
+        if (kind == null) return "stackinteger";
+        return switch (kind) {
+            case STRING -> "stackstring";
+            case FLOAT -> "stackfloat";
+            case CHAR -> "stackchar";
+            case BOOLEAN -> "stackboolean";
+            default -> "stackinteger";
+        };
+    }
+
+    private String stackArrayNameForExprType(ExpressionNodeY expr) {
+        Type t = typeAnnotations.get(expr);
+        if (t == null) return "stackinteger";
+        return stackArrayFor(t.getKind());
+    }
+
+    private String stackArrayForExpr(ExpressionNodeY expr) {
+        Type t = typeAnnotations.get(expr);
+        if (t == null) return "stackinteger";
+        return stackArrayFor(t.getKind());
+    }
 
     private String binaryOpToSymbol(BinaryOperator op) {
         return switch (op) {
@@ -795,36 +811,14 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         };
     }
 
-    /**
-     * Helper for typenode
-     *
-     */
-    private Type mapTypeNode(TypeNodeY typeNode) {
-        if (typeNode == null) return Type.unknown();
-        return mapYDataType(typeNode.getDataType(), typeNode.getCustomTypeName());
-    }
-
-    /**
-     * Principal mapper for data type
-     *
-     */
-    private Type mapYDataType(YDataType dt, String customName) {
-        if (dt == null) return Type.unknown();
-        switch (dt) {
-            case INT:
-                return Type.intType();
-            case FLOAT:
-                return Type.floatType();
-            case STRING:
-                return Type.stringType();
-            case CHAR:
-                return Type.charType();
-            case BOOLEAN:
-                return Type.booleanType();
-            case CUSTOM:
-                return Type.customType(customName);
-            default:
-                return Type.unknown();
-        }
+    private String typeToString(Type t) {
+        if (t == null) return "int";
+        return switch (t.getKind()) {
+            case STRING -> "string";
+            case FLOAT -> "float";
+            case CHAR -> "char";
+            case BOOLEAN -> "int";
+            default -> "int";
+        };
     }
 }

@@ -19,10 +19,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * This table is a component that represents a Types table
  * @author pablo03
  */
-//This table is a component that represents a Typestable
 public class TypesTable extends JTable {
 
     private final DefaultTableModel tableModel;
