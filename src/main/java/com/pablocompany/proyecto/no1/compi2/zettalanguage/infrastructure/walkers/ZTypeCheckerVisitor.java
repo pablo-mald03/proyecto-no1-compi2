@@ -1045,6 +1045,17 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     private Type resolveBaseTypeName(String typeName) {
         if (typeName == null) return Type.unknown();
         return switch (typeName) {
+            case "numerus" -> Type.intType();
+            case "decimalis" -> Type.floatType();
+            case "textum" -> Type.stringType();
+            case "littera" -> Type.charType();
+
+            case "entero" -> Type.intType();
+            case "flotante" -> Type.floatType();
+            case "cadena" -> Type.stringType();
+            case "caracter" -> Type.charType();
+            case "bool" -> Type.booleanType();
+
             case "int" -> Type.intType();
             case "double" -> Type.floatType();
             case "char" -> Type.charType();

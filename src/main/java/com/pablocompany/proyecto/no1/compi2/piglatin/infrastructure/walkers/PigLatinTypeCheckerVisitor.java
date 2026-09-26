@@ -835,6 +835,13 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             return Type.unknown();
         }
 
+        int extraDims = 1;
+        Type baseType = firstType;
+        if (firstType.isArray()) {
+            extraDims = firstType.getDimensions() + 1;
+            baseType = firstType.getElementType();
+        }
+
         for (int i = 1; i < node.getElements().size(); i++) {
             Type elemType = node.getElements().get(i).accept(this);
             if (!elemType.isAssignableTo(firstType) && !elemType.isUnknown()) {
@@ -844,7 +851,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             }
         }
 
-        Type result = Type.arrayType(firstType, 1);
+        Type result = Type.arrayType(baseType, extraDims);
         annotate(node, result);
         return result;
     }
@@ -942,12 +949,23 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (typeName == null) return Type.unknown();
         return switch (typeName) {
             case "numerus" -> Type.intType();
-            case "decimalis", "decimal" -> Type.floatType();
+            case "decimalis" -> Type.floatType();
             case "textum" -> Type.stringType();
             case "littera" -> Type.charType();
+
+            case "entero" -> Type.intType();
+            case "flotante" -> Type.floatType();
+            case "cadena" -> Type.stringType();
+            case "caracter" -> Type.charType();
+            case "bool" -> Type.booleanType();
+
+            case "int" -> Type.intType();
+            case "double" -> Type.floatType();
+            case "char" -> Type.charType();
             case "boolean" -> Type.booleanType();
-            case "void" -> Type.voidType();
             case "String" -> Type.stringType();
+
+            case "void" -> Type.voidType();
             default -> Type.customType(typeName);
         };
     }

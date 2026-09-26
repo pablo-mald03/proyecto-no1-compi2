@@ -193,6 +193,13 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
     public Void visit(VariableDeclarationNodePigLatin node) {
         String typeName = resolveTypeName(node.getDataType());
 
+
+        if (typeName == null && node.getInitializer() != null) {
+            if (node.getInitializer() instanceof InstanceCreationExpressionNodePigLatin inst) {
+                typeName = inst.getClassName();
+            }
+        }
+
         SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.FILE
                 ? SymbolKind.GLOBAL_VARIABLE
                 : SymbolKind.LOCAL_VARIABLE;
