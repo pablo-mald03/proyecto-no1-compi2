@@ -190,12 +190,12 @@ public class QuadrupleSerializer {
 
 
             case "read_int":
-                sb.append("  scanf(\"%d\", &").append(res).append(");\n");
+                sb.append("  scanf(\"%d\", &stackinteger[fp + ").append(a1).append("]);\n");
                 break;
 
             case "read_string":
-                sb.append("  ").append(res).append(" = (char*)malloc(1024);\n");
-                sb.append("  scanf(\"%s\", ").append(res).append(");\n");
+                sb.append("  stackstring[fp + ").append(a1).append("] = (char*)malloc(1024);\n");
+                sb.append("  scanf(\"%s\", stackstring[fp + ").append(a1).append("]);\n");
                 break;
 
             case "return":
@@ -229,6 +229,7 @@ public class QuadrupleSerializer {
             case "store_int":
                 sb.append("  stackinteger[").append(a1).append("] = ").append(res).append(";\n");
                 break;
+
             case "store_string":
                 sb.append("  stackstring[").append(a1).append("] = ").append(res).append(";\n");
                 break;
@@ -245,6 +246,38 @@ public class QuadrupleSerializer {
             case "fp_push":
                 sb.append("  stackinteger[sptr] = fp;\n");
                 sb.append("  sptr = sptr + 1;\n");
+                break;
+
+            case "array_load_indirect_int":
+                sb.append("  ").append(res).append(" = stackinteger[").append(a1).append("];\n");
+                break;
+            case "array_load_indirect_string":
+                sb.append("  ").append(res).append(" = stackstring[").append(a1).append("];\n");
+                break;
+            case "array_load_indirect_float":
+                sb.append("  ").append(res).append(" = stackfloat[").append(a1).append("];\n");
+                break;
+            case "array_load_indirect_char":
+                sb.append("  ").append(res).append(" = stackchar[").append(a1).append("];\n");
+                break;
+            case "array_load_indirect_boolean":
+                sb.append("  ").append(res).append(" = stackboolean[").append(a1).append("];\n");
+                break;
+
+            case "field_load_indirect_int":
+                sb.append("  ").append(res).append(" = stackinteger[").append(a1).append("];\n");
+                break;
+            case "field_load_indirect_string":
+                sb.append("  ").append(res).append(" = stackstring[").append(a1).append("];\n");
+                break;
+            case "field_load_indirect_float":
+                sb.append("  ").append(res).append(" = stackfloat[").append(a1).append("];\n");
+                break;
+            case "field_load_indirect_char":
+                sb.append("  ").append(res).append(" = stackchar[").append(a1).append("];\n");
+                break;
+            case "field_load_indirect_boolean":
+                sb.append("  ").append(res).append(" = stackboolean[").append(a1).append("];\n");
                 break;
 
             case "fp_set":

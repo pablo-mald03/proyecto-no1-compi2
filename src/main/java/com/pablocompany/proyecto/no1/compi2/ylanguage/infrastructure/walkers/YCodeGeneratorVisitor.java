@@ -1,10 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.walkers;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.*;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
@@ -83,6 +80,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     private final Map<String, StructInfo> structVariables = new HashMap<>();
 
+    private final Map<String, ArrayInfo> arrayInfos = new HashMap<>();
+
 
     public YCodeGeneratorVisitor(GlobalSymbolTable table,
                                  EditorContext context,
@@ -141,7 +140,6 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             }
         }
         structLayouts.put(node.getStructName(), fields);
-        System.out.println("STRUCT LAYOUT: " + node.getStructName() + " -> " + fields);
         return null;
     }
 
@@ -222,6 +220,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         paramOffsets.clear();
         localTypes.clear();
         structVariables.clear();
+        arrayInfos.clear();
         nextOffset = 1;
     }
 
@@ -235,6 +234,20 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         allocateLocal(localName, node);
 
         if (node.getInitializer() != null) {
+            if (node.getInitializer() instanceof ReadStatementNodeY) {
+                TypeKind kind = localTypes.getOrDefault(localName, TypeKind.INT);
+                Integer offset = localOffsets.get(localName);
+
+                if (offset == null) return null;
+
+                if (kind == TypeKind.STRING) {
+                    output.emit("read_string", String.valueOf(offset), null, null);
+                } else {
+                    output.emit("read_int", String.valueOf(offset), null, null);
+                }
+                return null;
+            }
+
             String valueRef = exprToString(node.getInitializer());
             String dest = getStackRefByName(localName);
             storeValueTo(valueRef, dest);
@@ -244,8 +257,46 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayDeclarationNodeY node) {
-        // TODO: arrays.
-        allocateLocal(node.getIdentifier(), node);
+        int totalSize = 1;
+        boolean allLiteral = true;
+        if (node.getDimensions() != null) {
+            for (ExpressionNodeY dim : node.getDimensions()) {
+                Integer size = tryExtractIntLiteral(dim);
+                if (size == null) {
+                    allLiteral = false;
+                    break;
+                }
+                totalSize *= size;
+            }
+        }
+
+        if (!allLiteral) {
+
+            totalSize = 1;
+        }
+
+        int base = nextOffset;
+        nextOffset += totalSize;
+
+        TypeKind elementKind = mapTypeNodeToType(node.getDataType()).getKind();
+        arrayInfos.put(node.getIdentifier(),
+                new ArrayInfo(base, elementKind, totalSize, false));
+
+        if (node.getInitializer() != null
+                && node.getInitializer() instanceof ArrayInitExpressionNodeY init
+                && init.getElements() != null) {
+
+            List<ExpressionNodeY> values = init.getElements();
+            String suffix = kindToSuffix(elementKind);
+            String arrayStack = stackArrayForKind(elementKind);
+            String cxReg = "CX_" + suffix.toUpperCase();
+
+            for (int i = 0; i < values.size() && i < totalSize; i++) {
+                String valueRef = exprToString(values.get(i));
+                loadRegister(valueRef, cxReg);
+                output.emit("store_" + suffix, "fp + " + (base + i), null, cxReg);
+            }
+        }
         return null;
     }
 
@@ -373,17 +424,16 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     public Void visit(ReadStatementNodeY node) {
         int offset = nextOffset++;
         Type t = typeAnnotations.get(node);
-        String typeName = typeToString(t);
-        String arrayName = stackArrayForKind(t != null ? t.getKind() : TypeKind.INT);
-        String dest = arrayName + "[fp + " + offset + "]";
+        TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
+        String arrayName = stackArrayForKind(kind);
 
-        if ("string".equals(typeName)) {
-            output.emit("read_string", null, null, dest);
+        if (kind == TypeKind.STRING) {
+            output.emit("read_string", String.valueOf(offset), null, null);
         } else {
-            output.emit("read_int", null, null, dest);
+            output.emit("read_int", String.valueOf(offset), null, null);
         }
 
-        lastExpr = dest;
+        lastExpr = arrayName + "[fp + " + offset + "]";
         return null;
     }
 
@@ -470,6 +520,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
         output.emit("goto", null, null, endLabel);
         output.emit("label", nextLabel, null, null);
+        output.emit("label", endLabel, null, null);
         return null;
     }
 
@@ -654,8 +705,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
         int offset = nextOffset++;
         String dest = stackArrayForKind(kind) + "[fp + " + offset + "]";
-        String storeSuffix = suffix;
-        output.emit("store_" + storeSuffix, String.valueOf(offset), null, cReg);
+        output.emit("store_" + suffix, "fp + " + offset, null, cReg);
 
         lastExpr = dest;
         return null;
@@ -671,7 +721,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
         int offset = nextOffset++;
         String dest = "stackinteger[fp + " + offset + "]";
-        output.emit("store_int", String.valueOf(offset), null, "CX_INT");
+        output.emit("store_int", "fp + " + offset, null, "CX_INT");
 
         lastExpr = dest;
         return null;
@@ -691,6 +741,34 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
         if (args != null) {
             for (ExpressionNodeY arg : args) {
+                if (arg instanceof IdentifierExpressionNodeY id) {
+                    String name = id.getIdentifier();
+
+                    ArrayInfo aInfo = arrayInfos.get(name);
+                    if (aInfo != null) {
+                        if (!aInfo.isHeap()) {
+                            output.emit("+", "fp", String.valueOf(aInfo.getBaseOffset()), "AX_INT");
+                        } else {
+                            output.emit("load_int", String.valueOf(aInfo.getBaseOffset()), null, "AX_INT");
+                        }
+                        output.emit("store_int", "sptr", null, "AX_INT");
+                        output.emit("sptr_inc", "1", null, null);
+                        continue;
+                    }
+
+                    StructInfo sInfo = structVariables.get(name);
+                    if (sInfo != null) {
+                        if (!sInfo.isReference()) {
+                            output.emit("+", "fp", String.valueOf(sInfo.getBaseOffset()), "AX_INT");
+                        } else {
+                            output.emit("load_int", String.valueOf(sInfo.getBaseOffset()), null, "AX_INT");
+                        }
+                        output.emit("store_int", "sptr", null, "AX_INT");
+                        output.emit("sptr_inc", "1", null, null);
+                        continue;
+                    }
+                }
+
                 String argRef = exprToString(arg);
                 Type t = typeAnnotations.get(arg);
                 TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
@@ -715,7 +793,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         output.emit("load_" + returnSuffix, "sptr", null, cxReg);
 
         int destOffset = nextOffset++;
-        output.emit("store_" + returnSuffix, String.valueOf(destOffset), null, cxReg);
+        output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
 
         output.emit("sptr_dec", String.valueOf(numArgs + 1), null, null);
 
@@ -726,6 +804,33 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayCallExpressionNodeY node) {
+        String arrayName = node.getArrayName();
+        ArrayInfo info = arrayInfos.get(arrayName);
+        if (info == null) return null;
+
+        String suffix = kindToSuffix(info.getElementType());
+        String arrayStack = stackArrayForKind(info.getElementType());
+        String cxReg = "CX_" + suffix.toUpperCase();
+
+        int dest = nextOffset++;
+
+        if (info.isHeap()) {
+            output.emit("load_int", String.valueOf(info.getBaseOffset()), null, "AX_INT");
+            String indexRef = exprToString(node.getIndexExpression());
+            loadRegister(indexRef, "BX_INT");
+            output.emit("+", "AX_INT", "BX_INT", "CX_INT");
+            output.emit("array_load_indirect_" + suffix, "CX_INT", null, cxReg);
+        } else {
+            String indexRef = exprToString(node.getIndexExpression());
+            loadRegister(indexRef, "AX_INT");
+            output.emit("array_load_" + suffix,
+                    arrayStack + ", fp + " + info.getBaseOffset(),
+                    "AX_INT",
+                    cxReg);
+        }
+
+        output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
+        lastExpr = arrayStack + "[fp + " + dest + "]";
         return null;
     }
 
@@ -759,23 +864,36 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         ExpressionNodeY target = node.getTarget();
         String fieldName = node.getPropertyName();
 
-        if (target instanceof IdentifierExpressionNodeY id) {
-            StructInfo info = structVariables.get(id.getIdentifier());
-            System.out.println("PROP ACCESS: " + id.getIdentifier() + "." + fieldName
-                    + " structInfo=" + info);
-            if (info != null) {
-                List<String> layout = structLayouts.get(info.getStructTypeName());
-                if (layout != null) {
-                    int fieldOffset = layout.indexOf(fieldName);
-                    if (fieldOffset >= 0) {
-                        Type fieldType = typeAnnotations.get(node);
-                        TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
-                        String arrayName = stackArrayForKind(kind);
-                        lastExpr = arrayName + "[fp + " + (info.getBaseOffset() + fieldOffset) + "]";
-                        return null;
-                    }
-                }
-            }
+        if (!(target instanceof IdentifierExpressionNodeY id)) {
+            return null;
+        }
+
+        StructInfo info = structVariables.get(id.getIdentifier());
+        if (info == null) return null;
+
+        List<String> layout = structLayouts.get(info.getStructTypeName());
+        if (layout == null) return null;
+
+        int fieldOffset = layout.indexOf(fieldName);
+        if (fieldOffset < 0) return null;
+
+        Type fieldType = typeAnnotations.get(node);
+        TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
+        String suffix = kindToSuffix(kind);
+        String arrayName = stackArrayForKind(kind);
+
+        if (info.isReference()) {
+            output.emit("load_int", String.valueOf(info.getBaseOffset()), null, "AX_INT");
+            String cxReg = "CX_" + suffix.toUpperCase();
+            output.emit("field_load_indirect_" + suffix,
+                    "AX_INT + " + fieldOffset,
+                    null,
+                    cxReg);
+            int dest = nextOffset++;
+            output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
+            lastExpr = arrayName + "[fp + " + dest + "]";
+        } else {
+            lastExpr = arrayName + "[fp + " + (info.getBaseOffset() + fieldOffset) + "]";
         }
         return null;
     }
@@ -845,21 +963,17 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         localOffsets.put(name, offset);
 
         TypeKind kind = TypeKind.INT;
-        if (node instanceof VariableDeclarationNodeY decl) {
+        if (node instanceof VariableDeclarationNodeY decl && decl.getDataType() != null) {
             Type t = mapTypeNodeToType(decl.getDataType());
             if (t != null) kind = t.getKind();
-        } else if (node instanceof ArrayDeclarationNodeY arr) {
-            Type t = mapTypeNodeToType(arr.getDataType());
+        } else if (node instanceof ForInitDeclarationNodeY f && f.getType() != null) {
+            Type t = mapTypeNodeToType(f.getType());
             if (t != null) kind = t.getKind();
-        } else if (node instanceof ForInitDeclarationNodeY forInit) {
-            Type t = mapTypeNodeToType(forInit.getType());
-            if (t != null) kind = t.getKind();
-        }
-        if (kind == TypeKind.INT) {
+        } else {
             Type t = typeAnnotations.get(node);
             if (t != null) kind = t.getKind();
         }
-
+        System.out.println("LOCAL " + name + " -> kind " + kind);
         localTypes.put(name, kind);
         return offset;
     }
@@ -1077,13 +1191,15 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             kind = mapTypeNodeToType(p.getType()).getKind();
         } else if (param instanceof StructParameterNodeY sp && sp.getDataType() != null) {
             String structTypeName = sp.getDataType().getCustomTypeName();
-            kind = TypeKind.CUSTOM;
-            List<String> layout = structLayouts.get(structTypeName);
-            slots = (layout != null) ? layout.size() : 1;
-            structVariables.put(pname, new StructInfo(structTypeName, nextOffset));
+            kind = TypeKind.INT;
+            slots = 1;
+            structVariables.put(pname, new StructInfo(structTypeName, nextOffset, true));
+
         } else if (param instanceof ArrayParameterNodeY ap && ap.getElementType() != null) {
-            kind = mapTypeNodeToType(ap.getElementType()).getKind();
-            // TODO: array params (size?)
+            TypeKind elementKind = mapTypeNodeToType(ap.getElementType()).getKind();
+            kind = TypeKind.INT;
+            slots = 1;
+            arrayInfos.put(pname, new ArrayInfo(nextOffset, elementKind, -1, true));
         }
 
         localTypes.put(pname, kind);
@@ -1093,4 +1209,11 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     }
 
 
+    private Integer tryExtractIntLiteral(ExpressionNodeY expr) {
+        if (expr instanceof LiteralExpressionNodeY lit) {
+            Object v = lit.getDataValue();
+            if (v instanceof Integer i) return i;
+        }
+        return null;
+    }
 }
