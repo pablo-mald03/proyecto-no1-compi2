@@ -1475,6 +1475,29 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         return null;
     }
 
+    private Symbol findTypeSymbolGlobal(String typeName) {
+        if (typeName == null) return null;
+
+        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), typeName);
+        for (Symbol s : found) {
+            if (s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT) {
+                return s;
+            }
+        }
+
+        for (SymbolScope fileScope : table.getFileScopes().values()) {
+            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
+                for (Symbol symbol : bucket) {
+                    if ((symbol.getKind() == SymbolKind.CLASS || symbol.getKind() == SymbolKind.STRUCT)
+                            && symbol.getName().equals(typeName)) {
+                        return symbol;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
 
     private boolean isIntLike(Type t) {
         if (t == null) return false;

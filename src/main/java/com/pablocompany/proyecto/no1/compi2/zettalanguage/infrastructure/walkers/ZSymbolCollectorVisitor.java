@@ -28,9 +28,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.conditionals.ElseIfListNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.conditionals.ElseIfNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.conditionals.IfStatementNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.FunctionDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.ParameterNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.ProcedureDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.loops.*;
@@ -44,6 +42,9 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parent
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Principal symbol collector visitor
  *
@@ -54,6 +55,8 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     private final EditorContext context;
 
     private String currentClassName;
+
+    private List<Symbol> currentClassMembers;
 
     public ZSymbolCollectorVisitor(GlobalSymbolTable table, EditorContext context) {
         this.table = table;
@@ -92,6 +95,9 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             return null;
         }
 
+        List<Symbol> previousMembers = currentClassMembers;
+        currentClassMembers = new ArrayList<>();
+
         SymbolScope scope = table.enterScope(SymbolScopeKind.CLASS, context.getFilePath());
         String scopeKey = GlobalSymbolTable.buildScopeKey(
                 context.getFilePath(),
@@ -106,13 +112,16 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         }
 
         table.exitScope();
+
+        classSymbol.setMembers(currentClassMembers);
+        currentClassMembers = previousMembers;
+
         return null;
     }
 
     // ============================================================
     // METHODS AND CONSTRUCTORS
     // ============================================================
-
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
         Symbol methodSymbol = buildSymbol(
@@ -134,9 +143,19 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        if (node.getType() != null) {
+            methodSymbol.setReturnType(resolveTypeName(node.getType()));
+        } else {
+            methodSymbol.setReturnType("void");
+        }
+
         if (!table.declare(methodSymbol)) {
             reportDuplicate(node.getName(), "metodo", node);
             return null;
+        }
+
+        if (currentClassMembers != null) {
+            currentClassMembers.add(methodSymbol);
         }
 
         SymbolScope scope = table.enterScope(SymbolScopeKind.METHOD, context.getFilePath());
@@ -194,6 +213,10 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             return null;
         }
 
+        if (currentClassMembers != null) {
+            currentClassMembers.add(constructorSymbol);
+        }
+
         SymbolScope scope = table.enterScope(SymbolScopeKind.CONSTRUCTOR, context.getFilePath());
         String scopeKey = GlobalSymbolTable.buildScopeKey(
                 context.getFilePath(),
@@ -219,6 +242,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         table.exitScope();
         return null;
     }
+
 
     @Override
     public Void visit(ParameterNodeZ node) {
@@ -279,8 +303,14 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             String label = kind == SymbolKind.ATTRIBUTE ? "atributo" : "variable";
             reportDuplicate(node.getIdentifier(), label, node);
         }
+
+        if (kind == SymbolKind.ATTRIBUTE && currentClassMembers != null) {
+            currentClassMembers.add(variable);
+        }
+
         return null;
     }
+
 
     @Override
     public Void visit(ArrayDeclarationNodeZ node) {
@@ -678,17 +708,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     public Void visit(ForUpdateNodeZ node) {
         return null;
     }
-
-    @Override
-    public Void visit(FunctionDeclarationNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ProcedureDeclarationNodeZ node) {
-        return null;
-    }
-
+    
     @Override
     public Void visit(PrintStatementNodeZ node) {
         return null;

@@ -59,6 +59,15 @@ public class Type {
         return new Type(TypeKind.ARRAY, null, elementType, 1);
     }
 
+    public static Type nullType() {
+        return new Type(TypeKind.NULL, null, null, 0);
+    }
+
+    public boolean isNull() {
+        return kind == TypeKind.NULL;
+    }
+
+
     public static Type arrayType(Type elementType, int dimensions) {
         return new Type(TypeKind.ARRAY, null, elementType, dimensions);
     }

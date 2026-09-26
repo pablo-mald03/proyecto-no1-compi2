@@ -13,6 +13,7 @@ public enum TypeKind {
     VOID("vacio"),
     CUSTOM("personalizado"),
     ARRAY("arreglo"),
+    NULL("null"),
     UNKNOWN("desconocido");
 
     private final String traduccion;
