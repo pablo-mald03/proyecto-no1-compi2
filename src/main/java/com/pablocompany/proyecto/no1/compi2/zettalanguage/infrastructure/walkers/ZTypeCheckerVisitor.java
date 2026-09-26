@@ -698,6 +698,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(LiteralExpressionNodeZ node) {
+        System.out.println("LITERAL: dt=" + node.getValueType());
         Type type = mapZDataType(node.getValueType(), null);
         annotate(node, type);
         return type;
@@ -705,6 +706,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(IdentifierExpressionNodeZ node) {
+        System.out.println("IDENTIFIER: " + node.getIdentifier());
         String name = node.getIdentifier();
         List<Symbol> found = table.resolveByName(name);
         if (found.isEmpty()) {
@@ -1051,6 +1053,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             case "boolean" -> Type.booleanType();
             case "void" -> Type.voidType();
             case "String" -> Type.stringType();
+            case "null" -> Type.nullType();
             default -> Type.customType(typeName);
         };
     }
@@ -1064,7 +1067,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             case CHAR -> Type.charType();
             case BOOLEAN -> Type.booleanType();
             case VOID -> Type.voidType();
-            case NULL -> Type.unknown();
+            case NULL -> Type.nullType();
             case CLASS -> "String".equals(customName)
                     ? Type.stringType()
                     : Type.customType(customName);
@@ -1124,6 +1127,15 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
             case EQUALS:
             case DIFFERENT:
+                if (left.getKind() == TypeKind.NULL && (right.isCustom() || right.isArray() || right.getKind() == TypeKind.STRING)) {
+                    return Type.booleanType();
+                }
+                if (right.getKind() == TypeKind.NULL && (left.isCustom() || left.isArray() || left.getKind() == TypeKind.STRING)) {
+                    return Type.booleanType();
+                }
+                if (left.getKind() == TypeKind.NULL && right.getKind() == TypeKind.NULL) {
+                    return Type.booleanType();
+                }
                 if (left.isCompatibleWith(right)
                         || (isNumericOrPromotable(left) && isNumericOrPromotable(right))) {
                     return Type.booleanType();
@@ -1278,7 +1290,8 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         error.setLine(node.getLine());
         error.setColumn(node.getColumn());
         error.setErrorType(ErrorType.SEMANTIC);
-        error.setDescription(description);
+        String descriptionNew = description.replace("float", "double");
+        error.setDescription(descriptionNew);
         error.setFilePath(context.getFilePath());
         error.setFileName(context.getFileName());
         context.getSemanticErrors().add(error);

@@ -140,31 +140,27 @@ public class Type {
      */
     public boolean isAssignableTo(Type other) {
         if (other == null) return false;
-        if (this.kind == TypeKind.UNKNOWN || other.kind == TypeKind.UNKNOWN) {
-            return true;
-        }
+        if (this.kind == TypeKind.UNKNOWN || other.kind == TypeKind.UNKNOWN) return true;
 
-        if (this.kind == TypeKind.VOID || other.kind == TypeKind.VOID) {
-            return false;
+        if (this.kind == TypeKind.VOID || other.kind == TypeKind.VOID) return false;
+
+        if (this.kind == TypeKind.NULL) {
+            return other.kind == TypeKind.CUSTOM
+                    || other.kind == TypeKind.ARRAY
+                    || other.kind == TypeKind.STRING;
         }
 
         if (this.equals(other)) return true;
 
-        if (this.kind == TypeKind.INT && other.kind == TypeKind.FLOAT) {
-            return true;
-        }
-
-        if (this.kind == TypeKind.CHAR && other.kind == TypeKind.INT) {
-            return true;
-        }
-
-        if (this.kind == TypeKind.BOOLEAN && other.kind == TypeKind.INT) {
-            return true;
-        }
+        if (this.kind == TypeKind.INT && other.kind == TypeKind.FLOAT) return true;
+        if (this.kind == TypeKind.CHAR && other.kind == TypeKind.INT) return true;
+        if (this.kind == TypeKind.BOOLEAN && other.kind == TypeKind.INT) return true;
 
         if (this.kind == TypeKind.ARRAY && other.kind == TypeKind.ARRAY) {
             if (this.dimensions != other.dimensions) return false;
-            if (this.elementType == null || other.elementType == null) return this.elementType == other.elementType;
+            if (this.elementType == null || other.elementType == null) {
+                return this.elementType == other.elementType;
+            }
             return this.elementType.isAssignableTo(other.elementType);
         }
 
