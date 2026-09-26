@@ -42,6 +42,7 @@ public class QuadrupleSerializer {
         sb.append("int sptr = 0;\n");
         sb.append("int hptr = 0;\n");
         sb.append("int fp = 0;\n\n");
+        sb.append("int saved_fp = 0;\n");
 
         sb.append("int stackinteger[" + STACK_SIZE + "];\n");
         sb.append("char* stackstring[" + STACK_SIZE + "];\n");
@@ -173,15 +174,12 @@ public class QuadrupleSerializer {
                     default -> "%d";
                 };
                 sb.append("  printf(\"").append(fmt).append("\\n\", ").append(a1).append(");\n");
+                sb.append("  fflush(stdout);\n");
                 break;
             }
 
             case "call":
                 sb.append("  ").append(a1).append("();\n");
-                break;
-
-            case "fp_set_offset":
-                sb.append("  fp = sptr - ").append(a1).append(";\n");
                 break;
 
             case "strcat":
@@ -244,8 +242,13 @@ public class QuadrupleSerializer {
                 break;
 
             case "fp_push":
-                sb.append("  stackinteger[sptr] = fp;\n");
-                sb.append("  sptr = sptr + 1;\n");
+                sb.append("  saved_fp = fp;\n");
+                break;
+            case "fp_pop":
+                sb.append("  fp = saved_fp;\n");
+                break;
+            case "fp_set_offset":
+                sb.append("  fp = sptr - ").append(a1).append(";\n");
                 break;
 
             case "array_load_indirect_int":
@@ -284,12 +287,6 @@ public class QuadrupleSerializer {
                 sb.append("  fp = sptr;\n");
                 break;
 
-            case "fp_pop":
-                sb.append("  sptr = fp;\n");
-                sb.append("  sptr = sptr + ").append(a1).append(";\n");
-                sb.append("  fp = stackinteger[sptr];\n");
-                sb.append("  sptr = sptr - ").append(a1).append(";\n");
-                break;
 
             default:
                 sb.append("  // unknown op: ").append(op).append("\n");

@@ -211,9 +211,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     }
 
     private void emitEpilogue(int numArgs) {
-        output.emit("fp_pop", String.valueOf(numArgs + 1), null, null);
+        output.emit("fp_pop", null, null, null);
     }
-
 
     private void resetFunctionState() {
         localOffsets.clear();
@@ -472,12 +471,12 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(IfStatementNodeY node) {
+        String endLabel = ctx.nextLabel();
+
         String condRef = exprToString(node.getCondition());
         loadRegister(condRef, "AX_INT");
 
         String elseLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
-
         output.emit("ifFalse", "AX_INT", null, elseLabel);
 
         if (node.getThenBody() != null) {
@@ -485,17 +484,35 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
                 if (s != null) s.accept(this);
             }
         }
-
         output.emit("goto", null, null, endLabel);
         output.emit("label", elseLabel, null, null);
 
         if (node.getElseIfs() != null) {
             for (ElseIfNodeY elseIf : node.getElseIfs()) {
-                if (elseIf != null) elseIf.accept(this);
+                if (elseIf == null) continue;
+
+                String condRef2 = exprToString(elseIf.getCondition());
+                loadRegister(condRef2, "AX_INT");
+
+                String nextElse = ctx.nextLabel();
+                output.emit("ifFalse", "AX_INT", null, nextElse);
+
+                if (elseIf.getBody() != null) {
+                    for (StatementNodeY s : elseIf.getBody()) {
+                        if (s != null) s.accept(this);
+                    }
+                }
+                output.emit("goto", null, null, endLabel);
+                output.emit("label", nextElse, null, null);
             }
         }
+
         if (node.getElseBlockNode() != null) {
-            node.getElseBlockNode().accept(this);
+            if (node.getElseBlockNode().getBody() != null) {
+                for (StatementNodeY s : node.getElseBlockNode().getBody()) {
+                    if (s != null) s.accept(this);
+                }
+            }
         }
 
         output.emit("label", endLabel, null, null);
@@ -504,33 +521,12 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfNodeY node) {
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
 
-        String nextLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
-
-        output.emit("ifFalse", "AX_INT", null, nextLabel);
-
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        output.emit("goto", null, null, endLabel);
-        output.emit("label", nextLabel, null, null);
-        output.emit("label", endLabel, null, null);
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodeY node) {
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
         return null;
     }
 
@@ -593,6 +589,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(ForStatementNodeY node) {
         String startLabel = ctx.nextLabel();
+        String continueLabel = ctx.nextLabel();
         String endLabel = ctx.nextLabel();
 
         if (node.getInit() != null) node.getInit().accept(this);
@@ -606,7 +603,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         }
 
         breakLabels.push(endLabel);
-        continueLabels.push(startLabel);
+        continueLabels.push(continueLabel);   // ← ahora continue salta al incremento
 
         if (node.getBody() != null) {
             for (StatementNodeY s : node.getBody()) {
@@ -617,6 +614,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         continueLabels.pop();
         breakLabels.pop();
 
+        output.emit("label", continueLabel, null, null);
         if (node.getUpdate() != null) node.getUpdate().accept(this);
 
         output.emit("goto", null, null, startLabel);
@@ -973,7 +971,6 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             Type t = typeAnnotations.get(node);
             if (t != null) kind = t.getKind();
         }
-        System.out.println("LOCAL " + name + " -> kind " + kind);
         localTypes.put(name, kind);
         return offset;
     }
