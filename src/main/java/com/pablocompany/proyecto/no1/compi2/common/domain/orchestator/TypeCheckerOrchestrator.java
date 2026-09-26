@@ -83,6 +83,11 @@ public class TypeCheckerOrchestrator {
      *
      */
     private void registerBuiltinClasses(GlobalSymbolTable table) {
+        SymbolScope global = table.getGlobalScope();
+        if (!global.resolveLocalByName("String").isEmpty()) {
+            return;
+        }
+
         Symbol stringSymbol = new Symbol();
         stringSymbol.setName("String");
         stringSymbol.setKind(SymbolKind.CLASS);
@@ -93,7 +98,6 @@ public class TypeCheckerOrchestrator {
         stringSymbol.setColumn(0);
         stringSymbol.setMembers(new ArrayList<>());
 
-        SymbolScope global = table.getGlobalScope();
         global.declare(stringSymbol);
     }
 }

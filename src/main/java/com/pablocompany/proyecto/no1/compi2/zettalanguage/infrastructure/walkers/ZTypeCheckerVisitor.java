@@ -698,7 +698,6 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(LiteralExpressionNodeZ node) {
-        System.out.println("LITERAL: dt=" + node.getValueType());
         Type type = mapZDataType(node.getValueType(), null);
         annotate(node, type);
         return type;
@@ -706,7 +705,6 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(IdentifierExpressionNodeZ node) {
-        System.out.println("IDENTIFIER: " + node.getIdentifier());
         String name = node.getIdentifier();
         List<Symbol> found = table.resolveByName(name);
         if (found.isEmpty()) {
