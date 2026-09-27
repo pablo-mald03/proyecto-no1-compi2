@@ -377,8 +377,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
                         loadRegister(valueRef, axReg);
                         output.emit("load_int", currentSelfSlot, null, "BX_INT");
-                        output.emit("heap_store_" + suffix,
-                                "stackinteger[BX_INT] + " + fieldOffset, null, axReg);
+                        emitHeapFieldStore("BX_INT", fieldOffset, kind, axReg);
                         return null;
                     }
                 }
@@ -407,7 +406,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
                         TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
                         String suffix = kindToSuffix(kind);
                         String axReg = "AX_" + suffix.toUpperCase();
-                        String bxReg = "BX_" + suffix.toUpperCase();
                         String cxReg = "CX_" + suffix.toUpperCase();
 
                         String valueRef = exprToString(node.getValue());
@@ -419,11 +417,9 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
                         loadRegister(valueRef, valueReg);
 
                         output.emit("load_int", currentSelfSlot, null, "BX_INT");
-                        output.emit("load_int",
-                                "stackinteger[BX_INT] + " + fieldOffset, null, axReg);
+                        emitHeapFieldLoad("BX_INT", fieldOffset, kind, axReg);   // FIX: heap, no stack
                         output.emit(op, axReg, valueReg, cxReg);
-                        output.emit("heap_store_" + suffix,
-                                "stackinteger[BX_INT] + " + fieldOffset, null, cxReg);
+                        emitHeapFieldStore("BX_INT", fieldOffset, kind, cxReg);
                         return null;
                     }
                 }
@@ -440,6 +436,8 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         storeRegisterBack("CX_INT", targetRef);
         return null;
     }
+
+
     @Override
     public Void visit(IncrementStatementNodeZ node) {
         if (!tryEmitAttributeIncDec(node.getTargetVariable(), "+")) {
@@ -515,7 +513,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             Type t = typeAnnotations.get(node.getValue());
             String arrayName = stackArrayForKind(t != null ? t.getKind() : TypeKind.INT);
             String dest = arrayName + "[fp + 0]";
-            System.out.println("RETURN: type=" + t + " valueRef=" + valueRef + " dest=" + dest);
             storeValueTo(valueRef, dest);
         }
         emitEpilogue();
@@ -766,8 +763,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
                     String cxReg = "CX_" + suffix.toUpperCase();
 
                     output.emit("load_int", currentSelfSlot, null, "AX_INT");
-                    output.emit("heap_load_" + suffix,
-                            "stackinteger[AX_INT] + " + fieldOffset, null, cxReg);
+                    emitHeapFieldLoad("AX_INT", fieldOffset, kind, cxReg);
                     int dest = nextOffset++;
                     output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
                     lastExpr = stackArrayForKind(kind) + "[fp + " + dest + "]";
@@ -978,8 +974,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String suffix = kindToSuffix(kind);
         String cxReg = "CX_" + suffix.toUpperCase();
 
-        output.emit("heap_load_" + suffix,
-                "stackinteger[AX_INT] + " + fieldOffset, null, cxReg);
+        emitHeapFieldLoad("AX_INT", fieldOffset, kind, cxReg);
 
         int dest = nextOffset++;
         output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
@@ -1056,6 +1051,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
         int extra = (isMethodCall || currentSelfSlot != null) ? 1 : 0;
         int cleanup = numArgs + 1 + extra + 200;
+        int retOffset = numArgs + 1 + extra;
 
         if (returnKind == TypeKind.VOID) {
             output.emit("sptr_dec", String.valueOf(cleanup), null, null);
@@ -1067,7 +1063,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String returnArray = stackArrayForKind(returnKind);
         String cxReg = "CX_" + returnSuffix.toUpperCase();
 
-        output.emit("load_" + returnSuffix, "sptr", null, cxReg);
+        output.emit("load_" + returnSuffix, "sptr - " + retOffset, null, cxReg);
         int destOffset = nextOffset++;
         output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
         output.emit("sptr_dec", String.valueOf(cleanup), null, null);
@@ -1430,11 +1426,10 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String cxReg = "CX_" + suffix.toUpperCase();
 
         output.emit("load_int", currentSelfSlot, null, "BX_INT");
-        output.emit("load_int", "stackinteger[BX_INT] + " + fieldOffset, null, axReg);
+        emitHeapFieldLoad("BX_INT", fieldOffset, kind, axReg);
         output.emit("=", "1", null, cxReg);
         output.emit(op, axReg, cxReg, cxReg);
-        output.emit("heap_store_" + suffix,
-                "stackinteger[BX_INT] + " + fieldOffset, null, cxReg);
+        emitHeapFieldStore("BX_INT", fieldOffset, kind, cxReg);
         return true;
     }
 
@@ -1474,5 +1469,15 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         output.emit(opName, reg, null, "stackstring[fp + " + bufOffset + "]");
 
         return "stackstring[fp + " + bufOffset + "]";
+    }
+
+    private void emitHeapFieldLoad(String selfReg, int fieldOffset, TypeKind kind, String destReg) {
+        String suffix = kindToSuffix(kind);
+        output.emit("heap_load_" + suffix, selfReg + " + " + fieldOffset, null, destReg);
+    }
+
+    private void emitHeapFieldStore(String selfReg, int fieldOffset, TypeKind kind, String srcReg) {
+        String suffix = kindToSuffix(kind);
+        output.emit("heap_store_" + suffix, selfReg + " + " + fieldOffset, null, srcReg);
     }
 }

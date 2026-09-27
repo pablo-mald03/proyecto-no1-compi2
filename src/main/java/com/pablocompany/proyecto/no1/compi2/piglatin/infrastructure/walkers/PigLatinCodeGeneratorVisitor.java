@@ -764,6 +764,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             return null;
         }
 
+        output.emit("sptr_inc", "200", null, null);
+
         List<String> fields = classLayouts.get(className);
         int numFields = fields != null ? fields.size() : 0;
 
@@ -774,9 +776,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         List<ExpressionNodePigLatin> args = node.getArguments();
         int numArgs = args != null ? args.size() : 0;
-
-        System.out.println("NEW OBJECT: ptrSlot=fp+" + ptrSlot + " className=" + className);
-
+        
         output.emit("sptr_inc", "1", null, null);
         output.emit("load_int", "fp + " + ptrSlot, null, "AX_INT");
         output.emit("store_int", "sptr", null, "AX_INT");
@@ -797,7 +797,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         String ctorName = className + "_" + className + "_" + numArgs;
         output.emit("call", ctorName, null, null);
-        output.emit("sptr_dec", String.valueOf(numArgs + 2), null, null);
+        output.emit("sptr_dec", String.valueOf(numArgs + 2 + 200), null, null);
 
         lastExpr = "stackinteger[fp + " + ptrSlot + "]";
         return null;
@@ -912,6 +912,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         String targetFunc;
         boolean pushSelf = false;
 
+        output.emit("sptr_inc", "200", null, null);
+
         if (isMethodCall) {
             String className = null;
             String selfPtrExpr = null;
@@ -925,6 +927,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             }
 
             if (className == null || selfPtrExpr == null) {
+                output.emit("sptr_dec", "200", null, null);
                 return null;
             }
 
@@ -942,6 +945,26 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         if (args != null) {
             for (ExpressionNodePigLatin arg : args) {
+                if (arg instanceof IdentifierExpressionNodePigLatin id) {         // FIX: mismo bloque que Y
+                    String name = id.getIdentifier();
+
+                    ArrayInfo aInfo = arrayInfos.get(name);
+                    if (aInfo != null) {
+                        output.emit("+", "fp", String.valueOf(aInfo.getBaseOffset()), "AX_INT");
+                        output.emit("store_int", "sptr", null, "AX_INT");
+                        output.emit("sptr_inc", "1", null, null);
+                        continue;
+                    }
+
+                    StructInfo sInfo = structVariables.get(name);
+                    if (sInfo != null) {
+                        output.emit("+", "fp", String.valueOf(sInfo.getBaseOffset()), "AX_INT");
+                        output.emit("store_int", "sptr", null, "AX_INT");
+                        output.emit("sptr_inc", "1", null, null);
+                        continue;
+                    }
+                }
+
                 String argRef = exprToString(arg);
                 Type t = typeAnnotations.get(arg);
                 TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
@@ -959,9 +982,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         Type returnType = typeAnnotations.get(node);
         TypeKind returnKind = returnType != null ? returnType.getKind() : TypeKind.INT;
         int extra = pushSelf ? 1 : 0;
+        int retOffset = numArgs + 1 + extra;
+        int cleanup = numArgs + 1 + extra + 200;
 
         if (returnKind == TypeKind.VOID) {
-            output.emit("sptr_dec", String.valueOf(numArgs + 1 + extra), null, null);
+            output.emit("sptr_dec", String.valueOf(cleanup), null, null);
             lastExpr = null;
             return null;
         }
@@ -970,10 +995,10 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         String returnArray = stackArrayForKind(returnKind);
         String cxReg = "CX_" + returnSuffix.toUpperCase();
 
-        output.emit("load_" + returnSuffix, "sptr", null, cxReg);
+        output.emit("load_" + returnSuffix, "sptr - " + retOffset, null, cxReg);
         int destOffset = nextOffset++;
         output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
-        output.emit("sptr_dec", String.valueOf(numArgs + 1 + extra), null, null);
+        output.emit("sptr_dec", String.valueOf(cleanup), null, null);
 
         lastExpr = returnArray + "[fp + " + destOffset + "]";
         return null;
@@ -1035,7 +1060,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     private int allocateLocal(String name, PigLatinAstNode node) {
         int offset = nextOffset++;
-        System.out.println("ALLOC: " + name + " -> fp + " + offset + " (nextOffset=" + (offset + 1) + ")");
         localOffsets.put(name, offset);
 
         TypeKind kind = TypeKind.INT;

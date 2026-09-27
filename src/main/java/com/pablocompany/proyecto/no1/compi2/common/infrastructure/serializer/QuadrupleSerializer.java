@@ -212,20 +212,26 @@ public class QuadrupleSerializer {
 
             case "read_string_to":
                 sb.append("  ").append(a1).append(" = (char*)malloc(1024);\n");
-                sb.append("  scanf(\"%s\", ").append(a1).append(");\n");
+                sb.append("  scanf(\"%1023s\", ").append(a1).append(");\n");
+                sb.append("  { int _c; while ((_c = getchar()) != '\\n' && _c != EOF); }\n");
                 break;
 
             case "read_int_to":
-                sb.append("  scanf(\" %d\", &").append(a1).append(");\n");
+                sb.append("  if (scanf(\" %d\", &").append(a1).append(") != 1) { ")
+                        .append(a1).append(" = 0; }\n");
+                sb.append("  { int _c; while ((_c = getchar()) != '\\n' && _c != EOF); }\n");
                 break;
 
             case "read_int":
-                sb.append("  scanf(\" %d\", &stackinteger[fp + ").append(a1).append("]);\n");
+                sb.append("  if (scanf(\" %d\", &stackinteger[fp + ").append(a1).append("]) != 1) { ")
+                        .append("stackinteger[fp + ").append(a1).append("] = 0; }\n");
+                sb.append("  { int _c; while ((_c = getchar()) != '\\n' && _c != EOF); }\n");
                 break;
 
             case "read_string":
                 sb.append("  stackstring[fp + ").append(a1).append("] = (char*)malloc(1024);\n");
-                sb.append("  scanf(\"%s\", stackstring[fp + ").append(a1).append("]);\n");
+                sb.append("  scanf(\"%1023s\", stackstring[fp + ").append(a1).append("]);\n");
+                sb.append("  { int _c; while ((_c = getchar()) != '\\n' && _c != EOF); }\n");
                 break;
 
             case "return":

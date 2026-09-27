@@ -784,14 +784,13 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     // ============================================================
     // STUBS
     // ============================================================
-
     @Override
     public Void visit(FunctionCallExpressionNodeY node) {
         String funcName = node.getFunctionName();
         List<ExpressionNodeY> args = node.getArguments();
         int numArgs = args != null ? args.size() : 0;
 
-        output.emit("sptr_inc", "1", null, null);
+        output.emit("sptr_inc", "200", null, null);
 
         if (args != null) {
             for (ExpressionNodeY arg : args) {
@@ -803,7 +802,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
                         if (!aInfo.isHeap()) {
                             output.emit("+", "fp", String.valueOf(aInfo.getBaseOffset()), "AX_INT");
                         } else {
-                            output.emit("load_int", String.valueOf(aInfo.getBaseOffset()), null, "AX_INT");
+                            output.emit("load_int", "fp + " + aInfo.getBaseOffset(), null, "AX_INT"); // FIX
                         }
                         output.emit("store_int", "sptr", null, "AX_INT");
                         output.emit("sptr_inc", "1", null, null);
@@ -815,7 +814,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
                         if (!sInfo.isReference()) {
                             output.emit("+", "fp", String.valueOf(sInfo.getBaseOffset()), "AX_INT");
                         } else {
-                            output.emit("load_int", String.valueOf(sInfo.getBaseOffset()), null, "AX_INT");
+                            output.emit("load_int", "fp + " + sInfo.getBaseOffset(), null, "AX_INT"); // FIX
                         }
                         output.emit("store_int", "sptr", null, "AX_INT");
                         output.emit("sptr_inc", "1", null, null);
@@ -844,7 +843,9 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         String returnArray = stackArrayForKind(returnKind);
         String cxReg = "CX_" + returnSuffix.toUpperCase();
 
-        output.emit("load_" + returnSuffix, "sptr", null, cxReg);
+        int retOffset = numArgs + 1;
+
+        output.emit("load_" + returnSuffix, "sptr - " + retOffset, null, cxReg);
 
         int destOffset = nextOffset++;
         output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
@@ -869,7 +870,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         int dest = nextOffset++;
 
         if (info.isHeap()) {
-            output.emit("load_int", String.valueOf(info.getBaseOffset()), null, "AX_INT");
+            output.emit("load_int", "fp + " + info.getBaseOffset(), null, "AX_INT");
             String indexRef = exprToString(node.getIndexExpression());
             loadRegister(indexRef, "BX_INT");
             output.emit("+", "AX_INT", "BX_INT", "CX_INT");
@@ -937,7 +938,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         String arrayName = stackArrayForKind(kind);
 
         if (info.isReference()) {
-            output.emit("load_int", String.valueOf(info.getBaseOffset()), null, "AX_INT");
+            output.emit("load_int", "fp + " + info.getBaseOffset(), null, "AX_INT"); // FIX: agregado "fp + "
             String cxReg = "CX_" + suffix.toUpperCase();
             output.emit("field_load_indirect_" + suffix,
                     "AX_INT + " + fieldOffset,
