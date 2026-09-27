@@ -57,6 +57,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Principal type checker for visitor
+ *
+ */
 @Getter
 public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
@@ -1288,7 +1292,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
         switch (op) {
             case PLUS:
-                if (left.getKind() == TypeKind.STRING && right.getKind() == TypeKind.STRING) {
+                if (left.getKind() == TypeKind.STRING || right.getKind() == TypeKind.STRING) {
                     return Type.stringType();
                 }
                 if (isNumericOrPromotable(left) && isNumericOrPromotable(right)) {

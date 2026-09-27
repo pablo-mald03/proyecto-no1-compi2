@@ -517,6 +517,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             Type t = typeAnnotations.get(node.getValue());
             String arrayName = stackArrayForKind(t != null ? t.getKind() : TypeKind.INT);
             String dest = arrayName + "[fp + 0]";
+            System.out.println("RETURN: type=" + t + " valueRef=" + valueRef + " dest=" + dest);
             storeValueTo(valueRef, dest);
         }
         emitEpilogue();
@@ -962,36 +963,27 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(PropertyAccessExpressionNodeZ node) {
-        ExpressionNodeZ target = node.getTarget();
-        String fieldName = node.getPropertyName();
+        Type targetType = typeAnnotations.get(node.getTarget());
+        if (targetType == null || !targetType.isCustom()) return null;
 
-        if (!(target instanceof IdentifierExpressionNodeZ id)) return null;
-
-        ObjectInfo info = objectVariables.get(id.getIdentifier());
-        if (info == null) return null;
-
-        List<String> layout = classLayouts.get(info.getClassName());
+        List<String> layout = classLayouts.get(targetType.getCustomName());
         if (layout == null) return null;
-
-        int fieldOffset = layout.indexOf(fieldName);
+        int fieldOffset = layout.indexOf(node.getPropertyName());
         if (fieldOffset < 0) return null;
+
+        if (!evalObjectPointerToReg(node.getTarget(), "AX_INT")) return null;
 
         Type fieldType = typeAnnotations.get(node);
         TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
         String suffix = kindToSuffix(kind);
-        String arrayName = stackArrayForKind(kind);
-
-        output.emit("load_int", "fp + " + info.getPtrSlot(), null, "AX_INT");
-
         String cxReg = "CX_" + suffix.toUpperCase();
+
         output.emit("heap_load_" + suffix,
-                "stackinteger[AX_INT] + " + fieldOffset,
-                null,
-                cxReg);
+                "stackinteger[AX_INT] + " + fieldOffset, null, cxReg);
 
         int dest = nextOffset++;
         output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-        lastExpr = arrayName + "[fp + " + dest + "]";
+        lastExpr = stackArrayForKind(kind) + "[fp + " + dest + "]";
         return null;
     }
 
@@ -1010,39 +1002,16 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         boolean isMethodCall = node.getTarget() != null;
 
         if (isMethodCall) {
-            String className = null;
-            String selfPtrExpr = null;
+            Type targetType = typeAnnotations.get(node.getTarget());
+            if (targetType == null || !targetType.isCustom()) return null;
 
-            if (node.getTarget() instanceof IdentifierExpressionNodeZ id) {
-                String idName = id.getIdentifier();
+            String className = targetType.getCustomName();
 
-                ObjectInfo info = objectVariables.get(idName);
-                if (info != null) {
-                    className = info.getClassName();
-                    selfPtrExpr = "stackinteger[fp + " + info.getPtrSlot() + "]";
-                } else if (currentClassName != null && currentSelfSlot != null) {
-                    List<String> layout = classLayouts.get(currentClassName);
-                    if (layout != null) {
-                        int fieldOffset = layout.indexOf(idName);
-                        if (fieldOffset >= 0) {
-                            Type fieldType = typeAnnotations.get(id);
-                            if (fieldType != null && fieldType.isCustom()) {
-                                className = fieldType.getCustomName();
-                                output.emit("load_int", currentSelfSlot, null, "AX_INT");
-                                output.emit("heap_load_int",
-                                        "stackinteger[AX_INT] + " + fieldOffset, null, "CX_INT");
-                                selfPtrExpr = "stackinteger[CX_INT]";
-                            }
-                        }
-                    }
-                }
-            }
+            if (!evalObjectPointerToReg(node.getTarget(), "AX_INT")) return null;
 
-            if (className == null || selfPtrExpr == null) return null;
             targetFunc = className + "_" + funcName + "_" + numArgs;
 
             output.emit("sptr_inc", "1", null, null);
-            output.emit("load_int", selfPtrExpr, null, "AX_INT");
             output.emit("store_int", "sptr", null, "AX_INT");
             output.emit("sptr_inc", "1", null, null);
         } else {
@@ -1090,10 +1059,8 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String cxReg = "CX_" + returnSuffix.toUpperCase();
 
         output.emit("load_" + returnSuffix, "sptr", null, cxReg);
-
         int destOffset = nextOffset++;
         output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
-
         output.emit("sptr_dec", String.valueOf(numArgs + 1 + extra), null, null);
 
         lastExpr = returnArray + "[fp + " + destOffset + "]";
@@ -1123,6 +1090,64 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     // ============================================================
     // HELPERS
     // ============================================================
+
+    /**
+     * Helper to evaluata a new pointer register
+     */
+    private boolean evalObjectPointerToReg(ExpressionNodeZ target, String reg) {
+        if (target == null) return false;
+
+        // Caso 1: identifier local/param que es objeto.
+        if (target instanceof IdentifierExpressionNodeZ id) {
+            String idName = id.getIdentifier();
+
+            ObjectInfo info = objectVariables.get(idName);
+            if (info != null) {
+                output.emit("load_int", "fp + " + info.getPtrSlot(), null, reg);
+                return true;
+            }
+
+            if (currentClassName != null && currentSelfSlot != null) {
+                List<String> layout = classLayouts.get(currentClassName);
+                if (layout != null) {
+                    int fieldOffset = layout.indexOf(idName);
+                    if (fieldOffset >= 0) {
+                        output.emit("load_int", currentSelfSlot, null, "AX_INT");
+                        output.emit("heap_load_int",
+                                "stackinteger[AX_INT] + " + fieldOffset, null, reg);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        if (target instanceof PropertyAccessExpressionNodeZ prop) {
+            Type propTargetType = typeAnnotations.get(prop.getTarget());
+            if (propTargetType == null || !propTargetType.isCustom()) return false;
+
+            List<String> layout = classLayouts.get(propTargetType.getCustomName());
+            if (layout == null) return false;
+
+            int fieldOffset = layout.indexOf(prop.getPropertyName());
+            if (fieldOffset < 0) return false;
+
+            if (!evalObjectPointerToReg(prop.getTarget(), "AX_INT")) return false;
+
+            output.emit("heap_load_int",
+                    "stackinteger[AX_INT] + " + fieldOffset, null, reg);
+            return true;
+        }
+
+        if (target instanceof FunctionCallExpressionNodeZ call) {
+            String ref = exprToString(call);
+            if (ref == null) return false;
+            loadRegister(ref, reg);
+            return true;
+        }
+
+        return false;
+    }
 
     private String exprToString(ExpressionNodeZ node) {
         node.accept(this);

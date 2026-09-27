@@ -679,34 +679,90 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(BinaryExpressionNodeY node) {
+        Type leftType = typeAnnotations.get(node.getLeft());
+        Type rightType = typeAnnotations.get(node.getRight());
+        Type resultType = typeAnnotations.get(node);
+
+        TypeKind leftKind = leftType != null ? leftType.getKind() : TypeKind.INT;
+        TypeKind rightKind = rightType != null ? rightType.getKind() : TypeKind.INT;
+
+        TypeKind resultKind = resultType != null ? resultType.getKind() : TypeKind.INT;
+        String resultSuffix = kindToSuffix(resultKind);
+        String cReg = "CX_" + resultSuffix.toUpperCase();
+
+        boolean isStringConcat = (resultKind == TypeKind.STRING
+                && node.getOperator() == BinaryOperator.PLUS);
+
         String leftRef = exprToString(node.getLeft());
         String rightRef = exprToString(node.getRight());
 
-        // Determine the type of the result.
-        Type resultType = typeAnnotations.get(node);
-        TypeKind kind = resultType != null ? resultType.getKind() : TypeKind.INT;
-        String suffix = kindToSuffix(kind);
+        if (isStringConcat) {
+            String leftStr = ensureStringRef(leftRef, leftKind);
+            String rightStr = ensureStringRef(rightRef, rightKind);
+
+            loadRegister(leftStr, "AX_STRING");
+            loadRegister(rightStr, "BX_STRING");
+            output.emit("strcat", "AX_STRING", "BX_STRING", "CX_STRING");
+
+            int offset = nextOffset++;
+            output.emit("store_string", "fp + " + offset, null, "CX_STRING");
+            lastExpr = "stackstring[fp + " + offset + "]";
+            return null;
+        }
+
+        String suffix = kindToSuffix(resultKind);
         String aReg = "AX_" + suffix.toUpperCase();
         String bReg = "BX_" + suffix.toUpperCase();
-        String cReg = "CX_" + suffix.toUpperCase();
 
         loadRegister(leftRef, aReg);
         loadRegister(rightRef, bReg);
 
-        String op;
-        if (kind == TypeKind.STRING && node.getOperator() == BinaryOperator.PLUS) {
-            op = "strcat";
-        } else {
-            op = binaryOpToSymbol(node.getOperator());
-        }
+        String op = binaryOpToSymbol(node.getOperator());
         output.emit(op, aReg, bReg, cReg);
 
         int offset = nextOffset++;
-        String dest = stackArrayForKind(kind) + "[fp + " + offset + "]";
+        String dest = stackArrayForKind(resultKind) + "[fp + " + offset + "]";
         output.emit("store_" + suffix, "fp + " + offset, null, cReg);
 
         lastExpr = dest;
         return null;
+    }
+
+    private String ensureStringRef(String operandRef, TypeKind operandKind) {
+        if (operandKind == TypeKind.STRING) {
+            return operandRef;
+        }
+
+        String reg;
+        String opName;
+        switch (operandKind) {
+            case FLOAT -> {
+                reg = "AX_FLOAT";
+                opName = "to_string_float";
+            }
+            case CHAR -> {
+                reg = "AX_CHAR";
+                opName = "to_string_char";
+            }
+            case BOOLEAN -> {
+                reg = "AX_BOOLEAN";
+                opName = "to_string_boolean";
+            }
+            default -> {
+                reg = "AX_INT";
+                opName = "to_string_int";
+            }
+        }
+
+        loadRegister(operandRef, reg);
+
+        int bufOffset = nextOffset++;
+        output.emit("alloc_string", null, null, "CX_STRING");
+        output.emit("store_string", "fp + " + bufOffset, null, "CX_STRING");
+
+        output.emit(opName, reg, null, "stackstring[fp + " + bufOffset + "]");
+
+        return "stackstring[fp + " + bufOffset + "]";
     }
 
     @Override

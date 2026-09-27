@@ -114,26 +114,26 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(BodyNodePigLatin node) {
-        // Emit main function.
         output.getFunctionNames().add("main");
         output.emit("function_start", "main", null, null);
 
-        // Prologue: main has no self, no args.
-        output.emit("fp_push", null, null, null);
-        output.emit("fp_set_offset", "1", null, null);
+        output.emit("=", "0", null, "sptr");
+        output.emit("=", "0", null, "fp");
         nextOffset = 1;
 
-        // VARIABILES> section (global-ish locals of main).
         if (node.getVariablesSection() != null) {
             node.getVariablesSection().accept(this);
         }
 
-        // MAIOR> section.
+        int slotsToReserve = nextOffset;
+        if (slotsToReserve > 1) {
+            output.emit("sptr_inc", String.valueOf(slotsToReserve), null, null);
+        }
+
         if (node.getMaiorSection() != null) {
             node.getMaiorSection().accept(this);
         }
 
-        output.emit("fp_pop", null, null, null);
         output.emit("return", null, null, null);
         return null;
     }
@@ -215,9 +215,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             structVariables.put(name, new StructInfo(declaredType.getCustomName(), offset, false));
         }
 
-
-        System.out.println("VARDECL: " + name + " isObject=" + isObject + " isStruct=" + isStruct);
-
         if (node.getInitializer() != null) {
             String valueRef = exprToString(node.getInitializer());
             if (valueRef != null) {
@@ -230,8 +227,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayDeclarationNodePigLatin node) {
-
-        System.out.println("ARRAY DECL: " + node.getIdentifier() + " dims=" + node.getDimensions().size());
 
         int totalSize = 1;
         boolean allLiteral = true;
@@ -422,7 +417,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ExpressionStatementNodePigLatin node) {
-        System.out.println("EXPRSTMT: " + node.getExpression().getClass().getSimpleName());
         if (node.getExpression() != null) node.getExpression().accept(this);
         return null;
     }
@@ -454,7 +448,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 output.emit("read_int_to", targetRef, null, null);
             }
         } else {
-            // Bare << waits for any key.
             int offset = nextOffset++;
             output.emit("read_string", String.valueOf(offset), null, null);
         }
@@ -782,6 +775,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         List<ExpressionNodePigLatin> args = node.getArguments();
         int numArgs = args != null ? args.size() : 0;
 
+        System.out.println("NEW OBJECT: ptrSlot=fp+" + ptrSlot + " className=" + className);
+
         output.emit("sptr_inc", "1", null, null);
         output.emit("load_int", "fp + " + ptrSlot, null, "AX_INT");
         output.emit("store_int", "sptr", null, "AX_INT");
@@ -908,10 +903,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(FunctionCallExpressionNodePigLatin node) {
-
-        System.out.println("FUNCCALL: name=" + node.getFunctionName()
-                + " target=" + (node.getTarget() == null ? "null" : node.getTarget().getClass().getSimpleName())
-                + " targetId=" + (node.getTarget() instanceof IdentifierExpressionNodePigLatin id ? id.getIdentifier() : "-"));
 
         String funcName = node.getFunctionName();
         List<ExpressionNodePigLatin> args = node.getArguments();
@@ -1044,6 +1035,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     private int allocateLocal(String name, PigLatinAstNode node) {
         int offset = nextOffset++;
+        System.out.println("ALLOC: " + name + " -> fp + " + offset + " (nextOffset=" + (offset + 1) + ")");
         localOffsets.put(name, offset);
 
         TypeKind kind = TypeKind.INT;

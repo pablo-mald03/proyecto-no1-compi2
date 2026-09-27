@@ -200,15 +200,14 @@ public class QuadrupleSerializer {
                 break;
 
             case "strcat":
-                sb.append("  ").append(res).append(" = strcat(").append(a1).append(", ").append(a2).append(");\n");
+                sb.append("  ").append(res).append(" = (char*)malloc(strlen(").append(a1)
+                        .append(") + strlen(").append(a2).append(") + 1);\n");
+                sb.append("  strcpy(").append(res).append(", ").append(a1).append(");\n");
+                sb.append("  strcat(").append(res).append(", ").append(a2).append(");\n");
                 break;
 
             case "neg":
                 sb.append("  ").append(res).append(" = -").append(a1).append(";\n");
-                break;
-
-            case "read_int_to":
-                sb.append("  scanf(\"%d\", &").append(a1).append(");\n");
                 break;
 
             case "read_string_to":
@@ -216,8 +215,12 @@ public class QuadrupleSerializer {
                 sb.append("  scanf(\"%s\", ").append(a1).append(");\n");
                 break;
 
+            case "read_int_to":
+                sb.append("  scanf(\" %d\", &").append(a1).append(");\n");
+                break;
+
             case "read_int":
-                sb.append("  scanf(\"%d\", &stackinteger[fp + ").append(a1).append("]);\n");
+                sb.append("  scanf(\" %d\", &stackinteger[fp + ").append(a1).append("]);\n");
                 break;
 
             case "read_string":
