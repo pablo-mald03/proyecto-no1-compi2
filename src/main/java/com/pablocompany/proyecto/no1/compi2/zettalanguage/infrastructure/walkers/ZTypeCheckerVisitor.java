@@ -146,7 +146,12 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
         currentReturnType = previousReturn;
         table.setCurrentScope(previousScope);
-        return Type.voidType();
+        Type returnType = node.getType() != null
+                ? mapTypeNode(node.getType())
+                : Type.voidType();
+
+        annotate(node, returnType);
+        return returnType;
     }
 
     @Override
@@ -203,12 +208,9 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     @Override
     public Type visit(VariableDeclarationNodeZ node) {
         Type declaredType = mapTypeNode(node.getDataType());
-
-        // If dimensions > 0, it's an array.
         if (node.getDimensions() > 0) {
             declaredType = Type.arrayType(declaredType, node.getDimensions());
         }
-
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
             if (!initType.isAssignableTo(declaredType)) {
@@ -217,7 +219,8 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
                         node);
             }
         }
-        return Type.voidType();
+        annotate(node, declaredType);
+        return declaredType;
     }
 
     @Override

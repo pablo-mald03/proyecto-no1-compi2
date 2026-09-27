@@ -49,6 +49,10 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVis
 
 import java.util.*;
 
+/**
+ * Principal code generator visitor for the .z language
+ *
+ */
 public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     private final GlobalSymbolTable table;
@@ -70,25 +74,28 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     private String lastExpr;
 
     // Z-specific
-    private final Map<String, List<String>> classLayouts = new HashMap<>();
     private final Map<String, ObjectInfo> objectVariables = new HashMap<>();
     private final Map<String, ArrayInfo> arrayInfos = new HashMap<>();
 
     private String currentClassName = null;
-    private String currentSelfSlot = null;   // "fp + 1" when inside a method
+    private String currentSelfSlot = null;
+
+    private final Map<String, List<String>> classLayouts;
 
     public ZCodeGeneratorVisitor(GlobalSymbolTable table,
                                  EditorContext context,
                                  Map<AstNode, Type> typeAnnotations,
                                  CodeGeneratorOutput output,
                                  CodeGenContext ctx,
-                                 StringPool stringPool) {
+                                 StringPool stringPool,
+                                 Map<String, List<String>> classLayouts) {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
         this.output = output;
         this.ctx = ctx;
         this.stringPool = stringPool;
+        this.classLayouts = classLayouts;
     }
 
     // ============================================================
@@ -106,18 +113,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String previousClass = currentClassName;
         currentClassName = node.getClassName();
 
-        // Build layout (attributes in declaration order).
-        List<String> fields = new ArrayList<>();
-        if (node.getMembers() != null) {
-            for (ZAstNode member : node.getMembers()) {
-                if (member instanceof VariableDeclarationNodeZ attr) {
-                    fields.add(attr.getIdentifier());
-                }
-            }
-        }
-        classLayouts.put(currentClassName, fields);
-
-        // Emit members.
         if (node.getMembers() != null) {
             for (ZAstNode member : node.getMembers()) {
                 if (member != null) member.accept(this);
@@ -127,6 +122,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         currentClassName = previousClass;
         return null;
     }
+
 
     @Override
     public Void visit(CodeBodyNodeZ node) {
@@ -159,6 +155,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         currentSelfSlot = "fp + 1";
         localTypes.put("self", TypeKind.INT);
         paramOffsets.put("self", 1);
+        nextOffset = 2;
 
         // Then the regular parameters.
         if (node.getParams() != null) {
@@ -183,11 +180,14 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
         String className = currentClassName != null ? currentClassName : "Unknown";
-        String funcName = className + "_" + node.getName();
+
+        int numArgs = node.getParams() != null ? node.getParams().size() : 0;
+        String funcName = className + "_" + node.getName() + "_" + numArgs;
+
         output.getFunctionNames().add(funcName);
         output.emit("function_start", funcName, null, null);
 
-        int numArgs = node.getParams() != null ? node.getParams().size() : 0;
+
 
         emitPrologue(numArgs + 1);
         resetFunctionState();
@@ -195,6 +195,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         currentSelfSlot = "fp + 1";
         localTypes.put("self", TypeKind.INT);
         paramOffsets.put("self", 1);
+        nextOffset = 2;
 
         if (node.getParams() != null) {
             for (ParameterNodeZ param : node.getParams()) {
@@ -241,7 +242,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     public Void visit(VariableDeclarationNodeZ node) {
         String localName = node.getIdentifier();
 
-        Type declaredType = typeAnnotations.get(node);
+        Type declaredType = mapTypeNodeToType(node.getDataType());
         boolean isObject = declaredType != null
                 && declaredType.isCustom()
                 && !"String".equals(declaredType.getCustomName());
@@ -261,13 +262,11 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
                 return null;
             }
             String valueRef = exprToString(node.getInitializer());
-
             String dest = getStackRefByName(localName);
             storeValueTo(valueRef, dest);
         }
         return null;
     }
-
 
     @Override
     public Void visit(ArrayDeclarationNodeZ node) {
@@ -363,6 +362,31 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(VariableAssignmentNodeZ node) {
+        if (node.getIdentifier() instanceof IdentifierExpressionNodeZ id) {
+            String name = id.getIdentifier();
+            if (!localOffsets.containsKey(name) && !paramOffsets.containsKey(name)
+                    && currentClassName != null && currentSelfSlot != null) {
+                List<String> layout = classLayouts.get(currentClassName);
+                if (layout != null) {
+                    int fieldOffset = layout.indexOf(name);
+                    if (fieldOffset >= 0) {
+                        String valueRef = exprToString(node.getExpressionNode());
+                        Type valueType = typeAnnotations.get(node.getExpressionNode());
+                        TypeKind kind = valueType != null ? valueType.getKind() : TypeKind.INT;
+                        if (kind == TypeKind.NULL) kind = TypeKind.INT;
+                        String suffix = kindToSuffix(kind);
+                        String axReg = "AX_" + suffix.toUpperCase();
+
+                        loadRegister(valueRef, axReg);
+                        output.emit("load_int", currentSelfSlot, null, "BX_INT");
+                        output.emit("heap_store_" + suffix,
+                                "stackinteger[BX_INT] + " + fieldOffset, null, axReg);
+                        return null;
+                    }
+                }
+            }
+        }
+
         String valueRef = exprToString(node.getExpressionNode());
         String targetRef = exprToString(node.getIdentifier());
         storeValueTo(valueRef, targetRef);
@@ -371,39 +395,82 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ShortlyOperationNodeZ node) {
+        String op = shortlyOpToBinary(node.getOperator());
+
+        if (node.getTarget() instanceof IdentifierExpressionNodeZ id) {
+            String name = id.getIdentifier();
+            if (!localOffsets.containsKey(name) && !paramOffsets.containsKey(name)
+                    && currentClassName != null && currentSelfSlot != null) {
+                List<String> layout = classLayouts.get(currentClassName);
+                if (layout != null) {
+                    int fieldOffset = layout.indexOf(name);
+                    if (fieldOffset >= 0) {
+                        Type t = typeAnnotations.get(node.getTarget());
+                        TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
+                        String suffix = kindToSuffix(kind);
+                        String axReg = "AX_" + suffix.toUpperCase();
+                        String bxReg = "BX_" + suffix.toUpperCase();
+                        String cxReg = "CX_" + suffix.toUpperCase();
+
+                        String valueRef = exprToString(node.getValue());
+                        Type valueType = typeAnnotations.get(node.getValue());
+                        TypeKind valueKind = valueType != null ? valueType.getKind() : TypeKind.INT;
+                        String valueSuffix = kindToSuffix(valueKind);
+                        String valueReg = "CX_" + valueSuffix.toUpperCase();
+
+                        loadRegister(valueRef, valueReg);
+
+                        output.emit("load_int", currentSelfSlot, null, "BX_INT");
+                        output.emit("load_int",
+                                "stackinteger[BX_INT] + " + fieldOffset, null, axReg);
+                        output.emit(op, axReg, valueReg, cxReg);
+                        output.emit("heap_store_" + suffix,
+                                "stackinteger[BX_INT] + " + fieldOffset, null, cxReg);
+                        return null;
+                    }
+                }
+            }
+        }
+
         String targetRef = exprToString(node.getTarget());
         String valueRef = exprToString(node.getValue());
 
         loadRegister(targetRef, "AX_INT");
         loadRegister(valueRef, "BX_INT");
 
-        String op = shortlyOpToBinary(node.getOperator());
         output.emit(op, "AX_INT", "BX_INT", "CX_INT");
         storeRegisterBack("CX_INT", targetRef);
         return null;
     }
-
     @Override
     public Void visit(IncrementStatementNodeZ node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "+");
+        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "+")) {
+            emitIncDec(exprToString(node.getTargetVariable()), "+");
+        }
         return null;
     }
 
     @Override
     public Void visit(DecrementStatementNodeZ node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "-");
+        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "-")) {
+            emitIncDec(exprToString(node.getTargetVariable()), "-");
+        }
         return null;
     }
 
     @Override
     public Void visit(IncrementPrevStatementNodeZ node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "+");
+        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "+")) {
+            emitIncDec(exprToString(node.getTargetVariable()), "+");
+        }
         return null;
     }
 
     @Override
     public Void visit(DecrementPrevStatementNodeZ node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "-");
+        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "-")) {
+            emitIncDec(exprToString(node.getTargetVariable()), "-");
+        }
         return null;
     }
 
@@ -452,6 +519,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             String dest = arrayName + "[fp + 0]";
             storeValueTo(valueRef, dest);
         }
+        emitEpilogue();
         output.emit("return", null, null, null);
         return null;
     }
@@ -681,7 +749,35 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(IdentifierExpressionNodeZ node) {
-        lastExpr = getStackRefByName(node.getIdentifier());
+        String name = node.getIdentifier();
+
+        if (localOffsets.containsKey(name) || paramOffsets.containsKey(name)) {
+            lastExpr = getStackRefByName(name);
+            return null;
+        }
+
+        if (currentClassName != null && currentSelfSlot != null) {
+            List<String> layout = classLayouts.get(currentClassName);
+            if (layout != null) {
+                int fieldOffset = layout.indexOf(name);
+                if (fieldOffset >= 0) {
+                    Type fieldType = typeAnnotations.get(node);
+                    TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
+                    String suffix = kindToSuffix(kind);
+                    String cxReg = "CX_" + suffix.toUpperCase();
+
+                    output.emit("load_int", currentSelfSlot, null, "AX_INT");
+                    output.emit("heap_load_" + suffix,
+                            "stackinteger[AX_INT] + " + fieldOffset, null, cxReg);
+                    int dest = nextOffset++;
+                    output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
+                    lastExpr = stackArrayForKind(kind) + "[fp + " + dest + "]";
+                    return null;
+                }
+            }
+        }
+
+        lastExpr = "0";
         return null;
     }
 
@@ -706,26 +802,38 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             operandKind = TypeKind.INT;
         }
 
-        String operandSuffix = kindToSuffix(operandKind);
-        String aReg = "AX_" + operandSuffix.toUpperCase();
-        String bReg = "BX_" + operandSuffix.toUpperCase();
-
-        String leftRef = exprToString(node.getLeft());
-        String rightRef = exprToString(node.getRight());
-
-        loadRegister(leftRef, aReg);
-        loadRegister(rightRef, bReg);
-
         TypeKind resultKind = resultType != null ? resultType.getKind() : TypeKind.INT;
         String resultSuffix = kindToSuffix(resultKind);
         String cReg = "CX_" + resultSuffix.toUpperCase();
 
-        String op;
-        if (resultKind == TypeKind.STRING && node.getOperator() == BinaryOperator.PLUS) {
-            op = "strcat";
-        } else {
-            op = binaryOpToSymbol(node.getOperator());
+        boolean isStringConcat = (resultKind == TypeKind.STRING
+                && node.getOperator() == BinaryOperator.PLUS);
+
+        String leftRef = exprToString(node.getLeft());
+        String rightRef = exprToString(node.getRight());
+
+        if (isStringConcat) {
+            String leftStr = ensureStringRef(leftRef, leftKind);
+            String rightStr = ensureStringRef(rightRef, rightKind);
+
+            loadRegister(leftStr, "AX_STRING");
+            loadRegister(rightStr, "BX_STRING");
+            output.emit("strcat", "AX_STRING", "BX_STRING", "CX_STRING");
+
+            int offset = nextOffset++;
+            output.emit("store_string", "fp + " + offset, null, "CX_STRING");
+            lastExpr = "stackstring[fp + " + offset + "]";
+            return null;
         }
+
+        String operandSuffix = kindToSuffix(operandKind);
+        String aReg = "AX_" + operandSuffix.toUpperCase();
+        String bReg = "BX_" + operandSuffix.toUpperCase();
+
+        loadRegister(leftRef, aReg);
+        loadRegister(rightRef, bReg);
+
+        String op = binaryOpToSymbol(node.getOperator());
         output.emit(op, aReg, bReg, cReg);
 
         int offset = nextOffset++;
@@ -793,11 +901,9 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ObjectInstantiationNodeZ node) {
-        // novus Clase(args)
         TypeNodeZ typeNode = node.getType();
         String className = typeNode != null ? typeNode.getCustomTypeName() : null;
 
-        // String built-in: novus String("a") -> just the string value.
         if ("String".equals(className)) {
             if (node.getArguments() != null && !node.getArguments().isEmpty()) {
                 lastExpr = exprToString(node.getArguments().get(0));
@@ -810,25 +916,20 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         List<String> fields = classLayouts.get(className);
         int numFields = fields != null ? fields.size() : 0;
 
-        // Allocate object in heap.
         output.emit("heap_alloc", String.valueOf(numFields), null, "AX_INT");
 
-        // Store pointer in a fresh stack slot so we can push it as self later.
         int ptrSlot = nextOffset++;
         output.emit("store_int", "fp + " + ptrSlot, null, "AX_INT");
 
         List<ExpressionNodeZ> args = node.getArguments();
         int numArgs = args != null ? args.size() : 0;
 
-        // Reserve return slot.
         output.emit("sptr_inc", "1", null, null);
 
-        // Push self.
         output.emit("load_int", "fp + " + ptrSlot, null, "AX_INT");
         output.emit("store_int", "sptr", null, "AX_INT");
         output.emit("sptr_inc", "1", null, null);
 
-        // Push user args.
         if (args != null) {
             for (ExpressionNodeZ arg : args) {
                 String argRef = exprToString(arg);
@@ -842,10 +943,10 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        String ctorName = className + "_" + className;
-        output.emit("call", resolveFunctionName(ctorName), null, null);
 
-        // sptr still points at return slot. Cleanup.
+        String ctorName = className + "_" + className + "_" + numArgs;
+        output.emit("call", ctorName, null, null);
+
         output.emit("sptr_dec", String.valueOf(numArgs + 2), null, null);
 
         lastExpr = "stackinteger[fp + " + ptrSlot + "]";
@@ -880,7 +981,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String suffix = kindToSuffix(kind);
         String arrayName = stackArrayForKind(kind);
 
-        // Load pointer from stack slot.
         output.emit("load_int", "fp + " + info.getPtrSlot(), null, "AX_INT");
 
         String cxReg = "CX_" + suffix.toUpperCase();
@@ -897,7 +997,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodeZ node) {
-        // obj.arr[i] not yet supported.
         return null;
     }
 
@@ -907,40 +1006,52 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         List<ExpressionNodeZ> args = node.getArguments();
         int numArgs = args != null ? args.size() : 0;
 
-        // Determine target name: obj.method() vs bare method().
         String targetFunc;
         boolean isMethodCall = node.getTarget() != null;
 
         if (isMethodCall) {
-            // obj.method() -> Clase_method(self, args...)
             String className = null;
+            String selfPtrExpr = null;
+
             if (node.getTarget() instanceof IdentifierExpressionNodeZ id) {
-                ObjectInfo info = objectVariables.get(id.getIdentifier());
-                if (info != null) className = info.getClassName();
+                String idName = id.getIdentifier();
+
+                ObjectInfo info = objectVariables.get(idName);
+                if (info != null) {
+                    className = info.getClassName();
+                    selfPtrExpr = "stackinteger[fp + " + info.getPtrSlot() + "]";
+                } else if (currentClassName != null && currentSelfSlot != null) {
+                    List<String> layout = classLayouts.get(currentClassName);
+                    if (layout != null) {
+                        int fieldOffset = layout.indexOf(idName);
+                        if (fieldOffset >= 0) {
+                            Type fieldType = typeAnnotations.get(id);
+                            if (fieldType != null && fieldType.isCustom()) {
+                                className = fieldType.getCustomName();
+                                // Load self, then load the pointer stored in that attribute.
+                                output.emit("load_int", currentSelfSlot, null, "AX_INT");
+                                output.emit("heap_load_int",
+                                        "stackinteger[AX_INT] + " + fieldOffset, null, "CX_INT");
+                                selfPtrExpr = "stackinteger[CX_INT]";
+                            }
+                        }
+                    }
+                }
             }
-            if (className == null) return null;
+
+            if (className == null || selfPtrExpr == null) return null;
             targetFunc = className + "_" + funcName;
 
             output.emit("sptr_inc", "1", null, null);
-
-            // Push self.
-            if (node.getTarget() instanceof IdentifierExpressionNodeZ id) {
-                ObjectInfo info = objectVariables.get(id.getIdentifier());
-                if (info != null) {
-                    output.emit("load_int", "fp + " + info.getPtrSlot(), null, "AX_INT");
-                    output.emit("store_int", "sptr", null, "AX_INT");
-                    output.emit("sptr_inc", "1", null, null);
-                }
-            }
+            output.emit("load_int", selfPtrExpr, null, "AX_INT");
+            output.emit("store_int", "sptr", null, "AX_INT");
+            output.emit("sptr_inc", "1", null, null);
         } else {
             targetFunc = resolveFunctionName(funcName);
 
-            // Is it an implicit 'this' method call?
             if (currentSelfSlot != null && currentClassName != null) {
                 targetFunc = currentClassName + "_" + funcName;
                 output.emit("sptr_inc", "1", null, null);
-
-                // Push self from currentSelfSlot.
                 output.emit("load_int", currentSelfSlot, null, "AX_INT");
                 output.emit("store_int", "sptr", null, "AX_INT");
                 output.emit("sptr_inc", "1", null, null);
@@ -949,7 +1060,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             }
         }
 
-        // Push user args.
         if (args != null) {
             for (ExpressionNodeZ arg : args) {
                 String argRef = exprToString(arg);
@@ -967,6 +1077,15 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
         Type returnType = typeAnnotations.get(node);
         TypeKind returnKind = returnType != null ? returnType.getKind() : TypeKind.INT;
+
+        int extra = (isMethodCall || currentSelfSlot != null) ? 1 : 0;
+
+        if (returnKind == TypeKind.VOID) {
+            output.emit("sptr_dec", String.valueOf(numArgs + 1 + extra), null, null);
+            lastExpr = null;
+            return null;
+        }
+
         String returnSuffix = kindToSuffix(returnKind);
         String returnArray = stackArrayForKind(returnKind);
         String cxReg = "CX_" + returnSuffix.toUpperCase();
@@ -976,8 +1095,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         int destOffset = nextOffset++;
         output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
 
-        // Cleanup: numArgs + 1 (return slot) + (isMethodCall || implicit this ? 1 : 0).
-        int extra = (isMethodCall || currentSelfSlot != null) ? 1 : 0;
         output.emit("sptr_dec", String.valueOf(numArgs + 1 + extra), null, null);
 
         lastExpr = returnArray + "[fp + " + destOffset + "]";
@@ -1257,5 +1374,71 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             if (v instanceof Integer i) return i;
         }
         return null;
+    }
+
+
+    private boolean tryEmitAttributeIncDec(ExpressionNodeZ target, String op) {
+        if (!(target instanceof IdentifierExpressionNodeZ id)) return false;
+        String name = id.getIdentifier();
+        if (localOffsets.containsKey(name) || paramOffsets.containsKey(name)) return false;
+        if (currentClassName == null || currentSelfSlot == null) return false;
+
+        List<String> layout = classLayouts.get(currentClassName);
+        if (layout == null) return false;
+
+        int fieldOffset = layout.indexOf(name);
+        if (fieldOffset < 0) return false;
+
+        Type t = typeAnnotations.get(target);
+        TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
+        String suffix = kindToSuffix(kind);
+        String axReg = "AX_" + suffix.toUpperCase();
+        String cxReg = "CX_" + suffix.toUpperCase();
+
+        output.emit("load_int", currentSelfSlot, null, "BX_INT");
+        output.emit("load_int", "stackinteger[BX_INT] + " + fieldOffset, null, axReg);
+        output.emit("=", "1", null, cxReg);
+        output.emit(op, axReg, cxReg, cxReg);
+        output.emit("heap_store_" + suffix,
+                "stackinteger[BX_INT] + " + fieldOffset, null, cxReg);
+        return true;
+    }
+
+
+    private String ensureStringRef(String operandRef, TypeKind operandKind) {
+        if (operandKind == TypeKind.STRING) {
+            return operandRef;
+        }
+
+        String reg;
+        String opName;
+        switch (operandKind) {
+            case FLOAT -> {
+                reg = "AX_FLOAT";
+                opName = "to_string_float";
+            }
+            case CHAR -> {
+                reg = "AX_CHAR";
+                opName = "to_string_char";
+            }
+            case BOOLEAN -> {
+                reg = "AX_BOOLEAN";
+                opName = "to_string_boolean";
+            }
+            default -> {
+                reg = "AX_INT";
+                opName = "to_string_int";
+            }
+        }
+
+        loadRegister(operandRef, reg);
+
+        int bufOffset = nextOffset++;
+        output.emit("alloc_string", null, null, "CX_STRING");
+        output.emit("store_string", "fp + " + bufOffset, null, "CX_STRING");
+
+        output.emit(opName, reg, null, "stackstring[fp + " + bufOffset + "]");
+
+        return "stackstring[fp + " + bufOffset + "]";
     }
 }

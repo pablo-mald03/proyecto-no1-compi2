@@ -26,7 +26,7 @@ public class QuadrupleSerializer {
         emitHeader();
         emitStringConstants();
         emitFunctions();
-        emitMainCall();
+        //emitMainCall();
         return sb.toString();
     }
 
@@ -79,6 +79,11 @@ public class QuadrupleSerializer {
     // ============================================================
 
     private void emitFunctions() {
+        for (String name : output.getFunctionNames()) {
+            sb.append("void ").append(name).append("();\n");
+        }
+        if (!output.getFunctionNames().isEmpty()) sb.append("\n");
+
         boolean insideFunction = false;
 
         for (Quadruple q : output.getQuadruples()) {
@@ -106,12 +111,12 @@ public class QuadrupleSerializer {
                 break;
             }
         }
+        sb.append("\nint main() {\n");
         if (mainFunc != null) {
-            sb.append("\nint main() {\n");
             sb.append("  ").append(mainFunc).append("();\n");
-            sb.append("  return 0;\n");
-            sb.append("}\n");
         }
+        sb.append("  return 0;\n");
+        sb.append("}\n");
     }
 
     // ============================================================
@@ -334,6 +339,26 @@ public class QuadrupleSerializer {
                 break;
             case "heap_store_boolean":
                 sb.append("  heapboolean[").append(a1).append("] = ").append(res).append(";\n");
+                break;
+
+            case "alloc_string":
+                sb.append("  ").append(res).append(" = (char*)malloc(64);\n");
+                break;
+
+            case "to_string_int":
+                sb.append("  sprintf(").append(res).append(", \"%d\", ").append(a1).append(");\n");
+                break;
+
+            case "to_string_float":
+                sb.append("  sprintf(").append(res).append(", \"%f\", ").append(a1).append(");\n");
+                break;
+
+            case "to_string_char":
+                sb.append("  sprintf(").append(res).append(", \"%c\", ").append(a1).append(");\n");
+                break;
+
+            case "to_string_boolean":
+                sb.append("  sprintf(").append(res).append(", \"%d\", ").append(a1).append(");\n");
                 break;
 
             default:

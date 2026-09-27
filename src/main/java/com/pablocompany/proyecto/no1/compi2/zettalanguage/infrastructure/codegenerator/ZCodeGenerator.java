@@ -12,6 +12,8 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.Progra
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers.ZCodeGeneratorVisitor;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +26,14 @@ public class ZCodeGenerator implements CodeGenerator {
                                         GlobalSymbolTable table,
                                         Map<AstNode, Type> typeAnnotations,
                                         StringPool stringPool) {
+        return generate(context, table, typeAnnotations, stringPool, new HashMap<>());
+    }
+
+    public CodeGeneratorOutput generate(EditorContext context,
+                                        GlobalSymbolTable table,
+                                        Map<AstNode, Type> typeAnnotations,
+                                        StringPool stringPool,
+                                        Map<String, List<String>> classLayouts) {
 
         CodeGeneratorOutput output = new CodeGeneratorOutput(context.getFilePath());
         CodeGenContext ctx = new CodeGenContext();
@@ -31,7 +41,7 @@ public class ZCodeGenerator implements CodeGenerator {
         ZAstNode ast = (ZAstNode) context.getAstNode();
         if (ast instanceof ProgramNodeZ program) {
             ZCodeGeneratorVisitor visitor = new ZCodeGeneratorVisitor(
-                    table, context, typeAnnotations, output, ctx, stringPool);
+                    table, context, typeAnnotations, output, ctx, stringPool, classLayouts);
             program.accept(visitor);
         }
 
