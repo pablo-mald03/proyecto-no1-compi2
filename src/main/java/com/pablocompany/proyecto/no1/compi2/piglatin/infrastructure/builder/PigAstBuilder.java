@@ -661,7 +661,7 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         ExpressionNodePigLatin target = (ExpressionNodePigLatin) ctx.nest_variable().accept(this);
         ExpressionNodePigLatin value = (ExpressionNodePigLatin) ctx.expression().accept(this);
 
-        return new VariableAssignmentNodePigLatin(line, column, target, value);
+        return new VariableAssignmentNodePigLatin(line, column, target, value, true);
     }
 
     //========================
@@ -957,7 +957,11 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     public PigLatinAstNode visitValString(PigLatinParser.ValStringContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodePigLatin(line, column, DataType.STRING, ctx.STRING().getText());
+        String raw = ctx.STRING().getText();
+        if (raw.length() >= 2 && raw.startsWith("\"") && raw.endsWith("\"")) {
+            raw = raw.substring(1, raw.length() - 1);
+        }
+        return new LiteralExpressionNodePigLatin(line, column, DataType.STRING, raw);
     }
 
     @Override

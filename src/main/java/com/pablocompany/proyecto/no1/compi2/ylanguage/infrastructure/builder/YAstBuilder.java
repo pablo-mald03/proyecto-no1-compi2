@@ -1033,7 +1033,11 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     public YAstNode visitValueString(YParser.ValueStringContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodeY(line, column, YDataType.STRING, ctx.TEXT().getText());
+        String raw = ctx.TEXT().getText();
+        if (raw.length() >= 2 && raw.startsWith("\"") && raw.endsWith("\"")) {
+            raw = raw.substring(1, raw.length() - 1);
+        }
+        return new LiteralExpressionNodeY(line, column, YDataType.STRING, raw);
     }
 
     @Override

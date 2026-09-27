@@ -373,6 +373,88 @@ public class QuadrupleSerializer {
                 sb.append("  sprintf(").append(res).append(", \"%d\", ").append(a1).append(");\n");
                 break;
 
+            case "array_load_int": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(res).append(" = ").append(arr)
+                        .append("[").append(off).append(" + ").append(a2).append("];\n");
+                break;
+            }
+            case "array_load_string": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(res).append(" = ").append(arr)
+                        .append("[").append(off).append(" + ").append(a2).append("];\n");
+                break;
+            }
+            case "array_load_float": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(res).append(" = ").append(arr)
+                        .append("[").append(off).append(" + ").append(a2).append("];\n");
+                break;
+            }
+            case "array_load_char": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(res).append(" = ").append(arr)
+                        .append("[").append(off).append(" + ").append(a2).append("];\n");
+                break;
+            }
+            case "array_load_boolean": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(res).append(" = ").append(arr)
+                        .append("[").append(off).append(" + ").append(a2).append("];\n");
+                break;
+            }
+
+            case "array_store_int": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(arr).append("[").append(off).append(" + ").append(a2).append("] = ")
+                        .append(res).append(";\n");
+                break;
+            }
+            case "array_store_string": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(arr).append("[").append(off).append(" + ").append(a2).append("] = ")
+                        .append(res).append(";\n");
+                break;
+            }
+            case "array_store_float": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(arr).append("[").append(off).append(" + ").append(a2).append("] = ")
+                        .append(res).append(";\n");
+                break;
+            }
+            case "array_store_char": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(arr).append("[").append(off).append(" + ").append(a2).append("] = ")
+                        .append(res).append(";\n");
+                break;
+            }
+            case "array_store_boolean": {
+                int comma = a1.indexOf(',');
+                String arr = a1.substring(0, comma).trim();
+                String off = a1.substring(comma + 1).trim();
+                sb.append("  ").append(arr).append("[").append(off).append(" + ").append(a2).append("] = ")
+                        .append(res).append(";\n");
+                break;
+            }
+
             default:
                 sb.append("  // unknown op: ").append(op).append("\n");
         }

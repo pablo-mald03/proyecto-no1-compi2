@@ -1047,7 +1047,11 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     public ZAstNode visitValText(ZParser.ValTextContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodeZ(line, column, ZDataType.STRING, ctx.TEXT().getText());
+        String raw = ctx.TEXT().getText();
+        if (raw.length() >= 2 && raw.startsWith("\"") && raw.endsWith("\"")) {
+            raw = raw.substring(1, raw.length() - 1);
+        }
+        return new LiteralExpressionNodeZ(line, column, ZDataType.STRING, raw);
     }
 
     @Override

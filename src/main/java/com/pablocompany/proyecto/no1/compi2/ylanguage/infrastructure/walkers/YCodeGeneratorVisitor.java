@@ -414,7 +414,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             String typeName = typeToString(t);
             String register = registerFor(typeName);
             loadRegister(valueRef, register);
-            output.emit("print", register, typeName, null);
+            output.emit("println", register, typeName, null);
         }
         return null;
     }

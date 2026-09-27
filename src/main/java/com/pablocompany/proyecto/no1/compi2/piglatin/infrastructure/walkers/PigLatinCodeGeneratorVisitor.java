@@ -197,6 +197,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 && declaredType.isCustom()
                 && !"String".equals(declaredType.getCustomName());
 
+
         boolean isStruct = false;
         if (isObject) {
             Symbol sym = findTypeSymbolGlobal(declaredType.getCustomName());
@@ -214,6 +215,9 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             structVariables.put(name, new StructInfo(declaredType.getCustomName(), offset, false));
         }
 
+
+        System.out.println("VARDECL: " + name + " isObject=" + isObject + " isStruct=" + isStruct);
+
         if (node.getInitializer() != null) {
             String valueRef = exprToString(node.getInitializer());
             if (valueRef != null) {
@@ -226,6 +230,9 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayDeclarationNodePigLatin node) {
+
+        System.out.println("ARRAY DECL: " + node.getIdentifier() + " dims=" + node.getDimensions().size());
+
         int totalSize = 1;
         boolean allLiteral = true;
         if (node.getDimensions() != null) {
@@ -244,8 +251,12 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         nextOffset += totalSize;
 
         TypeKind elementKind = mapTypeNodeToType(node.getDataType()).getKind();
+        if (elementKind == TypeKind.CUSTOM) elementKind = TypeKind.INT;
+
         arrayInfos.put(node.getIdentifier(),
                 new ArrayInfo(base, elementKind, totalSize, false));
+
+        System.out.println("  → registered base=" + base + " totalSize=" + totalSize);
 
         if (node.getInitializer() != null && node.getInitializer().getElements() != null) {
             List<ExpressionNodePigLatin> values = node.getInitializer().getElements();
@@ -343,6 +354,29 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(VariableAssignmentNodePigLatin node) {
+        if (node.getIdentifier() instanceof MemberArrayAccessExpressionNodePigLatin arrAccess) {
+            if (!(arrAccess.getTarget() instanceof IdentifierExpressionNodePigLatin id)) return null;
+            String arrayName = id.getIdentifier();
+            ArrayInfo info = arrayInfos.get(arrayName);
+            if (info == null) return null;
+
+            String suffix = kindToSuffix(info.getElementType());
+            String arrayStack = stackArrayForKind(info.getElementType());
+            String cxReg = "CX_" + suffix.toUpperCase();
+
+            String valueRef = exprToString(node.getExpressionNode());
+            loadRegister(valueRef, cxReg);
+
+            String indexRef = exprToString(arrAccess.getIndex());
+            loadRegister(indexRef, "AX_INT");
+
+            output.emit("array_store_" + suffix,
+                    arrayStack + ", fp + " + info.getBaseOffset(),
+                    "AX_INT",
+                    cxReg);
+            return null;
+        }
+
         String valueRef = exprToString(node.getExpressionNode());
         String targetRef = exprToString(node.getIdentifier());
         storeValueTo(valueRef, targetRef);
@@ -804,7 +838,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             return null;
         }
 
-        // Struct (stack) ?
         StructInfo sinfo = structVariables.get(idName);
         if (sinfo != null) {
             List<String> layout = classLayouts.get(sinfo.getStructTypeName());
@@ -824,11 +857,34 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodePigLatin node) {
+        if (!(node.getTarget() instanceof IdentifierExpressionNodePigLatin id)) {
+            return null;
+        }
+        String arrayName = id.getIdentifier();
+        ArrayInfo info = arrayInfos.get(arrayName);
+        if (info == null) return null;
+
+        String suffix = kindToSuffix(info.getElementType());
+        String arrayStack = stackArrayForKind(info.getElementType());
+        String cxReg = "CX_" + suffix.toUpperCase();
+        int dest = nextOffset++;
+
+        String indexRef = exprToString(node.getIndex());
+        loadRegister(indexRef, "AX_INT");
+
+        output.emit("array_load_" + suffix,
+                arrayStack + ", fp + " + info.getBaseOffset(),
+                "AX_INT",
+                cxReg);
+
+        output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
+        lastExpr = arrayStack + "[fp + " + dest + "]";
         return null;
     }
 
     @Override
     public Void visit(ArrayCallExpressionNodePigLatin node) {
+        System.out.println("ARRAY CALL: " + node.getArrayName() + " info=" + arrayInfos.get(node.getArrayName()));
         String arrayName = node.getArrayName();
         ArrayInfo info = arrayInfos.get(arrayName);
         if (info == null) return null;
@@ -873,7 +929,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 ObjectInfo oinfo = objectVariables.get(id.getIdentifier());
                 if (oinfo != null) {
                     className = oinfo.getClassName();
-                    selfPtrExpr = "stackinteger[fp + " + oinfo.getPtrSlot() + "]";
+                    selfPtrExpr = "fp + " + oinfo.getPtrSlot();
                 }
             }
 
