@@ -25,7 +25,6 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expr
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.imports.ImportType;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.instances.ExpressionStatementNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.StructInstanceNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructPropertyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.TypeNodePigLatin;
@@ -55,6 +54,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * AST builder for the Pig Latin language (orchestrator)
@@ -183,6 +183,12 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     // BLOCK CODE ACTIONS
     //========================
 
+
+    @Override
+    public PigLatinAstNode visitLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx) {
+        return ctx.declaration().accept(this);
+    }
+
     @Override
     public PigLatinAstNode visitBlockCode(PigLatinParser.BlockCodeContext ctx) {
         return ctx.block_code().accept(this);
@@ -208,8 +214,39 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        ExpressionNodePigLatin obj = (ExpressionNodePigLatin) ctx.object_values().accept(this);
-        return new ExpressionStatementNodePigLatin(line, column, obj);
+        ExpressionNodePigLatin callExpr = (ExpressionNodePigLatin) ctx.call_statement().accept(this);
+        return new ExpressionStatementNodePigLatin(line, column, callExpr);
+    }
+
+    @Override
+    public PigLatinAstNode visitChainedCallStatement(PigLatinParser.ChainedCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        ExpressionNodePigLatin target = (ExpressionNodePigLatin) ctx.object_values().accept(this);
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodePigLatin> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodePigLatin argsNode = (ArgumentsNodePigLatin) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodePigLatin(line, column, target, name, args);
+    }
+
+    @Override
+    public PigLatinAstNode visitDirectCallStatement(PigLatinParser.DirectCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodePigLatin> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodePigLatin argsNode = (ArgumentsNodePigLatin) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodePigLatin(line, column, null, name, args);
     }
 
     @Override
@@ -525,7 +562,7 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        List<AstNode> decls = new ArrayList<>();
+        List<PigLatinAstNode> decls = new ArrayList<>();
         for (PigLatinParser.DeclarationContext dCtx : ctx.declaration()) {
             decls.add(dCtx.accept(this));
         }
@@ -548,11 +585,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     @Override
     public PigLatinAstNode visitNormalArrayInstance(PigLatinParser.NormalArrayInstanceContext ctx) {
         return ctx.array_declaration().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx) {
-        return ctx.struct_instance().accept(this);
     }
 
     @Override
@@ -583,7 +615,42 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
 
         ExpressionNodePigLatin expr = (ExpressionNodePigLatin) ctx.expression().accept(this);
 
+        if (type != null
+                && type.getDataType() == DataType.CUSTOM
+                && expr instanceof ArrayInitExpressionNodePigLatin arrayInit) {
+            StructLiteralExpressionNodePigLatin structLiteral =
+                    reinterpretAsStructLiteral(arrayInit);
+            return new StructInstanceNodePigLatin(
+                    line, column,
+                    id,
+                    type.getCustomTypeName(),
+                    structLiteral
+            );
+        }
+
         return new VariableDeclarationNodePigLatin(line, column, type, id, expr);
+    }
+
+    private StructLiteralExpressionNodePigLatin reinterpretAsStructLiteral(
+            ArrayInitExpressionNodePigLatin arrayInit) {
+
+        List<StructPropertyNodePigLatin> properties = new ArrayList<>();
+
+        for (ExpressionNodePigLatin element : arrayInit.getElements()) {
+            StructPropertyNodePigLatin property = new StructPropertyNodePigLatin(
+                    arrayInit.getLine(),
+                    arrayInit.getColumn(),
+                    null,
+                    element
+            );
+            properties.add(property);
+        }
+
+        return new StructLiteralExpressionNodePigLatin(
+                arrayInit.getLine(),
+                arrayInit.getColumn(),
+                properties
+        );
     }
 
     @Override
@@ -594,7 +661,7 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         ExpressionNodePigLatin target = (ExpressionNodePigLatin) ctx.nest_variable().accept(this);
         ExpressionNodePigLatin value = (ExpressionNodePigLatin) ctx.expression().accept(this);
 
-        return new VariableAssignmentNodePigLatin(line, column, target, value);
+        return new VariableAssignmentNodePigLatin(line, column, target, value, true);
     }
 
     //========================
@@ -667,7 +734,11 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         int column = ctx.getStart().getCharPositionInLine();
 
         String id = ctx.ID().getText();
-        ExpressionNodePigLatin size = (ExpressionNodePigLatin) ctx.expression().accept(this);
+
+        List<ExpressionNodePigLatin> dimensions = ctx.expression().stream()
+                .map(e -> (ExpressionNodePigLatin) e.accept(this))
+                .collect(Collectors.toList());
+
         TypeNodePigLatin type = (TypeNodePigLatin) ctx.variable_type().accept(this);
 
         ArrayInitExpressionNodePigLatin init = null;
@@ -675,7 +746,7 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
             init = (ArrayInitExpressionNodePigLatin) ctx.array_initialization().accept(this);
         }
 
-        return new ArrayDeclarationNodePigLatin(line, column, type, id, size, init);
+        return new ArrayDeclarationNodePigLatin(line, column, type, id, dimensions, init);
     }
 
     @Override
@@ -689,78 +760,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
         }
         return new ArrayInitExpressionNodePigLatin(line, column, values);
     }
-
-    //========================
-    // STRUCT OPERATIONS
-    //========================
-
-    @Override
-    public PigLatinAstNode visitNormalVariableStruct(PigLatinParser.NormalVariableStructContext ctx) {
-        return ctx.variable_without_value().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitArrayVariableStruct(PigLatinParser.ArrayVariableStructContext ctx) {
-        return ctx.array_variable_struct().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitInternalStructNormalVariable(PigLatinParser.InternalStructNormalVariableContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String id = ctx.ID().getText();
-        TypeNodePigLatin type = (TypeNodePigLatin) ctx.variable_type().accept(this);
-        return new StructAttributeNodePigLatin(line, column, id, type, false);
-    }
-
-    @Override
-    public PigLatinAstNode visitInternalStructArray(PigLatinParser.InternalStructArrayContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String id = ctx.ID().getText();
-        TypeNodePigLatin type = (TypeNodePigLatin) ctx.variable_type().accept(this);
-        return new StructAttributeNodePigLatin(line, column, id, type, true);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructInstance(PigLatinParser.StructInstanceContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String varName = ctx.ID(0).getText();
-        String structName = ctx.ID(1).getText();
-        StructLiteralExpressionNodePigLatin literal = (StructLiteralExpressionNodePigLatin) ctx.struct_literal().accept(this);
-
-        return new StructInstanceNodePigLatin(line, column, varName, structName, literal);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructLiteralValue(PigLatinParser.StructLiteralValueContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        PigLatinParser.StructDataListContext dataList =
-                (PigLatinParser.StructDataListContext) ctx.struct_data_list();
-
-        List<StructPropertyNodePigLatin> values = new ArrayList<>();
-        for (PigLatinParser.Struct_data_valueContext vCtx : dataList.struct_data_value()) {
-            values.add((StructPropertyNodePigLatin) vCtx.accept(this));
-        }
-        return new StructLiteralExpressionNodePigLatin(line, column, values);
-    }
-
-    @Override
-    public PigLatinAstNode visitStructDataNormal(PigLatinParser.StructDataNormalContext ctx) {
-        int line = ctx.getStart().getLine();
-        int column = ctx.getStart().getCharPositionInLine();
-
-        String key = ctx.ID().getText();
-        ExpressionNodePigLatin val = (ExpressionNodePigLatin) ctx.expression().accept(this);
-        return new StructPropertyNodePigLatin(line, column, key, val);
-    }
-
 
     //========================
     // NESTED VARIABLES
@@ -958,7 +957,11 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     public PigLatinAstNode visitValString(PigLatinParser.ValStringContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodePigLatin(line, column, DataType.STRING, ctx.STRING().getText());
+        String raw = ctx.STRING().getText();
+        if (raw.length() >= 2 && raw.startsWith("\"") && raw.endsWith("\"")) {
+            raw = raw.substring(1, raw.length() - 1);
+        }
+        return new LiteralExpressionNodePigLatin(line, column, DataType.STRING, raw);
     }
 
     @Override
@@ -990,11 +993,6 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     @Override
     public PigLatinAstNode visitValStructNestValue(PigLatinParser.ValStructNestValueContext ctx) {
         return ctx.object_values().accept(this);
-    }
-
-    @Override
-    public PigLatinAstNode visitValStructPropertyLiteral(PigLatinParser.ValStructPropertyLiteralContext ctx) {
-        return ctx.struct_literal().accept(this);
     }
 
     @Override

@@ -160,6 +160,42 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitStatementObjectPropertyCalling(PigLatinParser.StatementObjectPropertyCallingContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code LocalDeclaration}
+	 * labeled alternative in {@link PigLatinParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code LocalDeclaration}
+	 * labeled alternative in {@link PigLatinParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ChainedCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterChainedCallStatement(PigLatinParser.ChainedCallStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ChainedCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitChainedCallStatement(PigLatinParser.ChainedCallStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code DirectCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterDirectCallStatement(PigLatinParser.DirectCallStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code DirectCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitDirectCallStatement(PigLatinParser.DirectCallStatementContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code CodeBlockIf}
 	 * labeled alternative in {@link PigLatinParser#block_code}.
 	 * @param ctx the parse tree
@@ -520,18 +556,6 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitVariableInstance(PigLatinParser.VariableInstanceContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code VariableAssignment}
-	 * labeled alternative in {@link PigLatinParser#declaration}.
-	 * @param ctx the parse tree
-	 */
-	void enterVariableAssignment(PigLatinParser.VariableAssignmentContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code VariableAssignment}
-	 * labeled alternative in {@link PigLatinParser#declaration}.
-	 * @param ctx the parse tree
-	 */
-	void exitVariableAssignment(PigLatinParser.VariableAssignmentContext ctx);
-	/**
 	 * Enter a parse tree produced by the {@code NormalArrayInstance}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
 	 * @param ctx the parse tree
@@ -544,17 +568,17 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitNormalArrayInstance(PigLatinParser.NormalArrayInstanceContext ctx);
 	/**
-	 * Enter a parse tree produced by the {@code StructVariableInstance}
+	 * Enter a parse tree produced by the {@code VariableAssignment}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
 	 * @param ctx the parse tree
 	 */
-	void enterStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx);
+	void enterVariableAssignment(PigLatinParser.VariableAssignmentContext ctx);
 	/**
-	 * Exit a parse tree produced by the {@code StructVariableInstance}
+	 * Exit a parse tree produced by the {@code VariableAssignment}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
 	 * @param ctx the parse tree
 	 */
-	void exitStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx);
+	void exitVariableAssignment(PigLatinParser.VariableAssignmentContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code GlobalAbbreviatedOperation}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
@@ -697,102 +721,6 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitValues_array_list(PigLatinParser.Values_array_listContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code NormalVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 */
-	void enterNormalVariableStruct(PigLatinParser.NormalVariableStructContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code NormalVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 */
-	void exitNormalVariableStruct(PigLatinParser.NormalVariableStructContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code ArrayVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 */
-	void enterArrayVariableStruct(PigLatinParser.ArrayVariableStructContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ArrayVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 */
-	void exitArrayVariableStruct(PigLatinParser.ArrayVariableStructContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code InternalStructNormalVariable}
-	 * labeled alternative in {@link PigLatinParser#variable_without_value}.
-	 * @param ctx the parse tree
-	 */
-	void enterInternalStructNormalVariable(PigLatinParser.InternalStructNormalVariableContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code InternalStructNormalVariable}
-	 * labeled alternative in {@link PigLatinParser#variable_without_value}.
-	 * @param ctx the parse tree
-	 */
-	void exitInternalStructNormalVariable(PigLatinParser.InternalStructNormalVariableContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code InternalStructArray}
-	 * labeled alternative in {@link PigLatinParser#array_variable_struct}.
-	 * @param ctx the parse tree
-	 */
-	void enterInternalStructArray(PigLatinParser.InternalStructArrayContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code InternalStructArray}
-	 * labeled alternative in {@link PigLatinParser#array_variable_struct}.
-	 * @param ctx the parse tree
-	 */
-	void exitInternalStructArray(PigLatinParser.InternalStructArrayContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code StructInstance}
-	 * labeled alternative in {@link PigLatinParser#struct_instance}.
-	 * @param ctx the parse tree
-	 */
-	void enterStructInstance(PigLatinParser.StructInstanceContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StructInstance}
-	 * labeled alternative in {@link PigLatinParser#struct_instance}.
-	 * @param ctx the parse tree
-	 */
-	void exitStructInstance(PigLatinParser.StructInstanceContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code StructLiteralValue}
-	 * labeled alternative in {@link PigLatinParser#struct_literal}.
-	 * @param ctx the parse tree
-	 */
-	void enterStructLiteralValue(PigLatinParser.StructLiteralValueContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StructLiteralValue}
-	 * labeled alternative in {@link PigLatinParser#struct_literal}.
-	 * @param ctx the parse tree
-	 */
-	void exitStructLiteralValue(PigLatinParser.StructLiteralValueContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code StructDataList}
-	 * labeled alternative in {@link PigLatinParser#struct_data_list}.
-	 * @param ctx the parse tree
-	 */
-	void enterStructDataList(PigLatinParser.StructDataListContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StructDataList}
-	 * labeled alternative in {@link PigLatinParser#struct_data_list}.
-	 * @param ctx the parse tree
-	 */
-	void exitStructDataList(PigLatinParser.StructDataListContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code StructDataNormal}
-	 * labeled alternative in {@link PigLatinParser#struct_data_value}.
-	 * @param ctx the parse tree
-	 */
-	void enterStructDataNormal(PigLatinParser.StructDataNormalContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code StructDataNormal}
-	 * labeled alternative in {@link PigLatinParser#struct_data_value}.
-	 * @param ctx the parse tree
-	 */
-	void exitStructDataNormal(PigLatinParser.StructDataNormalContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code NestedVariable}
 	 * labeled alternative in {@link PigLatinParser#nest_variable}.
@@ -1129,18 +1057,6 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitValStructNestValue(PigLatinParser.ValStructNestValueContext ctx);
-	/**
-	 * Enter a parse tree produced by the {@code ValStructPropertyLiteral}
-	 * labeled alternative in {@link PigLatinParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void enterValStructPropertyLiteral(PigLatinParser.ValStructPropertyLiteralContext ctx);
-	/**
-	 * Exit a parse tree produced by the {@code ValStructPropertyLiteral}
-	 * labeled alternative in {@link PigLatinParser#normal_values}.
-	 * @param ctx the parse tree
-	 */
-	void exitValStructPropertyLiteral(PigLatinParser.ValStructPropertyLiteralContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ValArrayInitialLiteral}
 	 * labeled alternative in {@link PigLatinParser#normal_values}.

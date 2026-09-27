@@ -29,7 +29,7 @@ constructor_declaration
 
 /*------ METHOD PRODUCTION ------*/
 method_declaration
-    : PUBLIC type ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
+    : PUBLIC type (INIT_BRACKET FINAL_BRACKET)* ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
     ;
 
 /*------ PARAMETER LIST PRODUCTIONS ------*/
@@ -54,7 +54,13 @@ statement
     | compound_assignment DOT_COMMA     # StatementCompoundAssignment
     | nested_variables_usage            # StatementNestedAssignment
     | variable_declaration              # StatementVariableDeclaration
-    | object_values DOT_COMMA           # StatementObjectPropertyCalling
+    | call_statement DOT_COMMA          # StatementObjectPropertyCalling
+    ;
+
+/*------ CALL AS STATEMENT (solo llamadas, nunca acceso plano) ------*/
+call_statement
+    : object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT   # ChainedCallStatement
+    | ID INIT_PARENT arguments_list? FINAL_PARENT                     # DirectCallStatement
     ;
 
 /*------ RETURN STATEMENT ------*/

@@ -4,6 +4,7 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.frame;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
@@ -329,23 +330,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         rootPanel.repaint();
     }
 
-    /**
-     * Add a default project structure for new projects
-     */
-    private void addDefaultProjectStructure() {
-        if (managementScreen != null) {
-            var fileTree = managementScreen.getWorkspacePanel().getFileTreePanel();
-
-            // Create default folders
-            fileTree.createNewFile("src", true);
-            fileTree.createNewFile("main", true, "src");
-            fileTree.createNewFile("Main.z", false, "src/main");
-            fileTree.createNewFile("utils", true, "src");
-            fileTree.createNewFile("Helper.z", false, "src/utils");
-            fileTree.createNewFile("config.y", false, "");
-        }
-    }
-
     // ==========================================
     // WORKSPACE NOTIFIER IMPLEMENTATION
     // ==========================================
@@ -383,6 +367,16 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         } else {
             System.out.println("[ERROR] " + message);
         }
+    }
+
+    @Override
+    public void loadSymbolsTable(List<Symbol> symbols) {
+        this.managementScreen.getBottomPanel().setSymbols(symbols);
+    }
+
+    @Override
+    public void loadTypesTable(List<Symbol> symbols) {
+        this.managementScreen.getBottomPanel().setTypes(symbols);
     }
 
     @Override

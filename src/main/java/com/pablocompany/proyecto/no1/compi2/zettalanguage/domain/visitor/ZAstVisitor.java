@@ -20,9 +20,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.conditionals.ElseIfListNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.conditionals.ElseIfNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.conditionals.IfStatementNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.FunctionDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.ParameterNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.ProcedureDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.loops.*;
@@ -31,7 +29,6 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.DefaultCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.BodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
@@ -44,9 +41,7 @@ public interface ZAstVisitor<T> {
 
     //======Top node values
     T visit(ProgramNodeZ node);
-
-    T visit(BodyNodeZ node);
-
+    
     T visit(CodeBodyNodeZ node);
 
 
@@ -80,8 +75,6 @@ public interface ZAstVisitor<T> {
     T visit(LiteralExpressionNodeZ node);
 
     T visit(IdentifierExpressionNodeZ node);
-
-    T visit(ArrayCallExpressionNodeZ node);
 
     T visit(FunctionCallExpressionNodeZ node);
 
@@ -148,11 +141,7 @@ public interface ZAstVisitor<T> {
     T visit(ForInitAssignmentNodeZ node);
 
     T visit(ForUpdateNodeZ node);
-
-    T visit(FunctionDeclarationNodeZ node);
-
-    T visit(ProcedureDeclarationNodeZ node);
-
+    
     T visit(ParameterNodeZ node);
 
 

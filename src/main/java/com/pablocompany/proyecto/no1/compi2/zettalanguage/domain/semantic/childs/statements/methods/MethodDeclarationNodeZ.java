@@ -20,12 +20,16 @@ public class MethodDeclarationNodeZ extends ZAstNode {
     private final List<ParameterNodeZ> params;
     private final List<ZAstNode> body;
 
-    public MethodDeclarationNodeZ(int line, int column, String name, TypeNodeZ type, List<ParameterNodeZ> params, List<ZAstNode> body) {
+    //Return dimensions
+    private final int returnDimensions;
+
+    public MethodDeclarationNodeZ(int line, int column, String name, TypeNodeZ type, List<ParameterNodeZ> params, List<ZAstNode> body, int returnDimensions) {
         super(line, column);
         this.name = name;
         this.type = type;
         this.params = params;
         this.body = body;
+        this.returnDimensions = returnDimensions;
     }
 
     @Override

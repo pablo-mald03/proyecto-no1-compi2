@@ -43,16 +43,12 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.StatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * AST builder for the Z language
- */
 /**
  * AST builder for the Z language (Zettaradian)
  */
@@ -151,6 +147,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int column = ctx.getStart().getCharPositionInLine();
 
         TypeNodeZ returnType = (TypeNodeZ) ctx.type().accept(this);
+        int returnDimensions = ctx.INIT_BRACKET().size();
         String name = ctx.ID().getText();
 
         List<ParameterNodeZ> params = new ArrayList<>();
@@ -164,7 +161,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
             body.add(sCtx.accept(this));
         }
 
-        return new MethodDeclarationNodeZ(line, column, name, returnType, params, body);
+        return new MethodDeclarationNodeZ(line, column, name, returnType, params, body, returnDimensions);
     }
 
     //========================
@@ -247,8 +244,39 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        ExpressionNodeZ obj = (ExpressionNodeZ) ctx.object_values().accept(this);
-        return new ExpressionStatementNodeZ(line, column, obj);
+        ExpressionNodeZ callExpr = (ExpressionNodeZ) ctx.call_statement().accept(this);
+        return new ExpressionStatementNodeZ(line, column, callExpr);
+    }
+
+    @Override
+    public ZAstNode visitChainedCallStatement(ZParser.ChainedCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        ExpressionNodeZ target = (ExpressionNodeZ) ctx.object_values().accept(this);
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodeZ> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodeZ argsNode = (ArgumentsNodeZ) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodeZ(line, column, target, name, args);
+    }
+
+    @Override
+    public ZAstNode visitDirectCallStatement(ZParser.DirectCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        String name = ctx.ID().getText();
+
+        List<ExpressionNodeZ> args = new ArrayList<>();
+        if (ctx.arguments_list() != null) {
+            ArgumentsNodeZ argsNode = (ArgumentsNodeZ) ctx.arguments_list().accept(this);
+            args = argsNode.getArguments();
+        }
+        return new FunctionCallExpressionNodeZ(line, column, null, name, args);
     }
 
     //========================
@@ -1019,7 +1047,11 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     public ZAstNode visitValText(ZParser.ValTextContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodeZ(line, column, ZDataType.STRING, ctx.TEXT().getText());
+        String raw = ctx.TEXT().getText();
+        if (raw.length() >= 2 && raw.startsWith("\"") && raw.endsWith("\"")) {
+            raw = raw.substring(1, raw.length() - 1);
+        }
+        return new LiteralExpressionNodeZ(line, column, ZDataType.STRING, raw);
     }
 
     @Override

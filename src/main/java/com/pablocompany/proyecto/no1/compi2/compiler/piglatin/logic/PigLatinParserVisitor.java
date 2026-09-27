@@ -100,6 +100,27 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatementObjectPropertyCalling(PigLatinParser.StatementObjectPropertyCallingContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code LocalDeclaration}
+	 * labeled alternative in {@link PigLatinParser#statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLocalDeclaration(PigLatinParser.LocalDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ChainedCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitChainedCallStatement(PigLatinParser.ChainedCallStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code DirectCallStatement}
+	 * labeled alternative in {@link PigLatinParser#call_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDirectCallStatement(PigLatinParser.DirectCallStatementContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code CodeBlockIf}
 	 * labeled alternative in {@link PigLatinParser#block_code}.
 	 * @param ctx the parse tree
@@ -310,13 +331,6 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVariableInstance(PigLatinParser.VariableInstanceContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code VariableAssignment}
-	 * labeled alternative in {@link PigLatinParser#declaration}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitVariableAssignment(PigLatinParser.VariableAssignmentContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code NormalArrayInstance}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
 	 * @param ctx the parse tree
@@ -324,12 +338,12 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitNormalArrayInstance(PigLatinParser.NormalArrayInstanceContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code StructVariableInstance}
+	 * Visit a parse tree produced by the {@code VariableAssignment}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitStructVariableInstance(PigLatinParser.StructVariableInstanceContext ctx);
+	T visitVariableAssignment(PigLatinParser.VariableAssignmentContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code GlobalAbbreviatedOperation}
 	 * labeled alternative in {@link PigLatinParser#declaration}.
@@ -413,62 +427,6 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitValues_array_list(PigLatinParser.Values_array_listContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code NormalVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNormalVariableStruct(PigLatinParser.NormalVariableStructContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ArrayVariableStruct}
-	 * labeled alternative in {@link PigLatinParser#struct_attribute}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitArrayVariableStruct(PigLatinParser.ArrayVariableStructContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code InternalStructNormalVariable}
-	 * labeled alternative in {@link PigLatinParser#variable_without_value}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInternalStructNormalVariable(PigLatinParser.InternalStructNormalVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code InternalStructArray}
-	 * labeled alternative in {@link PigLatinParser#array_variable_struct}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInternalStructArray(PigLatinParser.InternalStructArrayContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructInstance}
-	 * labeled alternative in {@link PigLatinParser#struct_instance}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructInstance(PigLatinParser.StructInstanceContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructLiteralValue}
-	 * labeled alternative in {@link PigLatinParser#struct_literal}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructLiteralValue(PigLatinParser.StructLiteralValueContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructDataList}
-	 * labeled alternative in {@link PigLatinParser#struct_data_list}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructDataList(PigLatinParser.StructDataListContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code StructDataNormal}
-	 * labeled alternative in {@link PigLatinParser#struct_data_value}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStructDataNormal(PigLatinParser.StructDataNormalContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code NestedVariable}
 	 * labeled alternative in {@link PigLatinParser#nest_variable}.
@@ -665,13 +623,6 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitValStructNestValue(PigLatinParser.ValStructNestValueContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ValStructPropertyLiteral}
-	 * labeled alternative in {@link PigLatinParser#normal_values}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitValStructPropertyLiteral(PigLatinParser.ValStructPropertyLiteralContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ValArrayInitialLiteral}
 	 * labeled alternative in {@link PigLatinParser#normal_values}.

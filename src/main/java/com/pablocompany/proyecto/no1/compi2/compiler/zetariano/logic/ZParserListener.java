@@ -222,6 +222,30 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitStatementObjectPropertyCalling(ZParser.StatementObjectPropertyCallingContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ChainedCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterChainedCallStatement(ZParser.ChainedCallStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ChainedCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitChainedCallStatement(ZParser.ChainedCallStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code DirectCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterDirectCallStatement(ZParser.DirectCallStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code DirectCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitDirectCallStatement(ZParser.DirectCallStatementContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link ZParser#return_statement}.
 	 * @param ctx the parse tree

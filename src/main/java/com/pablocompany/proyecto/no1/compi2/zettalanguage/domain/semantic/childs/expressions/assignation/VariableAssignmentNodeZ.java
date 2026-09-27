@@ -15,18 +15,18 @@ public class VariableAssignmentNodeZ extends StatementNodeZ {
     private final boolean isAccessProperty;
 
     //Is a normal assignation
-    public VariableAssignmentNodeZ(int line, int column, ExpressionNodeZ expressionNode, ExpressionNodeZ identifier) {
+    public VariableAssignmentNodeZ(int line, int column, ExpressionNodeZ identifier,       // ← target (LHS)
+                                   ExpressionNodeZ expressionNode) { // ← value (RHS)
         super(line, column);
-        this.expressionNode = expressionNode;
         this.identifier = identifier;
+        this.expressionNode = expressionNode;
         this.isAccessProperty = false;
     }
 
-    //Is an Assignment with properties
-    public VariableAssignmentNodeZ(int line, int column, ExpressionNodeZ expressionNode, ExpressionNodeZ identifier, boolean isAccessProperty) {
+    public VariableAssignmentNodeZ(int line, int column, ExpressionNodeZ identifier, ExpressionNodeZ expressionNode, boolean isAccessProperty) {
         super(line, column);
-        this.expressionNode = expressionNode;
         this.identifier = identifier;
+        this.expressionNode = expressionNode;
         this.isAccessProperty = isAccessProperty;
     }
 

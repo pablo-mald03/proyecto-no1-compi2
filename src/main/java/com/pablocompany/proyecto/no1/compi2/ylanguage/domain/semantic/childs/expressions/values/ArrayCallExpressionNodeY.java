@@ -17,7 +17,7 @@ public class ArrayCallExpressionNodeY extends ExpressionNodeY {
 
     private TypeNodeY inferredType;
 
-    //This property is used to disctinct if the arrayCall is an struct instance value
+    //This property is used to distinct if the arrayCall is an struct instance value
     private boolean isDeclaration;
 
     public ArrayCallExpressionNodeY(int line, int column, String arrayName, ExpressionNodeY indexExpression) {

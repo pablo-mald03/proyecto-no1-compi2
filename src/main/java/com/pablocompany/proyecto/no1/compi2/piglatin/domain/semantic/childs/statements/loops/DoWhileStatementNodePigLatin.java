@@ -10,13 +10,13 @@ import lombok.Getter;
 //This is the principal do while representation class
 @Getter
 public class DoWhileStatementNodePigLatin extends StatementNodePigLatin {
-    private final ExpressionNodePigLatin condion;
+    private final ExpressionNodePigLatin condition;
     private final CodeBodyNodePigLatin body;
 
-    public DoWhileStatementNodePigLatin(int line, int column, CodeBodyNodePigLatin body, ExpressionNodePigLatin condion) {
+    public DoWhileStatementNodePigLatin(int line, int column, CodeBodyNodePigLatin body, ExpressionNodePigLatin condition) {
         super(line, column);
         this.body = body;
-        this.condion = condion;
+        this.condition = condition;
     }
 
 

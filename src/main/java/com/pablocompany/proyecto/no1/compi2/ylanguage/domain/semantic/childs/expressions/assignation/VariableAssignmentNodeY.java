@@ -8,25 +8,24 @@ import lombok.Getter;
 
 @Getter
 public class VariableAssignmentNodeY extends StatementNodeY {
-
     private final ExpressionNodeY identifier;
     private final ExpressionNodeY expressionNode;
 
     private final boolean isAccessProperty;
 
-    //Is a normal assignation
-    public VariableAssignmentNodeY(int line, int column, ExpressionNodeY expressionNode, ExpressionNodeY identifier) {
+    // Is a normal assignation
+    public VariableAssignmentNodeY(int line, int column, ExpressionNodeY identifier, ExpressionNodeY expressionNode) {
         super(line, column);
-        this.expressionNode = expressionNode;
         this.identifier = identifier;
+        this.expressionNode = expressionNode;
         this.isAccessProperty = false;
     }
 
-    //Is an Assignment with properties
-    public VariableAssignmentNodeY(int line, int column, ExpressionNodeY expressionNode, ExpressionNodeY identifier, boolean isAccessProperty) {
+    // Is an Assignment with properties
+    public VariableAssignmentNodeY(int line, int column, ExpressionNodeY identifier, ExpressionNodeY expressionNode, boolean isAccessProperty) {
         super(line, column);
-        this.expressionNode = expressionNode;
         this.identifier = identifier;
+        this.expressionNode = expressionNode;
         this.isAccessProperty = isAccessProperty;
     }
 

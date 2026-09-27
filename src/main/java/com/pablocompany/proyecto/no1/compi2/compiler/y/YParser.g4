@@ -22,10 +22,9 @@ struct_declaration
 
 /*** STRUCT FIELDS ****/
 struct_field
-    : type ID NEWLINE+                                              #StructNormalProperty
-    | type ID INIT_BRACKET expression FINAL_BRACKET NEWLINE+        #StructArrayProperty
+    : type ID NEWLINE+                                                       #StructNormalProperty
+    | type ID (INIT_BRACKET expression FINAL_BRACKET)+ NEWLINE+              #StructArrayProperty
     ;
-
 
 /*---*******---- FUNCTIONS PRODUCTIONS ----*******---*/
 
@@ -47,9 +46,9 @@ parameter_list
 /*** FUNCTION PARAMETER FIELDS ****/
 
 parameter
-    : type ID                                   #PrimitiveParameter
-    | INIT_BRACKET FINAL_BRACKET type ID        #ArrayParameter
-    | INIT_BRACE FINAL_BRACE ID ID              #StructParameter
+    : type ID                                                        #PrimitiveParameter
+    | (INIT_BRACKET FINAL_BRACKET)+ type ID                          #ArrayParameter
+    | INIT_BRACE FINAL_BRACE (INIT_BRACKET FINAL_BRACKET)* ID ID     #StructParameter
     ;
 
 
@@ -60,11 +59,12 @@ statement
     : block_statement                           #StatementBlock
     | console_actions                           #StatementConsoleAction
     | loop_control                              #StatementLoopControl
-    | abbreviated_operation                     #StatementAbbreviatedOperation
-    | compound_assignment DOT_COMMA             #StatementCompoundAssignment
+    | abbreviated_operation NEWLINE+            #StatementAbbreviatedOperation
+    | compound_assignment NEWLINE+              #StatementCompoundAssignment
     | struct_declaration                        #StatementStructDeclaration
     | variable_declaration NEWLINE+             #VariableDeclarationStatement
     | assignment NEWLINE+                       #AssignmentVariableStatement
+    | function_call NEWLINE+                    #StatementFunctionCall
     | RETURN expression? NEWLINE+               #ReturnStatement
     ;
 
@@ -132,8 +132,8 @@ for_statement
 
 /*** FOR INIT STATEMENT PRODUCTION ****/
 for_init
-    : type ID EQUAL expression   #ForInitVarDecl
-    | nest_variable EQUAL expression  #ForInitAssign
+    : type ID EQUAL expression          #ForInitVarDecl
+    | nest_variable EQUAL expression    #ForInitAssign
     ;
 
 /*** FOR UPDATE STATEMENT PRODUCTION ****/
@@ -165,10 +165,10 @@ read_call
 
 /*------ INCREMENT / DECREMENT PRODUCTIONS (PREFIX AND SUFIX) ------*/
 abbreviated_operation
-    : nest_variable ABREV_PLUS DOT_COMMA    # IncSufixOperation
-    | nest_variable ABREV_MINUS DOT_COMMA   # DecSufixOperation
-    | ABREV_PLUS nest_variable  DOT_COMMA   # IncPrefixOperation
-    | ABREV_MINUS nest_variable  DOT_COMMA   # DecPrefixOperation
+    : nest_variable ABREV_PLUS     # IncSufixOperation
+    | nest_variable ABREV_MINUS    # DecSufixOperation
+    | ABREV_PLUS nest_variable     # IncPrefixOperation
+    | ABREV_MINUS nest_variable    # DecPrefixOperation
     ;
 
 /*---*******---- COMPOUND ASSIGNMENT PRODUCTIONS ----*******---*/
@@ -197,10 +197,13 @@ nest_variable
 object_values
     : object_values DOT ID                                                  # ObjectPropertyChain
     | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
-    | ID INIT_PARENT arguments_list? FINAL_PARENT                           # BaseFunctionCall
+    | function_call                                                         #BaseFunctionCall
     | ID                                                                    # BaseIdentifier
     ;
 
+function_call:
+    ID INIT_PARENT arguments_list? FINAL_PARENT                           # FunctionCall
+    ;
 /*--------****--- ARGUMENTS FOR FUNCTIONS LIST---****--------*/
 
 arguments_list

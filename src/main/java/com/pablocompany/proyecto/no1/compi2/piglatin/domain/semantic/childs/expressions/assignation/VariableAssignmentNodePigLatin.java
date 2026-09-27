@@ -14,19 +14,10 @@ public class VariableAssignmentNodePigLatin extends StatementNodePigLatin {
 
     private final boolean isAccessProperty;
 
-    //Is a normal assignation
-    public VariableAssignmentNodePigLatin(int line, int column, ExpressionNodePigLatin expressionNode, ExpressionNodePigLatin identifier) {
+    public VariableAssignmentNodePigLatin(int line, int column, ExpressionNodePigLatin identifier, ExpressionNodePigLatin expressionNode, boolean isAccessProperty) {
         super(line, column);
-        this.expressionNode = expressionNode;
         this.identifier = identifier;
-        this.isAccessProperty = false;
-    }
-
-    //Is an Assignment with properties
-    public VariableAssignmentNodePigLatin(int line, int column, ExpressionNodePigLatin expressionNode, ExpressionNodePigLatin identifier, boolean isAccessProperty) {
-        super(line, column);
         this.expressionNode = expressionNode;
-        this.identifier = identifier;
         this.isAccessProperty = isAccessProperty;
     }
 

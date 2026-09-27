@@ -234,6 +234,18 @@ public interface YParserListener extends ParseTreeListener {
 	 */
 	void exitAssignmentVariableStatement(YParser.AssignmentVariableStatementContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code StatementFunctionCall}
+	 * labeled alternative in {@link YParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterStatementFunctionCall(YParser.StatementFunctionCallContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code StatementFunctionCall}
+	 * labeled alternative in {@link YParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitStatementFunctionCall(YParser.StatementFunctionCallContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ReturnStatement}
 	 * labeled alternative in {@link YParser#statement}.
 	 * @param ctx the parse tree
@@ -761,6 +773,18 @@ public interface YParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitBaseIdentifier(YParser.BaseIdentifierContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code FunctionCall}
+	 * labeled alternative in {@link YParser#function_call}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctionCall(YParser.FunctionCallContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code FunctionCall}
+	 * labeled alternative in {@link YParser#function_call}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctionCall(YParser.FunctionCallContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ArgumentsList}
 	 * labeled alternative in {@link YParser#arguments_list}.

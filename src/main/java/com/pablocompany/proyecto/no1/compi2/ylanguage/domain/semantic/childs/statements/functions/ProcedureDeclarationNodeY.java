@@ -14,15 +14,13 @@ public class ProcedureDeclarationNodeY extends StatementNodeY {
 
     private final String name;
     private final List<ParameterNodeY> parameters;
-    private final List<YAstNode> localVariables;
     private final List<YAstNode> body;
 
-    public ProcedureDeclarationNodeY(int line, int column, List<YAstNode> body, String name, List<ParameterNodeY> parameters, List<YAstNode> localVariables) {
+    public ProcedureDeclarationNodeY(int line, int column, String name, List<ParameterNodeY> parameters, List<YAstNode> body) {
         super(line, column);
-        this.body = body;
         this.name = name;
         this.parameters = parameters;
-        this.localVariables = localVariables;
+        this.body = body;
     }
 
     @Override

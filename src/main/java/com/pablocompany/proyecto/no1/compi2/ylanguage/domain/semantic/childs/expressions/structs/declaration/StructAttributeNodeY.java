@@ -7,6 +7,8 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.Ex
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
 import lombok.Getter;
 
+import java.util.List;
+
 //This class represents the struct attributes declaration
 @Getter
 public class StructAttributeNodeY extends YAstNode {
@@ -15,14 +17,15 @@ public class StructAttributeNodeY extends YAstNode {
     private final TypeNodeY type;
     private final boolean isArray;
 
-    private final ExpressionNodeY dimension;
+    //Nullable when dont have dimensions
+    private final List<ExpressionNodeY> dimensions;
 
-    public StructAttributeNodeY(int line, int column, String identifier, TypeNodeY type, boolean isArray, ExpressionNodeY dimension) {
+    public StructAttributeNodeY(int line, int column, String identifier, TypeNodeY type, boolean isArray, List<ExpressionNodeY> dimensions) {
         super(line, column);
         this.identifier = identifier;
         this.type = type;
         this.isArray = isArray;
-        this.dimension = dimension;
+        this.dimensions = dimensions;
     }
 
     @Override

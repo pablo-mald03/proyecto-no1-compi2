@@ -44,8 +44,16 @@ statement
     | return_control                        # ReturnControlAction
     | abbreviated_operation                 # LocalAbbreviatedOperation
     | assignment                            # LocalAssignment
-    | object_values DOT_COMMA               # StatementObjectPropertyCalling
+    | call_statement DOT_COMMA              # StatementObjectPropertyCalling
+    | declaration                           # LocalDeclaration
     ;
+
+/*------ CALL AS STATEMENT (solo llamadas, nunca acceso plano) ------*/
+call_statement
+    : object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT   # ChainedCallStatement
+    | ID INIT_PARENT arguments_list? FINAL_PARENT                     # DirectCallStatement
+    ;
+
 
 /*===*****===== COMMON CODE SECTION =====*****===*/
 
@@ -145,12 +153,13 @@ variabiles_body
 
 declaration
     : variable_declaration          # VariableInstance
-    | assignment                    # VariableAssignment
     | array_declaration             # NormalArrayInstance
-    | struct_instance               # StructVariableInstance
+    | assignment                    # VariableAssignment
     | abbreviated_operation         # GlobalAbbreviatedOperation
-    | compound_assignment DOT_COMMA          # CompoundAssignment
+    | compound_assignment DOT_COMMA # CompoundAssignment
     ;
+
+
 
 /*-----VARIABLE PRODUCTIONS-----*/
 
@@ -176,8 +185,9 @@ compound_assignment
 /*-----ARRAY PRODUCTIONS-----*/
 
 array_declaration
-    : SERIES ID INIT_BRACKET expression FINAL_BRACKET TWO_POINTS variable_type array_initialization? DOT_COMMA      # NormalArrayDeclaration
+    : SERIES ID (INIT_BRACKET expression FINAL_BRACKET)+ TWO_POINTS variable_type array_initialization? DOT_COMMA      # NormalArrayDeclaration
     ;
+
 
 array_initialization
     : INIT_BRACE values_array_list FINAL_BRACE      # ArrayInitWithValues
@@ -187,38 +197,6 @@ values_array_list
     : expression (COMMA expression)*
     ;
 
-/*---****------****--- STRUCT VARIABLES DECLARATION DEFINITION SECTION ---****------****---*/
-
-struct_attribute
-    : variable_without_value            # NormalVariableStruct
-    | array_variable_struct             # ArrayVariableStruct
-    ;
-
-variable_without_value
-    : ESTO ID TWO_POINTS variable_type      # InternalStructNormalVariable
-    ;
-
-array_variable_struct
-    : SERIES ID TWO_POINTS variable_type           # InternalStructArray
-    ;
-
-/*-----STRUCT INSTANCE PRODUCTIONS-----*/
-
-struct_instance
-    : ESTO ID TWO_POINTS ID struct_literal DOT_COMMA # StructInstance
-    ;
-
-struct_literal
-    : INIT_BRACE struct_data_list FINAL_BRACE  # StructLiteralValue
-    ;
-
-struct_data_list
-    : struct_data_value (COMMA struct_data_value)*      #StructDataList
-    ;
-
-struct_data_value
-    : ID TWO_POINTS expression                 # StructDataNormal
-    ;
 
 /*-----STRUCT PROPERTY ACCESS -----*/
 
@@ -274,7 +252,6 @@ normal_values
     | INT                                               # ValInt
     | boolean_values                                    # ValBool
     | object_values                                     # ValStructNestValue
-    | struct_literal                                    # ValStructPropertyLiteral
     | array_initialization                              # ValArrayInitialLiteral
     | NOVUS ID INIT_PARENT arguments_list? FINAL_PARENT # ValNewInstance
     ;

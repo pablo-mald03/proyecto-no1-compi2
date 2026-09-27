@@ -1,16 +1,25 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.CompilationContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.SymbolCollectorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.orchestator.TypeCheckerOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer;
+import com.pablocompany.proyecto.no1.compi2.common.domain.resolver.ReferenceResolverOrchestrator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.orchestator.CodeGeneratorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.ParserFactory;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
+import com.pablocompany.proyecto.no1.compi2.piglatin.domain.imports.DependencyGraph;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.importResolver.DependencyAnalyzer;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHighlightListenerFactory;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.dialogs.CustomInputDialog;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.ModalType;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.validator.ClassFileNameValidator;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -40,7 +49,7 @@ public class WorkspacePanel extends JPanel {
     private final JSplitPane splitPane;
     private final JPanel welcomePanel;
     private String projectName;
-
+    private CompilationContext compilationContext;
 
     //Compiled code
     private String compiledOutput;
@@ -49,7 +58,7 @@ public class WorkspacePanel extends JPanel {
     //Principal reference for the file Contexts
     private final Map<String, EditorContext> fileContexts;
 
-    // NEW: Main class reference
+    // Main class reference
     private String mainClassPath;
     private FileNode mainClassNode;
 
@@ -224,6 +233,7 @@ public class WorkspacePanel extends JPanel {
             return false;
         }
 
+        this.compilationContext = new CompilationContext();
         this.clearAllCompilationData();
         compiledOutput = "";
         isCompiled = false;
@@ -246,47 +256,166 @@ public class WorkspacePanel extends JPanel {
 
         //AST BUILDING PHASE
 
-        //VERIFY STEPS
+        notifier.logWarning("Validando nombres de archivos .z...");
 
-        notifier.logWarning("Verificando importacion de paquetes...");
+        ClassFileNameValidator classFileNameValidator = new ClassFileNameValidator();
+        classFileNameValidator.validate(this.fileContexts);
 
-
-        notifier.logInfo("Analisis semantico en curso...");
-
-        //SEMANTIC PHASE
-
-        notifier.logSuccess("Analisis semantico completado");
-
-
-        notifier.logInfo("Generacion de codigo 3D en curso...");
-
-
-        String finalCompiledCode =
-                "#include <stdio.h>\n\n" +
-                        "int main() {\n" +
-                        "    int numero;\n" +
-                        "    printf(\"Ingrese un numero: \");\n" +
-                        "    scanf(\"%d\", &numero);\n" +
-                        "    printf(\"El numero ingresado fue: %d\\n\", numero);\n" +
-                        "    return 0;\n" +
-                        "}";
-
-
-        notifier.logSuccess("Generacion de codigo 3D completado");
-
-        if (!finalCompiledCode.isEmpty()) {
-            this.compiledOutput = finalCompiledCode;
-            this.isCompiled = true;
-
-            generateCompiledFile(finalCompiledCode);
-        } else {
-            notifier.logError("No se genero codigo compilado");
-
+        boolean classFileNameErrors = this.verifyErrors("Error de nombres de archivo: se encontraron: ");
+        if (classFileNameErrors) {
             return false;
         }
 
-        notifier.logSuccess("Compilacion exitosa");
+        notifier.logSuccess("Validacion de nombres .z completada");
+
+
+        //VERIFY STEPS
+        DependencyAnalyzer dependencyAnalyzer = new DependencyAnalyzer();
+        DependencyGraph dependencyGraph = dependencyAnalyzer.analyze(this.fileContexts);
+
+        this.compilationContext.setDependencyGraph(dependencyGraph);
+
+        if (dependencyGraph.hasErrors()) {
+            for (CompilerError error : dependencyGraph.getErrors()) {
+                EditorContext ctx = fileContexts.get(error.getFilePath());
+                if (ctx != null) {
+                    ctx.getSemanticErrors().add(error);
+                }
+            }
+            this.verifyErrors("Error de importaciones: se encontraron: ");
+            return false;
+        }
+
+        notifier.logSuccess("Verificacion de importaciones completada");
+
+        notifier.logInfo("Recolectando simbolos...");
+
+        SymbolCollectorOrchestrator symbolCollector =
+                new SymbolCollectorOrchestrator(this.compilationContext.getDependencyGraph());
+        GlobalSymbolTable symbolTable = symbolCollector.collectAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder()
+        );
+        this.compilationContext.setSymbolTable(symbolTable);
+
+
+        notifier.logSuccess("Recoleccion de simbolos completada");
+
+        notifier.logInfo("Resolviendo referencias...");
+
+        ReferenceResolverOrchestrator referenceResolver =
+                new ReferenceResolverOrchestrator(this.compilationContext.getDependencyGraph());
+        referenceResolver.resolveAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
+                this.compilationContext.getSymbolTable()
+        );
+
+        boolean referenceErrors = this.verifyErrors("Error de referencias: se encontraron: ");
+        if (referenceErrors) {
+            return false;
+        }
+
+        notifier.logSuccess("Resolucion de referencias completada");
+
+        notifier.logInfo("Verificando tipos...");
+
+        TypeCheckerOrchestrator typeChecker = new TypeCheckerOrchestrator();
+        typeChecker.checkAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
+                this.compilationContext.getSymbolTable(),
+                this.compilationContext.getTypeAnnotations()
+        );
+
+        boolean typeErrors = this.verifyErrors("Error de tipos: se encontraron: ");
+        if (typeErrors) {
+            return false;
+        }
+
+        notifier.logSuccess("Verificacion de tipos completada");
+
+        this.notifier.loadSymbolsTable(symbolTable.getAllSymbols());
+        this.notifier.loadTypesTable(symbolTable.getAllSymbols());
+
+        //3D CODE PHASE
+
+        notifier.logInfo("Generacion de codigo 3D en curso...");
+
+        CodeGeneratorOrchestrator codeGen = new CodeGeneratorOrchestrator();
+        String finalCompiledCode = codeGen.generateAll(
+                this.fileContexts,
+                this.compilationContext.getSymbolTable(),
+                this.compilationContext.getTypeAnnotations(),
+                this.mainClassPath
+        );
+
+        notifier.logSuccess("Generacion de codigo 3D completado");
+
+        if (finalCompiledCode != null && !finalCompiledCode.isEmpty()) {
+            this.compiledOutput = finalCompiledCode;
+            this.isCompiled = true;
+            generateCompiledFile(finalCompiledCode);
+            generateQuadruplesFile(codeGen.dumpQuadruplesAsText());
+        } else {
+            notifier.logError("No se genero codigo compilado");
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * METHOD TO GENERATE THE QUADRUPLES
+     *
+     */
+    private void generateQuadruplesFile(String quadruplesText) {
+        try {
+            String quadPath = "compiled/cuartetas.txt";
+
+            DefaultMutableTreeNode compiledFolderNode = fileTreePanel.findNodeByPath("compiled");
+            if (compiledFolderNode == null) {
+                fileTreePanel.createNewFile("compiled", true);
+            }
+
+            DefaultMutableTreeNode quadFileNode = fileTreePanel.getFileNodes().get(quadPath);
+            if (quadFileNode != null && quadFileNode.getUserObject() instanceof FileNode existingFile) {
+                existingFile.setContent(quadruplesText);
+                existingFile.getEditorContext().setCompiledCode(quadruplesText);
+                existingFile.getEditorContext().setCompiled(true);
+                existingFile.setModified(false);
+
+                updateContextForFile(quadPath, quadruplesText);
+                notifier.notifySaveFile(quadPath, quadruplesText);
+
+                if (openEditors.containsKey(quadPath)) {
+                    CodeEditorPanel editor = openEditors.get(quadPath);
+                    if (editor != null) {
+                        editor.setCode(quadruplesText);
+                        editor.setEditable(false);
+                    }
+                }
+            } else {
+                fileTreePanel.createNewFile("cuartetas.txt", false, "compiled");
+
+                DefaultMutableTreeNode newNode = fileTreePanel.getFileNodes().get(quadPath);
+                if (newNode != null && newNode.getUserObject() instanceof FileNode node) {
+                    node.setContent(quadruplesText);
+                    node.getEditorContext().setCompiledCode(quadruplesText);
+                    node.getEditorContext().setCompiled(true);
+                    node.setModified(false);
+
+                    updateContextForFile(quadPath, quadruplesText);
+                    notifier.notifySaveFile(quadPath, quadruplesText);
+                }
+            }
+
+            fileTreePanel.reloadTree();
+            notifier.logInfo("Cuartetas generadas en: " + quadPath);
+
+        } catch (Exception e) {
+            notifier.logError("Error al generar el archivo de cuartetas: " + e.getMessage());
+        }
     }
 
     /**
