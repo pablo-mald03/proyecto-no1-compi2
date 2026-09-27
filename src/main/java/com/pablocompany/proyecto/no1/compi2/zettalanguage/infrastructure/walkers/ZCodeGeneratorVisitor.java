@@ -147,11 +147,9 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         output.emit("function_start", funcName, null, null);
 
 
-        // +1 for the implicit 'self' pointer.
         emitPrologue(numArgs + 1);
         resetFunctionState();
 
-        // self is at [fp + 1].
         currentSelfSlot = "fp + 1";
         localTypes.put("self", TypeKind.INT);
         paramOffsets.put("self", 1);
@@ -914,6 +912,8 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             return null;
         }
 
+        output.emit("sptr_inc", "200", null, null);
+
         List<String> fields = classLayouts.get(className);
         int numFields = fields != null ? fields.size() : 0;
 
@@ -944,15 +944,15 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             }
         }
 
-
         String ctorName = className + "_" + className + "_" + numArgs;
         output.emit("call", ctorName, null, null);
 
-        output.emit("sptr_dec", String.valueOf(numArgs + 2), null, null);
+        output.emit("sptr_dec", String.valueOf(numArgs + 2 + 200), null, null);
 
         lastExpr = "stackinteger[fp + " + ptrSlot + "]";
         return null;
     }
+
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
@@ -1001,13 +1001,21 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String targetFunc;
         boolean isMethodCall = node.getTarget() != null;
 
+        output.emit("sptr_inc", "200", null, null);
+
         if (isMethodCall) {
             Type targetType = typeAnnotations.get(node.getTarget());
-            if (targetType == null || !targetType.isCustom()) return null;
+            if (targetType == null || !targetType.isCustom()) {
+                output.emit("sptr_dec", "200", null, null);   // rollback
+                return null;
+            }
 
             String className = targetType.getCustomName();
 
-            if (!evalObjectPointerToReg(node.getTarget(), "AX_INT")) return null;
+            if (!evalObjectPointerToReg(node.getTarget(), "AX_INT")) {
+                output.emit("sptr_dec", "200", null, null);   // rollback
+                return null;
+            }
 
             targetFunc = className + "_" + funcName + "_" + numArgs;
 
@@ -1047,9 +1055,10 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         TypeKind returnKind = returnType != null ? returnType.getKind() : TypeKind.INT;
 
         int extra = (isMethodCall || currentSelfSlot != null) ? 1 : 0;
+        int cleanup = numArgs + 1 + extra + 200;
 
         if (returnKind == TypeKind.VOID) {
-            output.emit("sptr_dec", String.valueOf(numArgs + 1 + extra), null, null);
+            output.emit("sptr_dec", String.valueOf(cleanup), null, null);
             lastExpr = null;
             return null;
         }
@@ -1061,11 +1070,12 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         output.emit("load_" + returnSuffix, "sptr", null, cxReg);
         int destOffset = nextOffset++;
         output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
-        output.emit("sptr_dec", String.valueOf(numArgs + 1 + extra), null, null);
+        output.emit("sptr_dec", String.valueOf(cleanup), null, null);
 
         lastExpr = returnArray + "[fp + " + destOffset + "]";
         return null;
     }
+
 
     @Override
     public Void visit(ArrayInitExpressionNodeZ node) {

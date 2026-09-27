@@ -356,12 +356,66 @@ public class WorkspacePanel extends JPanel {
             this.compiledOutput = finalCompiledCode;
             this.isCompiled = true;
             generateCompiledFile(finalCompiledCode);
+            generateQuadruplesFile(codeGen.dumpQuadruplesAsText());
         } else {
             notifier.logError("No se genero codigo compilado");
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * METHOD TO GENERATE THE QUADRUPLES
+     *
+     */
+    private void generateQuadruplesFile(String quadruplesText) {
+        try {
+            String quadPath = "compiled/cuartetas.txt";
+
+            DefaultMutableTreeNode compiledFolderNode = fileTreePanel.findNodeByPath("compiled");
+            if (compiledFolderNode == null) {
+                fileTreePanel.createNewFile("compiled", true);
+            }
+
+            DefaultMutableTreeNode quadFileNode = fileTreePanel.getFileNodes().get(quadPath);
+            if (quadFileNode != null && quadFileNode.getUserObject() instanceof FileNode existingFile) {
+                existingFile.setContent(quadruplesText);
+                existingFile.getEditorContext().setCompiledCode(quadruplesText);
+                existingFile.getEditorContext().setCompiled(true);
+                existingFile.setModified(false);
+
+                updateContextForFile(quadPath, quadruplesText);
+                notifier.notifySaveFile(quadPath, quadruplesText);
+
+                if (openEditors.containsKey(quadPath)) {
+                    CodeEditorPanel editor = openEditors.get(quadPath);
+                    if (editor != null) {
+                        editor.setCode(quadruplesText);
+                        editor.setEditable(false);
+                    }
+                }
+            } else {
+                fileTreePanel.createNewFile("cuartetas.txt", false, "compiled");
+
+                DefaultMutableTreeNode newNode = fileTreePanel.getFileNodes().get(quadPath);
+                if (newNode != null && newNode.getUserObject() instanceof FileNode node) {
+                    node.setContent(quadruplesText);
+                    node.getEditorContext().setCompiledCode(quadruplesText);
+                    node.getEditorContext().setCompiled(true);
+                    node.setModified(false);
+
+                    updateContextForFile(quadPath, quadruplesText);
+                    notifier.notifySaveFile(quadPath, quadruplesText);
+                }
+            }
+
+            fileTreePanel.reloadTree();
+            notifier.logInfo("Cuartetas generadas en: " + quadPath);
+
+        } catch (Exception e) {
+            notifier.logError("Error al generar el archivo de cuartetas: " + e.getMessage());
+        }
     }
 
     /**

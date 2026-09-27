@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.common.infrastructure.orchestator;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.Quadruple;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.factory.CodeGeneratorFactory;
@@ -26,6 +27,8 @@ import java.util.Map;
  *
  */
 public class CodeGeneratorOrchestrator {
+
+    private CodeGeneratorOutput lastOutput;
 
     public String generateAll(Map<String, EditorContext> allContexts,
                               GlobalSymbolTable table,
@@ -110,7 +113,23 @@ public class CodeGeneratorOrchestrator {
         // ============================================================
         // SERIALIZE
         // ============================================================
+        this.lastOutput = combined;
         QuadrupleSerializer serializer = new QuadrupleSerializer(combined, stringPool);
         return serializer.serialize();
+    }
+
+    public String dumpQuadruplesAsText() {
+        if (lastOutput == null) return "";
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (Quadruple q : lastOutput.getQuadruples()) {
+            sb.append(String.format("%-5d %-12s %-15s %-15s %-15s%n",
+                    i++,
+                    q.getOp(),
+                    q.getArg1() != null ? q.getArg1() : "-",
+                    q.getArg2() != null ? q.getArg2() : "-",
+                    q.getResult() != null ? q.getResult() : "-"));
+        }
+        return sb.toString();
     }
 }
