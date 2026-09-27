@@ -141,11 +141,11 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
         String className = currentClassName != null ? currentClassName : "Unknown";
-        String funcName = className + "_" + node.getName();
+        int numArgs = node.getParams() != null ? node.getParams().size() : 0;
+        String funcName = className + "_" + node.getName() + "_" + numArgs;
         output.getFunctionNames().add(funcName);
         output.emit("function_start", funcName, null, null);
 
-        int numArgs = node.getParams() != null ? node.getParams().size() : 0;
 
         // +1 for the implicit 'self' pointer.
         emitPrologue(numArgs + 1);
@@ -1002,9 +1002,9 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(FunctionCallExpressionNodeZ node) {
-        String funcName = node.getFunctionName();
         List<ExpressionNodeZ> args = node.getArguments();
         int numArgs = args != null ? args.size() : 0;
+        String funcName = node.getFunctionName();
 
         String targetFunc;
         boolean isMethodCall = node.getTarget() != null;
@@ -1028,7 +1028,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
                             Type fieldType = typeAnnotations.get(id);
                             if (fieldType != null && fieldType.isCustom()) {
                                 className = fieldType.getCustomName();
-                                // Load self, then load the pointer stored in that attribute.
                                 output.emit("load_int", currentSelfSlot, null, "AX_INT");
                                 output.emit("heap_load_int",
                                         "stackinteger[AX_INT] + " + fieldOffset, null, "CX_INT");
@@ -1040,7 +1039,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             }
 
             if (className == null || selfPtrExpr == null) return null;
-            targetFunc = className + "_" + funcName;
+            targetFunc = className + "_" + funcName + "_" + numArgs;
 
             output.emit("sptr_inc", "1", null, null);
             output.emit("load_int", selfPtrExpr, null, "AX_INT");
@@ -1050,7 +1049,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             targetFunc = resolveFunctionName(funcName);
 
             if (currentSelfSlot != null && currentClassName != null) {
-                targetFunc = currentClassName + "_" + funcName;
+                targetFunc = currentClassName + "_" + funcName + "_" + numArgs;
                 output.emit("sptr_inc", "1", null, null);
                 output.emit("load_int", currentSelfSlot, null, "AX_INT");
                 output.emit("store_int", "sptr", null, "AX_INT");

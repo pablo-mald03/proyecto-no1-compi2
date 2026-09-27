@@ -57,6 +57,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Principal type checker class for pig latin
+ *
+ */
 @Getter
 public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
@@ -374,9 +378,6 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
     @Override
     public Type visit(ReturnStatementNodePigLatin node) {
-        // In .pig, return only makes sense inside a function... but .pig has no functions.
-        // It only has the main section. So return at top-level is meaningless.
-        // We'll just visit the expression.
         if (node.getValue() != null) node.getValue().accept(this);
         return Type.voidType();
     }

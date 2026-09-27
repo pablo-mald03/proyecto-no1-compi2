@@ -9,6 +9,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.models.CodeGenerator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.serializer.QuadrupleSerializer;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.codegen.PigLatinCodeGenerator;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -39,23 +40,45 @@ public class CodeGeneratorOrchestrator {
         for (String filePath : allContexts.keySet()) {
             EditorContext ctx = allContexts.get(filePath);
             if (ctx == null) continue;
-            if (!".z".equals(ctx.getFileExtension())) continue;
+            String ext = ctx.getFileExtension();
+            if (ext == null) continue;
 
-            ZAstNode ast = (ZAstNode) ctx.getAstNode();
-            if (ast instanceof ProgramNodeZ program && program.getClassNode() != null) {
-                ClassDeclarationNodeZ cls = program.getClassNode();
-                List<String> fields = new ArrayList<>();
-                if (cls.getMembers() != null) {
-                    for (ZAstNode member : cls.getMembers()) {
-                        if (member instanceof VariableDeclarationNodeZ attr) {
-                            fields.add(attr.getIdentifier());
+            if (".z".equals(ext)) {
+                ZAstNode ast = (ZAstNode) ctx.getAstNode();
+                if (ast instanceof ProgramNodeZ program && program.getClassNode() != null) {
+                    ClassDeclarationNodeZ cls = program.getClassNode();
+                    List<String> fields = new ArrayList<>();
+                    if (cls.getMembers() != null) {
+                        for (ZAstNode member : cls.getMembers()) {
+                            if (member instanceof VariableDeclarationNodeZ attr) {
+                                fields.add(attr.getIdentifier());
+                            }
                         }
                     }
+                    globalClassLayouts.put(cls.getClassName(), fields);
                 }
-                globalClassLayouts.put(cls.getClassName(), fields);
             }
         }
 
+        // ============================================================
+        // PASS 1: .y files
+        // ============================================================
+        for (String filePath : allContexts.keySet()) {
+            EditorContext ctx = allContexts.get(filePath);
+            if (ctx == null) continue;
+            if (!".y".equals(ctx.getFileExtension())) continue;
+
+            CodeGenerator gen = CodeGeneratorFactory.create(".y");
+            if (gen == null) continue;
+
+            CodeGeneratorOutput out = gen.generate(ctx, table, typeAnnotations, stringPool);
+            combined.getQuadruples().addAll(out.getQuadruples());
+            combined.getFunctionNames().addAll(out.getFunctionNames());
+        }
+
+        // ============================================================
+        // PASS 2: .z files
+        // ============================================================
         for (String filePath : allContexts.keySet()) {
             EditorContext ctx = allContexts.get(filePath);
             if (ctx == null) continue;
@@ -71,21 +94,23 @@ public class CodeGeneratorOrchestrator {
             combined.getFunctionNames().addAll(out.getFunctionNames());
         }
 
+        // ============================================================
+        // PASS 3: .pig
+        // ============================================================
         EditorContext mainCtx = allContexts.get(mainClassPath);
         if (mainCtx != null) {
             CodeGenerator gen = CodeGeneratorFactory.create(".pig");
             if (gen != null) {
-                CodeGeneratorOutput out = gen.generate(mainCtx, table, typeAnnotations, stringPool);
-                combined.getQuadruples().addAll(out.getQuadruples());
-                combined.getFunctionNames().addAll(out.getFunctionNames());
+                ((PigLatinCodeGenerator) gen).generate(
+                        mainCtx, table, typeAnnotations, stringPool,
+                        globalClassLayouts, combined);
             }
-        } else {
-            System.out.println("MAIN CTX NOT FOUND: " + mainClassPath);
         }
 
+        // ============================================================
+        // SERIALIZE
+        // ============================================================
         QuadrupleSerializer serializer = new QuadrupleSerializer(combined, stringPool);
-        String finalC = serializer.serialize();
-        System.out.println(finalC);
-        return finalC;
+        return serializer.serialize();
     }
 }
