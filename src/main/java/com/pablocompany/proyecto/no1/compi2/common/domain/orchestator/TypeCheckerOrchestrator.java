@@ -1,5 +1,8 @@
 package com.pablocompany.proyecto.no1.compi2.common.domain.orchestator;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFG;
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFGOrchestrator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.UnreachableCodeDetector;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.TypeChecker;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
@@ -54,6 +57,17 @@ public class TypeCheckerOrchestrator {
             if (!processed.contains(filePath)) {
                 checkOne(filePath, allContexts, table, typeAnnotations);
             }
+        }
+
+
+        CFGOrchestrator cfgOrchestrator = new CFGOrchestrator();
+        Map<String, CFG> cfgs = cfgOrchestrator.buildAll(allContexts);
+
+        UnreachableCodeDetector detector = new UnreachableCodeDetector();
+        for (Map.Entry<String, CFG> entry : cfgs.entrySet()) {
+            EditorContext ctx = allContexts.get(entry.getKey());
+            if (ctx == null) continue;
+            detector.detect(entry.getValue(), ctx);
         }
     }
 
