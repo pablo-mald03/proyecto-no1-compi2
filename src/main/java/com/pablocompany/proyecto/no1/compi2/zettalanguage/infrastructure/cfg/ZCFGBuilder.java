@@ -2,10 +2,10 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.cfg;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFG;
 import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFGBuilder;
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.ZCFGBuilderVisitor;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers.ZCFGBuilderVisitor;
 
 /**
  * Principal cfg builder for z language

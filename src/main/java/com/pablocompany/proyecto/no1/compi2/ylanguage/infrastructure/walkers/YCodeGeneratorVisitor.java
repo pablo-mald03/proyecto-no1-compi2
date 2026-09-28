@@ -445,6 +445,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             String dest = arrayName + "[fp + 0]";
             storeValueTo(valueRef, dest);
         }
+        output.emit("fp_pop", null, null, null);
         output.emit("return", null, null, null);
         return null;
     }
