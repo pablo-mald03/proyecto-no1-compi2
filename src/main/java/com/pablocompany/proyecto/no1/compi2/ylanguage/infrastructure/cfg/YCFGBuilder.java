@@ -1,8 +1,11 @@
-package com.pablocompany.proyecto.no1.compi2.common.domain.cfg;
+package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.cfg;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFG;
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFGBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.walkers.YCFGBuilderVisitor;
 
 /**
  * Principal CFG builder

@@ -1,5 +1,6 @@
-package com.pablocompany.proyecto.no1.compi2.common.domain.cfg;
+package com.pablocompany.proyecto.no1.compi2.common.domain.factory;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFGBuilder;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.cfg.ZCFGBuilder;
 
 /**

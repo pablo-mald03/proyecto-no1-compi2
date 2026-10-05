@@ -1,5 +1,8 @@
-package com.pablocompany.proyecto.no1.compi2.common.domain.cfg;
+package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers;
 
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFG;
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFGNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.NodeType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
@@ -34,6 +37,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parent
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
+import lombok.Getter;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -44,6 +48,7 @@ import java.util.List;
  * Principal CFG builder visitor
  *
  */
+@Getter
 public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
 
     private final CFG cfg;
@@ -566,24 +571,51 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
         breakTargets.push(exit);
 
         pushPendingExits();
-        currentPendingExits = new ArrayList<>();
-        currentPendingExits.add(sw);
+
+        List<CFGNode> branchExits = new ArrayList<>();
 
         if (node.getCases() != null) {
             for (SwitchCaseNodeZ c : node.getCases()) {
-                if (c != null) c.accept(this);
+                if (c == null) continue;
+                CFGNode caseNode = cfg.createNode("case", NodeType.CASE, c);
+                cfg.addEdge(sw, caseNode);
+
+                currentPendingExits = new ArrayList<>();
+                currentPendingExits.add(caseNode);
+
+                if (c.getBody() != null) {
+                    for (ZAstNode s : c.getBody()) {
+                        if (s != null) s.accept(this);
+                    }
+                }
+
+                branchExits.addAll(currentPendingExits);
             }
         }
+
         if (node.getDefaultCase() != null) {
-            node.getDefaultCase().accept(this);
+            DefaultCaseNodeZ d = node.getDefaultCase();
+            CFGNode defNode = cfg.createNode("default", NodeType.CASE, d);
+            cfg.addEdge(sw, defNode);
+
+            currentPendingExits = new ArrayList<>();
+            currentPendingExits.add(defNode);
+
+            if (d.getBody() != null) {
+                for (ZAstNode s : d.getBody()) {
+                    if (s != null) s.accept(this);
+                }
+            }
+
+            branchExits.addAll(currentPendingExits);
         }
 
-        popPendingExits();
-        breakTargets.pop();
-
-        for (CFGNode e : currentPendingExits) {
+        for (CFGNode e : branchExits) {
             cfg.addEdge(e, exit);
         }
+
+        breakTargets.pop();
+        popPendingExits();
 
         currentPendingExits = new ArrayList<>();
         currentPendingExits.add(exit);
@@ -592,29 +624,11 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchCaseNodeZ node) {
-        CFGNode c = cfg.createNode("case", NodeType.CASE, node);
-        connectPendingExitsTo(c);
-        addPendingExit(c);
-
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeZ node) {
-        CFGNode c = cfg.createNode("default", NodeType.CASE, node);
-        connectPendingExitsTo(c);
-        addPendingExit(c);
-
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
         return null;
     }
 

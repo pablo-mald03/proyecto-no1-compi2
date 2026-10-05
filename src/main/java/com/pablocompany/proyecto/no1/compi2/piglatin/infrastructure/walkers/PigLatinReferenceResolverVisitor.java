@@ -81,7 +81,10 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(ProgramNodePigLatin node) {
+        SymbolScope fileScope = table.getFileScope(context.getFilePath());
+        if (fileScope != null) table.setCurrentScope(fileScope);
         if (node.getBody() != null) node.getBody().accept(this);
+        table.resetToGlobal();
         return null;
     }
 

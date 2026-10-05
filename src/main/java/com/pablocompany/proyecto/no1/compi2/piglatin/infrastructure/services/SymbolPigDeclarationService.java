@@ -68,7 +68,8 @@ public class SymbolPigDeclarationService {
     }
 
     private SymbolKind currentKind() {
-        return table.getCurrentScope().getKind() == SymbolScopeKind.FILE
+        SymbolScopeKind k = table.getCurrentScope().getKind();
+        return (k == SymbolScopeKind.FILE || k == SymbolScopeKind.GLOBAL)
                 ? SymbolKind.GLOBAL_VARIABLE
                 : SymbolKind.LOCAL_VARIABLE;
     }

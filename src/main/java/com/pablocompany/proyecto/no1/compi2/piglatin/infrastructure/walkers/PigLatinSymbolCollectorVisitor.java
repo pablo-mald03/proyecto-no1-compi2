@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
@@ -86,7 +87,10 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(ProgramNodePigLatin node) {
+        SymbolScope fileScope = table.getOrCreateFileScope(context.getFilePath());
+        table.setCurrentScope(fileScope);
         if (node.getBody() != null) node.getBody().accept(this);
+        table.resetToGlobal();
         return null;
     }
 
