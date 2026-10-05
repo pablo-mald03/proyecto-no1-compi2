@@ -6,30 +6,36 @@ options {
 
 /*===*****========*****===== PROGRAM ROOT SECTION ===*****==========*****===*/
 program
-    : class_declaration EOF
+    : class_declaration+ EOF
     ;
 
 /*===*****========*****===== CLASS SECTION ===*****==========*****===*/
 
 class_declaration
-    : access_modifier CLASS ID INIT_BRACE class_member* FINAL_BRACE   # ClassDeclaration
+    : access_modifier CLASS name=ID (EXTENDS parent=ID)? INIT_BRACE class_member* FINAL_BRACE   # ClassDeclaration
     ;
 
 /*------ CLASS MEMBER PRODUCTIONS (CONSTRUCTOR/ATTRIBUTES) ------*/
 class_member
-    : variable_declaration          # ClassFieldMember
+    : field_declaration             # ClassFieldMember
     | constructor_declaration       # ClassConstructorMember
     | method_declaration            # ClassMethodMember
     ;
 
-/*------ CONSTRUCTOR PRODUCTION ------*/
-constructor_declaration
-    : PUBLIC ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # ConstructorDeclaration
+/*------ FIELD PRODUCTION (ENCAPSULATION: MODIFIER REQUIRED) ------*/
+field_declaration
+    : access_modifier type (INIT_BRACKET FINAL_BRACKET)* ID (EQUAL expression)? DOT_COMMA   # FieldDeclaration
     ;
 
-/*------ METHOD PRODUCTION ------*/
+
+/*------ CONSTRUCTOR PRODUCTION ------*/
+constructor_declaration
+    : access_modifier ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # ConstructorDeclaration
+    ;
+
+/*------ METHOD PRODUCTION (OVERRIDE OPTIONAL) ------*/
 method_declaration
-    : PUBLIC type (INIT_BRACKET FINAL_BRACKET)* ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
+    : OVERRIDE? access_modifier type (INIT_BRACKET FINAL_BRACKET)* ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
     ;
 
 /*------ PARAMETER LIST PRODUCTIONS ------*/
@@ -211,10 +217,10 @@ object_values
     : object_values DOT ID                                                  # ObjectPropertyChain
     | object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT         # ObjectMethodChain
     | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
-    | ID INIT_PARENT arguments_list? FINAL_PARENT                          # BaseFunctionCall
+    | ID INIT_PARENT arguments_list? FINAL_PARENT                           # BaseFunctionCall
+    | THIS                                                                  # BaseThis
     | ID                                                                    # BaseIdentifier
     ;
-
 
 
 /*--------****--- ARGUMENT FUNCTION LIST ---****--------*/

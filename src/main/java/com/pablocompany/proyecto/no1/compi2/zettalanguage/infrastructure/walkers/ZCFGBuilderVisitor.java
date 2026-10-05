@@ -34,7 +34,6 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
@@ -106,8 +105,10 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
         cfg.setEntryId(entry.getId());
         currentPendingExits.add(entry);
 
-        if (node.getClassNode() != null) {
-            node.getClassNode().accept(this);
+        if (node.getClassesNode() != null) {
+            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
+                classNode.accept(this);
+            }
         }
 
         CFGNode exit = cfg.createNode("EXIT", NodeType.EXIT, node);
@@ -663,12 +664,6 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
     // ============================================================
     // EXPRESSIONS (no-op)
     // ============================================================
-
-    @Override
-    public Void visit(ExpressionNodeZ node) {
-        return null;
-    }
-
     @Override
     public Void visit(LiteralExpressionNodeZ node) {
         return null;

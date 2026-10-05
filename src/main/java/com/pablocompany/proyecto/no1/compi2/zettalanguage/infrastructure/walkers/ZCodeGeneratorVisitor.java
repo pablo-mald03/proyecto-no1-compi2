@@ -104,7 +104,12 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProgramNodeZ node) {
-        if (node.getClassNode() != null) node.getClassNode().accept(this);
+        if (node.getClassesNode() != null) {
+            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
+                classNode.accept(this);
+            }
+
+        }
         return null;
     }
 
@@ -718,11 +723,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     // ============================================================
     // EXPRESSIONS
     // ============================================================
-
-    @Override
-    public Void visit(ExpressionNodeZ node) {
-        return null;
-    }
 
     @Override
     public Void visit(LiteralExpressionNodeZ node) {

@@ -62,8 +62,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProgramNodeZ node) {
-        if (node.getClassNode() != null) {
-            node.getClassNode().accept(this);
+        if (node.getClassesNode() != null) {
+            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
+                classNode.accept(this);
+            }
+
         }
         return null;
     }
@@ -692,11 +695,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfListNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ExpressionNodeZ node) {
         return null;
     }
 

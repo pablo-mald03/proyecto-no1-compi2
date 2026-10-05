@@ -20,7 +20,9 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.enums.AccessModifierZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.enums.ZDataType;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -77,9 +79,12 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        ClassDeclarationNodeZ classDecl =
-                (ClassDeclarationNodeZ) ctx.class_declaration().accept(this);
-        return new ProgramNodeZ(line, column, classDecl);
+        List<ClassDeclarationNodeZ> classes = new ArrayList<>();
+        for (ZParser.Class_declarationContext cCtx : ctx.class_declaration()) {
+            classes.add((ClassDeclarationNodeZ) cCtx.accept(this));
+        }
+
+        return new ProgramNodeZ(line, column, classes);
     }
 
     @Override
@@ -87,14 +92,16 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        String className = ctx.ID().getText();
+        AccessModifierZ modifier = toModifier(ctx.access_modifier());
+        String className = ctx.name.getText();
+        String parentName = ctx.parent != null ? ctx.parent.getText() : null;
 
         List<ZAstNode> members = new ArrayList<>();
         for (ZParser.Class_memberContext mCtx : ctx.class_member()) {
             members.add(mCtx.accept(this));
         }
 
-        return new ClassDeclarationNodeZ(line, column, className, members);
+        return new ClassDeclarationNodeZ(line, column, className, members, modifier, parentName);
     }
 
     //========================
@@ -103,7 +110,48 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
 
     @Override
     public ZAstNode visitClassFieldMember(ZParser.ClassFieldMemberContext ctx) {
-        return ctx.variable_declaration().accept(this);
+        return ctx.field_declaration().accept(this);
+    }
+
+
+    @Override
+    public ZAstNode visitFieldDeclaration(ZParser.FieldDeclarationContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        AccessModifierZ modifier = toModifier(ctx.access_modifier());
+        TypeNodeZ type = (TypeNodeZ) ctx.type().accept(this);
+        int dimensions = ctx.INIT_BRACKET().size();
+        String name = ctx.ID().getText();
+
+        ExpressionNodeZ initializer = null;
+        if (ctx.expression() != null) {
+            initializer = (ExpressionNodeZ) ctx.expression().accept(this);
+        }
+
+        return new FieldDeclarationNodeZ(line, column, modifier, type, dimensions, name, initializer);
+    }
+
+    @Override
+    public ZAstNode visitBaseThis(ZParser.BaseThisContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+        return new ThisExpressionNodeZ(line, column);
+    }
+
+    @Override
+    public ZAstNode visitModifierPrivate(ZParser.ModifierPrivateContext ctx) {
+        return super.visitModifierPrivate(ctx);
+    }
+
+    @Override
+    public ZAstNode visitModifierPublic(ZParser.ModifierPublicContext ctx) {
+        return super.visitModifierPublic(ctx);
+    }
+
+    @Override
+    public ZAstNode visitModifierProtected(ZParser.ModifierProtectedContext ctx) {
+        return super.visitModifierProtected(ctx);
     }
 
     @Override
@@ -125,6 +173,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
+        AccessModifierZ modifier = toModifier(ctx.access_modifier());
         String name = ctx.ID().getText();
 
         List<ParameterNodeZ> params = new ArrayList<>();
@@ -138,7 +187,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
             body.add(sCtx.accept(this));
         }
 
-        return new ConstructorDeclarationNodeZ(line, column, name, params, body);
+        return new ConstructorDeclarationNodeZ(line, column, name, params, body, modifier);
     }
 
     @Override
@@ -146,6 +195,8 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
+        boolean override = ctx.OVERRIDE() != null;
+        AccessModifierZ modifier = toModifier(ctx.access_modifier());
         TypeNodeZ returnType = (TypeNodeZ) ctx.type().accept(this);
         int returnDimensions = ctx.INIT_BRACKET().size();
         String name = ctx.ID().getText();
@@ -161,9 +212,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
             body.add(sCtx.accept(this));
         }
 
-        return new MethodDeclarationNodeZ(line, column, name, returnType, params, body, returnDimensions);
+        return new MethodDeclarationNodeZ(line, column, name, returnType, params, body,
+                returnDimensions, modifier, override);
     }
-
     //========================
     // PARAMETER NODES
     //========================
@@ -1119,5 +1170,19 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
         return new LiteralExpressionNodeZ(line, column, ZDataType.BOOLEAN, false);
+    }
+
+    /**
+     * Helper to resolve the modifier
+     *
+     */
+    private AccessModifierZ toModifier(ZParser.Access_modifierContext ctx) {
+        if (ctx instanceof ZParser.ModifierPrivateContext) {
+            return AccessModifierZ.PRIVATE;
+        }
+        if (ctx instanceof ZParser.ModifierProtectedContext) {
+            return AccessModifierZ.PROTECTED;
+        }
+        return AccessModifierZ.PUBLIC;
     }
 }

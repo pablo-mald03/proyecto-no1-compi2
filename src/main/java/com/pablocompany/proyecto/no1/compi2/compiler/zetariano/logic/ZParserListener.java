@@ -66,6 +66,18 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitClassMethodMember(ZParser.ClassMethodMemberContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code FieldDeclaration}
+	 * labeled alternative in {@link ZParser#field_declaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterFieldDeclaration(ZParser.FieldDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code FieldDeclaration}
+	 * labeled alternative in {@link ZParser#field_declaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitFieldDeclaration(ZParser.FieldDeclarationContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ConstructorDeclaration}
 	 * labeled alternative in {@link ZParser#constructor_declaration}.
 	 * @param ctx the parse tree
@@ -774,6 +786,18 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitNestedVariable(ZParser.NestedVariableContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code BaseThis}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterBaseThis(ZParser.BaseThisContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BaseThis}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitBaseThis(ZParser.BaseThisContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code ObjectMethodChain}
 	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
@@ -1241,4 +1265,40 @@ public interface ZParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitBoolFalse(ZParser.BoolFalseContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ModifierPrivate}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 */
+	void enterModifierPrivate(ZParser.ModifierPrivateContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ModifierPrivate}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 */
+	void exitModifierPrivate(ZParser.ModifierPrivateContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ModifierPublic}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 */
+	void enterModifierPublic(ZParser.ModifierPublicContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ModifierPublic}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 */
+	void exitModifierPublic(ZParser.ModifierPublicContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ModifierProtected}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 */
+	void enterModifierProtected(ZParser.ModifierProtectedContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ModifierProtected}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 */
+	void exitModifierProtected(ZParser.ModifierProtectedContext ctx);
 }

@@ -31,7 +31,6 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
@@ -59,9 +58,10 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProgramNodeZ node) {
-        if (node.getClassNode() != null) {
-            ClassDeclarationNodeZ classNode = node.getClassNode();
-            classNode.accept(this);
+        if (node.getClassesNode() != null) {
+            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
+                classNode.accept(this);
+            }
 
         }
         return null;
@@ -188,11 +188,6 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ShortlyOperationNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ExpressionNodeZ node) {
         return null;
     }
 
