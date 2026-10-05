@@ -3,15 +3,10 @@ package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.walkers;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
-import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
-import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeY;
@@ -51,6 +46,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.St
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions.FunctionsRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.service.*;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -68,6 +64,13 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     private final EditorContext context;
     private final Map<AstNode, Type> typeAnnotations;
 
+    private final YSemanticErrorReporter reporter;
+    private final YTypeMapperService mapper;
+    private final YSymbolLookupService lookup;
+    private final YTypeCompatibilityService compat;
+    private final YCallResolutionService calls;
+    private final YScopeService scopes;
+
     private Type currentSwitchSelectorType;
     private Type currentReturnType;
 
@@ -77,45 +80,32 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
+
+        this.reporter = new YSemanticErrorReporter(context);
+        this.mapper = new YTypeMapperService();
+        this.lookup = new YSymbolLookupService(table, context);
+        this.compat = new YTypeCompatibilityService(mapper);
+        this.calls = new YCallResolutionService(lookup, compat, reporter);
+        this.scopes = new YScopeService(table, context);
     }
 
     private void annotate(AstNode node, Type type) {
         typeAnnotations.put(node, type);
     }
 
-    private SymbolScope lookupRegisteredScope(YAstNode node) {
-        String key = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        return table.getRegisteredScope(key);
-    }
-
-    // ============================================================
-    // TOP-LEVEL
-    // ============================================================
+    // -------- TOP-LEVEL --------
 
     @Override
     public Type visit(ProgramNodeY node) {
-        if (node.getStructures() != null) {
-            node.getStructures().accept(this);
-        }
-        if (node.getFunctions() != null) {
-            node.getFunctions().accept(this);
-        }
+        if (node.getStructures() != null) node.getStructures().accept(this);
+        if (node.getFunctions() != null) node.getFunctions().accept(this);
         return Type.voidType();
     }
 
     @Override
     public Type visit(StructuresRegionNodeY node) {
         if (node.getStructs() != null) {
-            for (StructDeclarationNodeY struct : node.getStructs()) {
-                if (struct != null) {
-                    struct.accept(this);
-                }
-            }
+            for (StructDeclarationNodeY s : node.getStructs()) if (s != null) s.accept(this);
         }
         return Type.voidType();
     }
@@ -123,42 +113,28 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(FunctionsRegionNodeY node) {
         if (node.getFunctions() != null) {
-            for (YAstNode function : node.getFunctions()) {
-                if (function != null) {
-                    function.accept(this);
-                }
-            }
+            for (YAstNode f : node.getFunctions()) if (f != null) f.accept(this);
         }
         return Type.voidType();
     }
 
-    // ============================================================
-    // STRUCTS
-    // ============================================================
+    // -------- STRUCTS --------
 
     @Override
     public Type visit(StructDeclarationNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        if (node.getAttributes() != null) {
-            node.getAttributes().accept(this);
-        }
-
-        table.setCurrentScope(previousScope);
+        scopes.withScope(node, () -> {
+            if (node.getBody() != null) {
+                node.getBody().accept(this);
+            }
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(StructBodyNodeY node) {
         if (node.getAttributes() != null) {
-            for (StructAttributeNodeY attribute : node.getAttributes()) {
-                if (attribute != null) {
-                    attribute.accept(this);
-                }
+            for (StructAttributeNodeY a : node.getAttributes()) {
+                if (a != null) a.accept(this);
             }
         }
         return Type.voidType();
@@ -167,19 +143,15 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(StructAttributeNodeY node) {
         TypeNodeY typeNode = node.getType();
-
         if (typeNode != null && typeNode.getDataType() == YDataType.CUSTOM) {
             String customName = typeNode.getCustomTypeName();
-            if (customName != null) {
-                Symbol referenced = findStructSymbolGlobal(customName);
-                if (referenced == null) {
-                    reportTypeError(node.getIdentifier(),
-                            "El tipo '" + customName + "' del atributo no existe", node);
-                }
+            if (customName != null && lookup.findType(customName) == null) {
+                reporter.reportTypeError(node.getIdentifier(),
+                        "El tipo '" + customName + "' del atributo no existe", node);
             }
         }
 
-        Type type = mapTypeNode(typeNode);
+        Type type = mapper.mapTypeNode(typeNode);
         if (node.isArray()) {
             int dims = node.getDimensions() != null ? node.getDimensions().size() : 1;
             type = Type.arrayType(type, dims);
@@ -191,9 +163,9 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(StructPropertyNodeY node) {
         if (node.getValue() != null) {
-            Type valueType = node.getValue().accept(this);
-            annotate(node, valueType);
-            return valueType;
+            Type t = node.getValue().accept(this);
+            annotate(node, t);
+            return t;
         }
         return Type.unknown();
     }
@@ -201,11 +173,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(StructLiteralExpressionNodeY node) {
         if (node.getProperties() != null) {
-            for (StructPropertyNodeY property : node.getProperties()) {
-                if (property != null) {
-                    property.accept(this);
-                }
-            }
+            for (StructPropertyNodeY p : node.getProperties()) if (p != null) p.accept(this);
         }
         return Type.unknown();
     }
@@ -213,11 +181,8 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(StructInstanceNodeY node) {
         String structTypeName = node.getStructType();
-
-        Symbol structSymbol = findStructSymbol(structTypeName);
-        if (structSymbol == null) {
-            return Type.unknown();
-        }
+        Symbol structSymbol = lookup.findStruct(structTypeName);
+        if (structSymbol == null) return Type.unknown();
 
         Type structType = Type.customType(structTypeName);
         annotate(node, structType);
@@ -230,29 +195,21 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
             if (properties == null) properties = new ArrayList<>();
 
             if (properties.size() != members.size()) {
-                reportTypeError(
-                        structTypeName,
+                reporter.reportTypeError(structTypeName,
                         "El struct " + structTypeName + " espera " + members.size()
-                                + " valores, pero se dieron " + properties.size(),
-                        node
-                );
+                                + " valores, pero se dieron " + properties.size(), node);
             }
 
-            int minCount = Math.min(properties.size(), members.size());
-            for (int i = 0; i < minCount; i++) {
+            int n = Math.min(properties.size(), members.size());
+            for (int i = 0; i < n; i++) {
                 StructPropertyNodeY prop = properties.get(i);
                 Symbol member = members.get(i);
-
-                Type memberType = mapSymbolToType(member);
+                Type memberType = mapper.mapSymbolToType(member);
                 Type valueType = prop.getValue().accept(this);
-
                 if (!valueType.isAssignableTo(memberType)) {
-                    reportTypeError(
-                            structTypeName,
+                    reporter.reportTypeError(structTypeName,
                             "El valor en posicion " + i + " del struct " + structTypeName
-                                    + " deberia ser " + memberType + ", pero es " + valueType,
-                            prop
-                    );
+                                    + " deberia ser " + memberType + ", pero es " + valueType, prop);
                 }
             }
         }
@@ -260,108 +217,74 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         return structType;
     }
 
-    // ============================================================
-    // FUNCTIONS AND PROCEDURES
-    // ============================================================
+    // -------- FUNCTIONS / PROCEDURES --------
 
     @Override
     public Type visit(FunctionDeclarationNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
+        scopes.withScope(node, () -> {
+            Type previousReturn = currentReturnType;
+            currentReturnType = node.getReturnType() != null
+                    ? mapper.mapTypeNode(node.getReturnType())
+                    : Type.voidType();
 
-        Type previousReturn = currentReturnType;
-        currentReturnType = node.getReturnType() != null
-                ? mapTypeNode(node.getReturnType())
-                : Type.voidType();
-
-        if (node.getReturnType() != null
-                && node.getReturnType().getDataType() == YDataType.CUSTOM) {
-            String customName = node.getReturnType().getCustomTypeName();
-            if (customName != null && findStructSymbol(customName) == null) {
-                reportTypeError(customName,
-                        "El tipo de retorno '" + customName + "' no existe", node);
-            }
-        }
-
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null) {
-                    param.accept(this);
+            if (node.getReturnType() != null
+                    && node.getReturnType().getDataType() == YDataType.CUSTOM) {
+                String customName = node.getReturnType().getCustomTypeName();
+                if (customName != null && lookup.findStruct(customName) == null) {
+                    reporter.reportTypeError(customName,
+                            "El tipo de retorno '" + customName + "' no existe", node);
                 }
             }
-        }
 
-        if (node.getBody() != null) {
-            for (YAstNode statement : node.getBody()) {
-                if (statement != null) {
-                    statement.accept(this);
-                }
+            if (node.getParameters() != null) {
+                for (ParameterNodeY p : node.getParameters()) if (p != null) p.accept(this);
             }
-        }
+            if (node.getBody() != null) {
+                for (YAstNode s : node.getBody()) if (s != null) s.accept(this);
+            }
 
-        currentReturnType = previousReturn;
-        table.setCurrentScope(previousScope);
+            currentReturnType = previousReturn;
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(ProcedureDeclarationNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        Type previousReturn = currentReturnType;
-        currentReturnType = null;
-
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null) param.accept(this);
+        scopes.withScope(node, () -> {
+            Type previousReturn = currentReturnType;
+            currentReturnType = null;
+            if (node.getParameters() != null) {
+                for (ParameterNodeY p : node.getParameters()) if (p != null) p.accept(this);
             }
-        }
-        if (node.getBody() != null) {
-            for (YAstNode statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+            if (node.getBody() != null) {
+                for (YAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
-        }
-
-        currentReturnType = previousReturn;
-        table.setCurrentScope(previousScope);
+            currentReturnType = previousReturn;
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(StructParameterNodeY node) {
         TypeNodeY typeNode = node.getDataType();
-        if (typeNode == null) {
-            return Type.unknown();
-        }
+        if (typeNode == null) return Type.unknown();
 
         if (typeNode.getDataType() == YDataType.CUSTOM) {
             String customName = typeNode.getCustomTypeName();
             if (customName == null) {
-                reportTypeError(node.getIdentifier(),
+                reporter.reportTypeError(node.getIdentifier(),
                         "El parametro '" + node.getIdentifier() + "' tiene un tipo struct sin nombre", node);
                 return Type.unknown();
             }
-
-            Symbol structSymbol = findStructSymbol(customName);
-            if (structSymbol == null) {
-                reportTypeError(node.getIdentifier(),
+            if (lookup.findStruct(customName) == null) {
+                reporter.reportTypeError(node.getIdentifier(),
                         "El tipo struct '" + customName + "' no existe o no es accesible", node);
                 return Type.unknown();
             }
         }
 
-        Type base = mapTypeNode(typeNode);
-        if (node.isArray()) {
-            base = Type.arrayType(base, node.getDimensions());
-        }
-
+        Type base = mapper.mapTypeNode(typeNode);
+        if (node.isArray()) base = Type.arrayType(base, node.getDimensions());
         annotate(node, base);
         return base;
     }
@@ -374,60 +297,51 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(ArrayParameterNodeY node) {
         TypeNodeY typeNode = node.getElementType();
-        if (typeNode == null) {
-            return Type.unknown();
-        }
+        if (typeNode == null) return Type.unknown();
 
         if (typeNode.getDataType() == YDataType.CUSTOM) {
             String customName = typeNode.getCustomTypeName();
-            if (customName != null) {
-                Symbol structSymbol = findStructSymbol(customName);
-                if (structSymbol == null) {
-                    reportTypeError(node.getIdentifier(),
-                            "El tipo struct '" + customName + "' no existe o no es accesible", node);
-                    return Type.unknown();
-                }
+            if (customName != null && lookup.findStruct(customName) == null) {
+                reporter.reportTypeError(node.getIdentifier(),
+                        "El tipo struct '" + customName + "' no existe o no es accesible", node);
+                return Type.unknown();
             }
         }
 
-        Type element = mapTypeNode(typeNode);
+        Type element = mapper.mapTypeNode(typeNode);
         Type arrayType = Type.arrayType(element, node.getDimensions());
         annotate(node, arrayType);
         return arrayType;
     }
 
-    // ============================================================
-    // VARIABLE DECLARATIONS
-    // ============================================================
+    // -------- VARIABLES --------
 
     @Override
     public Type visit(VariableDeclarationNodeY node) {
-        Type declaredType = mapTypeNode(node.getDataType());
-
+        Type declaredType = mapper.mapTypeNode(node.getDataType());
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
             if (!initType.isAssignableTo(declaredType)) {
-                reportTypeError(node.getIdentifier(),
+                reporter.reportTypeError(node.getIdentifier(),
                         "No se puede asignar " + initType + " a variable de tipo " + declaredType, node);
             }
         }
-
         return Type.voidType();
     }
 
     @Override
     public Type visit(ArrayDeclarationNodeY node) {
-        Type elementType = mapTypeNode(node.getDataType());
-        Type arrayType = Type.arrayType(elementType, node.getDimensions().size());
+        Type elementType = mapper.mapTypeNode(node.getDataType());
+        int dims = node.getDimensions() != null ? node.getDimensions().size() : 1;
+        Type arrayType = Type.arrayType(elementType, dims);
 
         if (node.getDimensions() != null) {
             for (ExpressionNodeY dimExpr : node.getDimensions()) {
-                if (dimExpr != null) {
-                    Type dimType = dimExpr.accept(this);
-                    if (!isIntLike(dimType) && !dimType.isUnknown()) {
-                        reportTypeError(node.getIdentifier(),
-                                "Las dimensiones del arreglo deben ser enteras", node);
-                    }
+                if (dimExpr == null) continue;
+                Type dimType = dimExpr.accept(this);
+                if (!compat.isIntLike(dimType) && !dimType.isUnknown()) {
+                    reporter.reportTypeError(node.getIdentifier(),
+                            "Las dimensiones del arreglo deben ser enteras", node);
                 }
             }
         }
@@ -435,57 +349,48 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
             if (!initType.isAssignableTo(arrayType)) {
-                reportTypeError(node.getIdentifier(),
+                reporter.reportTypeError(node.getIdentifier(),
                         "No se puede asignar " + initType + " a arreglo de tipo " + arrayType, node);
             }
         }
-
         return Type.voidType();
     }
 
     @Override
     public Type visit(ForInitDeclarationNodeY node) {
-        Type declaredType = mapTypeNode(node.getType());
-
+        Type declaredType = mapper.mapTypeNode(node.getType());
         if (node.getExpr() != null) {
             Type initType = node.getExpr().accept(this);
             if (!initType.isAssignableTo(declaredType)) {
-                reportTypeError(node.getId(), "No se puede asignar " + initType + " a " + declaredType, node);
+                reporter.reportTypeError(node.getId(),
+                        "No se puede asignar " + initType + " a " + declaredType, node);
             }
         }
-
         return Type.voidType();
     }
 
     @Override
     public Type visit(ForInitAssignmentNodeY node) {
-        Type targetType = node.getId() != null
-                ? node.getId().accept(this)
-                : Type.unknown();
-
-        Type valueType = node.getExpr() != null
-                ? node.getExpr().accept(this)
-                : Type.unknown();
-
+        Type targetType = node.getId() != null ? node.getId().accept(this) : Type.unknown();
+        Type valueType = node.getExpr() != null ? node.getExpr().accept(this) : Type.unknown();
         if (!valueType.isAssignableTo(targetType)) {
-            reportTypeError(targetType.getKind().getTranslation() + " = " + valueType.getKind().getTranslation(),
+            reporter.reportTypeError(targetType.getKind().getTranslation() + " = "
+                            + valueType.getKind().getTranslation(),
                     "No se puede asignar " + valueType + " a " + targetType, node);
         }
-
         return Type.voidType();
     }
 
     @Override
     public Type visit(ForUpdateNodeY node) {
         Type targetType = node.getTarget().accept(this);
-
         switch (node.getOperator()) {
             case INCREMENT:
             case DECREMENT:
             case PREFIX_INCREMENT:
             case PREFIX_DECREMENT:
                 if (!targetType.isNumeric() && !targetType.isUnknown()) {
-                    reportTypeError(targetType.getKind().getTranslation(),
+                    reporter.reportTypeError(targetType.getKind().getTranslation(),
                             "El operador requiere un operando numerico", node);
                 }
                 break;
@@ -493,31 +398,25 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
                 if (node.getValue() != null) {
                     Type valueType = node.getValue().accept(this);
                     if (!valueType.isAssignableTo(targetType)) {
-                        reportTypeError(targetType.getKind().getTranslation() + " = " + valueType.getKind().getTranslation(),
+                        reporter.reportTypeError(targetType.getKind().getTranslation() + " = "
+                                        + valueType.getKind().getTranslation(),
                                 "No se puede asignar " + valueType + " a " + targetType, node);
                     }
                 }
                 break;
         }
-
         return Type.voidType();
     }
 
-    // ============================================================
-    // STATEMENTS
-    // ============================================================
+    // -------- STATEMENTS --------
 
     @Override
     public Type visit(VariableAssignmentNodeY node) {
-        Type targetType = node.getIdentifier() != null
-                ? node.getIdentifier().accept(this)
-                : Type.unknown();
-        Type valueType = node.getExpressionNode() != null
-                ? node.getExpressionNode().accept(this)
-                : Type.unknown();
-
+        Type targetType = node.getIdentifier() != null ? node.getIdentifier().accept(this) : Type.unknown();
+        Type valueType = node.getExpressionNode() != null ? node.getExpressionNode().accept(this) : Type.unknown();
         if (!valueType.isAssignableTo(targetType)) {
-            reportTypeError(targetType.getKind().getTranslation() + " = " + valueType.getKind().getTranslation(),
+            reporter.reportTypeError(targetType.getKind().getTranslation() + " = "
+                            + valueType.getKind().getTranslation(),
                     "No se puede asignar " + valueType + " a " + targetType, node);
         }
         return Type.voidType();
@@ -527,30 +426,23 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     public Type visit(ShortlyOperationNodeY node) {
         Type targetType = node.getTarget().accept(this);
         Type valueType = node.getValue().accept(this);
-
-        if (targetType.isUnknown() || valueType.isUnknown()) {
-            return Type.voidType();
-        }
+        if (targetType.isUnknown() || valueType.isUnknown()) return Type.voidType();
 
         String opLexeme = node.getOperator().getValue();
-
         switch (node.getOperator()) {
             case PLUS_ASSIGN:
-                if (targetType.getKind() == TypeKind.STRING && valueType.getKind() == TypeKind.STRING) {
-                    break;
-                }
-                if (!isNumericOrPromotable(targetType) || !isNumericOrPromotable(valueType)) {
-                    reportTypeError(opLexeme,
+                if (targetType.getKind() == TypeKind.STRING && valueType.getKind() == TypeKind.STRING) break;
+                if (!compat.isNumericOrPromotable(targetType) || !compat.isNumericOrPromotable(valueType)) {
+                    reporter.reportTypeError(opLexeme,
                             "Operador '+=' incompatible entre " + targetType + " y " + valueType, node);
                 }
                 break;
-
             case MINUS_ASSIGN:
             case MULTIPLY_ASSIGN:
             case DIVIDE_ASSIGN:
             case MODULO_ASSIGN:
-                if (!isNumericOrPromotable(targetType) || !isNumericOrPromotable(valueType)) {
-                    reportTypeError(opLexeme,
+                if (!compat.isNumericOrPromotable(targetType) || !compat.isNumericOrPromotable(valueType)) {
+                    reporter.reportTypeError(opLexeme,
                             "Operador '" + opLexeme + "' incompatible entre " + targetType + " y " + valueType, node);
                 }
                 break;
@@ -561,9 +453,9 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(IncrementStatementNodeY node) {
         if (node.getTargetVariable() != null) {
-            Type targetType = node.getTargetVariable().accept(this);
-            if (!targetType.isNumeric() && !targetType.isUnknown()) {
-                reportTypeError(targetType.getKind().getTranslation(),
+            Type t = node.getTargetVariable().accept(this);
+            if (!t.isNumeric() && !t.isUnknown()) {
+                reporter.reportTypeError(t.getKind().getTranslation(),
                         "El operador '++' requiere un operando numerico", node);
             }
         }
@@ -573,9 +465,9 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(DecrementStatementNodeY node) {
         if (node.getTargetVariable() != null) {
-            Type targetType = node.getTargetVariable().accept(this);
-            if (!targetType.isNumeric() && !targetType.isUnknown()) {
-                reportTypeError(targetType.getKind().getTranslation(),
+            Type t = node.getTargetVariable().accept(this);
+            if (!t.isNumeric() && !t.isUnknown()) {
+                reporter.reportTypeError(t.getKind().getTranslation(),
                         "El operador '--' requiere un operando numerico", node);
             }
         }
@@ -585,9 +477,9 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(IncrementPrevStatementNodeY node) {
         if (node.getTargetVariable() != null) {
-            Type targetType = node.getTargetVariable().accept(this);
-            if (!targetType.isNumeric() && !targetType.isUnknown()) {
-                reportTypeError(targetType.getKind().getTranslation(),
+            Type t = node.getTargetVariable().accept(this);
+            if (!t.isNumeric() && !t.isUnknown()) {
+                reporter.reportTypeError(t.getKind().getTranslation(),
                         "El operador '++' requiere un operando numerico", node);
             }
         }
@@ -597,9 +489,9 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(DecrementPrevStatementNodeY node) {
         if (node.getTargetVariable() != null) {
-            Type targetType = node.getTargetVariable().accept(this);
-            if (!targetType.isNumeric() && !targetType.isUnknown()) {
-                reportTypeError(targetType.getKind().getTranslation(),
+            Type t = node.getTargetVariable().accept(this);
+            if (!t.isNumeric() && !t.isUnknown()) {
+                reporter.reportTypeError(t.getKind().getTranslation(),
                         "El operador '--' requiere un operando numerico", node);
             }
         }
@@ -626,22 +518,17 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(ReturnStatementNodeY node) {
         if (currentReturnType == null) {
-            reportTypeError("retornar",
+            reporter.reportTypeError("retornar",
                     "Un procedimiento no puede tener una instruccion 'retornar'", node);
             if (node.getValue() != null) node.getValue().accept(this);
             return Type.voidType();
         }
-
-        Type valueType = node.getValue() != null
-                ? node.getValue().accept(this)
-                : Type.voidType();
-
+        Type valueType = node.getValue() != null ? node.getValue().accept(this) : Type.voidType();
         if (!valueType.isAssignableTo(currentReturnType)) {
-            reportTypeError(valueType.getKind().getTranslation(),
+            reporter.reportTypeError(valueType.getKind().getTranslation(),
                     "El tipo de retorno " + valueType
                             + " no coincide con el tipo declarado " + currentReturnType, node);
         }
-
         return Type.voidType();
     }
 
@@ -655,79 +542,49 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         return Type.voidType();
     }
 
-    // ============================================================
-    // CONTROL FLOW (with scope lookup)
-    // ============================================================
+    // -------- CONTROL FLOW --------
 
     @Override
     public Type visit(IfStatementNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        Type condType = node.getCondition().accept(this);
-        if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.getKind().getTranslation(),
-                    "La condicion del 'if' debe ser booleana", node);
-        }
-        if (node.getThenBody() != null) {
-            for (StatementNodeY statement : node.getThenBody()) {
-                if (statement != null) statement.accept(this);
+        scopes.withScope(node, () -> {
+            Type condType = node.getCondition().accept(this);
+            if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
+                reporter.reportTypeError(condType.getKind().getTranslation(),
+                        "La condicion del 'if' debe ser booleana", node);
             }
-        }
-        if (node.getElseIfs() != null) {
-            for (ElseIfNodeY elseIf : node.getElseIfs()) {
-                if (elseIf != null) elseIf.accept(this);
+            if (node.getThenBody() != null) {
+                for (StatementNodeY s : node.getThenBody()) if (s != null) s.accept(this);
             }
-        }
-        if (node.getElseBlockNode() != null) {
-            node.getElseBlockNode().accept(this);
-        }
-
-        table.setCurrentScope(previousScope);
+            if (node.getElseIfs() != null) {
+                for (ElseIfNodeY e : node.getElseIfs()) if (e != null) e.accept(this);
+            }
+            if (node.getElseBlockNode() != null) node.getElseBlockNode().accept(this);
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(ElseIfNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        Type condType = node.getCondition().accept(this);
-        if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.getKind().getTranslation(),
-                    "La condicion del 'else if' debe ser booleana", node);
-        }
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+        scopes.withScope(node, () -> {
+            Type condType = node.getCondition().accept(this);
+            if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
+                reporter.reportTypeError(condType.getKind().getTranslation(),
+                        "La condicion del 'else if' debe ser booleana", node);
             }
-        }
-
-        table.setCurrentScope(previousScope);
+            if (node.getBody() != null) {
+                for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
+            }
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(ElseBlockNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+        scopes.withScope(node, () -> {
+            if (node.getBody() != null) {
+                for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
             }
-        }
-
-        table.setCurrentScope(previousScope);
+        });
         return Type.voidType();
     }
 
@@ -738,168 +595,107 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
     @Override
     public Type visit(WhileStatementNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        Type condType = node.getCondition().accept(this);
-        if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.getKind().getTranslation(),
-                    "La condicion del 'while' debe ser booleana", node);
-        }
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+        scopes.withScope(node, () -> {
+            Type condType = node.getCondition().accept(this);
+            if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
+                reporter.reportTypeError(condType.getKind().getTranslation(),
+                        "La condicion del 'while' debe ser booleana", node);
             }
-        }
-
-        table.setCurrentScope(previousScope);
+            if (node.getBody() != null) {
+                for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
+            }
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(DoWhileStatementNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+        scopes.withScope(node, () -> {
+            if (node.getBody() != null) {
+                for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
             }
-        }
-        Type condType = node.getCondition().accept(this);
-        if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.getKind().getTranslation(),
-                    "La condicion del 'do-while' debe ser booleana", node);
-        }
-
-        table.setCurrentScope(previousScope);
+            Type condType = node.getCondition().accept(this);
+            if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
+                reporter.reportTypeError(condType.getKind().getTranslation(),
+                        "La condicion del 'do-while' debe ser booleana", node);
+            }
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(ForStatementNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        if (node.getInit() != null) node.getInit().accept(this);
-        if (node.getCondition() != null) {
-            Type condType = node.getCondition().accept(this);
-            if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-                reportTypeError(condType.getKind().getTranslation(),
-                        "La condicion del 'for' debe ser booleana", node);
+        scopes.withScope(node, () -> {
+            if (node.getInit() != null) node.getInit().accept(this);
+            if (node.getCondition() != null) {
+                Type condType = node.getCondition().accept(this);
+                if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
+                    reporter.reportTypeError(condType.getKind().getTranslation(),
+                            "La condicion del 'for' debe ser booleana", node);
+                }
             }
-        }
-        if (node.getUpdate() != null) node.getUpdate().accept(this);
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+            if (node.getUpdate() != null) node.getUpdate().accept(this);
+            if (node.getBody() != null) {
+                for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
             }
-        }
-
-        table.setCurrentScope(previousScope);
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(SwitchStatementNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        Type selectorType = node.getSelector().accept(this);
-        TypeKind k = selectorType.getKind();
-
-        if (k != TypeKind.INT
-                && k != TypeKind.CHAR
-                && k != TypeKind.STRING
-                && !selectorType.isUnknown()) {
-            reportTypeError("switch",
-                    "El selector del 'switch' debe ser entero, caracter o cadena, pero es " + selectorType,
-                    node);
-        }
-
-        Type previousSelector = currentSwitchSelectorType;
-        currentSwitchSelectorType = selectorType;
-
-        if (node.getCases() != null) {
-            for (SwitchCaseNodeY caseNode : node.getCases()) {
-                if (caseNode != null) caseNode.accept(this);
+        scopes.withScope(node, () -> {
+            Type selectorType = node.getSelector().accept(this);
+            TypeKind k = selectorType.getKind();
+            if (k != TypeKind.INT && k != TypeKind.CHAR && k != TypeKind.STRING && !selectorType.isUnknown()) {
+                reporter.reportTypeError("switch",
+                        "El selector del 'switch' debe ser entero, caracter o cadena, pero es " + selectorType,
+                        node);
             }
-        }
-        if (node.getDefaultCase() != null) {
-            node.getDefaultCase().accept(this);
-        }
-
-        currentSwitchSelectorType = previousSelector;
-        table.setCurrentScope(previousScope);
+            Type previousSelector = currentSwitchSelectorType;
+            currentSwitchSelectorType = selectorType;
+            if (node.getCases() != null) {
+                for (SwitchCaseNodeY c : node.getCases()) if (c != null) c.accept(this);
+            }
+            if (node.getDefaultCase() != null) node.getDefaultCase().accept(this);
+            currentSwitchSelectorType = previousSelector;
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(SwitchCaseNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        if (node.getValue() != null) {
-            Type caseValueType = node.getValue().accept(this);
-
-            if (currentSwitchSelectorType != null
-                    && !currentSwitchSelectorType.isUnknown()
-                    && !caseValueType.isUnknown()) {
-                if (!caseValueType.isAssignableTo(currentSwitchSelectorType)) {
-                    reportTypeError("case",
+        scopes.withScope(node, () -> {
+            if (node.getValue() != null) {
+                Type caseValueType = node.getValue().accept(this);
+                if (currentSwitchSelectorType != null
+                        && !currentSwitchSelectorType.isUnknown()
+                        && !caseValueType.isUnknown()
+                        && !caseValueType.isAssignableTo(currentSwitchSelectorType)) {
+                    reporter.reportTypeError("case",
                             "El valor del 'case' tiene tipo " + caseValueType
                                     + ", incompatible con el selector " + currentSwitchSelectorType,
                             node);
                 }
             }
-        }
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+            if (node.getBody() != null) {
+                for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
             }
-        }
-
-        table.setCurrentScope(previousScope);
+        });
         return Type.voidType();
     }
 
     @Override
     public Type visit(DefaultCaseNodeY node) {
-        SymbolScope previousScope = table.getCurrentScope();
-        SymbolScope scope = lookupRegisteredScope(node);
-        if (scope != null) {
-            table.setCurrentScope(scope);
-        }
-
-        if (node.getBody() != null) {
-            for (StatementNodeY statement : node.getBody()) {
-                if (statement != null) statement.accept(this);
+        scopes.withScope(node, () -> {
+            if (node.getBody() != null) {
+                for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
             }
-        }
-
-        table.setCurrentScope(previousScope);
+        });
         return Type.voidType();
     }
 
-    // ============================================================
-    // EXPRESSIONS
-    // ============================================================
+    // -------- EXPRESSIONS --------
 
     @Override
     public Type visit(ExpressionNodeY node) {
@@ -908,32 +704,26 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
     @Override
     public Type visit(LiteralExpressionNodeY node) {
-        Type type = mapYDataType(node.getValueType(), null);
-        annotate(node, type);
-        return type;
+        Type t = mapper.mapYDataType(node.getValueType(), null);
+        annotate(node, t);
+        return t;
     }
 
     @Override
     public Type visit(IdentifierExpressionNodeY node) {
-        String name = node.getIdentifier();
-        List<Symbol> found = table.resolveByName(name);
-        if (found.isEmpty()) {
-            return Type.unknown();
-        }
+        List<Symbol> found = lookup.resolveByName(node.getIdentifier());
+        if (found.isEmpty()) return Type.unknown();
 
-        Symbol symbol = found.get(0);
-        Type type = mapSymbolToType(symbol);
-        annotate(node, type);
-        return type;
+        Type t = mapper.mapSymbolToType(found.get(0));
+        annotate(node, t);
+        return t;
     }
 
     @Override
     public Type visit(BinaryExpressionNodeY node) {
         Type left = node.getLeft().accept(this);
         Type right = node.getRight().accept(this);
-        BinaryOperator op = node.getOperator();
-
-        Type result = inferBinaryType(left, right, op, node);
+        Type result = compat.inferBinaryType(left, right, node.getOperator(), reporter, node);
         annotate(node, result);
         return result;
     }
@@ -942,31 +732,25 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     public Type visit(UnaryExpressionNodeY node) {
         Type operandType = node.getExpressionNode().accept(this);
         UnaryOperator op = node.getOperator();
-
         Type result;
         switch (op) {
             case NEGATE:
                 if (!operandType.isNumeric() && !operandType.isUnknown()) {
-                    reportTypeError(op.getValue() + " " + operandType.getKind().getTranslation(),
+                    reporter.reportTypeError(op.getValue() + " " + operandType.getKind().getTranslation(),
                             "El operador '-' requiere un operando numerico", node);
                     result = Type.unknown();
-                } else {
-                    result = operandType;
-                }
+                } else result = operandType;
                 break;
             case NOT:
                 if (operandType.getKind() != TypeKind.BOOLEAN && !operandType.isUnknown()) {
-                    reportTypeError(op.getValue() + " " + operandType.getKind().getTranslation(),
+                    reporter.reportTypeError(op.getValue() + " " + operandType.getKind().getTranslation(),
                             "El operador '!' requiere un operando booleano", node);
                     result = Type.unknown();
-                } else {
-                    result = Type.booleanType();
-                }
+                } else result = Type.booleanType();
                 break;
             default:
                 result = Type.unknown();
         }
-
         annotate(node, result);
         return result;
     }
@@ -976,120 +760,58 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         List<Type> argTypes = new ArrayList<>();
         if (node.getArguments() != null) {
             for (ExpressionNodeY arg : node.getArguments()) {
-                Type argType = arg != null ? arg.accept(this) : Type.unknown();
-                argTypes.add(argType);
+                argTypes.add(arg != null ? arg.accept(this) : Type.unknown());
             }
         }
-
-        String name = node.getFunctionName();
-        List<Symbol> candidates = table.resolveByName(name);
-
-        List<Symbol> functions = new ArrayList<>();
-        for (Symbol s : candidates) {
-            if (s.getKind() == SymbolKind.FUNCTION) {
-                functions.add(s);
-            }
-        }
-
-        if (functions.isEmpty()) {
-            return Type.unknown();
-        }
-
-        List<Symbol> arityMatches = new ArrayList<>();
-        for (Symbol f : functions) {
-            if (f.getParameterTypes().size() == argTypes.size()) {
-                arityMatches.add(f);
-            }
-        }
-
-        if (arityMatches.isEmpty()) {
-            reportTypeError(name,
-                    "No existe la funcion '" + name + "' con " + argTypes.size()
-                            + " argumento(s)", node);
-            return Type.unknown();
-        }
-
-        List<Symbol> compatible = new ArrayList<>();
-        for (Symbol f : arityMatches) {
-            if (isCallCompatible(f, argTypes)) {
-                compatible.add(f);
-            }
-        }
-
-        Symbol chosen;
-        if (compatible.size() == 1) {
-            chosen = compatible.get(0);
-        } else if (compatible.size() > 1) {
-            reportTypeError(name,
-                    "Llamada ambigua a '" + name + "': hay " + compatible.size()
-                            + " sobrecargas compatibles", node);
-            return Type.unknown();
-        } else {
-            reportTypeError(name,
-                    "No existe una sobrecarga de '" + name + "' compatible con los argumentos dados",
-                    node);
-            return Type.unknown();
-        }
-
-        Type returnType = resolveSymbolReturnType(chosen);
-        annotate(node, returnType);
-        return returnType;
+        Type result = calls.resolve(node, argTypes);
+        annotate(node, result);
+        return result;
     }
 
     @Override
     public Type visit(ArrayCallExpressionNodeY node) {
-        String arrayName = node.getArrayName();
-        List<Symbol> found = table.resolveByName(arrayName);
-        if (found.isEmpty()) {
-            return Type.unknown();
-        }
+        List<Symbol> found = lookup.resolveByName(node.getArrayName());
+        if (found.isEmpty()) return Type.unknown();
 
-        Type arrayType = mapSymbolToType(found.get(0));
+        Type arrayType = mapper.mapSymbolToType(found.get(0));
         if (!arrayType.isArray()) {
-            reportTypeError(arrayName, "'" + arrayName + "' no es un arreglo", node);
+            reporter.reportTypeError(node.getArrayName(),
+                    "'" + node.getArrayName() + "' no es un arreglo", node);
             return Type.unknown();
         }
 
         if (node.getIndexExpression() != null) {
             Type indexType = node.getIndexExpression().accept(this);
-            if (!isIntLike(indexType) && !indexType.isUnknown()) {
-                reportTypeError(arrayName, "El indice de un arreglo debe ser entero", node);
+            if (!compat.isIntLike(indexType) && !indexType.isUnknown()) {
+                reporter.reportTypeError(node.getArrayName(),
+                        "El indice de un arreglo debe ser entero", node);
             }
         }
 
         Type elementType = arrayType.getElementType();
         int dims = arrayType.getDimensions() - 1;
-        Type result = dims > 0
-                ? Type.arrayType(elementType, dims)
-                : elementType;
-
+        Type result = dims > 0 ? Type.arrayType(elementType, dims) : elementType;
         annotate(node, result);
         return result;
     }
 
     @Override
     public Type visit(ArrayInitExpressionNodeY node) {
-        if (node.getElements() == null || node.getElements().isEmpty()) {
-            return Type.unknown();
-        }
+        if (node.getElements() == null || node.getElements().isEmpty()) return Type.unknown();
 
         Type firstType = node.getElements().get(0).accept(this);
         if (firstType.isUnknown()) {
-            for (int i = 1; i < node.getElements().size(); i++) {
-                node.getElements().get(i).accept(this);
-            }
+            for (int i = 1; i < node.getElements().size(); i++) node.getElements().get(i).accept(this);
             return Type.unknown();
         }
-
         for (int i = 1; i < node.getElements().size(); i++) {
             Type elemType = node.getElements().get(i).accept(this);
             if (!elemType.isAssignableTo(firstType) && !elemType.isUnknown()) {
-                reportTypeError("",
+                reporter.reportTypeError("",
                         "El elemento en posicion " + i + " tiene tipo " + elemType
                                 + ", incompatible con el primer elemento " + firstType, node);
             }
         }
-
         Type result = Type.arrayType(firstType, 1);
         annotate(node, result);
         return result;
@@ -1098,42 +820,33 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     @Override
     public Type visit(ArrayValuesNodeY node) {
         if (node.getValues() != null) {
-            for (ExpressionNodeY value : node.getValues()) {
-                if (value != null) {
-                    value.accept(this);
-                }
-            }
+            for (ExpressionNodeY v : node.getValues()) if (v != null) v.accept(this);
         }
         return Type.voidType();
     }
 
     @Override
     public Type visit(PropertyAccessExpressionNodeY node) {
-        if (node.getTarget() == null) {
-            return Type.unknown();
-        }
+        if (node.getTarget() == null) return Type.unknown();
 
         Type targetType = node.getTarget().accept(this);
-
-        if (targetType.isUnknown()) {
-            return Type.unknown();
-        }
+        if (targetType.isUnknown()) return Type.unknown();
 
         if (!targetType.isCustom()) {
-            reportTypeError(node.getPropertyName(),
+            reporter.reportTypeError(node.getPropertyName(),
                     "El target de '" + node.getPropertyName() + "' no es un struct", node);
             return Type.unknown();
         }
 
-        Symbol member = findMemberInStruct(targetType, node.getPropertyName());
+        Symbol member = lookup.findMemberInStruct(targetType, node.getPropertyName());
         if (member == null) {
-            reportTypeError(node.getPropertyName(),
+            reporter.reportTypeError(node.getPropertyName(),
                     "El struct " + targetType.getCustomName()
                             + " no tiene un atributo '" + node.getPropertyName() + "'", node);
             return Type.unknown();
         }
 
-        Type memberType = mapSymbolToType(member);
+        Type memberType = mapper.mapSymbolToType(member);
         annotate(node, memberType);
         return memberType;
     }
@@ -1144,7 +857,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
         if (!targetType.isArray()) {
             if (!targetType.isUnknown()) {
-                reportTypeError("[]",
+                reporter.reportTypeError("[]",
                         "El target del acceso por indice no es un arreglo", node);
             }
             return Type.unknown();
@@ -1152,31 +865,23 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
         if (node.getIndex() != null) {
             Type indexType = node.getIndex().accept(this);
-            if (!isIntLike(indexType) && !indexType.isUnknown()) {
-                reportTypeError("[]",
+            if (!compat.isIntLike(indexType) && !indexType.isUnknown()) {
+                reporter.reportTypeError("[]",
                         "El indice de un arreglo debe ser entero", node);
             }
         }
 
         Type elementType = targetType.getElementType();
         int dims = targetType.getDimensions() - 1;
-        Type result = dims > 0
-                ? Type.arrayType(elementType, dims)
-                : elementType;
-
+        Type result = dims > 0 ? Type.arrayType(elementType, dims) : elementType;
         annotate(node, result);
         return result;
     }
 
-
     @Override
     public Type visit(ArgumentsNodeY node) {
         if (node.getArguments() != null) {
-            for (ExpressionNodeY arg : node.getArguments()) {
-                if (arg != null) {
-                    arg.accept(this);
-                }
-            }
+            for (ExpressionNodeY arg : node.getArguments()) if (arg != null) arg.accept(this);
         }
         return Type.voidType();
     }
@@ -1185,343 +890,4 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     public Type visit(TypeNodeY node) {
         return Type.unknown();
     }
-
-    /**
-     * Helper for resolve symbol
-     *
-     */
-    private Type mapSymbolToType(Symbol symbol) {
-        if (symbol == null) return Type.unknown();
-
-        String typeName = symbol.getType();
-        if (typeName == null) {
-            return Type.unknown();
-        }
-
-        Type base = resolveTypeName(typeName);
-        if (base == null) {
-            return Type.unknown();
-        }
-
-        int dims = symbol.getDimensions();
-        if (dims > 0) {
-            return Type.arrayType(base, dims);
-        }
-        return base;
-    }
-
-
-    /**
-     * Helper to resolve typename
-     *
-     */
-    private Type resolveTypeName(String typeName) {
-        if (typeName == null) return Type.unknown();
-
-        int dims = 0;
-        String baseName = typeName;
-        while (baseName.endsWith("[]")) {
-            dims++;
-            baseName = baseName.substring(0, baseName.length() - 2);
-        }
-
-        Type base = resolveBaseTypeName(baseName);
-        if (dims > 0) {
-            return Type.arrayType(base, dims);
-        }
-        return base;
-    }
-
-    /**
-     * Resolve base typename helper
-     *
-     */
-    private Type resolveBaseTypeName(String typeName) {
-        if (typeName == null) return Type.unknown();
-        return switch (typeName) {
-            case "numerus" -> Type.intType();
-            case "decimalis" -> Type.floatType();
-            case "textum" -> Type.stringType();
-            case "littera" -> Type.charType();
-
-            case "entero" -> Type.intType();
-            case "flotante" -> Type.floatType();
-            case "cadena" -> Type.stringType();
-            case "caracter" -> Type.charType();
-            case "bool" -> Type.booleanType();
-
-            case "int" -> Type.intType();
-            case "double" -> Type.floatType();
-            case "char" -> Type.charType();
-            case "boolean" -> Type.booleanType();
-            case "String" -> Type.stringType();
-
-            case "void" -> Type.voidType();
-            default -> Type.customType(typeName);
-        };
-    }
-
-    /**
-     * Helper to report a new error
-     *
-     */
-    private void reportTypeError(String lexeme, String description, YAstNode node) {
-        CompilerError error = new CompilerError();
-        error.setLexeme(lexeme);
-        error.setLine(node.getLine());
-        error.setColumn(node.getColumn());
-        error.setErrorType(ErrorType.SEMANTIC);
-        error.setDescription(description);
-        error.setFilePath(context.getFilePath());
-        error.setFileName(context.getFileName());
-        context.getSemanticErrors().add(error);
-    }
-
-
-    /**
-     * Inferrer helper method
-     *
-     */
-
-    private Type inferBinaryType(Type left, Type right, BinaryOperator op, BinaryExpressionNodeY node) {
-        if (left.isUnknown() || right.isUnknown()) {
-            return Type.unknown();
-        }
-
-        String opLexeme = op.toString();
-
-        switch (op) {
-            case PLUS:
-                if (left.getKind() == TypeKind.STRING || right.getKind() == TypeKind.STRING) {
-                    return Type.stringType();
-                }
-                if (isNumericOrPromotable(left) && isNumericOrPromotable(right)) {
-                    return promoteNumeric(left, right);
-                }
-                reportTypeError(opLexeme,
-                        "Operador '+' incompatible entre " + left + " y " + right, node);
-                return Type.unknown();
-
-            case MINUS:
-            case MULTIPLICATION:
-            case DIVIDE:
-            case MODULE:
-                if (isNumericOrPromotable(left) && isNumericOrPromotable(right)) {
-                    return promoteNumeric(left, right);
-                }
-                reportTypeError(opLexeme,
-                        "Operador aritmetico incompatible entre " + left + " y " + right, node);
-                return Type.unknown();
-
-            case LESS:
-            case GREATER:
-            case LESS_EQUALS:
-            case GREATER_EQUALS:
-                if (isNumericOrPromotable(left) && isNumericOrPromotable(right)) {
-                    return Type.booleanType();
-                }
-                reportTypeError(opLexeme,
-                        "Operador relacional incompatible entre " + left + " y " + right, node);
-                return Type.unknown();
-
-            case EQUALS:
-            case DIFFERENT:
-                if (left.isCompatibleWith(right)
-                        || (isNumericOrPromotable(left) && isNumericOrPromotable(right))) {
-                    return Type.booleanType();
-                }
-                reportTypeError(opLexeme,
-                        "Operador de igualdad incompatible entre " + left + " y " + right, node);
-                return Type.unknown();
-
-            case AND:
-            case OR:
-                if (left.getKind() == TypeKind.BOOLEAN && right.getKind() == TypeKind.BOOLEAN) {
-                    return Type.booleanType();
-                }
-                reportTypeError(opLexeme,
-                        "Operador logico incompatible entre " + left + " y " + right, node);
-                return Type.unknown();
-
-            default:
-                return Type.unknown();
-        }
-    }
-
-    /**
-     * Principal mapper for data type
-     *
-     */
-    private Type mapYDataType(YDataType dt, String customName) {
-        if (dt == null) return Type.unknown();
-        switch (dt) {
-            case INT:
-                return Type.intType();
-            case FLOAT:
-                return Type.floatType();
-            case STRING:
-                return Type.stringType();
-            case CHAR:
-                return Type.charType();
-            case BOOLEAN:
-                return Type.booleanType();
-            case CUSTOM:
-                return Type.customType(customName);
-            default:
-                return Type.unknown();
-        }
-    }
-
-    /**
-     * Helper for typenode
-     *
-     */
-    private Type mapTypeNode(TypeNodeY typeNode) {
-        if (typeNode == null) return Type.unknown();
-        return mapYDataType(typeNode.getDataType(), typeNode.getCustomTypeName());
-    }
-
-    /**
-     * Helper to find the struct symbol
-     *
-     */
-
-    private Symbol findStructSymbol(String structName) {
-        if (structName == null) return null;
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), structName);
-        for (Symbol symbol : found) {
-            if (symbol.getKind() == SymbolKind.STRUCT) {
-                return symbol;
-            }
-        }
-        return null;
-    }
-
-    private Symbol findMemberInStruct(Type structType, String memberName) {
-        if (structType == null || !structType.isCustom()) return null;
-        if (memberName == null) return null;
-
-        Symbol structSymbol = findStructSymbol(structType.getCustomName());
-        if (structSymbol == null) return null;
-
-        List<Symbol> members = structSymbol.getMembers();
-        if (members == null) return null;
-
-        for (Symbol member : members) {
-            if (member.getName().equals(memberName)) {
-                return member;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Method to verify if tis numeric
-     *
-     */
-    private boolean isNumericOrPromotable(Type t) {
-        if (t == null) return false;
-        TypeKind k = t.getKind();
-        return k == TypeKind.INT
-                || k == TypeKind.FLOAT
-                || k == TypeKind.CHAR
-                || k == TypeKind.BOOLEAN;
-    }
-
-    /**
-     * Helper to promote the numeric expressions
-     *
-     */
-    private Type promoteNumeric(Type a, Type b) {
-        if (a.getKind() == TypeKind.FLOAT || b.getKind() == TypeKind.FLOAT) {
-            return Type.floatType();
-        }
-        return Type.intType();
-    }
-
-    /**
-     * Call compatibility helper
-     *
-     */
-    private boolean isCallCompatible(Symbol function, List<Type> argTypes) {
-        List<String> paramTypes = function.getParameterTypes();
-
-        if (paramTypes.size() != argTypes.size()) {
-            return false;
-        }
-
-        for (int i = 0; i < paramTypes.size(); i++) {
-            Type paramType = resolveTypeName(paramTypes.get(i));
-            Type argType = argTypes.get(i);
-
-            if (argType.isUnknown()) {
-                continue;
-            }
-
-            if (!argType.isAssignableTo(paramType)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private Type resolveSymbolReturnType(Symbol function) {
-        String rt = function.getReturnType();
-        if (rt == null || "void".equals(rt)) {
-            return Type.voidType();
-        }
-        return resolveTypeName(rt);
-    }
-
-    private Symbol findStructSymbolGlobal(String structName) {
-        if (structName == null) return null;
-
-        Symbol local = findStructSymbol(structName);
-        if (local != null) return local;
-
-        for (SymbolScope fileScope : table.getFileScopes().values()) {
-            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
-                for (Symbol symbol : bucket) {
-                    if (symbol.getKind() == SymbolKind.STRUCT
-                            && symbol.getName().equals(structName)) {
-                        return symbol;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private Symbol findTypeSymbolGlobal(String typeName) {
-        if (typeName == null) return null;
-
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), typeName);
-        for (Symbol s : found) {
-            if (s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT) {
-                return s;
-            }
-        }
-
-        for (SymbolScope fileScope : table.getFileScopes().values()) {
-            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
-                for (Symbol symbol : bucket) {
-                    if ((symbol.getKind() == SymbolKind.CLASS || symbol.getKind() == SymbolKind.STRUCT)
-                            && symbol.getName().equals(typeName)) {
-                        return symbol;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-
-    private boolean isIntLike(Type t) {
-        if (t == null) return false;
-        TypeKind k = t.getKind();
-        return k == TypeKind.INT
-                || k == TypeKind.CHAR
-                || k == TypeKind.BOOLEAN;
-    }
-
 }
