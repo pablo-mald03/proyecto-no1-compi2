@@ -10,6 +10,7 @@ public enum DataType {
     BOOLEAN("bool"),
     VOID("actio"),
     CUSTOM("custom"),
+    NULL("null"),
     OBJECT("objeto");
 
     private final String operation;

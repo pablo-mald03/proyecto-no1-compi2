@@ -93,14 +93,11 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ClassDeclarationNodeZ node) {
-        // 1) Declare the class symbol.
         declarations.declareClass(node.getClassName(), node);
         this.currentClassName = node.getClassName();
 
-        // 2) Open a fresh member collection for this class.
         classMembers.begin();
 
-        // 3) Enter the class scope.
         scopes.registerScope(node, SymbolScopeKind.CLASS);
         try {
             if (node.getMembers() != null) {
@@ -112,15 +109,11 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
             table.exitScope();
         }
 
-        // 4) Attach the collected members to the class symbol.
-        //    (The class symbol is the one we just declared in the FILE scope.
-        //     We look it up again because declareClass returned it but we don't
-        //     keep it here on purpose: the service owns the lifecycle.)
         Symbol classSymbol = lookupClass(node.getClassName());
         if (classSymbol != null) {
             classSymbol.setMembers(classMembers.end());
         } else {
-            classMembers.end();   // discard
+            classMembers.end();
         }
 
         this.currentClassName = null;
@@ -133,7 +126,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
-        // 1) Build the parameter type list.
         List<String> paramTypes = new ArrayList<>();
         if (node.getParams() != null) {
             for (ParameterNodeZ p : node.getParams()) {
@@ -148,14 +140,11 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
                 ? resolveTypeName(node.getType())
                 : "void";
 
-        // 2) Declare the method symbol.
         Symbol method = declarations.declareMethod(
                 node.getName(), paramTypes, returnType, node);
 
-        // 3) Register it as a member of the current class.
         if (method != null) classMembers.add(method);
 
-        // 4) Enter the method scope.
         scopes.registerScope(node, SymbolScopeKind.METHOD);
         try {
             if (node.getParams() != null) {
@@ -239,7 +228,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         int dims = node.getDimensions();
         declarations.declareVariable(node.getIdentifier(), typeName, dims, node);
 
-        // If we just declared an attribute inside a class, register it as a member.
         if (isInClassScope()) {
             Symbol attr = lookupInCurrentScope(node.getIdentifier());
             if (attr != null) classMembers.add(attr);

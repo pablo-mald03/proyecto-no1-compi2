@@ -366,6 +366,27 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVariableDeclaration(PigLatinParser.VariableDeclarationContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ObjectDeclaration}
+	 * labeled alternative in {@link PigLatinParser#variable_declaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectDeclaration(PigLatinParser.ObjectDeclarationContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ObjectInitNew}
+	 * labeled alternative in {@link PigLatinParser#object_initializer}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectInitNew(PigLatinParser.ObjectInitNewContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ObjectInitNull}
+	 * labeled alternative in {@link PigLatinParser#object_initializer}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectInitNull(PigLatinParser.ObjectInitNullContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code StructAssignment}
 	 * labeled alternative in {@link PigLatinParser#assignment}.
 	 * @param ctx the parse tree
@@ -616,6 +637,13 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitValBool(PigLatinParser.ValBoolContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ValNull}
+	 * labeled alternative in {@link PigLatinParser#normal_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitValNull(PigLatinParser.ValNullContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ValStructNestValue}
 	 * labeled alternative in {@link PigLatinParser#normal_values}.

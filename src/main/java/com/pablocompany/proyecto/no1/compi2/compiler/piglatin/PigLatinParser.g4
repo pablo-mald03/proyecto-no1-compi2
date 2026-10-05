@@ -164,7 +164,14 @@ declaration
 /*-----VARIABLE PRODUCTIONS-----*/
 
 variable_declaration
-    : ESTO ID TWO_POINTS variable_type? expression DOT_COMMA         # VariableDeclaration
+    : ESTO ID TWO_POINTS variable_type? expression DOT_COMMA                # VariableDeclaration
+    | ESTO ID TWO_POINTS object_initializer TWO_POINTS ID DOT_COMMA         # ObjectDeclaration
+    ;
+
+/*------ OBJECT INITIALIZER (INSTANCIA DIRECTA O NULL, TIPO EXPLICITO AL FINAL) ------*/
+object_initializer
+    : NOVUS ID INIT_PARENT arguments_list? FINAL_PARENT   # ObjectInitNew
+    | NULL                                                # ObjectInitNull
     ;
 
 /*-----ASSIGNMENT PRODUCTIONS-----*/
@@ -251,6 +258,7 @@ normal_values
     | DECIMAL                                           # ValDecimal
     | INT                                               # ValInt
     | boolean_values                                    # ValBool
+    | NULL                                              # ValNull
     | object_values                                     # ValStructNestValue
     | array_initialization                              # ValArrayInitialLiteral
     | NOVUS ID INIT_PARENT arguments_list? FINAL_PARENT # ValNewInstance

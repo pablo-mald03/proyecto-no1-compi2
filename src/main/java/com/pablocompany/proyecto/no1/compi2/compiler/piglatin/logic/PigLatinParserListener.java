@@ -616,6 +616,42 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitVariableDeclaration(PigLatinParser.VariableDeclarationContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ObjectDeclaration}
+	 * labeled alternative in {@link PigLatinParser#variable_declaration}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectDeclaration(PigLatinParser.ObjectDeclarationContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectDeclaration}
+	 * labeled alternative in {@link PigLatinParser#variable_declaration}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectDeclaration(PigLatinParser.ObjectDeclarationContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ObjectInitNew}
+	 * labeled alternative in {@link PigLatinParser#object_initializer}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectInitNew(PigLatinParser.ObjectInitNewContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectInitNew}
+	 * labeled alternative in {@link PigLatinParser#object_initializer}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectInitNew(PigLatinParser.ObjectInitNewContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ObjectInitNull}
+	 * labeled alternative in {@link PigLatinParser#object_initializer}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectInitNull(PigLatinParser.ObjectInitNullContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectInitNull}
+	 * labeled alternative in {@link PigLatinParser#object_initializer}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectInitNull(PigLatinParser.ObjectInitNullContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code StructAssignment}
 	 * labeled alternative in {@link PigLatinParser#assignment}.
 	 * @param ctx the parse tree
@@ -1045,6 +1081,18 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitValBool(PigLatinParser.ValBoolContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code ValNull}
+	 * labeled alternative in {@link PigLatinParser#normal_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterValNull(PigLatinParser.ValNullContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ValNull}
+	 * labeled alternative in {@link PigLatinParser#normal_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitValNull(PigLatinParser.ValNullContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ValStructNestValue}
 	 * labeled alternative in {@link PigLatinParser#normal_values}.
