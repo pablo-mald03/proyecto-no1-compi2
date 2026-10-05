@@ -689,8 +689,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeZ node) {
-        // Minimal support: evaluate selector, then each case as a labeled block.
-        // (Full switch lowering is a TODO; for now emits case bodies in order.)
         if (node.getSelector() != null) {
             exprToString(node.getSelector());
         }
@@ -952,8 +950,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
-        // novus int[3][4] etc. For now delegate to a simple linear reservation.
-        // TODO: dynamic dims + heap arrays when needed.
         return null;
     }
 

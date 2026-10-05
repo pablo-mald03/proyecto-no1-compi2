@@ -62,8 +62,6 @@ public class SymbolScope {
         return bucket.get(0);
     }
 
-
-    //TODO
     /**
      * Deep search: this scope + all descendants.
      */

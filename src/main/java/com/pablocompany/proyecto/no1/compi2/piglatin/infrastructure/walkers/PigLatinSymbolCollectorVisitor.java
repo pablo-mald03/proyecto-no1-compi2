@@ -1,13 +1,9 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
-import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
-import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
@@ -46,6 +42,7 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesSectionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.services.*;
 import lombok.Getter;
 
 import java.util.List;
@@ -62,404 +59,256 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
     private final EditorContext context;
     private final Map<String, String> importResolutionMap;
 
+    private final ScopePigResolutionService scopes;
+    private final TypePigResolutionService types;
+    private final SemanticPigErrorReporterService reporter;
+    private final SymbolPigDeclarationService declarations;
+    private final SymbolPigMemberCollectorService members;
+    private final ImportPigResolutionService imports;
+
     public PigLatinSymbolCollectorVisitor(GlobalSymbolTable table,
                                           EditorContext context,
                                           Map<String, String> importResolutionMap) {
         this.table = table;
         this.context = context;
         this.importResolutionMap = importResolutionMap;
+
+        this.reporter = new SemanticPigErrorReporterService(context);
+        this.types = new TypePigResolutionService();
+        this.scopes = new ScopePigResolutionService(table, context);
+        this.members = new SymbolPigMemberCollectorService(context, types);
+        this.declarations = new SymbolPigDeclarationService(table, context, reporter, types);
+        this.imports = new ImportPigResolutionService(
+                table, context, reporter, new SymbolPigLookupService(table));
     }
 
-    // ============================================================
-    // TOP-LEVEL
-    // ============================================================
+    // ---------------- TOP LEVEL ----------------
 
     @Override
     public Void visit(ProgramNodePigLatin node) {
-        if (node.getBody() != null) {
-            node.getBody().accept(this);
-        }
+        if (node.getBody() != null) node.getBody().accept(this);
         return null;
     }
 
     @Override
     public Void visit(BodyNodePigLatin node) {
         if (node.getImports() != null) {
-            for (ImportNodePigLatin importNode : node.getImports()) {
-                if (importNode != null) {
-                    importNode.accept(this);
-                }
-            }
+            for (ImportNodePigLatin i : node.getImports()) if (i != null) i.accept(this);
         }
-        if (node.getVariablesSection() != null) {
-            node.getVariablesSection().accept(this);
-        }
-
-        if (node.getMaiorSection() != null) {
-            node.getMaiorSection().accept(this);
-        }
+        if (node.getVariablesSection() != null) node.getVariablesSection().accept(this);
+        if (node.getMaiorSection() != null) node.getMaiorSection().accept(this);
         return null;
     }
 
     @Override
     public Void visit(MaiorSectionNodePigLatin node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.FUNCTION, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getStatements() != null) {
-            node.getStatements().accept(this);
+        scopes.registerScope(node, SymbolScopeKind.FUNCTION);
+        try {
+            if (node.getStatements() != null) node.getStatements().accept(this);
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
-    // ============================================================
-    // IMPORTS
-    // ============================================================
+    // ---------------- IMPORTS ----------------
 
     @Override
     public Void visit(ImportNodePigLatin node) {
         String rawPath = node.getImportPath();
-        String logicalName = extractLogicalName(rawPath);
+        String logicalName = imports.extractLogicalName(rawPath);
         String resolvedPath = importResolutionMap != null
-                ? importResolutionMap.get(rawPath)
-                : null;
+                ? importResolutionMap.get(rawPath) : null;
 
-        Symbol importSymbol = buildSymbol(
-                logicalName,
-                SymbolKind.IMPORT,
-                resolvedPath,
-                node
-        );
-        importSymbol.setQualifiedName(resolvedPath);
-
-        if (!table.declare(importSymbol)) {
-            reportDuplicate(logicalName, "import", node);
-        }
-
-        bringImportedSymbols(resolvedPath, node);
+        declarations.declareImport(logicalName, resolvedPath, node);
+        imports.bringImportedSymbols(resolvedPath, node);
         return null;
     }
 
-    /**
-     * Extracts the logical name from an import path.
-     */
-    private String extractLogicalName(String rawPath) {
-        if (rawPath == null) return null;
-
-        int lastDot = rawPath.lastIndexOf('.');
-        String withoutExtension = lastDot != -1
-                ? rawPath.substring(0, lastDot)
-                : rawPath;
-
-        int lastSeparator = withoutExtension.lastIndexOf('.');
-        return lastSeparator != -1
-                ? withoutExtension.substring(lastSeparator + 1)
-                : withoutExtension;
-    }
-
-    // ============================================================
-    // VARIABLES SECTION
-    // ============================================================
+    // ---------------- VARIABLES SECTION ----------------
 
     @Override
     public Void visit(VariablesSectionNodePigLatin node) {
-        if (node.getDeclarations() != null) {
-            node.getDeclarations().accept(this);
-        }
+        if (node.getDeclarations() != null) node.getDeclarations().accept(this);
         return null;
     }
 
     @Override
     public Void visit(VariablesBodyNodePigLatin node) {
         if (node.getDeclarations() != null) {
-            for (PigLatinAstNode declaration : node.getDeclarations()) {
-                if (declaration != null) {
-                    declaration.accept(this);
-                }
-            }
+            for (PigLatinAstNode d : node.getDeclarations()) if (d != null) d.accept(this);
         }
         return null;
     }
 
     @Override
     public Void visit(VariableDeclarationNodePigLatin node) {
-        String typeName = resolveTypeName(node.getDataType());
-
-
-        if (typeName == null && node.getInitializer() != null) {
-            if (node.getInitializer() instanceof InstanceCreationExpressionNodePigLatin inst) {
-                typeName = inst.getClassName();
-            }
-        }
-
-        SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.FILE
-                ? SymbolKind.GLOBAL_VARIABLE
-                : SymbolKind.LOCAL_VARIABLE;
-
-        Symbol variable = buildSymbol(
-                node.getIdentifier(),
-                kind,
-                typeName,
-                node
-        );
-
-        if (!table.declare(variable)) {
-            String label = kind == SymbolKind.GLOBAL_VARIABLE ? "variable global" : "variable";
-            reportDuplicate(node.getIdentifier(), label, node);
-        }
+        declarations.declareVariable(node.getIdentifier(), node.getDataType(), node);
         return null;
     }
 
     @Override
     public Void visit(ArrayDeclarationNodePigLatin node) {
-        String typeName = resolveTypeName(node.getDataType());
-
-        SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.FILE
-                ? SymbolKind.GLOBAL_VARIABLE
-                : SymbolKind.LOCAL_VARIABLE;
-
-        Symbol array = buildSymbol(
-                node.getIdentifier(),
-                kind,
-                typeName,
-                node
-        );
-
-        if (node.getDimensions() != null) {
-            array.setDimensions(node.getDimensions().size());
-        }
-        array.setArray(true);
-
-        if (!table.declare(array)) {
-            reportDuplicate(node.getIdentifier(), "arreglo", node);
-        }
+        int dims = node.getDimensions() != null ? node.getDimensions().size() : 0;
+        declarations.declareArray(node.getIdentifier(), node.getDataType(), dims, node);
         return null;
     }
 
     @Override
     public Void visit(StructInstanceNodePigLatin node) {
-
-        SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.FILE
-                ? SymbolKind.GLOBAL_VARIABLE
-                : SymbolKind.LOCAL_VARIABLE;
-
-        Symbol instance = buildSymbol(
-                node.getIdentifier(),
-                kind,
-                node.getStructType(),
-                node
-        );
-
-        if (!table.declare(instance)) {
-            reportDuplicate(node.getIdentifier(), "instancia de struct", node);
-        }
+        declarations.declareStructInstance(node.getIdentifier(), node.getStructType(), node);
         return null;
     }
 
-    // ============================================================
-    // CODE SECTION AND BLOCKS
-    // ============================================================
+    // ---------------- CODE BLOCKS ----------------
 
     @Override
     public Void visit(CodeBodyNodePigLatin node) {
         if (node.getStatements() != null) {
-            for (PigLatinAstNode statement : node.getStatements()) {
-                if (statement != null) {
-                    statement.accept(this);
-                }
-            }
+            for (PigLatinAstNode s : node.getStatements()) if (s != null) s.accept(this);
         }
         return null;
     }
 
     @Override
     public Void visit(IfStatementNodePigLatin node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-
-        if (node.getThenBody() != null) {
-            for (PigLatinAstNode thenBody : node.getThenBody()) {
-                if (thenBody != null) {
-                    thenBody.accept(this);
-                }
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getThenBody() != null) {
+                for (PigLatinAstNode s : node.getThenBody()) if (s != null) s.accept(this);
             }
-        }
-
-        if (node.getElseIfs() != null) {
-            for (ElseIfNodePigLatin elseIf : node.getElseIfs()) {
-                if (elseIf != null) {
-                    elseIf.accept(this);
-                }
+            if (node.getElseIfs() != null) {
+                for (ElseIfNodePigLatin e : node.getElseIfs()) if (e != null) e.accept(this);
             }
+            if (node.getElseBlockNode() != null) node.getElseBlockNode().accept(this);
+        } finally {
+            table.exitScope();
         }
-        if (node.getElseBlockNode() != null) {
-            node.getElseBlockNode().accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseIfNodePigLatin node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-
-        if (node.getBody() != null) {
-            for (PigLatinAstNode body : node.getBody()) {
-                if (body != null) {
-                    body.accept(this);
-                }
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getBody() != null) {
+                for (PigLatinAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodePigLatin node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getBody() != null) {
-            for (PigLatinAstNode body : node.getBody()) {
-                if (body != null) {
-                    body.accept(this);
-                }
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getBody() != null) {
+                for (PigLatinAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodePigLatin node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getBody() != null) node.getBody().accept(this);
+        } finally {
+            table.exitScope();
         }
-        if (node.getBody() != null) {
-            node.getBody().accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodePigLatin node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getBody() != null) {
-            node.getBody().accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getBody() != null) node.getBody().accept(this);
+            if (node.getCondition() != null) node.getCondition().accept(this);
+        } finally {
+            table.exitScope();
         }
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodePigLatin node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getInit() != null) {
-            node.getInit().accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getInit() != null) node.getInit().accept(this);
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getUpdate() != null) node.getUpdate().accept(this);
+            if (node.getBody() != null) node.getBody().accept(this);
+        } finally {
+            table.exitScope();
         }
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getUpdate() != null) {
-            node.getUpdate().accept(this);
-        }
-        if (node.getBody() != null) {
-            node.getBody().accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ForInitDeclarationNodePigLatin node) {
-        String typeName = resolveTypeName(node.getType());
-
-        Symbol variable = buildSymbol(
-                node.getId(),
-                SymbolKind.LOCAL_VARIABLE,
-                typeName,
-                node
-        );
-
-        if (!table.declare(variable)) {
-            reportDuplicate(node.getId(), "variable de for", node);
-        }
+        declarations.declareForVariable(node.getId(), node.getType(), node);
         return null;
     }
 
-    // ============================================================
-    // NON-DECLARING NODES
-    // ============================================================
+    // ---------------- STRUCT ----------------
+
+    @Override
+    public Void visit(StructDeclarationNodePigLatin node) {
+        List<Symbol> memberSymbols = members.collectFromBody(node.getAttributes());
+        declarations.declareStruct(node.getStructName(), node, memberSymbols);
+        return null;
+    }
+
+    // ---------------- NO-DECLARING ----------------
+
+    @Override
+    public Void visit(StructBodyNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(StructAttributeNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(AccessorNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(StructPropertyNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(StructLiteralExpressionNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(PropertyAccessExpressionNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(MemberArrayAccessExpressionNodePigLatin node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ShortlyOperationNodePigLatin node) {
+        return null;
+    }
 
     @Override
     public Void visit(VariableAssignmentNodePigLatin node) {
@@ -468,11 +317,6 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
 
     @Override
     public Void visit(BinaryExpressionNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(TypeNodePigLatin node) {
         return null;
     }
 
@@ -507,52 +351,12 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
     }
 
     @Override
-    public Void visit(StructBodyNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructDeclarationNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructAttributeNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructPropertyNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructLiteralExpressionNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(PropertyAccessExpressionNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(MemberArrayAccessExpressionNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ShortlyOperationNodePigLatin node) {
+    public Void visit(TypeNodePigLatin node) {
         return null;
     }
 
     @Override
     public Void visit(ExpressionNodePigLatin node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(AccessorNodePigLatin node) {
         return null;
     }
 
@@ -629,82 +433,5 @@ public class PigLatinSymbolCollectorVisitor implements PigLatinAstVisitor<Void> 
     @Override
     public Void visit(InstanceCreationExpressionNodePigLatin node) {
         return null;
-    }
-
-    // ============================================================
-    // HELPERS
-    // ============================================================
-
-    private Symbol buildSymbol(String name, SymbolKind kind, String type, PigLatinAstNode node) {
-        Symbol symbol = new Symbol();
-        symbol.setName(name);
-        symbol.setKind(kind);
-        symbol.setType(type);
-        symbol.setFilePath(context.getFilePath());
-        symbol.setFileName(context.getFileName());
-        symbol.setLine(node.getLine());
-        symbol.setColumn(node.getColumn());
-        return symbol;
-    }
-
-    private void reportDuplicate(String name, String kindLabel, PigLatinAstNode node) {
-        CompilerError error = new CompilerError();
-        error.setLexeme(name);
-        error.setLine(node.getLine());
-        error.setColumn(node.getColumn());
-        error.setErrorType(ErrorType.SEMANTIC);
-        error.setDescription("Ya existe un " + kindLabel + " con el nombre '" + name + "' en este ambito");
-        error.setFilePath(context.getFilePath());
-        error.setFileName(context.getFileName());
-        context.getSemanticErrors().add(error);
-    }
-
-    private String resolveTypeName(TypeNodePigLatin typeNode) {
-        if (typeNode == null) return null;
-        if (typeNode.getCustomTypeName() != null) {
-            return typeNode.getCustomTypeName();
-        }
-        if (typeNode.getDataType() != null) {
-            return typeNode.getDataType().getValue();
-        }
-        return null;
-    }
-
-
-    private void bringImportedSymbols(String resolvedPath, PigLatinAstNode node) {
-        if (resolvedPath == null) {
-            return;
-        }
-        SymbolScope importedScope = table.getFileScope(resolvedPath);
-        if (importedScope == null) {
-            return;
-        }
-
-        for (Symbol symbol : importedScope.getSymbols().values().stream()
-                .flatMap(List::stream).toList()) {
-
-            if (symbol.getKind() != SymbolKind.STRUCT
-                    && symbol.getKind() != SymbolKind.FUNCTION
-                    && symbol.getKind() != SymbolKind.CLASS) {
-                continue;
-            }
-
-            Symbol imported = buildSymbol(
-                    symbol.getName(),
-                    symbol.getKind(),
-                    symbol.getType(),
-                    node
-            );
-            imported.setQualifiedName(symbol.getQualifiedName());
-            imported.setFilePath(symbol.getFilePath());
-            imported.setFileName(symbol.getFileName());
-            imported.setLine(symbol.getLine());
-            imported.setColumn(symbol.getColumn());
-            imported.setParameterTypes(symbol.getParameterTypes());
-            imported.setMembers(symbol.getMembers());
-            imported.setReturnType(symbol.getReturnType());
-
-            table.declareOrReplace(imported);
-        }
     }
 }

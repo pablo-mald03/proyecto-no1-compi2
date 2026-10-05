@@ -83,7 +83,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
     private final Map<String, StructInfo> structVariables = new HashMap<>();
     private final Map<String, ArrayInfo> arrayInfos = new HashMap<>();
 
-    // Shared with Z visitors: className/structName -> ordered field names
     private final Map<String, List<String>> classLayouts;
 
     public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table,
