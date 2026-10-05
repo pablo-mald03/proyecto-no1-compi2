@@ -12,7 +12,7 @@ program
 /*===*****========*****===== CLASS SECTION ===*****==========*****===*/
 
 class_declaration
-    : PUBLIC CLASS ID INIT_BRACE class_member* FINAL_BRACE   # ClassDeclaration
+    : access_modifier CLASS ID INIT_BRACE class_member* FINAL_BRACE   # ClassDeclaration
     ;
 
 /*------ CLASS MEMBER PRODUCTIONS (CONSTRUCTOR/ATTRIBUTES) ------*/
@@ -290,4 +290,11 @@ normal_values
 boolean_values
     : TRUE     # BoolTrue
     | FALSE    # BoolFalse
+    ;
+
+/*--------****--- ACCESS MODIFIER VALUES ---****--------*/
+access_modifier
+    : PRIVATE   # ModifierPrivate
+    | PUBLIC    # ModifierPublic
+    | PROTECTED # ModifierProtected
     ;

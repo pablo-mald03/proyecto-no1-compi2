@@ -665,25 +665,55 @@ public class YCFGBuilderVisitor implements YAstVisitor<Void> {
         CFGNode exit = cfg.createNode("salida elegir", NodeType.MERGE, node);
         breakTargets.push(exit);
 
+        // Save the incoming flow so we can restore it after the switch.
         pushPendingExits();
-        currentPendingExits = new ArrayList<>();
-        currentPendingExits.add(sw);
+
+        // Collect exits of each branch (breaks already point to `exit`;
+        // fall-throughs / end-of-case need to be connected to `exit` too).
+        List<CFGNode> branchExits = new ArrayList<>();
 
         if (node.getCases() != null) {
             for (SwitchCaseNodeY c : node.getCases()) {
-                if (c != null) c.accept(this);
+                if (c == null) continue;
+                CFGNode caseNode = cfg.createNode("caso", NodeType.CASE, c);
+                cfg.addEdge(sw, caseNode);       // <-- branch from switch
+
+                currentPendingExits = new ArrayList<>();
+                currentPendingExits.add(caseNode);
+
+                if (c.getBody() != null) {
+                    for (StatementNodeY s : c.getBody()) {
+                        if (s != null) s.accept(this);
+                    }
+                }
+
+                branchExits.addAll(currentPendingExits);
             }
         }
+
         if (node.getDefaultCase() != null) {
-            node.getDefaultCase().accept(this);
+            DefaultCaseNodeY d = node.getDefaultCase();
+            CFGNode defNode = cfg.createNode("siempre", NodeType.CASE, d);
+            cfg.addEdge(sw, defNode);
+
+            currentPendingExits = new ArrayList<>();
+            currentPendingExits.add(defNode);
+
+            if (d.getBody() != null) {
+                for (StatementNodeY s : d.getBody()) {
+                    if (s != null) s.accept(this);
+                }
+            }
+
+            branchExits.addAll(currentPendingExits);
         }
 
-        popPendingExits();
-        breakTargets.pop();
-
-        for (CFGNode e : currentPendingExits) {
+        for (CFGNode e : branchExits) {
             cfg.addEdge(e, exit);
         }
+
+        breakTargets.pop();
+        popPendingExits();
 
         currentPendingExits = new ArrayList<>();
         currentPendingExits.add(exit);
@@ -692,29 +722,11 @@ public class YCFGBuilderVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchCaseNodeY node) {
-        CFGNode c = cfg.createNode("caso", NodeType.CASE, node);
-        connectPendingExitsTo(c);
-        addPendingExit(c);
-
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeY node) {
-        CFGNode c = cfg.createNode("siempre", NodeType.CASE, node);
-        connectPendingExitsTo(c);
-        addPendingExit(c);
-
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
         return null;
     }
 

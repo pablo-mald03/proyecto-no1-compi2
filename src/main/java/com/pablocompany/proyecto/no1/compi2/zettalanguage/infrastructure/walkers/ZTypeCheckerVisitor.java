@@ -52,6 +52,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Principal type checker visitor class
+ *
+ */
 @Getter
 public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
@@ -424,6 +428,15 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             reportTypeError("return",
                     "Un constructor no puede tener una instruccion 'return'", node);
             if (node.getValue() != null) node.getValue().accept(this);
+            return Type.voidType();
+        }
+
+        if (currentReturnType.getKind() == TypeKind.VOID) {
+            if (node.getValue() != null) {
+                Type valueType = node.getValue().accept(this);
+                reportTypeError(valueType.toString(),
+                        "Un metodo void no puede retornar un valor de tipo " + valueType, node);
+            }
             return Type.voidType();
         }
 

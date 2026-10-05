@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.common.domain.factory;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFGBuilder;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.cfg.YCFGBuilder;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.cfg.ZCFGBuilder;
 
 /**
@@ -14,7 +15,7 @@ public class CFGBuilderFactory {
         return switch (extension) {
             case ".z" -> new ZCFGBuilder();
             /*           case ".pig" -> new PigCFGBuilder();*/
-            /*            case ".y" -> new YCFGBuilder();*/
+            case ".y" -> new YCFGBuilder();
             default -> null;
         };
     }
