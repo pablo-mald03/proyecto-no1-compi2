@@ -15,9 +15,12 @@ import java.util.List;
 public class ZTypeCompatibilityService {
 
     private final ZTypeMapperService mapper;
+    private final ZAssignabilityService assignability;
 
-    public ZTypeCompatibilityService(ZTypeMapperService mapper) {
+    public ZTypeCompatibilityService(ZTypeMapperService mapper,
+                                     ZAssignabilityService assignability) {
         this.mapper = mapper;
+        this.assignability = assignability;
     }
 
     // -------- predicates --------
@@ -54,7 +57,7 @@ public class ZTypeCompatibilityService {
             Type paramType = mapper.resolveTypeName(paramTypes.get(i));
             Type argType = argTypes.get(i);
             if (argType.isUnknown()) continue;
-            if (!argType.isAssignableTo(paramType)) return false;
+            if (!assignability.isAssignable(argType, paramType)) return false;
         }
         return true;
     }
@@ -132,7 +135,8 @@ public class ZTypeCompatibilityService {
                 if (left.getKind() == TypeKind.NULL && right.getKind() == TypeKind.NULL) {
                     return Type.booleanType();
                 }
-                if (left.isCompatibleWith(right)
+                if (assignability.isAssignable(left, right)
+                        || assignability.isAssignable(right, left)
                         || (isNumericOrPromotable(left) && isNumericOrPromotable(right))) {
                     return Type.booleanType();
                 }

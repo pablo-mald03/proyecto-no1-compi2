@@ -50,7 +50,7 @@ public class ZCallResolutionService {
 
         if (compatible.size() == 1) return compatible.get(0);
         if (compatible.size() > 1) {
-            reporter.reportTypeError(name, "Llamada ambigua a '" + name + "'", node);
+            reporter.reportTypeError(name, "Llamada ambigua a '" + name + "'", null);
             return null;
         }
 

@@ -65,6 +65,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     private final ZSemanticErrorReporter reporter;
     private final ZTypeMapperService mapper;
     private final ZSymbolLookupService lookup;
+    private final ZAssignabilityService assignability;
     private final ZTypeCompatibilityService compat;
     private final ZCallResolutionService calls;
     private final ZScopeService scopes;
@@ -86,7 +87,8 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         this.mapper = new ZTypeMapperService();
         this.access = new ZAccessControlService(context);
         this.lookup = new ZSymbolLookupService(table, context, access);
-        this.compat = new ZTypeCompatibilityService(mapper);
+        this.assignability = new ZAssignabilityService(lookup);
+        this.compat = new ZTypeCompatibilityService(mapper, assignability);
         this.calls = new ZCallResolutionService(compat, reporter);
         this.scopes = new ZScopeService(table, context);
         this.overrides = new ZOverrideService(reporter, lookup);
@@ -229,7 +231,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         }
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
-            if (!initType.isAssignableTo(declaredType)) {
+            if (!assignability.isAssignable(initType, declaredType)) {
                 reporter.reportTypeError(node.getIdentifier(),
                         "No se puede asignar " + initType + " a variable de tipo " + declaredType,
                         node);
@@ -247,7 +249,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         }
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
-            if (!initType.isAssignableTo(declaredType)) {
+            if (!assignability.isAssignable(initType, declaredType)) {
                 reporter.reportTypeError(node.getName(),
                         "No se puede asignar " + initType + " a atributo de tipo " + declaredType,
                         node);
@@ -264,7 +266,6 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
                     "'this' solo puede usarse dentro de una clase", node);
             return Type.unknown();
         }
-
         node.setEnclosingClass(currentClass.getName());
         Type t = Type.customType(currentClass.getName());
         annotate(node, t);
@@ -279,7 +280,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
-            if (!initType.isAssignableTo(arrayType)) {
+            if (!assignability.isAssignable(initType, arrayType)) {
                 reporter.reportTypeError(node.getIdentifier(),
                         "No se puede asignar " + initType + " a arreglo de tipo " + arrayType,
                         node);
@@ -293,7 +294,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         Type declaredType = mapper.mapTypeNode(node.getType());
         if (node.getExpr() != null) {
             Type initType = node.getExpr().accept(this);
-            if (!initType.isAssignableTo(declaredType)) {
+            if (!assignability.isAssignable(initType, declaredType)) {
                 reporter.reportTypeError(node.getId(),
                         "No se puede asignar " + initType + " a " + declaredType, node);
             }
@@ -305,7 +306,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     public Type visit(ForInitAssignmentNodeZ node) {
         Type targetType = node.getId() != null ? node.getId().accept(this) : Type.unknown();
         Type valueType = node.getExpr() != null ? node.getExpr().accept(this) : Type.unknown();
-        if (!valueType.isAssignableTo(targetType)) {
+        if (!assignability.isAssignable(valueType, targetType)) {
             reporter.reportTypeError(targetType + " = " + valueType,
                     "No se puede asignar " + valueType + " a " + targetType, node);
         }
@@ -328,7 +329,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             case ASSIGN:
                 if (node.getValue() != null) {
                     Type valueType = node.getValue().accept(this);
-                    if (!valueType.isAssignableTo(targetType)) {
+                    if (!assignability.isAssignable(valueType, targetType)) {
                         reporter.reportTypeError(targetType + " = " + valueType,
                                 "No se puede asignar " + valueType + " a " + targetType, node);
                     }
@@ -349,7 +350,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         Type valueType = node.getExpressionNode() != null
                 ? node.getExpressionNode().accept(this) : Type.unknown();
 
-        if (!valueType.isAssignableTo(targetType)) {
+        if (!assignability.isAssignable(valueType, targetType)) {
             reporter.reportTypeError(targetType + " = " + valueType,
                     "No se puede asignar " + valueType + " a " + targetType, node);
         }
@@ -451,18 +452,8 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         return Type.unknown();
     }
 
-    /**
-     * Return statement. Handles three cases:
-     * - Inside a constructor (currentReturnType == null): 'return' with a value is an error.
-     * - Inside a void method: 'return;' is fine; 'return expr;' is an error.
-     * - Inside a typed method: the value must be assignable to the return type.
-     * <p>
-     * The original bug ("void is not assignable to void") came from treating
-     * the void case via isAssignableTo. We handle it explicitly here.
-     */
     @Override
     public Type visit(ReturnStatementNodeZ node) {
-        // Case 1: constructor
         if (currentReturnType == null) {
             reporter.reportTypeError("return",
                     "Un constructor no puede tener una instruccion 'return'", node);
@@ -470,7 +461,6 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             return Type.voidType();
         }
 
-        // Case 2: void method
         if (currentReturnType.getKind() == TypeKind.VOID) {
             if (node.getValue() != null) {
                 Type valueType = node.getValue().accept(this);
@@ -480,12 +470,11 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             return Type.voidType();
         }
 
-        // Case 3: typed method
         Type valueType = node.getValue() != null
                 ? node.getValue().accept(this)
                 : Type.voidType();
 
-        if (!valueType.isAssignableTo(currentReturnType)) {
+        if (!assignability.isAssignable(valueType, currentReturnType)) {
             reporter.reportTypeError(valueType.toString(),
                     "El tipo de retorno " + valueType
                             + " no coincide con el tipo declarado " + currentReturnType, node);
@@ -636,7 +625,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
                 if (currentSwitchSelectorType != null
                         && !currentSwitchSelectorType.isUnknown()
                         && !caseValueType.isUnknown()
-                        && !caseValueType.isAssignableTo(currentSwitchSelectorType)) {
+                        && !assignability.isAssignable(caseValueType, currentSwitchSelectorType)) {
                     reporter.reportTypeError("case",
                             "El valor del 'case' tiene tipo " + caseValueType
                                     + ", incompatible con el selector "
@@ -727,9 +716,11 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         Type elseType = node.getElseExpr().accept(this);
 
         Type result;
-        if (thenType.isAssignableTo(elseType)) result = elseType;
-        else if (elseType.isAssignableTo(thenType)) result = thenType;
-        else if (compat.isNumericOrPromotable(thenType) && compat.isNumericOrPromotable(elseType)) {
+        if (assignability.isAssignable(thenType, elseType)) {
+            result = elseType;
+        } else if (assignability.isAssignable(elseType, thenType)) {
+            result = thenType;
+        } else if (compat.isNumericOrPromotable(thenType) && compat.isNumericOrPromotable(elseType)) {
             result = compat.promoteNumeric(thenType, elseType);
         } else {
             reporter.reportTypeError(thenType + " : " + elseType,
@@ -930,7 +921,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
         for (int i = 1; i < node.getElements().size(); i++) {
             Type elemType = node.getElements().get(i).accept(this);
-            if (!elemType.isAssignableTo(firstType) && !elemType.isUnknown()) {
+            if (!assignability.isAssignable(elemType, firstType) && !elemType.isUnknown()) {
                 reporter.reportTypeError(firstType.toString(),
                         "El elemento en posicion " + i + " tiene tipo " + elemType
                                 + ", incompatible con el primer elemento " + firstType, node);
@@ -963,10 +954,10 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         return Type.unknown();
     }
 
-    /**
-     * Merge fields helper method
-     *
-     */
+    // ============================================================
+    // HELPERS
+    // ============================================================
+
     private void mergeInheritedMembers(Symbol child, Symbol parent) {
         if (child.getMembers() == null) child.setMembers(new ArrayList<>());
         if (parent.getMembers() == null) return;
