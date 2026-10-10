@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walker
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -58,11 +59,8 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProgramNodeZ node) {
-        if (node.getClassesNode() != null) {
-            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
-                classNode.accept(this);
-            }
-
+        if (node.getClassNode() != null) {
+                node.getClassNode().accept(this);
         }
         return null;
     }
@@ -112,6 +110,11 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
         return null;
     }
 

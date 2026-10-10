@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.enums.ParameterKind;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.enums.AccessModifierZ;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -35,6 +36,17 @@ public class Symbol {
     private List<Symbol> members;
 
     private String returnType;
+
+    AccessModifierZ accessModifier;
+
+    String declaringClass;
+
+    boolean overriding;
+
+    String parentName;
+
+    Symbol parentSymbol;
+
 
     public Symbol() {
         this.parameterTypes = new ArrayList<>();

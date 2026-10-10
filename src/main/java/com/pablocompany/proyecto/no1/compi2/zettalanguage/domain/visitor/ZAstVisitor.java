@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor;
 
 
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -52,6 +53,8 @@ public interface ZAstVisitor<T> {
     T visit(ObjectInstantiationNodeZ node);
 
     T visit(ArrayInstantiationNodeZ node);
+
+    T visit(InstanceCreationExpressionNodeZ node);
 
     T visit(TernaryExpressionNodeZ node);
 

@@ -3,10 +3,12 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walker
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -60,12 +62,9 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     private final ZSymbolDeclarationService declarations;
     private final ZClassMemberCollectorService classMembers;
 
-    private String currentClassName;
-
     public ZSymbolCollectorVisitor(GlobalSymbolTable table, EditorContext context) {
         this.table = table;
         this.context = context;
-
         this.reporter = new ZSemanticErrorReporter(context);
         this.scopes = new ZScopeService(table, context);
         this.declarations = new ZSymbolDeclarationService(table, context, reporter);
@@ -78,11 +77,8 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProgramNodeZ node) {
-        if (node.getClassesNode() != null) {
-            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
-                classNode.accept(this);
-            }
-
+        if (node.getClassNode() != null) {
+            node.getClassNode().accept(this);
         }
         return null;
     }
@@ -93,30 +89,29 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ClassDeclarationNodeZ node) {
-        declarations.declareClass(node.getClassName(), node);
-        this.currentClassName = node.getClassName();
+        Symbol classSymbol = declarations.declareClass(node);
 
         classMembers.begin();
 
         scopes.registerScope(node, SymbolScopeKind.CLASS);
         try {
             if (node.getMembers() != null) {
-                for (ZAstNode member : node.getMembers()) {
-                    if (member != null) member.accept(this);
+                for (ZAstNode m : node.getMembers()) {
+                    if (m != null) m.accept(this);
                 }
             }
         } finally {
             table.exitScope();
         }
 
-        Symbol classSymbol = lookupClass(node.getClassName());
+        Symbol parent = classSymbol != null && classSymbol.getParentName() != null
+                ? lookupClassInFile(classSymbol.getParentName())
+                : null;
         if (classSymbol != null) {
-            classSymbol.setMembers(classMembers.end());
+            classSymbol.setMembers(classMembers.end(parent));
         } else {
-            classMembers.end();
+            classMembers.end(null);
         }
-
-        this.currentClassName = null;
         return null;
     }
 
@@ -126,36 +121,23 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
-        List<String> paramTypes = new ArrayList<>();
-        if (node.getParams() != null) {
-            for (ParameterNodeZ p : node.getParams()) {
-                if (p == null) continue;
-                String t = resolveParameterType(p);
-                if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
-                paramTypes.add(t);
-            }
-        }
+        List<String> paramTypes = collectParameterTypes(node.getParams());
 
         String returnType = node.getType() != null
                 ? resolveTypeName(node.getType())
                 : "void";
 
-        Symbol method = declarations.declareMethod(
-                node.getName(), paramTypes, returnType, node);
-
+        Symbol method = declarations.declareMethod(node, paramTypes, returnType);
         if (method != null) classMembers.add(method);
 
         scopes.registerScope(node, SymbolScopeKind.METHOD);
         try {
+            declarations.declareThis(currentClassName(), node);
             if (node.getParams() != null) {
-                for (ParameterNodeZ p : node.getParams()) {
-                    if (p != null) p.accept(this);
-                }
+                for (ParameterNodeZ p : node.getParams()) if (p != null) p.accept(this);
             }
             if (node.getBody() != null) {
-                for (ZAstNode s : node.getBody()) {
-                    if (s != null) s.accept(this);
-                }
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
         } finally {
             table.exitScope();
@@ -163,40 +145,30 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         return null;
     }
 
+
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
-        String name = node.getName() != null ? node.getName() : currentClassName;
+        String name = node.getName() != null ? node.getName() : currentClassName();
+        List<String> paramTypes = collectParameterTypes(node.getParams());
 
-        List<String> paramTypes = new ArrayList<>();
-        if (node.getParams() != null) {
-            for (ParameterNodeZ p : node.getParams()) {
-                if (p == null) continue;
-                String t = resolveParameterType(p);
-                if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
-                paramTypes.add(t);
-            }
-        }
-
-        Symbol ctor = declarations.declareConstructor(name, paramTypes, node);
+        Symbol ctor = declarations.declareConstructor(node, name, paramTypes);
         if (ctor != null) classMembers.add(ctor);
 
         scopes.registerScope(node, SymbolScopeKind.CONSTRUCTOR);
         try {
+            declarations.declareThis(currentClassName(), node);
             if (node.getParams() != null) {
-                for (ParameterNodeZ p : node.getParams()) {
-                    if (p != null) p.accept(this);
-                }
+                for (ParameterNodeZ p : node.getParams()) if (p != null) p.accept(this);
             }
             if (node.getBody() != null) {
-                for (ZAstNode s : node.getBody()) {
-                    if (s != null) s.accept(this);
-                }
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
         } finally {
             table.exitScope();
         }
         return null;
     }
+
 
     @Override
     public Void visit(ParameterNodeZ node) {
@@ -237,11 +209,16 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(FieldDeclarationNodeZ node) {
+        String typeName = resolveTypeName(node.getType());
+        Symbol field = declarations.declareField(node, typeName);
+        if (field != null) classMembers.add(field);
         return null;
     }
 
+
     @Override
     public Void visit(ThisExpressionNodeZ node) {
+        // Nothing to declare here. The checker resolves `this` against the enclosing class and annotates the node.
         return null;
     }
 
@@ -409,6 +386,11 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
         return null;
     }
 
@@ -593,5 +575,39 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     private String resolveParameterType(ParameterNodeZ node) {
         String fromType = resolveTypeName(node.getType());
         return fromType != null ? fromType : "?";
+    }
+
+    //Helpers to collect the parameters
+    private List<String> collectParameterTypes(List<ParameterNodeZ> params) {
+        List<String> result = new ArrayList<>();
+        if (params == null) return result;
+        for (ParameterNodeZ p : params) {
+            if (p == null) continue;
+            String t = resolveParameterType(p);
+            if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
+            result.add(t);
+        }
+        return result;
+    }
+
+    /**
+     * Look up class in file helper resolver
+     *
+     */
+    private Symbol lookupClassInFile(String className) {
+        return table.resolveDeepInFile(context.getFilePath(), className).stream()
+                .filter(s -> s.getKind() == SymbolKind.CLASS)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Helper to resolve the class name
+     *
+     */
+    private String currentClassName() {
+        SymbolScope scope = table.getCurrentScope();
+        while (scope != null && scope.getKind() != SymbolScopeKind.CLASS) scope = scope.getParent();
+        return scope != null ? scope.getClassName() : null;
     }
 }

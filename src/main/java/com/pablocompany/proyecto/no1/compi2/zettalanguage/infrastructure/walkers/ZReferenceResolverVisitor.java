@@ -8,6 +8,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolS
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -63,11 +64,8 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProgramNodeZ node) {
-        if (node.getClassesNode() != null) {
-            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
-                classNode.accept(this);
-            }
-
+        if (node.getClassNode() != null) {
+            node.getClassNode().accept(this);
         }
         return null;
     }
@@ -290,6 +288,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
                 }
             }
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
         return null;
     }
 

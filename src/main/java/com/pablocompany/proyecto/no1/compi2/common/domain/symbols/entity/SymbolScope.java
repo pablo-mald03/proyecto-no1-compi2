@@ -19,6 +19,7 @@ public class SymbolScope {
     private String ownerPath;        // filePath that owns this scope (null for global)
     private Map<String, List<Symbol>> symbols;
     private List<SymbolScope> children;
+    private String className;
 
     public SymbolScope() {
         this.symbols = new HashMap<>();

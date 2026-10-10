@@ -13,5 +13,6 @@ public enum SymbolKind {
     PARAMETER,
     GLOBAL_VARIABLE,
     LOCAL_VARIABLE,
-    IMPORT
+    IMPORT,
+    THIS
 }

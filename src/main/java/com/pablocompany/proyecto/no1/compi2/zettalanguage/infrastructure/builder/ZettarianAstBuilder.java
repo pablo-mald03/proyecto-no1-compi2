@@ -79,12 +79,9 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
 
-        List<ClassDeclarationNodeZ> classes = new ArrayList<>();
-        for (ZParser.Class_declarationContext cCtx : ctx.class_declaration()) {
-            classes.add((ClassDeclarationNodeZ) cCtx.accept(this));
-        }
-
-        return new ProgramNodeZ(line, column, classes);
+        ClassDeclarationNodeZ classNode = (ClassDeclarationNodeZ) ctx.class_declaration().accept(this);
+        
+        return new ProgramNodeZ(line, column, classNode);
     }
 
     @Override

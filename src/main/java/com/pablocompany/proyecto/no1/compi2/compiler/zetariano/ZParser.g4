@@ -6,7 +6,7 @@ options {
 
 /*===*****========*****===== PROGRAM ROOT SECTION ===*****==========*****===*/
 program
-    : class_declaration+ EOF
+    : class_declaration EOF
     ;
 
 /*===*****========*****===== CLASS SECTION ===*****==========*****===*/
@@ -24,18 +24,18 @@ class_member
 
 /*------ FIELD PRODUCTION (ENCAPSULATION: MODIFIER REQUIRED) ------*/
 field_declaration
-    : access_modifier type (INIT_BRACKET FINAL_BRACKET)* ID (EQUAL expression)? DOT_COMMA   # FieldDeclaration
+    : access_modifier? type (INIT_BRACKET FINAL_BRACKET)* ID (EQUAL expression)? DOT_COMMA   # FieldDeclaration
     ;
 
 
 /*------ CONSTRUCTOR PRODUCTION ------*/
 constructor_declaration
-    : access_modifier ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # ConstructorDeclaration
+    : access_modifier? ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # ConstructorDeclaration
     ;
 
 /*------ METHOD PRODUCTION (OVERRIDE OPTIONAL) ------*/
 method_declaration
-    : OVERRIDE? access_modifier type (INIT_BRACKET FINAL_BRACKET)* ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
+    : OVERRIDE? access_modifier? type (INIT_BRACKET FINAL_BRACKET)* ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # MethodDeclaration
     ;
 
 /*------ PARAMETER LIST PRODUCTIONS ------*/

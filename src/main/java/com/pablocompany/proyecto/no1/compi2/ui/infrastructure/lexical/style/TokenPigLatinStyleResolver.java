@@ -38,7 +38,7 @@ public class TokenPigLatinStyleResolver implements TokenStyleProvider {
                  PigLatinLexer.ALITER, PigLatinLexer.ACTIO,
                  PigLatinLexer.REDDERE, PigLatinLexer.RATIO, PigLatinLexer.READ, PigLatinLexer.PRINT,
                  PigLatinLexer.INTERRUMPE, PigLatinLexer.PERGE, PigLatinLexer.IMPORT, PigLatinLexer.NOVUS,
-                 PigLatinLexer.VERUM, PigLatinLexer.FALSUS ->
+                 PigLatinLexer.VERUM, PigLatinLexer.FALSUS, PigLatinLexer.NULL ->
                     TokenStyle.KEYWORD;
 
             case PigLatinLexer.STRING, PigLatinLexer.CHAR -> TokenStyle.STRING;

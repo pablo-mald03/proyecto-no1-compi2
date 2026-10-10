@@ -4,19 +4,17 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.princi
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
 
-import java.util.List;
-
 /**
  * This is the principal node that defines the program structure
  */
 @Getter
 public class ProgramNodeZ extends ZAstNode {
 
-    private final List<ClassDeclarationNodeZ> classesNode;
+    private final ClassDeclarationNodeZ classNode;
 
-    public ProgramNodeZ(int line, int column, List<ClassDeclarationNodeZ> classesNode) {
+    public ProgramNodeZ(int line, int column, ClassDeclarationNodeZ classNode) {
         super(line, column);
-        this.classesNode = classesNode;
+        this.classNode = classNode;
     }
 
     @Override

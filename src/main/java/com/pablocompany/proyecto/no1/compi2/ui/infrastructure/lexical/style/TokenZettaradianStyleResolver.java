@@ -41,9 +41,9 @@ public class TokenZettaradianStyleResolver implements TokenStyleProvider {
                  ZLexer.BREAK, ZLexer.DEFAULT,
                  ZLexer.WHILE, ZLexer.FOR,
                  ZLexer.TRUE, ZLexer.FALSE, ZLexer.PUBLIC, ZLexer.VOID, ZLexer.CLASS,
-                 ZLexer.NEW, ZLexer.NULL -> TokenStyle.Z_KEYWORD;
+                 ZLexer.NEW, ZLexer.NULL, ZLexer.EXTENDS, ZLexer.THIS -> TokenStyle.Z_KEYWORD;
 
-            case ZLexer.READ, ZLexer.PRINT, ZLexer.PRINTLN -> TokenStyle.Z_FUNCTIONS;
+            case ZLexer.READ, ZLexer.PRINT, ZLexer.PRINTLN, ZLexer.OVERRIDE -> TokenStyle.Z_FUNCTIONS;
 
             case ZLexer.TEXT, ZLexer.CHAR -> TokenStyle.Z_STRING;
 

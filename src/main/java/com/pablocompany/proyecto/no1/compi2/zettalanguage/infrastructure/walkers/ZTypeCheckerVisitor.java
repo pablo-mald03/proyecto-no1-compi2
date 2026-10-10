@@ -6,10 +6,12 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.MemberLookupResult;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -66,9 +68,12 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     private final ZTypeCompatibilityService compat;
     private final ZCallResolutionService calls;
     private final ZScopeService scopes;
+    private final ZOverrideService overrides;
+    private final ZAccessControlService access;
 
     private Type currentSwitchSelectorType;
     private Type currentReturnType;
+    private Symbol currentClass;
 
     public ZTypeCheckerVisitor(GlobalSymbolTable table,
                                EditorContext context,
@@ -79,10 +84,12 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
         this.reporter = new ZSemanticErrorReporter(context);
         this.mapper = new ZTypeMapperService();
-        this.lookup = new ZSymbolLookupService(table, context);
+        this.access = new ZAccessControlService(context);
+        this.lookup = new ZSymbolLookupService(table, context, access);
         this.compat = new ZTypeCompatibilityService(mapper);
         this.calls = new ZCallResolutionService(compat, reporter);
         this.scopes = new ZScopeService(table, context);
+        this.overrides = new ZOverrideService(reporter);
     }
 
     private void annotate(AstNode node, Type type) {
@@ -95,22 +102,34 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(ProgramNodeZ node) {
-        if (node.getClassesNode() != null) {
-            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
-                classNode.accept(this);
-            }
-
+        if (node.getClassNode() != null) {
+            node.getClassNode().accept(this);
         }
         return Type.voidType();
     }
 
     @Override
     public Type visit(ClassDeclarationNodeZ node) {
+        Symbol previousClass = currentClass;
+        currentClass = lookup.findType(node.getClassName());
+        Symbol parent = null;
+        String parentName = node.getParentName();
+
+        if (parentName != null && !parentName.isBlank()) {
+            parent = lookup.findType(parentName);
+            if (parent == null || parent.getKind() != SymbolKind.CLASS) {
+                reporter.reportTypeError(parentName,
+                        "La superclase '" + parentName + "' no esta declarada", node);
+            }
+        }
+
         scopes.withScope(node, () -> {
             if (node.getMembers() != null) {
                 for (ZAstNode m : node.getMembers()) if (m != null) m.accept(this);
             }
         });
+
+        currentClass = previousClass;
         return Type.voidType();
     }
 
@@ -120,11 +139,19 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(MethodDeclarationNodeZ node) {
+        Symbol parent = currentClass != null && currentClass.getParentName() != null
+                ? lookup.findType(currentClass.getParentName())
+                : null;
+        overrides.validate(node, parent, currentClass);
+
         scopes.withScope(node, () -> {
             Type previousReturn = currentReturnType;
             currentReturnType = node.getType() != null
                     ? mapper.mapTypeNode(node.getType())
                     : Type.voidType();
+            if (node.getReturnDimensions() > 0) {
+                currentReturnType = Type.arrayType(currentReturnType, node.getReturnDimensions());
+            }
 
             if (node.getParams() != null) {
                 for (ParameterNodeZ p : node.getParams()) if (p != null) p.accept(this);
@@ -139,6 +166,9 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         Type returnType = node.getType() != null
                 ? mapper.mapTypeNode(node.getType())
                 : Type.voidType();
+        if (node.getReturnDimensions() > 0) {
+            returnType = Type.arrayType(returnType, node.getReturnDimensions());
+        }
         annotate(node, returnType);
         return returnType;
     }
@@ -161,7 +191,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(ParameterNodeZ node) {
-        return Type.unknown();   // already declared by the collector
+        return Type.unknown();
     }
 
     // ============================================================
@@ -200,12 +230,34 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(FieldDeclarationNodeZ node) {
-        return null;
+        Type declaredType = mapper.mapTypeNode(node.getType());
+        if (node.getDimensions() > 0) {
+            declaredType = Type.arrayType(declaredType, node.getDimensions());
+        }
+        if (node.getInitializer() != null) {
+            Type initType = node.getInitializer().accept(this);
+            if (!initType.isAssignableTo(declaredType)) {
+                reporter.reportTypeError(node.getName(),
+                        "No se puede asignar " + initType + " a atributo de tipo " + declaredType,
+                        node);
+            }
+        }
+        annotate(node, declaredType);
+        return declaredType;
     }
 
     @Override
     public Type visit(ThisExpressionNodeZ node) {
-        return null;
+        if (currentClass == null) {
+            reporter.reportTypeError("this",
+                    "'this' solo puede usarse dentro de una clase", node);
+            return Type.unknown();
+        }
+
+        node.setEnclosingClass(currentClass.getName());
+        Type t = Type.customType(currentClass.getName());
+        annotate(node, t);
+        return t;
     }
 
     @Override
@@ -694,16 +746,28 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             if (targetType.isUnknown() || !targetType.isCustom()) return Type.unknown();
             classSymbol = lookup.findType(targetType.getCustomName());
         } else {
-            classSymbol = lookup.getCurrentClassSymbol();
+            classSymbol = currentClass;
         }
 
         if (classSymbol == null) return Type.unknown();
 
-        List<Symbol> methods = lookup.findMethodsInClass(classSymbol, methodName);
+        List<Symbol> methods = new ArrayList<>();
+        for (Symbol m : lookup.findMethodsInClass(classSymbol, methodName)) {
+            if (access.isAccessible(m, currentClass)) methods.add(m);
+        }
+
         if (methods.isEmpty()) {
-            reporter.reportTypeError(methodName,
-                    "La clase " + classSymbol.getName() + " no tiene un metodo '" + methodName + "'",
-                    node);
+            List<Symbol> all = lookup.findMethodsInClass(classSymbol, methodName);
+            if (!all.isEmpty()) {
+                reporter.reportTypeError(methodName,
+                        "El metodo '" + methodName + "' de la clase "
+                                + classSymbol.getName() + " no es accesible desde este contexto",
+                        node);
+            } else {
+                reporter.reportTypeError(methodName,
+                        "La clase " + classSymbol.getName()
+                                + " no tiene un metodo '" + methodName + "'", node);
+            }
             return Type.unknown();
         }
 
@@ -728,14 +792,25 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             return Type.unknown();
         }
 
-        Symbol member = lookup.findMemberInType(targetType, node.getPropertyName());
-        if (member == null) {
+        MemberLookupResult result = lookup.findMemberInType(
+                targetType, node.getPropertyName(), currentClass);
+
+        if (result.isInaccessible()) {
+            reporter.reportTypeError(node.getPropertyName(),
+                    "El miembro '" + node.getPropertyName() + "' de la clase "
+                            + targetType.getCustomName() + " no es accesible desde este contexto",
+                    node);
+            return Type.unknown();
+        }
+
+        if (!result.isFound()) {
             reporter.reportTypeError(node.getPropertyName(),
                     "La clase " + targetType.getCustomName()
                             + " no tiene un miembro '" + node.getPropertyName() + "'", node);
             return Type.unknown();
         }
 
+        Symbol member = result.getMember();
         if (member.getKind() != SymbolKind.ATTRIBUTE) {
             reporter.reportTypeError(node.getPropertyName(),
                     "'" + node.getPropertyName() + "' no es un atributo", node);
@@ -823,6 +898,11 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         }
         annotate(node, arrayType);
         return arrayType;
+    }
+
+    @Override
+    public Type visit(InstanceCreationExpressionNodeZ node) {
+        return null;
     }
 
     @Override

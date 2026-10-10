@@ -6,6 +6,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.NodeType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -106,10 +107,8 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
         cfg.setEntryId(entry.getId());
         currentPendingExits.add(entry);
 
-        if (node.getClassesNode() != null) {
-            for (ClassDeclarationNodeZ classNode : node.getClassesNode()) {
-                classNode.accept(this);
-            }
+        if (node.getClassNode() != null) {
+            node.getClassNode().accept(this);
         }
 
         CFGNode exit = cfg.createNode("EXIT", NodeType.EXIT, node);
@@ -707,6 +706,11 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
         return null;
     }
 

@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.servic
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.MemberLookupResult;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
@@ -18,11 +19,16 @@ public class ZSymbolLookupService {
 
     private final GlobalSymbolTable table;
     private final EditorContext context;
+    private final ZAccessControlService access;
 
-    public ZSymbolLookupService(GlobalSymbolTable table, EditorContext context) {
+    public ZSymbolLookupService(GlobalSymbolTable table,
+                                EditorContext context,
+                                ZAccessControlService access) {
         this.table = table;
         this.context = context;
+        this.access = access;
     }
+
 
     public List<Symbol> resolveByName(String name) {
         return table.resolveByName(name);
@@ -41,7 +47,6 @@ public class ZSymbolLookupService {
             }
         }
 
-        // Fallback: cross-file.
         for (SymbolScope fileScope : table.getFileScopes().values()) {
             for (List<Symbol> bucket : fileScope.getSymbols().values()) {
                 for (Symbol symbol : bucket) {
@@ -68,6 +73,31 @@ public class ZSymbolLookupService {
             }
         }
         return null;
+    }
+
+    public MemberLookupResult findMemberInType(Type type, String memberName, Symbol accessingClass) {
+        if (type == null || !type.isCustom() || memberName == null) {
+            return MemberLookupResult.notFound();
+        }
+
+        Symbol owner = findType(type.getCustomName());
+        if (owner == null) return MemberLookupResult.notFound();
+
+        Symbol member = null;
+        if (owner.getMembers() != null) {
+            for (Symbol m : owner.getMembers()) {
+                if (memberName.equals(m.getName())) {
+                    member = m;
+                    break;
+                }
+            }
+        }
+        if (member == null) return MemberLookupResult.notFound();
+
+        if (!access.isAccessible(member, accessingClass)) {
+            return MemberLookupResult.inaccessible(member);
+        }
+        return MemberLookupResult.found(member);
     }
 
     /**
@@ -112,5 +142,13 @@ public class ZSymbolLookupService {
             if (m.getKind() == SymbolKind.CONSTRUCTOR) result.add(m);
         }
         return result;
+    }
+
+    /**
+     * Method to resolves `this` inside a method/constructor body.
+     */
+    public Symbol resolveThis() {
+        List<Symbol> found = table.resolveByName("this");
+        return found.isEmpty() ? null : found.get(0);
     }
 }
