@@ -108,7 +108,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
                 ? lookupClassInFile(classSymbol.getParentName())
                 : null;
         if (classSymbol != null) {
-            classSymbol.setMembers(classMembers.end(parent));
+            classSymbol.setMembers(classMembers.end(null));
         } else {
             classMembers.end(null);
         }

@@ -97,7 +97,7 @@ public class Symbol {
 
         return new Object[]{
                 name,
-                kind,
+                kind.getValue(),
                 dataType,
                 isArray ? "Sí" : "No",
                 isArray ? formatDimensions() : "-",

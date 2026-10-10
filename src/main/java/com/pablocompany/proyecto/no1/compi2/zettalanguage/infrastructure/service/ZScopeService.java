@@ -5,6 +5,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalS
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 
 public class ZScopeService {
 
@@ -19,8 +20,12 @@ public class ZScopeService {
     /**
      * Creates a new scope of the given kind and registers it under a key
      */
+    // ZScopeService
     public SymbolScope registerScope(ZAstNode node, SymbolScopeKind kind) {
         SymbolScope scope = table.enterScope(kind, context.getFilePath());
+        if (kind == SymbolScopeKind.CLASS && node instanceof ClassDeclarationNodeZ cls) {
+            scope.setClassName(cls.getClassName());
+        }
         table.registerScope(buildKey(node), scope);
         return scope;
     }

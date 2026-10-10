@@ -112,6 +112,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     public Type visit(ClassDeclarationNodeZ node) {
         Symbol previousClass = currentClass;
         currentClass = lookup.findType(node.getClassName());
+
         Symbol parent = null;
         String parentName = node.getParentName();
 
@@ -120,7 +121,12 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             if (parent == null || parent.getKind() != SymbolKind.CLASS) {
                 reporter.reportTypeError(parentName,
                         "La superclase '" + parentName + "' no esta declarada", node);
+                parent = null;
             }
+        }
+
+        if (parent != null && currentClass != null) {
+            mergeInheritedMembers(currentClass, parent);
         }
 
         scopes.withScope(node, () -> {
@@ -955,5 +961,29 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     @Override
     public Type visit(TypeNodeZ node) {
         return Type.unknown();
+    }
+
+    /**
+     * Merge fields helper method
+     *
+     */
+    private void mergeInheritedMembers(Symbol child, Symbol parent) {
+        if (child.getMembers() == null) child.setMembers(new ArrayList<>());
+        if (parent.getMembers() == null) return;
+
+        for (Symbol inherited : parent.getMembers()) {
+            if (inherited.getKind() == SymbolKind.CONSTRUCTOR) continue;
+
+            boolean overridden = false;
+            for (Symbol own : child.getMembers()) {
+                if (own.getKind() == inherited.getKind()
+                        && own.getName().equals(inherited.getName())
+                        && own.getParameterTypes().equals(inherited.getParameterTypes())) {
+                    overridden = true;
+                    break;
+                }
+            }
+            if (!overridden) child.getMembers().add(inherited);
+        }
     }
 }
