@@ -15,9 +15,16 @@ import java.util.List;
 public class ZOverrideService {
 
     private final ZSemanticErrorReporter reporter;
+    private final ZSymbolLookupService lookup;
 
-    public ZOverrideService(ZSemanticErrorReporter reporter) {
+    public ZOverrideService(ZSemanticErrorReporter reporter,
+                            ZSymbolLookupService lookup) {
         this.reporter = reporter;
+        this.lookup = lookup;
+    }
+
+    private Symbol lookupType(String name) {
+        return lookup.findType(name);
     }
 
     /**
@@ -25,10 +32,14 @@ public class ZOverrideService {
      */
     public void validate(MethodDeclarationNodeZ node,
                          Symbol parentClass,
+                         String declaredParentName,
                          Symbol thisClass) {
 
         if (parentClass == null) {
             if (node.isOverride()) {
+                if (declaredParentName != null) {
+                    return;
+                }
                 reporter.reportTypeError(node.getName(),
                         "El metodo '" + node.getName()
                                 + "' esta marcado con @Override pero la clase '"
@@ -47,7 +58,10 @@ public class ZOverrideService {
                                 + "' esta marcado con @Override pero la superclase '"
                                 + parentClass.getName()
                                 + "' no tiene un metodo con esa firma", node);
+                return;
             }
+
+            validateReturnType(node, parentMethod, parentClass);
         } else {
             if (parentMethod != null) {
                 reporter.reportTypeError(node.getName(),
@@ -57,6 +71,89 @@ public class ZOverrideService {
                                 + "' pero no tiene la anotacion @Override", node);
             }
         }
+    }
+
+    /**
+     * Validates that the child's return type is compatible with the parent's.
+     */
+    private void validateReturnType(MethodDeclarationNodeZ node,
+                                    Symbol parentMethod,
+                                    Symbol parentClass) {
+
+        String childReturn = resolveReturnTypeName(node);
+        String parentReturn = parentMethod.getReturnType();
+        int childDims = node.getReturnDimensions();
+        int parentDims = parentMethod.getDimensions();
+
+        if (childDims != parentDims) {
+            reporter.reportTypeError(node.getName(),
+                    "El tipo de retorno del metodo '" + node.getName()
+                            + "' no coincide con el de la superclase '" + parentClass.getName()
+                            + "': se esperaba " + formatType(parentReturn, parentDims)
+                            + " pero es " + formatType(childReturn, childDims),
+                    node);
+            return;
+        }
+
+        if (!isReturnCovariant(childReturn, parentReturn)) {
+            reporter.reportTypeError(node.getName(),
+                    "El tipo de retorno del metodo '" + node.getName()
+                            + "' no coincide con el de la superclase '" + parentClass.getName()
+                            + "': se esperaba " + formatType(parentReturn, parentDims)
+                            + " pero es " + formatType(childReturn, childDims),
+                    node);
+        }
+    }
+
+    /**
+     * Returns the child's declared return type as a string, or "void" if absent.
+     */
+    private String resolveReturnTypeName(MethodDeclarationNodeZ node) {
+        if (node.getType() == null) return "void";
+        if (node.getType().getCustomTypeName() != null) {
+            return node.getType().getCustomTypeName();
+        }
+        if (node.getType().getDataType() != null) {
+            return node.getType().getDataType().getValue();
+        }
+        return "void";
+    }
+
+    /**
+     * Covariance checker method. rule: `child` is assignable to `parent` helper.
+     */
+    private boolean isReturnCovariant(String child, String parent) {
+        if (child == null || parent == null) return false;
+        if (child.equals(parent)) return true;
+
+        if (isPrimitive(child) || isPrimitive(parent)) return false;
+
+        return isSubclassOf(child, parent);
+    }
+
+    private boolean isPrimitive(String typeName) {
+        return switch (typeName) {
+            case "int", "double", "char", "boolean", "void", "String" -> true;
+            default -> false;
+        };
+    }
+
+    private boolean isSubclassOf(String childName, String parentName) {
+        String current = childName;
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        while (current != null && !seen.contains(current)) {
+            seen.add(current);
+            if (current.equals(parentName)) return true;
+            Symbol s = lookupType(current);
+            if (s == null) return false;
+            current = s.getParentName();
+        }
+        return false;
+    }
+
+    private String formatType(String type, int dims) {
+        if (dims <= 0) return type;
+        return type + "[]".repeat(dims);
     }
 
     // -------- helpers --------

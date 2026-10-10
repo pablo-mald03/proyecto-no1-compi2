@@ -89,7 +89,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         this.compat = new ZTypeCompatibilityService(mapper);
         this.calls = new ZCallResolutionService(compat, reporter);
         this.scopes = new ZScopeService(table, context);
-        this.overrides = new ZOverrideService(reporter);
+        this.overrides = new ZOverrideService(reporter, lookup);
     }
 
     private void annotate(AstNode node, Type type) {
@@ -142,7 +142,12 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         Symbol parent = currentClass != null && currentClass.getParentName() != null
                 ? lookup.findType(currentClass.getParentName())
                 : null;
-        overrides.validate(node, parent, currentClass);
+
+        String declaredParentName = currentClass != null
+                ? currentClass.getParentName()
+                : null;
+
+        overrides.validate(node, parent, declaredParentName, currentClass);
 
         scopes.withScope(node, () -> {
             Type previousReturn = currentReturnType;

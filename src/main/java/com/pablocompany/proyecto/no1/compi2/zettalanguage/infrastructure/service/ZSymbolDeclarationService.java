@@ -58,6 +58,7 @@ public class ZSymbolDeclarationService {
         Symbol symbol = base(node.getName(), SymbolKind.METHOD, null, node);
         symbol.getParameterTypes().addAll(parameterTypes);
         symbol.setReturnType(returnType != null ? returnType : "void");
+        symbol.setReturnDimensions(node.getReturnDimensions());
         symbol.setAccessModifier(node.getModifier());
         symbol.setOverriding(node.isOverride());
         symbol.setDeclaringClass(currentClassName());
@@ -198,6 +199,7 @@ public class ZSymbolDeclarationService {
         s.setFileName(context.getFileName());
         s.setLine(node.getLine());
         s.setColumn(node.getColumn());
+        s.setReturnDimensions(0);
         return s;
     }
 }

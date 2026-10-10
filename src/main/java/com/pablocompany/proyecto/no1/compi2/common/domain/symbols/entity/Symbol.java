@@ -41,6 +41,8 @@ public class Symbol {
 
     String declaringClass;
 
+    private int returnDimensions;
+
     boolean overriding;
 
     String parentName;
