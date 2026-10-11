@@ -60,8 +60,10 @@ public class ZArraySizeEvaluatorService {
         };
     }
 
-    // ---------------- unary ----------------
-
+    /**
+     * Helper method to evaluate the unary expressions
+     *
+     */
     private OptionalInt evaluateUnary(UnaryExpressionNodeZ un) {
         if (un.getOperator() != UnaryOperator.NEGATE) return OptionalInt.empty();
 
@@ -71,8 +73,10 @@ public class ZArraySizeEvaluatorService {
         return OptionalInt.of(-inner.getAsInt());
     }
 
-    // ---------------- binary ----------------
-
+    /**
+     * Helper method to evaluate the binary expressions
+     *
+     */
     private OptionalInt evaluateBinary(BinaryExpressionNodeZ bin) {
         OptionalInt left = evaluate(bin.getLeft());
         OptionalInt right = evaluate(bin.getRight());
