@@ -34,7 +34,7 @@ public enum ValueType {
      * Helper method to evaluate from suffix
      *
      */
-    public static ValueType fromSuffix(String suffix) {
+    public ValueType fromSuffix(String suffix) {
         for (ValueType t : values()) if (t.suffix.equals(suffix)) return t;
         throw new IllegalArgumentException("Tipo desconocido: " + suffix);
     }
