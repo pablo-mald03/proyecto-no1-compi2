@@ -797,22 +797,35 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
 
     @Override
     public Type visit(ArrayInitExpressionNodeY node) {
-        if (node.getElements() == null || node.getElements().isEmpty()) return Type.unknown();
+        if (node.getElements() == null || node.getElements().isEmpty()) {
+            return Type.unknown();
+        }
 
         Type firstType = node.getElements().get(0).accept(this);
         if (firstType.isUnknown()) {
-            for (int i = 1; i < node.getElements().size(); i++) node.getElements().get(i).accept(this);
+            for (int i = 1; i < node.getElements().size(); i++) {
+                node.getElements().get(i).accept(this);
+            }
             return Type.unknown();
         }
+
+        int extraDims = 1;
+        Type baseType = firstType;
+        if (firstType.isArray()) {
+            extraDims = firstType.getDimensions() + 1;
+            baseType = firstType.getElementType();
+        }
+
         for (int i = 1; i < node.getElements().size(); i++) {
             Type elemType = node.getElements().get(i).accept(this);
             if (!elemType.isAssignableTo(firstType) && !elemType.isUnknown()) {
-                reporter.reportTypeError("",
+                reporter.reportTypeError(firstType.toString(),
                         "El elemento en posicion " + i + " tiene tipo " + elemType
                                 + ", incompatible con el primer elemento " + firstType, node);
             }
         }
-        Type result = Type.arrayType(firstType, 1);
+
+        Type result = Type.arrayType(baseType, extraDims);
         annotate(node, result);
         return result;
     }
