@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
@@ -223,6 +224,10 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
         if (!imports.typeExists(node.getClassName(), node)) {
             reporter.reportUnknownType(node.getClassName(), node);
         }
+        Symbol sym = lookup.findTypeSymbolGlobal(context.getFilePath(), node.getClassName());
+        if (sym != null && sym.getKind() == SymbolKind.STRUCT) {
+            reporter.reportUnknownType(node.getClassName(), node);
+        }
         visitArgs(node.getArguments());
         return null;
     }
@@ -252,12 +257,21 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(VariableDeclarationNodePigLatin node) {
-        if (node.getInitializer() != null) node.getInitializer().accept(this);
+        if (node.getDataType() != null) {
+            node.getDataType().accept(this);
+        }
+
+        if (node.getInitializer() != null) {
+            node.getInitializer().accept(this);
+        }
         return null;
     }
 
     @Override
     public Void visit(ArrayDeclarationNodePigLatin node) {
+        if (node.getDataType() != null) {
+            node.getDataType().accept(this);
+        }
         if (node.getDimensions() != null) {
             for (ExpressionNodePigLatin d : node.getDimensions()) if (d != null) d.accept(this);
         }
@@ -328,6 +342,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(ReadStatementNodePigLatin node) {
+        if (node.getTarget() != null) node.getTarget().accept(this);
         return null;
     }
 
@@ -349,6 +364,7 @@ public class PigLatinReferenceResolverVisitor implements PigLatinAstVisitor<Void
 
     @Override
     public Void visit(ForInitDeclarationNodePigLatin node) {
+        if (node.getType() != null) node.getType().accept(this);
         if (node.getExpr() != null) node.getExpr().accept(this);
         return null;
     }
