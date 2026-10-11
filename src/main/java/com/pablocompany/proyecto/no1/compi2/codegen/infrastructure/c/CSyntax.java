@@ -5,7 +5,9 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Address;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Operand;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.*;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StringRef;
 import lombok.NoArgsConstructor;
 
 /**
@@ -27,13 +29,13 @@ public class CSyntax {
         };
     }
 
-    public String address(Address a) {
+ /*   public String address(Address a) {
         return switch (a) {
             case Frame framePtr -> withOffset("fp", framePtr.getOffset());
             case StackTop stackTop -> withOffset("sptr", stackTop.getOffset());
             case Indirect indirect -> withOffset(registerTo(indirect.getBase()), indirect.getOffset());
         };
-    }
+    }*/
 
     public String withOffset(String base, int offset) {
         if (offset == 0) return base;
