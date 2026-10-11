@@ -22,7 +22,13 @@ NULL: 'null';
 
 //ACCESS MODIFIERS
 PUBLIC: 'public';
+PROTECTED: 'protected';
+PRIVATE: 'private';
 
+//OBJECT KEYWORDS
+EXTENDS: 'extends';
+OVERRIDE: '@Override';
+THIS: 'this';
 
 //SECTION OF FUNCTION ACTIONS
 

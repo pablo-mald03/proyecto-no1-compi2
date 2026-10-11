@@ -45,6 +45,8 @@ public interface WorkspaceNotifier {
     
     void focusSymbolsTable();
 
+    void focusTypesTable();
+
     /*SECTION OF CLEAR METHODS OR RESET DATA*/
 
     void clearLogs();

@@ -15,6 +15,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOp
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -23,6 +24,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -104,7 +106,9 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ProgramNodeZ node) {
-        if (node.getClassNode() != null) node.getClassNode().accept(this);
+        if (node.getClassNode() != null) {
+            node.getClassNode().accept(this);
+        }
         return null;
     }
 
@@ -263,6 +267,16 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             String dest = getStackRefByName(localName);
             storeValueTo(valueRef, dest);
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(FieldDeclarationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ThisExpressionNodeZ node) {
         return null;
     }
 
@@ -689,8 +703,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeZ node) {
-        // Minimal support: evaluate selector, then each case as a labeled block.
-        // (Full switch lowering is a TODO; for now emits case bodies in order.)
         if (node.getSelector() != null) {
             exprToString(node.getSelector());
         }
@@ -720,11 +732,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     // ============================================================
     // EXPRESSIONS
     // ============================================================
-
-    @Override
-    public Void visit(ExpressionNodeZ node) {
-        return null;
-    }
 
     @Override
     public Void visit(LiteralExpressionNodeZ node) {
@@ -952,8 +959,11 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
-        // novus int[3][4] etc. For now delegate to a simple linear reservation.
-        // TODO: dynamic dims + heap arrays when needed.
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
         return null;
     }
 

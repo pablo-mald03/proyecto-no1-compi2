@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.child
 
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.enums.AccessModifierZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.ParameterNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
@@ -23,13 +24,18 @@ public class MethodDeclarationNodeZ extends ZAstNode {
     //Return dimensions
     private final int returnDimensions;
 
-    public MethodDeclarationNodeZ(int line, int column, String name, TypeNodeZ type, List<ParameterNodeZ> params, List<ZAstNode> body, int returnDimensions) {
+    private final AccessModifierZ modifier;
+    private final boolean override;
+
+    public MethodDeclarationNodeZ(int line, int column, String name, TypeNodeZ type, List<ParameterNodeZ> params, List<ZAstNode> body, int returnDimensions, AccessModifierZ modifier, boolean override) {
         super(line, column);
         this.name = name;
         this.type = type;
         this.params = params;
         this.body = body;
         this.returnDimensions = returnDimensions;
+        this.modifier = modifier;
+        this.override = override;
     }
 
     @Override

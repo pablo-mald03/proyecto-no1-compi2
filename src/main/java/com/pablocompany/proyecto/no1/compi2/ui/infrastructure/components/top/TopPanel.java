@@ -187,7 +187,7 @@ public class TopPanel extends JPanel {
         viewMenu.add(createMenuItem("Consola", 0, e -> notifier.focusConsole()));
         viewMenu.add(createMenuItem("Errores", 0, e -> notifier.focusErrors()));
         viewMenu.add(createMenuItem("Tabla de Símbolos", 0, e -> notifier.focusSymbolsTable()));
-        viewMenu.add(createMenuItem("Tabla de Tipos", 0, e -> notifier.focusSymbolsTable()));
+        viewMenu.add(createMenuItem("Tabla de Tipos", 0, e -> notifier.focusTypesTable()));
         menuBar.add(viewMenu);
 
         // Tools Menu

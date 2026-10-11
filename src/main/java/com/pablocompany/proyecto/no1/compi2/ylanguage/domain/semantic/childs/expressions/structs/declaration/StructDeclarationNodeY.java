@@ -9,11 +9,11 @@ import lombok.Getter;
 @Getter
 public class StructDeclarationNodeY extends YAstNode {
     private final String structName;
-    private final StructBodyNodeY attributes;
+    private final StructBodyNodeY body;
 
-    public StructDeclarationNodeY(int line, int column, StructBodyNodeY attributes, String structName) {
+    public StructDeclarationNodeY(int line, int column, StructBodyNodeY body, String structName) {
         super(line, column);
-        this.attributes = attributes;
+        this.body = body;
         this.structName = structName;
     }
 

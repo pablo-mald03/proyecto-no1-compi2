@@ -176,7 +176,7 @@ public class TypesTable extends JTable {
 
             tableModel.addRow(new Object[]{
                     symbol.getName(),
-                    symbol.getKind(),
+                    symbol.getKind().getValue(),
                     fieldCount,
                     fieldNames,
                     fieldTypes

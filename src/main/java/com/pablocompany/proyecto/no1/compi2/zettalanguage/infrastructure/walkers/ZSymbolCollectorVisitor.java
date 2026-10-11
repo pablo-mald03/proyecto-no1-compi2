@@ -1,15 +1,14 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
-import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -18,6 +17,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -38,9 +38,12 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZClassMemberCollectorService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZScopeService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZSemanticErrorReporter;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZSymbolDeclarationService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,17 +57,22 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     private final GlobalSymbolTable table;
     private final EditorContext context;
 
-    private String currentClassName;
-
-    private List<Symbol> currentClassMembers;
+    private final ZSemanticErrorReporter reporter;
+    private final ZScopeService scopes;
+    private final ZSymbolDeclarationService declarations;
+    private final ZClassMemberCollectorService classMembers;
 
     public ZSymbolCollectorVisitor(GlobalSymbolTable table, EditorContext context) {
         this.table = table;
         this.context = context;
+        this.reporter = new ZSemanticErrorReporter(context);
+        this.scopes = new ZScopeService(table, context);
+        this.declarations = new ZSymbolDeclarationService(table, context, reporter);
+        this.classMembers = new ZClassMemberCollectorService();
     }
 
     // ============================================================
-    // PROGRAM INIT VISIT NODE
+    // PROGRAM
     // ============================================================
 
     @Override
@@ -76,517 +84,299 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     }
 
     // ============================================================
-    // CLASS NODE
+    // CLASS
     // ============================================================
 
     @Override
     public Void visit(ClassDeclarationNodeZ node) {
-        Symbol classSymbol = buildSymbol(
-                node.getClassName(),
-                SymbolKind.CLASS,
-                null,
-                node
-        );
-        classSymbol.setQualifiedName(node.getClassName());
-        this.currentClassName = node.getClassName();
+        Symbol classSymbol = declarations.declareClass(node);
 
-        if (!table.declare(classSymbol)) {
-            reportDuplicate(node.getClassName(), "clase", node);
-            return null;
+        classMembers.begin();
+
+        scopes.registerScope(node, SymbolScopeKind.CLASS);
+        try {
+            if (node.getMembers() != null) {
+                for (ZAstNode m : node.getMembers()) {
+                    if (m != null) m.accept(this);
+                }
+            }
+        } finally {
+            table.exitScope();
         }
 
-        List<Symbol> previousMembers = currentClassMembers;
-        currentClassMembers = new ArrayList<>();
-
-        SymbolScope scope = table.enterScope(SymbolScopeKind.CLASS, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        for (ZAstNode astNode : node.getMembers()) {
-            astNode.accept(this);
+        Symbol parent = classSymbol != null && classSymbol.getParentName() != null
+                ? lookupClassInFile(classSymbol.getParentName())
+                : null;
+        if (classSymbol != null) {
+            classSymbol.setMembers(classMembers.end(null));
+        } else {
+            classMembers.end(null);
         }
-
-        table.exitScope();
-
-        classSymbol.setMembers(currentClassMembers);
-        currentClassMembers = previousMembers;
-
         return null;
     }
 
     // ============================================================
-    // METHODS AND CONSTRUCTORS
+    // METHODS / CONSTRUCTORS
     // ============================================================
+
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
-        Symbol methodSymbol = buildSymbol(
-                node.getName(),
-                SymbolKind.METHOD,
-                null,
-                node
-        );
+        List<String> paramTypes = collectParameterTypes(node.getParams());
 
-        if (node.getParams() != null) {
-            for (ParameterNodeZ param : node.getParams()) {
-                if (param != null) {
-                    String type = resolveParameterType(param);
-                    if (param.isArray()) {
-                        type = type + "[]".repeat(param.getDimensions());
-                    }
-                    methodSymbol.getParameterTypes().add(type);
-                }
+        String returnType = node.getType() != null
+                ? resolveTypeName(node.getType())
+                : "void";
+
+        Symbol method = declarations.declareMethod(node, paramTypes, returnType);
+        if (method != null) classMembers.add(method);
+
+        scopes.registerScope(node, SymbolScopeKind.METHOD);
+        try {
+            declarations.declareThis(currentClassName(), node);
+            if (node.getParams() != null) {
+                for (ParameterNodeZ p : node.getParams()) if (p != null) p.accept(this);
             }
-        }
-
-        if (node.getType() != null) {
-            methodSymbol.setReturnType(resolveTypeName(node.getType()));
-        } else {
-            methodSymbol.setReturnType("void");
-        }
-
-        if (!table.declare(methodSymbol)) {
-            reportDuplicate(node.getName(), "metodo", node);
-            return null;
-        }
-
-        if (currentClassMembers != null) {
-            currentClassMembers.add(methodSymbol);
-        }
-
-        SymbolScope scope = table.enterScope(SymbolScopeKind.METHOD, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getParams() != null) {
-            for (ParameterNodeZ param : node.getParams()) {
-                if (param != null) {
-                    param.accept(this);
-                }
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        for (ZAstNode astNode : node.getBody()) {
-            astNode.accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
+
 
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
-        String constructorName = node.getName() != null
-                ? node.getName()
-                : currentClassName;
+        String name = node.getName() != null ? node.getName() : currentClassName();
+        List<String> paramTypes = collectParameterTypes(node.getParams());
 
-        Symbol constructorSymbol = buildSymbol(
-                constructorName,
-                SymbolKind.CONSTRUCTOR,
-                null,
-                node
-        );
+        Symbol ctor = declarations.declareConstructor(node, name, paramTypes);
+        if (ctor != null) classMembers.add(ctor);
 
-        if (node.getParams() != null) {
-            for (ParameterNodeZ param : node.getParams()) {
-                if (param != null) {
-                    String type = resolveParameterType(param);
-                    if (param.isArray()) {
-                        type = type + "[]".repeat(param.getDimensions());
-                    }
-                    constructorSymbol.getParameterTypes().add(type);
-                }
+        scopes.registerScope(node, SymbolScopeKind.CONSTRUCTOR);
+        try {
+            declarations.declareThis(currentClassName(), node);
+            if (node.getParams() != null) {
+                for (ParameterNodeZ p : node.getParams()) if (p != null) p.accept(this);
             }
-        }
-
-        if (!table.declare(constructorSymbol)) {
-            reportDuplicate(constructorName, "constructor", node);
-            return null;
-        }
-
-        if (currentClassMembers != null) {
-            currentClassMembers.add(constructorSymbol);
-        }
-
-        SymbolScope scope = table.enterScope(SymbolScopeKind.CONSTRUCTOR, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getParams() != null) {
-            for (ParameterNodeZ param : node.getParams()) {
-                if (param != null) {
-                    param.accept(this);
-                }
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
-            }
-        }
-
-        table.exitScope();
         return null;
     }
 
 
     @Override
     public Void visit(ParameterNodeZ node) {
-        Symbol parameter = buildSymbol(
-                node.getName(),
-                SymbolKind.PARAMETER,
-                resolveParameterType(node),
-                node
-        );
-        parameter.setDimensions(node.getDimensions());
-        parameter.setArray(node.isArray());
-
-        if (!table.declare(parameter)) {
-            reportDuplicate(node.getName(), "parametro", node);
-        }
+        declarations.declareParameter(node, resolveParameterType(node));
         return null;
     }
 
     // ============================================================
-    // CODE BODY (method/constructor body)
+    // CODE BODY
     // ============================================================
 
     @Override
     public Void visit(CodeBodyNodeZ node) {
         if (node.getStatements() != null) {
-            for (ZAstNode statement : node.getStatements()) {
-                if (statement != null) {
-                    statement.accept(this);
-                }
+            for (ZAstNode s : node.getStatements()) {
+                if (s != null) s.accept(this);
             }
         }
         return null;
     }
 
     // ============================================================
-    // VARIABLE DECLARATIONS
+    // VARIABLES
     // ============================================================
 
     @Override
     public Void visit(VariableDeclarationNodeZ node) {
         String typeName = resolveTypeName(node.getDataType());
+        int dims = node.getDimensions();
+        declarations.declareVariable(node.getIdentifier(), typeName, dims, node);
 
-        SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.CLASS
-                ? SymbolKind.ATTRIBUTE
-                : SymbolKind.LOCAL_VARIABLE;
-
-        Symbol variable = buildSymbol(
-                node.getIdentifier(),
-                kind,
-                typeName,
-                node
-        );
-
-        variable.setDimensions(node.getDimensions());
-        variable.setArray(node.getDimensions() > 0);
-
-        if (!table.declare(variable)) {
-            String label = kind == SymbolKind.ATTRIBUTE ? "atributo" : "variable";
-            reportDuplicate(node.getIdentifier(), label, node);
+        if (isInClassScope()) {
+            Symbol attr = lookupInCurrentScope(node.getIdentifier());
+            if (attr != null) classMembers.add(attr);
         }
+        return null;
+    }
 
-        if (kind == SymbolKind.ATTRIBUTE && currentClassMembers != null) {
-            currentClassMembers.add(variable);
-        }
-
+    @Override
+    public Void visit(FieldDeclarationNodeZ node) {
+        String typeName = resolveTypeName(node.getType());
+        Symbol field = declarations.declareField(node, typeName);
+        if (field != null) classMembers.add(field);
         return null;
     }
 
 
     @Override
+    public Void visit(ThisExpressionNodeZ node) {
+        // Nothing to declare here. The checker resolves `this` against the enclosing class and annotates the node.
+        return null;
+    }
+
+    @Override
     public Void visit(ArrayDeclarationNodeZ node) {
         String typeName = resolveTypeName(node.getDataType());
+        int dims = node.getDimensions() != null ? node.getDimensions().size() : 0;
+        declarations.declareArray(node.getIdentifier(), typeName, dims, node);
 
-        SymbolKind kind = table.getCurrentScope().getKind() == SymbolScopeKind.CLASS
-                ? SymbolKind.ATTRIBUTE
-                : SymbolKind.LOCAL_VARIABLE;
-
-        Symbol array = buildSymbol(
-                node.getIdentifier(),
-                kind,
-                typeName,
-                node
-        );
-        array.setDimensions(node.getDimensions().size());
-        array.setArray(true);
-
-        if (!table.declare(array)) {
-            String label = kind == SymbolKind.ATTRIBUTE ? "arreglo atributo" : "arreglo";
-            reportDuplicate(node.getIdentifier(), label, node);
+        if (isInClassScope()) {
+            Symbol attr = lookupInCurrentScope(node.getIdentifier());
+            if (attr != null) classMembers.add(attr);
         }
         return null;
     }
 
     @Override
     public Void visit(ForInitDeclarationNodeZ node) {
-        String typeName = resolveTypeName(node.getType());
-
-        Symbol variable = buildSymbol(
-                node.getId(),
-                SymbolKind.LOCAL_VARIABLE,
-                typeName,
-                node
-        );
-
-        if (!table.declare(variable)) {
-            reportDuplicate(node.getId(), "variable de for", node);
-        }
+        declarations.declareForVariable(node.getId(), resolveTypeName(node.getType()), node);
         return null;
     }
 
     // ============================================================
-    // CONTROL FLOW BLOCKS
+    // CONTROL FLOW
     // ============================================================
 
     @Override
     public Void visit(IfStatementNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getThenBody() != null) {
-            for (ZAstNode astNode : node.getThenBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getThenBody() != null) {
+                for (ZAstNode s : node.getThenBody()) if (s != null) s.accept(this);
             }
-        }
-        if (node.getElseIfs() != null) {
-            for (ElseIfNodeZ elseIf : node.getElseIfs()) {
-                if (elseIf != null) {
-                    elseIf.accept(this);
-                }
+            if (node.getElseIfs() != null) {
+                for (ElseIfNodeZ e : node.getElseIfs()) if (e != null) e.accept(this);
             }
+            if (node.getElseBlockNode() != null) node.getElseBlockNode().accept(this);
+        } finally {
+            table.exitScope();
         }
-        if (node.getElseBlockNode() != null) {
-            node.getElseBlockNode().accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseIfNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ElseBlockNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+            if (node.getCondition() != null) node.getCondition().accept(this);
+        } finally {
+            table.exitScope();
         }
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getInit() != null) {
-            node.getInit().accept(this);
-        }
-        if (node.getCondition() != null) {
-            node.getCondition().accept(this);
-        }
-        if (node.getUpdate() != null) {
-            node.getUpdate().accept(this);
-        }
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getInit() != null) node.getInit().accept(this);
+            if (node.getCondition() != null) node.getCondition().accept(this);
+            if (node.getUpdate() != null) node.getUpdate().accept(this);
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(SwitchStatementNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getSelector() != null) {
-            node.getSelector().accept(this);
-        }
-        if (node.getCases() != null) {
-            for (SwitchCaseNodeZ caseNode : node.getCases()) {
-                if (caseNode != null) {
-                    caseNode.accept(this);
-                }
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getSelector() != null) node.getSelector().accept(this);
+            if (node.getCases() != null) {
+                for (SwitchCaseNodeZ c : node.getCases()) if (c != null) c.accept(this);
             }
+            if (node.getDefaultCase() != null) node.getDefaultCase().accept(this);
+        } finally {
+            table.exitScope();
         }
-        if (node.getDefaultCase() != null) {
-            node.getDefaultCase().accept(this);
-        }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(SwitchCaseNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeZ node) {
-        SymbolScope scope = table.enterScope(SymbolScopeKind.BLOCK, context.getFilePath());
-        String scopeKey = GlobalSymbolTable.buildScopeKey(
-                context.getFilePath(),
-                node.getClass().getSimpleName(),
-                node.getLine(),
-                node.getColumn()
-        );
-        table.registerScope(scopeKey, scope);
-
-        if (node.getBody() != null) {
-            for (ZAstNode astNode : node.getBody()) {
-                astNode.accept(this);
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
+        try {
+            if (node.getBody() != null) {
+                for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+        } finally {
+            table.exitScope();
         }
-
-        table.exitScope();
         return null;
     }
 
     // ============================================================
-    // NON-DECLARING NODES
+    // NON-DECLARING (no-op)
     // ============================================================
 
     @Override
@@ -596,6 +386,11 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
         return null;
     }
 
@@ -664,10 +459,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visit(ExpressionNodeZ node) {
-        return null;
-    }
 
     @Override
     public Void visit(ExpressionStatementNodeZ node) {
@@ -708,7 +499,7 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     public Void visit(ForUpdateNodeZ node) {
         return null;
     }
-    
+
     @Override
     public Void visit(PrintStatementNodeZ node) {
         return null;
@@ -740,51 +531,83 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     }
 
     // ============================================================
-    // HELPERS
+    // HELPERS (only what the visitor itself needs)
     // ============================================================
 
-    private Symbol buildSymbol(String name, SymbolKind kind, String type, ZAstNode node) {
-        Symbol symbol = new Symbol();
-        symbol.setName(name);
-        symbol.setKind(kind);
-        symbol.setType(type);
-        symbol.setFilePath(context.getFilePath());
-        symbol.setFileName(context.getFileName());
-        symbol.setLine(node.getLine());
-        symbol.setColumn(node.getColumn());
-        return symbol;
+    /**
+     * Returns true if the current scope is a class scope.
+     */
+    private boolean isInClassScope() {
+        return table.getCurrentScope().getKind() == SymbolScopeKind.CLASS;
     }
 
-    private void reportDuplicate(String name, String kindLabel, ZAstNode node) {
-        CompilerError error = new CompilerError();
-        error.setLexeme(name);
-        error.setLine(node.getLine());
-        error.setColumn(node.getColumn());
-        error.setErrorType(ErrorType.SEMANTIC);
-        error.setDescription("Ya existe un " + kindLabel + " con el nombre '" + name + "' en este ambito");
-        error.setFilePath(context.getFilePath());
-        error.setFileName(context.getFileName());
-        context.getSemanticErrors().add(error);
+    /**
+     * Looks up a symbol with the given name in the current scope only.
+     */
+    private Symbol lookupInCurrentScope(String name) {
+        List<Symbol> found = table.getCurrentScope().resolveLocalByName(name);
+        return found.isEmpty() ? null : found.get(0);
     }
 
+    /**
+     * Looks up a class symbol by name in the file scope.
+     */
+    private Symbol lookupClass(String className) {
+        return table.resolveDeepInFile(context.getFilePath(), className).stream()
+                .filter(s -> s.getKind() == SymbolKind.CLASS)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Resolves the type name of a TypeNode. Delegates to the mapper in the checker
+     */
     private String resolveTypeName(TypeNodeZ typeNode) {
         if (typeNode == null) return null;
-        if (typeNode.getCustomTypeName() != null) {
-            return typeNode.getCustomTypeName();
-        }
-        if (typeNode.getDataType() != null) {
-            return typeNode.getDataType().getValue();
-        }
+        if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
+        if (typeNode.getDataType() != null) return typeNode.getDataType().getValue();
         return null;
     }
 
+    /**
+     * Resolves the raw type name of a parameter.
+     */
     private String resolveParameterType(ParameterNodeZ node) {
         String fromType = resolveTypeName(node.getType());
-        if (fromType != null) return fromType;
-        return "?";
+        return fromType != null ? fromType : "?";
     }
 
+    //Helpers to collect the parameters
+    private List<String> collectParameterTypes(List<ParameterNodeZ> params) {
+        List<String> result = new ArrayList<>();
+        if (params == null) return result;
+        for (ParameterNodeZ p : params) {
+            if (p == null) continue;
+            String t = resolveParameterType(p);
+            if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
+            result.add(t);
+        }
+        return result;
+    }
+
+    /**
+     * Look up class in file helper resolver
+     *
+     */
+    private Symbol lookupClassInFile(String className) {
+        return table.resolveDeepInFile(context.getFilePath(), className).stream()
+                .filter(s -> s.getKind() == SymbolKind.CLASS)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Helper to resolve the class name
+     *
+     */
     private String currentClassName() {
-        return null;
+        SymbolScope scope = table.getCurrentScope();
+        while (scope != null && scope.getKind() != SymbolScopeKind.CLASS) scope = scope.getParent();
+        return scope != null ? scope.getClassName() : null;
     }
 }

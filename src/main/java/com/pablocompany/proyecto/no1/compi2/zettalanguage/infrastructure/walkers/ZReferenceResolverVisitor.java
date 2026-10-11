@@ -8,6 +8,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolS
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -16,6 +17,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -290,6 +292,11 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     }
 
     @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
     public Void visit(ArgumentsNodeZ node) {
         if (node.getArguments() != null) {
             for (ExpressionNodeZ arg : node.getArguments()) {
@@ -315,6 +322,16 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
         if (node.getInitializer() != null) {
             node.getInitializer().accept(this);
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(FieldDeclarationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ThisExpressionNodeZ node) {
         return null;
     }
 
@@ -692,11 +709,6 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfListNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ExpressionNodeZ node) {
         return null;
     }
 

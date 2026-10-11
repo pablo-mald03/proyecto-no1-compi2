@@ -45,6 +45,13 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitClassMethodMember(ZParser.ClassMethodMemberContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code FieldDeclaration}
+	 * labeled alternative in {@link ZParser#field_declaration}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFieldDeclaration(ZParser.FieldDeclarationContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ConstructorDeclaration}
 	 * labeled alternative in {@link ZParser#constructor_declaration}.
 	 * @param ctx the parse tree
@@ -458,6 +465,13 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitNestedVariable(ZParser.NestedVariableContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code BaseThis}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBaseThis(ZParser.BaseThisContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code ObjectMethodChain}
 	 * labeled alternative in {@link ZParser#object_values}.
 	 * @param ctx the parse tree
@@ -730,4 +744,25 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBoolFalse(ZParser.BoolFalseContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ModifierPrivate}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitModifierPrivate(ZParser.ModifierPrivateContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ModifierPublic}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitModifierPublic(ZParser.ModifierPublicContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ModifierProtected}
+	 * labeled alternative in {@link ZParser#access_modifier}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitModifierProtected(ZParser.ModifierProtectedContext ctx);
 }

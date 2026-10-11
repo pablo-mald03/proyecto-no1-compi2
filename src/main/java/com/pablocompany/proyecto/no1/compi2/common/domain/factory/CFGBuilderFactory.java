@@ -1,0 +1,23 @@
+package com.pablocompany.proyecto.no1.compi2.common.domain.factory;
+
+import com.pablocompany.proyecto.no1.compi2.common.domain.cfg.CFGBuilder;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.cfg.PigLatinCFGBuilder;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.cfg.YCFGBuilder;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.cfg.ZCFGBuilder;
+
+/**
+ * Principal factory class for the different CFG implementations
+ *
+ */
+public class CFGBuilderFactory {
+
+    public static CFGBuilder create(String extension) {
+        if (extension == null) return null;
+        return switch (extension) {
+            case ".z" -> new ZCFGBuilder();
+            case ".pig" -> new PigLatinCFGBuilder();
+            case ".y" -> new YCFGBuilder();
+            default -> null;
+        };
+    }
+}

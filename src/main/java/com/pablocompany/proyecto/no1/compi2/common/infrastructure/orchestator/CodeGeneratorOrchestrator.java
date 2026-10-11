@@ -30,6 +30,10 @@ public class CodeGeneratorOrchestrator {
 
     private CodeGeneratorOutput lastOutput;
 
+    /**
+     * Method to generate all the compiled code
+     *
+     */
     public String generateAll(Map<String, EditorContext> allContexts,
                               GlobalSymbolTable table,
                               Map<AstNode, Type> typeAnnotations,

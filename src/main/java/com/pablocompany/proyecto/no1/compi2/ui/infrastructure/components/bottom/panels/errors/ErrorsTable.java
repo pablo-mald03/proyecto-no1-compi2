@@ -21,7 +21,12 @@ import java.util.List;
  */
 public class ErrorsTable extends JTable {
 
+    private static final int MIN_ROW_HEIGHT = 30;
+    private static final int MIN_CHARS_PER_LINE = 10;
+    private static final int SAFETY_PX = 4;
+
     private final DefaultTableModel tableModel;
+    private boolean adjustingHeights = false;
 
     public ErrorsTable() {
         String[] columnNames = {"Lexema", "Archivo", "Directorio", "Línea", "Columna", "Tipo", "Descripción"};
@@ -41,7 +46,7 @@ public class ErrorsTable extends JTable {
 
         setupColumnWidths();
 
-        setRowHeight(30);
+        setRowHeight(MIN_ROW_HEIGHT);
     }
 
     /**
@@ -54,7 +59,7 @@ public class ErrorsTable extends JTable {
         setSelectionBackground(Theme.SURFACE_DARK.getColorSet());
         setSelectionForeground(Color.WHITE);
         setFont(new Font("Liberation Mono", Font.PLAIN, 13));
-        setRowHeight(30);
+        setRowHeight(MIN_ROW_HEIGHT);
 
         setIntercellSpacing(new Dimension(1, 0));
         setFocusable(false);
@@ -88,6 +93,72 @@ public class ErrorsTable extends JTable {
                 return c;
             }
         });
+    }
+
+    /**
+     * Padding horizontal total (izquierda + derecha) que usa cada columna.
+     * Debe coincidir con los bordes definidos en el renderer.
+     */
+    private int horizontalPadding(int column) {
+        return (column >= 1 && column <= 4) ? 10 : 30;
+    }
+
+    /**
+     * Cuantos caracteres caben por linea en una columna, segun su ancho actual
+     * y el ancho de un caracter de la fuente (monoespaciada, asi que es exacto).
+     */
+    private int maxCharsPerLine(int column) {
+        int colWidth = getColumnModel().getColumn(column).getWidth();
+        int charWidth = getFontMetrics(getFont()).charWidth('W');
+        int available = colWidth - horizontalPadding(column) - SAFETY_PX;
+        return Math.max(MIN_CHARS_PER_LINE, available / Math.max(1, charWidth));
+    }
+
+    private static String escapeHtml(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    /**
+     * Convierte el texto en HTML con saltos de linea (<br>) respetando el limite
+     * de caracteres por linea. Corta por palabras y, si una palabra sola no cabe
+     * (rutas, lexemas largos), la parte en trozos.
+     */
+    private String toWrappedHtml(String text, int maxChars) {
+        StringBuilder out = new StringBuilder("<html>");
+        String[] paragraphs = text.split("\n", -1);
+
+        for (int p = 0; p < paragraphs.length; p++) {
+            if (p > 0) {
+                out.append("<br>");
+            }
+
+            int len = 0; // caracteres en la linea visual actual
+            for (String word : paragraphs[p].split(" ", -1)) {
+
+                // Palabra mas larga que una linea completa: partirla
+                while (word.length() > maxChars) {
+                    if (len > 0) {
+                        out.append("<br>");
+                        len = 0;
+                    }
+                    out.append(escapeHtml(word.substring(0, maxChars))).append("<br>");
+                    word = word.substring(maxChars);
+                }
+
+                int needed = (len == 0 ? 0 : 1) + word.length();
+                if (len > 0 && len + needed > maxChars) {
+                    out.append("<br>");
+                    len = 0;
+                    needed = word.length();
+                }
+                if (len > 0) {
+                    out.append(' ');
+                }
+                out.append(escapeHtml(word));
+                len += needed;
+            }
+        }
+        return out.toString();
     }
 
     /**
@@ -131,11 +202,12 @@ public class ErrorsTable extends JTable {
                     }
                 }
 
-                if (column == 6 && value instanceof String) {
+                // Auto-wrap de cualquier columna de texto (los numeros no son String)
+                if (value instanceof String) {
                     String text = (String) value;
-                    if (text.length() > 50) {
-                        setText("<html><body style='width: " + (getColumnModel().getColumn(column).getWidth() - 30) + "px; text-align: left;'>"
-                                + text.replaceAll("\n", "<br>") + "</body></html>");
+                    int maxChars = maxCharsPerLine(column);
+                    if (text.length() > maxChars || text.indexOf('\n') >= 0) {
+                        setText(toWrappedHtml(text, maxChars));
                     }
                 }
 
@@ -175,31 +247,32 @@ public class ErrorsTable extends JTable {
     }
 
     /**
-     * Calculate and set row heights based on content
+     * Calcula el alto de cada fila segun la celda mas alta (sin tope maximo).
      */
     private void adjustRowHeights() {
-        // Clear any custom row heights
-        for (int row = 0; row < getRowCount(); row++) {
-            int rowHeight = getRowHeight();
+        if (adjustingHeights) {
+            return;
+        }
+        adjustingHeights = true;
+        try {
+            for (int row = 0; row < getRowCount(); row++) {
+                int rowHeight = MIN_ROW_HEIGHT;
 
-            for (int column = 0; column < getColumnCount(); column++) {
-                Component comp = prepareRenderer(getCellRenderer(row, column), row, column);
-                int compHeight = comp.getPreferredSize().height;
+                for (int column = 0; column < getColumnCount(); column++) {
+                    if (!(getValueAt(row, column) instanceof String)) {
+                        continue;
+                    }
+                    Component comp = prepareRenderer(getCellRenderer(row, column), row, column);
+                    rowHeight = Math.max(rowHeight, comp.getPreferredSize().height + 4);
+                }
 
-                // Add padding
-                compHeight += 10;
-
-                if (compHeight > rowHeight) {
-                    rowHeight = compHeight;
+                // Solo si cambia: setRowHeight dispara otro layout y podria ciclar
+                if (getRowHeight(row) != rowHeight) {
+                    setRowHeight(row, rowHeight);
                 }
             }
-
-            // Limit maximum row height to prevent extreme sizes
-            if (rowHeight > 150) {
-                rowHeight = 150;
-            }
-
-            setRowHeight(row, Math.max(getRowHeight(), rowHeight));
+        } finally {
+            adjustingHeights = false;
         }
     }
 
@@ -239,7 +312,7 @@ public class ErrorsTable extends JTable {
     public void clear() {
         tableModel.setRowCount(0);
         // Reset row heights
-        setRowHeight(30);
+        setRowHeight(MIN_ROW_HEIGHT);
     }
 
     /**

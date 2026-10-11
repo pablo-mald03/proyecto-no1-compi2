@@ -134,8 +134,8 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(StructDeclarationNodeY node) {
         List<String> fields = new ArrayList<>();
-        if (node.getAttributes() != null && node.getAttributes().getAttributes() != null) {
-            for (StructAttributeNodeY attr : node.getAttributes().getAttributes()) {
+        if (node.getBody() != null && node.getBody().getAttributes() != null) {
+            for (StructAttributeNodeY attr : node.getBody().getAttributes()) {
                 if (attr != null) fields.add(attr.getIdentifier());
             }
         }
@@ -445,6 +445,7 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
             String dest = arrayName + "[fp + 0]";
             storeValueTo(valueRef, dest);
         }
+        output.emit("fp_pop", null, null, null);
         output.emit("return", null, null, null);
         return null;
     }

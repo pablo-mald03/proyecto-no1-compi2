@@ -111,8 +111,8 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             table.setCurrentScope(scope);
         }
 
-        if (node.getAttributes() != null) {
-            node.getAttributes().accept(this);
+        if (node.getBody() != null) {
+            node.getBody().accept(this);
         }
 
         table.setCurrentScope(previous);

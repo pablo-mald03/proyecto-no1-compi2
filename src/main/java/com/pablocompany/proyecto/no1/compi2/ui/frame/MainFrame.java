@@ -405,6 +405,13 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         }
     }
 
+    @Override
+    public void focusTypesTable() {
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().showTypesTable();
+        }
+    }
+
 
     @Override
     public void clearLogs() {
@@ -630,15 +637,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    //This method redirect to the errors
-    private void reportMenu2ActionPerformed(java.awt.event.ActionEvent evt) {                                            
-        focusErrors();
-    }
-
-    private void reportMenu1ActionPerformed(java.awt.event.ActionEvent evt) {
-        focusSymbolsTable();
-    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walker
 import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeZ;
@@ -11,6 +12,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -31,7 +33,6 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.CodeBodyNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
 import lombok.Getter;
@@ -41,7 +42,6 @@ import java.util.List;
 
 /**
  * Validates that the declared class name matches the file name in .z files.
- * Rule: file "Persona.z" must declare class "Persona".
  */
 @Getter
 public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
@@ -60,9 +60,7 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
     @Override
     public Void visit(ProgramNodeZ node) {
         if (node.getClassNode() != null) {
-            ClassDeclarationNodeZ classNode = node.getClassNode();
-            classNode.accept(this);
-
+                node.getClassNode().accept(this);
         }
         return null;
     }
@@ -116,6 +114,11 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
     }
 
     @Override
+    public Void visit(InstanceCreationExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
     public Void visit(TernaryExpressionNodeZ node) {
         return null;
     }
@@ -127,6 +130,16 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(VariableDeclarationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(FieldDeclarationNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ThisExpressionNodeZ node) {
         return null;
     }
 
@@ -188,11 +201,6 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ShortlyOperationNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ExpressionNodeZ node) {
         return null;
     }
 

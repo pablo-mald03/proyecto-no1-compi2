@@ -629,6 +629,42 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterObjectDeclaration(PigLatinParser.ObjectDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectDeclaration(PigLatinParser.ObjectDeclarationContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectInitNew(PigLatinParser.ObjectInitNewContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectInitNew(PigLatinParser.ObjectInitNewContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterObjectInitNull(PigLatinParser.ObjectInitNullContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectInitNull(PigLatinParser.ObjectInitNullContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterStructAssignment(PigLatinParser.StructAssignmentContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -1056,6 +1092,18 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitValBool(PigLatinParser.ValBoolContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterValNull(PigLatinParser.ValNullContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitValNull(PigLatinParser.ValNullContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

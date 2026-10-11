@@ -3,7 +3,6 @@ package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
-import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
@@ -11,7 +10,6 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalS
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
-import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
@@ -31,7 +29,6 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expr
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.structs.properties.StructPropertyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.TypeNodePigLatin;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.types.enums.DataType;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.VariableDeclarationNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.statements.breakpoints.BreakStatementNodePigLatin;
@@ -51,6 +48,10 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesSectionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.services.PigAssignabilityService;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.services.SemanticPigErrorReporterService;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.services.SymbolPigLookupService;
+import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.services.TypePigResolutionService;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -68,8 +69,10 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
     private final EditorContext context;
     private final Map<AstNode, Type> typeAnnotations;
 
-    private Type currentSwitchSelectorType;
-    private Type currentReturnType;
+    private final SemanticPigErrorReporterService reporter;
+    private final TypePigResolutionService mapper;
+    private final SymbolPigLookupService lookup;
+    private final PigAssignabilityService assignability;
 
     public PigLatinTypeCheckerVisitor(GlobalSymbolTable table,
                                       EditorContext context,
@@ -77,6 +80,11 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
+
+        this.reporter = new SemanticPigErrorReporterService(context);
+        this.mapper = new TypePigResolutionService();
+        this.lookup = new SymbolPigLookupService(table);
+        this.assignability = new PigAssignabilityService(lookup, context);
     }
 
     private void annotate(AstNode node, Type type) {
@@ -136,9 +144,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
     @Override
     public Type visit(VariablesSectionNodePigLatin node) {
-        if (node.getDeclarations() != null) {
-            node.getDeclarations().accept(this);
-        }
+        if (node.getDeclarations() != null) node.getDeclarations().accept(this);
         return Type.voidType();
     }
 
@@ -152,10 +158,6 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         return Type.voidType();
     }
 
-    // ============================================================
-    // IMPORTS (nothing to type-check)
-    // ============================================================
-
     @Override
     public Type visit(ImportNodePigLatin node) {
         return Type.voidType();
@@ -167,32 +169,38 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
     @Override
     public Type visit(VariableDeclarationNodePigLatin node) {
-        Type declaredType = mapTypeNode(node.getDataType());
+        Type declaredType = mapper.mapTypeNode(node.getDataType());
 
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
-            if (!initType.isAssignableTo(declaredType)) {
-                reportTypeError(node.getIdentifier(),
+
+            // Null: only assignable to reference types.
+            if (initType.getKind() == TypeKind.NULL && !isReferenceType(declaredType)) {
+                reporter.reportTypeError(node.getIdentifier(),
+                        "No se puede asignar null a la variable '" + node.getIdentifier()
+                                + "' de tipo primitivo " + declaredType, node);
+            } else if (!assignability.isAssignable(initType, declaredType)) {
+                reporter.reportTypeError(node.getIdentifier(),
                         "No se puede asignar " + initType + " a variable de tipo " + declaredType,
                         node);
             }
         }
-        return Type.voidType();
+        annotate(node, declaredType);
+        return declaredType;
     }
 
     @Override
     public Type visit(ArrayDeclarationNodePigLatin node) {
-        Type elementType = mapTypeNode(node.getDataType());
+        Type elementType = mapper.mapTypeNode(node.getDataType());
         int dims = node.getDimensions() != null ? node.getDimensions().size() : 1;
         Type arrayType = Type.arrayType(elementType, dims);
 
-        // Validate dimensions are integer-like.
         if (node.getDimensions() != null) {
             for (ExpressionNodePigLatin dimExpr : node.getDimensions()) {
                 if (dimExpr != null) {
                     Type dimType = dimExpr.accept(this);
                     if (!isIntLike(dimType) && !dimType.isUnknown()) {
-                        reportTypeError(node.getIdentifier(),
+                        reporter.reportTypeError(node.getIdentifier(),
                                 "Las dimensiones del arreglo deben ser enteras", node);
                     }
                 }
@@ -201,8 +209,8 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         if (node.getInitializer() != null) {
             Type initType = node.getInitializer().accept(this);
-            if (!initType.isAssignableTo(arrayType)) {
-                reportTypeError(node.getIdentifier(),
+            if (!assignability.isAssignable(initType, arrayType)) {
+                reporter.reportTypeError(node.getIdentifier(),
                         "No se puede asignar " + initType + " a arreglo de tipo " + arrayType,
                         node);
             }
@@ -213,10 +221,9 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
     @Override
     public Type visit(StructInstanceNodePigLatin node) {
         String structTypeName = node.getStructType();
-        Symbol structSymbol = findTypeSymbolGlobal(structTypeName);
+        Symbol structSymbol = lookup.findTypeSymbolGlobal(context.getFilePath(), structTypeName);
 
         if (structSymbol == null || structSymbol.getKind() != SymbolKind.STRUCT) {
-            // Resolver already reported.
             return Type.unknown();
         }
 
@@ -231,7 +238,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             if (properties == null) properties = new ArrayList<>();
 
             if (properties.size() != members.size()) {
-                reportTypeError(structTypeName,
+                reporter.reportTypeError(structTypeName,
                         "El struct " + structTypeName + " espera " + members.size()
                                 + " valores, pero se dieron " + properties.size(),
                         node);
@@ -245,8 +252,8 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
                 Type memberType = mapSymbolToType(member);
                 Type valueType = prop.getValue().accept(this);
 
-                if (!valueType.isAssignableTo(memberType)) {
-                    reportTypeError(structTypeName,
+                if (!assignability.isAssignable(valueType, memberType)) {
+                    reporter.reportTypeError(structTypeName,
                             "El valor en posicion " + i + " del struct " + structTypeName
                                     + " deberia ser " + memberType + ", pero es " + valueType,
                             prop);
@@ -270,8 +277,8 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
                 ? node.getExpressionNode().accept(this)
                 : Type.unknown();
 
-        if (!valueType.isAssignableTo(targetType)) {
-            reportTypeError(targetType + " = " + valueType,
+        if (!assignability.isAssignable(valueType, targetType)) {
+            reporter.reportTypeError(targetType + " = " + valueType,
                     "No se puede asignar " + valueType + " a " + targetType, node);
         }
         return Type.voidType();
@@ -293,7 +300,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
                 if (targetType.getKind() == TypeKind.STRING && valueType.getKind() == TypeKind.STRING) break;
                 if (targetType.getKind() == TypeKind.STRING && isNumericOrPromotable(valueType)) break;
                 if (isNumericOrPromotable(targetType) && isNumericOrPromotable(valueType)) break;
-                reportTypeError(opLexeme,
+                reporter.reportTypeError(opLexeme,
                         "Operador '+=' incompatible entre " + targetType + " y " + valueType, node);
                 break;
             case MINUS_ASSIGN:
@@ -301,7 +308,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             case DIVIDE_ASSIGN:
             case MODULO_ASSIGN:
                 if (!isNumericOrPromotable(targetType) || !isNumericOrPromotable(valueType)) {
-                    reportTypeError(opLexeme,
+                    reporter.reportTypeError(opLexeme,
                             "Operador '" + opLexeme + "' incompatible entre " + targetType + " y " + valueType,
                             node);
                 }
@@ -315,7 +322,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (node.getTargetVariable() != null) {
             Type t = node.getTargetVariable().accept(this);
             if (!t.isNumeric() && !t.isUnknown()) {
-                reportTypeError(t.toString(), "El operador '++' requiere un operando numerico", node);
+                reporter.reportTypeError(t.toString(), "El operador '++' requiere un operando numerico", node);
             }
         }
         return Type.voidType();
@@ -326,7 +333,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (node.getTargetVariable() != null) {
             Type t = node.getTargetVariable().accept(this);
             if (!t.isNumeric() && !t.isUnknown()) {
-                reportTypeError(t.toString(), "El operador '--' requiere un operando numerico", node);
+                reporter.reportTypeError(t.toString(), "El operador '--' requiere un operando numerico", node);
             }
         }
         return Type.voidType();
@@ -337,7 +344,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (node.getTargetVariable() != null) {
             Type t = node.getTargetVariable().accept(this);
             if (!t.isNumeric() && !t.isUnknown()) {
-                reportTypeError(t.toString(), "El operador '++' requiere un operando numerico", node);
+                reporter.reportTypeError(t.toString(), "El operador '++' requiere un operando numerico", node);
             }
         }
         return Type.voidType();
@@ -348,7 +355,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (node.getTargetVariable() != null) {
             Type t = node.getTargetVariable().accept(this);
             if (!t.isNumeric() && !t.isUnknown()) {
-                reportTypeError(t.toString(), "El operador '--' requiere un operando numerico", node);
+                reporter.reportTypeError(t.toString(), "El operador '--' requiere un operando numerico", node);
             }
         }
         return Type.voidType();
@@ -404,7 +411,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         Type condType = node.getCondition().accept(this);
         if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.toString(), "La condicion del 'if' debe ser booleana", node);
+            reporter.reportTypeError(condType.toString(), "La condicion del 'if' debe ser booleana", node);
         }
         if (node.getThenBody() != null) {
             for (PigLatinAstNode s : node.getThenBody()) if (s != null) s.accept(this);
@@ -426,7 +433,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         Type condType = node.getCondition().accept(this);
         if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.toString(), "La condicion del 'else if' debe ser booleana", node);
+            reporter.reportTypeError(condType.toString(), "La condicion del 'else if' debe ser booleana", node);
         }
         if (node.getBody() != null) {
             for (PigLatinAstNode s : node.getBody()) if (s != null) s.accept(this);
@@ -463,7 +470,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         Type condType = node.getCondition().accept(this);
         if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.toString(), "La condicion del 'while' debe ser booleana", node);
+            reporter.reportTypeError(condType.toString(), "La condicion del 'while' debe ser booleana", node);
         }
         if (node.getBody() != null) node.getBody().accept(this);
 
@@ -480,7 +487,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (node.getBody() != null) node.getBody().accept(this);
         Type condType = node.getCondition().accept(this);
         if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-            reportTypeError(condType.toString(), "La condicion del 'do-while' debe ser booleana", node);
+            reporter.reportTypeError(condType.toString(), "La condicion del 'do-while' debe ser booleana", node);
         }
 
         table.setCurrentScope(previous);
@@ -497,7 +504,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (node.getCondition() != null) {
             Type condType = node.getCondition().accept(this);
             if (condType.getKind() != TypeKind.BOOLEAN && !condType.isUnknown()) {
-                reportTypeError(condType.toString(), "La condicion del 'for' debe ser booleana", node);
+                reporter.reportTypeError(condType.toString(), "La condicion del 'for' debe ser booleana", node);
             }
         }
         if (node.getUpdate() != null) node.getUpdate().accept(this);
@@ -509,11 +516,11 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
     @Override
     public Type visit(ForInitDeclarationNodePigLatin node) {
-        Type declaredType = mapTypeNode(node.getType());
+        Type declaredType = mapper.mapTypeNode(node.getType());
         if (node.getExpr() != null) {
             Type initType = node.getExpr().accept(this);
-            if (!initType.isAssignableTo(declaredType)) {
-                reportTypeError(node.getId(),
+            if (!assignability.isAssignable(initType, declaredType)) {
+                reporter.reportTypeError(node.getId(),
                         "No se puede asignar " + initType + " a " + declaredType, node);
             }
         }
@@ -527,8 +534,8 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         Type targetType = found.isEmpty() ? Type.unknown() : mapSymbolToType(found.get(0));
         Type valueType = node.getExpr() != null ? node.getExpr().accept(this) : Type.unknown();
 
-        if (!valueType.isAssignableTo(targetType)) {
-            reportTypeError(name,
+        if (!assignability.isAssignable(valueType, targetType)) {
+            reporter.reportTypeError(name,
                     "No se puede asignar " + valueType + " a " + targetType, node);
         }
         return Type.voidType();
@@ -546,15 +553,15 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             case PREFIX_INCREMENT:
             case PREFIX_DECREMENT:
                 if (!targetType.isNumeric() && !targetType.isUnknown()) {
-                    reportTypeError(targetType.toString(),
+                    reporter.reportTypeError(targetType.toString(),
                             "El operador requiere un operando numerico", node);
                 }
                 break;
             case ASSIGN:
                 if (node.getValue() != null) {
                     Type valueType = node.getValue().accept(this);
-                    if (!valueType.isAssignableTo(targetType)) {
-                        reportTypeError(targetType + " = " + valueType,
+                    if (!assignability.isAssignable(valueType, targetType)) {
+                        reporter.reportTypeError(targetType + " = " + valueType,
                                 "No se puede asignar " + valueType + " a " + targetType, node);
                     }
                 }
@@ -574,7 +581,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
     @Override
     public Type visit(LiteralExpressionNodePigLatin node) {
-        Type type = mapPigDataType(node.getValueType(), null);
+        Type type = mapper.mapDataType(node.getValueType(), null);
         annotate(node, type);
         return type;
     }
@@ -609,7 +616,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         switch (op) {
             case NEGATE:
                 if (!operandType.isNumeric() && !operandType.isUnknown()) {
-                    reportTypeError(op.getValue() + " " + operandType,
+                    reporter.reportTypeError(op.getValue() + " " + operandType,
                             "El operador '-' requiere un operando numerico", node);
                     result = Type.unknown();
                 } else {
@@ -618,7 +625,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
                 break;
             case NOT:
                 if (operandType.getKind() != TypeKind.BOOLEAN && !operandType.isUnknown()) {
-                    reportTypeError(op.getValue() + " " + operandType,
+                    reporter.reportTypeError(op.getValue() + " " + operandType,
                             "El operador '!' requiere un operando booleano", node);
                     result = Type.unknown();
                 } else {
@@ -643,24 +650,26 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         String name = node.getFunctionName();
 
-        // Case 1: with target - method call on an instance.
         if (node.getTarget() != null) {
             Type targetType = node.getTarget().accept(this);
             if (targetType.isUnknown() || !targetType.isCustom()) {
                 return Type.unknown();
             }
-            Symbol classSymbol = findTypeSymbolGlobal(targetType.getCustomName());
+            Symbol classSymbol = lookup.findTypeSymbolGlobal(
+                    context.getFilePath(), targetType.getCustomName());
             if (classSymbol == null) return Type.unknown();
 
             List<Symbol> methods = new ArrayList<>();
-            for (Symbol m : classSymbol.getMembers()) {
-                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(name)) {
-                    methods.add(m);
+            if (classSymbol.getMembers() != null) {
+                for (Symbol m : classSymbol.getMembers()) {
+                    if (m.getKind() == SymbolKind.METHOD && m.getName().equals(name)) {
+                        methods.add(m);
+                    }
                 }
             }
 
             if (methods.isEmpty()) {
-                reportTypeError(name,
+                reporter.reportTypeError(name,
                         "La clase " + classSymbol.getName() + " no tiene un metodo '" + name + "'",
                         node);
                 return Type.unknown();
@@ -674,19 +683,13 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             return returnType;
         }
 
-        // Case 2: direct call - function from an imported .y.
         List<Symbol> found = table.resolveByName(name);
         List<Symbol> functions = new ArrayList<>();
         for (Symbol s : found) {
-            if (s.getKind() == SymbolKind.FUNCTION) {
-                functions.add(s);
-            }
+            if (s.getKind() == SymbolKind.FUNCTION) functions.add(s);
         }
 
-        if (functions.isEmpty()) {
-            // Resolver already reported.
-            return Type.unknown();
-        }
+        if (functions.isEmpty()) return Type.unknown();
 
         Symbol chosen = resolveOverload(functions, argTypes, name, node);
         if (chosen == null) return Type.unknown();
@@ -704,21 +707,21 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (targetType.isUnknown()) return Type.unknown();
 
         if (!targetType.isCustom()) {
-            reportTypeError(node.getPropertyName(),
+            reporter.reportTypeError(node.getPropertyName(),
                     "El target de '" + node.getPropertyName() + "' no es una clase o struct", node);
             return Type.unknown();
         }
 
         Symbol member = findMemberInType(targetType, node.getPropertyName());
         if (member == null) {
-            reportTypeError(node.getPropertyName(),
+            reporter.reportTypeError(node.getPropertyName(),
                     "El tipo " + targetType.getCustomName()
                             + " no tiene un atributo '" + node.getPropertyName() + "'", node);
             return Type.unknown();
         }
 
         if (member.getKind() != SymbolKind.ATTRIBUTE) {
-            reportTypeError(node.getPropertyName(),
+            reporter.reportTypeError(node.getPropertyName(),
                     "'" + node.getPropertyName() + "' no es un atributo", node);
             return Type.unknown();
         }
@@ -734,7 +737,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         if (!targetType.isArray()) {
             if (!targetType.isUnknown()) {
-                reportTypeError("[]",
+                reporter.reportTypeError("[]",
                         "El target del acceso por indice no es un arreglo", node);
             }
             return Type.unknown();
@@ -743,7 +746,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (node.getIndex() != null) {
             Type indexType = node.getIndex().accept(this);
             if (!isIntLike(indexType) && !indexType.isUnknown()) {
-                reportTypeError("[]", "El indice de un arreglo debe ser entero", node);
+                reporter.reportTypeError("[]", "El indice de un arreglo debe ser entero", node);
             }
         }
 
@@ -763,14 +766,14 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         Type arrayType = mapSymbolToType(found.get(0));
         if (!arrayType.isArray()) {
-            reportTypeError(arrayName, "'" + arrayName + "' no es un arreglo", node);
+            reporter.reportTypeError(arrayName, "'" + arrayName + "' no es un arreglo", node);
             return Type.unknown();
         }
 
         if (node.getIndexExpression() != null) {
             Type indexType = node.getIndexExpression().accept(this);
             if (!isIntLike(indexType) && !indexType.isUnknown()) {
-                reportTypeError(arrayName, "El indice de un arreglo debe ser entero", node);
+                reporter.reportTypeError(arrayName, "El indice de un arreglo debe ser entero", node);
             }
         }
 
@@ -785,10 +788,10 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
     @Override
     public Type visit(InstanceCreationExpressionNodePigLatin node) {
         String className = node.getClassName();
-        Symbol classSymbol = findTypeSymbolGlobal(className);
+        Symbol classSymbol = lookup.findTypeSymbolGlobal(context.getFilePath(), className);
 
         if (classSymbol == null || classSymbol.getKind() != SymbolKind.CLASS) {
-            reportTypeError(className,
+            reporter.reportTypeError(className,
                     "La clase '" + className + "' no existe", node);
             return Type.unknown();
         }
@@ -800,7 +803,6 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             }
         }
 
-        // Special case: String's constructor is implicit; no need to look up.
         if ("String".equals(className)) {
             Type classType = Type.stringType();
             annotate(node, classType);
@@ -808,9 +810,9 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         }
 
         List<Symbol> constructors = new ArrayList<>();
-        for (Symbol m : classSymbol.getMembers()) {
-            if (m.getKind() == SymbolKind.CONSTRUCTOR) {
-                constructors.add(m);
+        if (classSymbol.getMembers() != null) {
+            for (Symbol m : classSymbol.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR) constructors.add(m);
             }
         }
 
@@ -845,8 +847,8 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         for (int i = 1; i < node.getElements().size(); i++) {
             Type elemType = node.getElements().get(i).accept(this);
-            if (!elemType.isAssignableTo(firstType) && !elemType.isUnknown()) {
-                reportTypeError(firstType.toString(),
+            if (!assignability.isAssignable(elemType, firstType) && !elemType.isUnknown()) {
+                reporter.reportTypeError(firstType.toString(),
                         "El elemento en posicion " + i + " tiene tipo " + elemType
                                 + ", incompatible con el primer elemento " + firstType, node);
             }
@@ -923,7 +925,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         String typeName = symbol.getType();
         if (typeName == null) return Type.unknown();
 
-        Type base = resolveTypeName(typeName);
+        Type base = mapper.resolveRawTypeName(typeName);
         if (base == null) return Type.unknown();
 
         int dims = symbol.getDimensions();
@@ -931,65 +933,6 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         return base;
     }
 
-    private Type resolveTypeName(String typeName) {
-        if (typeName == null) return Type.unknown();
-
-        int dims = 0;
-        String baseName = typeName;
-        while (baseName.endsWith("[]")) {
-            dims++;
-            baseName = baseName.substring(0, baseName.length() - 2);
-        }
-
-        Type base = resolveBaseTypeName(baseName);
-        if (dims > 0) return Type.arrayType(base, dims);
-        return base;
-    }
-
-    private Type resolveBaseTypeName(String typeName) {
-        if (typeName == null) return Type.unknown();
-        return switch (typeName) {
-            case "numerus" -> Type.intType();
-            case "decimalis" -> Type.floatType();
-            case "textum" -> Type.stringType();
-            case "littera" -> Type.charType();
-
-            case "entero" -> Type.intType();
-            case "flotante" -> Type.floatType();
-            case "cadena" -> Type.stringType();
-            case "caracter" -> Type.charType();
-            case "bool" -> Type.booleanType();
-
-            case "int" -> Type.intType();
-            case "double" -> Type.floatType();
-            case "char" -> Type.charType();
-            case "boolean" -> Type.booleanType();
-            case "String" -> Type.stringType();
-
-            case "void" -> Type.voidType();
-            default -> Type.customType(typeName);
-        };
-    }
-
-    private Type mapPigDataType(DataType dt, String customName) {
-        if (dt == null) return Type.unknown();
-        return switch (dt) {
-            case INT -> Type.intType();
-            case DECIMAL -> Type.floatType();
-            case STRING -> Type.stringType();
-            case CHAR -> Type.charType();
-            case BOOLEAN -> Type.booleanType();
-            case CUSTOM -> "String".equals(customName)
-                    ? Type.stringType()
-                    : Type.customType(customName);
-            default -> Type.unknown();
-        };
-    }
-
-    private Type mapTypeNode(TypeNodePigLatin typeNode) {
-        if (typeNode == null) return Type.unknown();
-        return mapPigDataType(typeNode.getDataType(), typeNode.getCustomTypeName());
-    }
 
     private Type inferBinaryType(Type left, Type right, BinaryOperator op, BinaryExpressionNodePigLatin node) {
         if (left.isUnknown() || right.isUnknown()) return Type.unknown();
@@ -1002,7 +945,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
                 if (left.getKind() == TypeKind.STRING && isNumericOrPromotable(right)) return Type.stringType();
                 if (isNumericOrPromotable(left) && right.getKind() == TypeKind.STRING) return Type.stringType();
                 if (isNumericOrPromotable(left) && isNumericOrPromotable(right)) return promoteNumeric(left, right);
-                reportTypeError(opLexeme,
+                reporter.reportTypeError(opLexeme,
                         "Operador '+' incompatible entre " + left + " y " + right, node);
                 return Type.unknown();
 
@@ -1011,7 +954,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             case DIVIDE:
             case MODULE:
                 if (isNumericOrPromotable(left) && isNumericOrPromotable(right)) return promoteNumeric(left, right);
-                reportTypeError(opLexeme,
+                reporter.reportTypeError(opLexeme,
                         "Operador aritmetico incompatible entre " + left + " y " + right, node);
                 return Type.unknown();
 
@@ -1020,7 +963,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             case LESS_EQUALS:
             case GREATER_EQUALS:
                 if (isNumericOrPromotable(left) && isNumericOrPromotable(right)) return Type.booleanType();
-                reportTypeError(opLexeme,
+                reporter.reportTypeError(opLexeme,
                         "Operador relacional incompatible entre " + left + " y " + right, node);
                 return Type.unknown();
 
@@ -1031,9 +974,11 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
                 if (right.getKind() == TypeKind.NULL && (left.isCustom() || left.isArray() || left.getKind() == TypeKind.STRING))
                     return Type.booleanType();
                 if (left.getKind() == TypeKind.NULL && right.getKind() == TypeKind.NULL) return Type.booleanType();
-                if (left.isCompatibleWith(right) || (isNumericOrPromotable(left) && isNumericOrPromotable(right)))
+                if (assignability.isAssignable(left, right)
+                        || assignability.isAssignable(right, left)
+                        || (isNumericOrPromotable(left) && isNumericOrPromotable(right)))
                     return Type.booleanType();
-                reportTypeError(opLexeme,
+                reporter.reportTypeError(opLexeme,
                         "Operador de igualdad incompatible entre " + left + " y " + right, node);
                 return Type.unknown();
 
@@ -1041,7 +986,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             case OR:
                 if (left.getKind() == TypeKind.BOOLEAN && right.getKind() == TypeKind.BOOLEAN)
                     return Type.booleanType();
-                reportTypeError(opLexeme,
+                reporter.reportTypeError(opLexeme,
                         "Operador logico incompatible entre " + left + " y " + right, node);
                 return Type.unknown();
 
@@ -1072,10 +1017,10 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (paramTypes.size() != argTypes.size()) return false;
 
         for (int i = 0; i < paramTypes.size(); i++) {
-            Type paramType = resolveTypeName(paramTypes.get(i));
+            Type paramType = mapper.resolveRawTypeName(paramTypes.get(i));
             Type argType = argTypes.get(i);
             if (argType.isUnknown()) continue;
-            if (!argType.isAssignableTo(paramType)) return false;
+            if (!assignability.isAssignable(argType, paramType)) return false;
         }
         return true;
     }
@@ -1088,7 +1033,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         }
 
         if (arityMatches.isEmpty()) {
-            reportTypeError(name,
+            reporter.reportTypeError(name,
                     "No existe una version de '" + name + "' con " + argTypes.size()
                             + " argumento(s)", node);
             return null;
@@ -1101,11 +1046,11 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         if (compatible.size() == 1) return compatible.get(0);
         if (compatible.size() > 1) {
-            reportTypeError(name, "Llamada ambigua a '" + name + "'", node);
+            reporter.reportTypeError(name, "Llamada ambigua a '" + name + "'", node);
             return null;
         }
 
-        reportTypeError(name,
+        reporter.reportTypeError(name,
                 "No existe una version de '" + name + "' compatible con los argumentos", node);
         return null;
     }
@@ -1113,52 +1058,15 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
     private Type resolveSymbolReturnType(Symbol fn) {
         String rt = fn.getReturnType();
         if (rt == null || "void".equals(rt)) return Type.voidType();
-        return resolveTypeName(rt);
-    }
-
-    private Symbol findTypeSymbolGlobal(String typeName) {
-        if (typeName == null) return null;
-
-        // 1. Current file
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), typeName);
-        for (Symbol s : found) {
-            if (s.getKind() == SymbolKind.CLASS
-                    || s.getKind() == SymbolKind.STRUCT) {
-                return s;
-            }
-        }
-
-        // 2. All file scopes
-        for (SymbolScope fileScope : table.getFileScopes().values()) {
-            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
-                for (Symbol symbol : bucket) {
-                    if ((symbol.getKind() == SymbolKind.CLASS
-                            || symbol.getKind() == SymbolKind.STRUCT)
-                            && symbol.getName().equals(typeName)) {
-                        return symbol;
-                    }
-                }
-            }
-        }
-
-        // 3. Global scope (for built-in classes like String)
-        SymbolScope global = table.getGlobalScope();
-        for (List<Symbol> bucket : global.getSymbols().values()) {
-            for (Symbol s : bucket) {
-                if ((s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT)
-                        && s.getName().equals(typeName)) {
-                    return s;
-                }
-            }
-        }
-        return null;
+        return mapper.resolveRawTypeName(rt);
     }
 
     private Symbol findMemberInType(Type customType, String memberName) {
         if (customType == null || !customType.isCustom()) return null;
         if (memberName == null) return null;
 
-        Symbol typeSymbol = findTypeSymbolGlobal(customType.getCustomName());
+        Symbol typeSymbol = lookup.findTypeSymbolGlobal(
+                context.getFilePath(), customType.getCustomName());
         if (typeSymbol == null) return null;
 
         List<Symbol> members = typeSymbol.getMembers();
@@ -1170,15 +1078,11 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         return null;
     }
 
-    private void reportTypeError(String lexeme, String description, PigLatinAstNode node) {
-        CompilerError error = new CompilerError();
-        error.setLexeme(lexeme);
-        error.setLine(node.getLine());
-        error.setColumn(node.getColumn());
-        error.setErrorType(ErrorType.SEMANTIC);
-        error.setDescription(description);
-        error.setFilePath(context.getFilePath());
-        error.setFileName(context.getFileName());
-        context.getSemanticErrors().add(error);
+    /**
+     * Reference types in PigLatin: custom, array, string.
+     */
+    private boolean isReferenceType(Type t) {
+        if (t == null) return false;
+        return t.isCustom() || t.isArray() || t.getKind() == TypeKind.STRING;
     }
 }

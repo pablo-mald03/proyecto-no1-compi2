@@ -43,6 +43,8 @@ public class QuadrupleSerializer {
         sb.append("int hptr = 0;\n");
         sb.append("int fp = 0;\n\n");
         sb.append("int saved_fp = 0;\n");
+        sb.append("int fpstack[" + STACK_SIZE + "];\n");
+        sb.append("int fpsp = 0;\n");
 
         sb.append("int stackinteger[" + STACK_SIZE + "];\n");
         sb.append("char* stackstring[" + STACK_SIZE + "];\n");
@@ -280,11 +282,12 @@ public class QuadrupleSerializer {
                 break;
 
             case "fp_push":
-                sb.append("  saved_fp = fp;\n");
+                sb.append("  fpstack[fpsp++] = fp;\n");
                 break;
             case "fp_pop":
-                sb.append("  fp = saved_fp;\n");
+                sb.append("  fp = fpstack[--fpsp];\n");
                 break;
+                
             case "fp_set_offset":
                 sb.append("  fp = sptr - ").append(a1).append(";\n");
                 break;
