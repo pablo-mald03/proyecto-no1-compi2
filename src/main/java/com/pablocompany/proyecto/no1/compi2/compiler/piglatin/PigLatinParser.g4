@@ -164,7 +164,7 @@ declaration
 /*-----VARIABLE PRODUCTIONS-----*/
 
 variable_declaration
-    : ESTO ID TWO_POINTS variable_type? expression DOT_COMMA                # VariableDeclaration
+    : ESTO ID TWO_POINTS variable_type expression DOT_COMMA                # VariableDeclaration
     | ESTO ID TWO_POINTS object_initializer TWO_POINTS ID DOT_COMMA         # ObjectDeclaration
     ;
 

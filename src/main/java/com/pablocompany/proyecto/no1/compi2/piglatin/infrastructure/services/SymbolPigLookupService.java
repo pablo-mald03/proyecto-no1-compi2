@@ -20,6 +20,44 @@ public class SymbolPigLookupService {
         this.table = table;
     }
 
+
+    /**
+     * Method to Finds a CLASS or STRUCT symbol by name, anywhere in the project.
+     */
+    public Symbol findTypeSymbolGlobal(String filePath, String typeName) {
+        if (typeName == null) return null;
+
+        List<Symbol> inFile = table.resolveDeepInFile(filePath, typeName);
+        for (Symbol s : inFile) {
+            if (s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT) {
+                return s;
+            }
+        }
+
+        for (SymbolScope fileScope : table.getFileScopes().values()) {
+            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
+                for (Symbol s : bucket) {
+                    if ((s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT)
+                            && s.getName().equals(typeName)) {
+                        return s;
+                    }
+                }
+            }
+        }
+
+        SymbolScope global = table.getGlobalScope();
+        for (List<Symbol> bucket : global.getSymbols().values()) {
+            for (Symbol s : bucket) {
+                if ((s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT)
+                        && s.getName().equals(typeName)) {
+                    return s;
+                }
+            }
+        }
+        return null;
+    }
+
+
     /**
      * Look up to the imports
      */

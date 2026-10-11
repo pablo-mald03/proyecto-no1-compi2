@@ -17,6 +17,32 @@ public class SemanticPigErrorReporterService {
         this.context = context;
     }
 
+
+    /**
+     * Helper to report a generic type error
+     */
+    public void reportTypeError(String lexeme, String description, PigLatinAstNode node) {
+        report(lexeme, node, description);
+    }
+
+    /**
+     * Helper to report null assigned to a primitive
+     */
+    public void reportNullToPrimitive(String varName, String primitiveType, PigLatinAstNode node) {
+        report(varName, node,
+                "No se puede asignar null a la variable '" + varName
+                        + "' de tipo primitivo " + primitiveType);
+    }
+
+    /**
+     * Helper to report an invalid assignment
+     */
+    public void reportInvalidAssignment(String varName, String sourceType,
+                                        String targetType, PigLatinAstNode node) {
+        report(varName, node,
+                "No se puede asignar " + sourceType + " a variable de tipo " + targetType);
+    }
+
     /**
      * Helper to report undeclared symbol
      *
