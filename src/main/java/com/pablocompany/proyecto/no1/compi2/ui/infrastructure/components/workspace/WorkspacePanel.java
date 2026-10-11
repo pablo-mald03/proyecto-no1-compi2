@@ -8,6 +8,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.ParserAnalyzer
 import com.pablocompany.proyecto.no1.compi2.common.domain.resolver.ReferenceResolverOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.orchestator.ArraySizeValidatorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.orchestator.CodeGeneratorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.parsing.ParserFactory;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
@@ -290,12 +291,8 @@ public class WorkspacePanel extends JPanel {
 
         notifier.logInfo("Recolectando simbolos...");
 
-        SymbolCollectorOrchestrator symbolCollector =
-                new SymbolCollectorOrchestrator(this.compilationContext.getDependencyGraph());
-        GlobalSymbolTable symbolTable = symbolCollector.collectAll(
-                this.fileContexts,
-                this.compilationContext.getDependencyGraph().getTopologicalOrder()
-        );
+        SymbolCollectorOrchestrator symbolCollector = new SymbolCollectorOrchestrator(this.compilationContext.getDependencyGraph());
+        GlobalSymbolTable symbolTable = symbolCollector.collectAll(this.fileContexts, this.compilationContext.getDependencyGraph().getTopologicalOrder());
         this.compilationContext.setSymbolTable(symbolTable);
 
 
@@ -303,13 +300,8 @@ public class WorkspacePanel extends JPanel {
 
         notifier.logInfo("Resolviendo referencias...");
 
-        ReferenceResolverOrchestrator referenceResolver =
-                new ReferenceResolverOrchestrator(this.compilationContext.getDependencyGraph());
-        referenceResolver.resolveAll(
-                this.fileContexts,
-                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
-                this.compilationContext.getSymbolTable()
-        );
+        ReferenceResolverOrchestrator referenceResolver = new ReferenceResolverOrchestrator(this.compilationContext.getDependencyGraph());
+        referenceResolver.resolveAll(this.fileContexts, this.compilationContext.getDependencyGraph().getTopologicalOrder(), this.compilationContext.getSymbolTable());
 
         boolean referenceErrors = this.verifyErrors("Error de referencias: se encontraron: ");
         if (referenceErrors) {
@@ -321,12 +313,7 @@ public class WorkspacePanel extends JPanel {
         notifier.logInfo("Verificando tipos...");
 
         TypeCheckerOrchestrator typeChecker = new TypeCheckerOrchestrator();
-        typeChecker.checkAll(
-                this.fileContexts,
-                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
-                this.compilationContext.getSymbolTable(),
-                this.compilationContext.getTypeAnnotations()
-        );
+        typeChecker.checkAll(this.fileContexts, this.compilationContext.getDependencyGraph().getTopologicalOrder(), this.compilationContext.getSymbolTable(), this.compilationContext.getTypeAnnotations());
 
         boolean typeErrors = this.verifyErrors("Error de tipos: se encontraron: ");
         if (typeErrors) {
@@ -338,17 +325,30 @@ public class WorkspacePanel extends JPanel {
         this.notifier.loadSymbolsTable(symbolTable.getAllSymbols());
         this.notifier.loadTypesTable(symbolTable.getAllSymbols());
 
+        notifier.logInfo("Validando tamanios de arreglos...");
+
+        ArraySizeValidatorOrchestrator arraySizeValidator =
+                new ArraySizeValidatorOrchestrator();
+        arraySizeValidator.validateAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
+                this.compilationContext.getSymbolTable()
+        );
+
+        boolean arraySizeErrors = this.verifyErrors("Error de tamanios de arreglos: se encontraron: ");
+        if (arraySizeErrors) {
+            return false;
+        }
+
+        notifier.logSuccess("Validacion de tamaños de arreglos completada");
+
+
         //3D CODE PHASE
 
         notifier.logInfo("Generacion de codigo 3D en curso...");
 
         CodeGeneratorOrchestrator codeGen = new CodeGeneratorOrchestrator();
-        String finalCompiledCode = codeGen.generateAll(
-                this.fileContexts,
-                this.compilationContext.getSymbolTable(),
-                this.compilationContext.getTypeAnnotations(),
-                this.mainClassPath
-        );
+        String finalCompiledCode = codeGen.generateAll(this.fileContexts, this.compilationContext.getSymbolTable(), this.compilationContext.getTypeAnnotations(), this.mainClassPath);
 
         notifier.logSuccess("Generacion de codigo 3D completado");
 
@@ -640,12 +640,7 @@ public class WorkspacePanel extends JPanel {
         JPanel tipsPanel = new JPanel(new GridBagLayout());
         tipsPanel.setOpaque(false);
 
-        String[] tips = {
-                "Haz doble clic en un archivo para abrirlo",
-                "Usa F2 para renombrar archivos y carpetas",
-                "Click derecho para crear nuevos archivos o carpetas",
-                "Arrastra el divisor para ajustar el tamaño del panel"
-        };
+        String[] tips = {"Haz doble clic en un archivo para abrirlo", "Usa F2 para renombrar archivos y carpetas", "Click derecho para crear nuevos archivos o carpetas", "Arrastra el divisor para ajustar el tamaño del panel"};
 
         GridBagConstraints tipsGbc = new GridBagConstraints();
         tipsGbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -707,11 +702,7 @@ public class WorkspacePanel extends JPanel {
         String parentPath = fileTreePanel.getSelectedParentPath();
         DefaultMutableTreeNode parentNode = fileTreePanel.getSelectedParentNode();
 
-        String baseName = CustomInputDialog.showInputDialog(
-                this,
-                "Crear Nuevo Archivo",
-                "Ingresa el nombre del archivo (sin extension):"
-        );
+        String baseName = CustomInputDialog.showInputDialog(this, "Crear Nuevo Archivo", "Ingresa el nombre del archivo (sin extension):");
 
         if (baseName == null || baseName.trim().isEmpty()) {
             return;
@@ -755,11 +746,7 @@ public class WorkspacePanel extends JPanel {
         String parentPath = fileTreePanel.getSelectedParentPath();
         DefaultMutableTreeNode parentNode = fileTreePanel.getSelectedParentNode();
 
-        String folderName = CustomInputDialog.showInputDialog(
-                this,
-                "Crear nuevo Folder",
-                "Ingresa el nombre del folder:"
-        );
+        String folderName = CustomInputDialog.showInputDialog(this, "Crear nuevo Folder", "Ingresa el nombre del folder:");
 
         if (folderName == null || folderName.trim().isEmpty()) {
             return;
@@ -806,12 +793,7 @@ public class WorkspacePanel extends JPanel {
 
         String oldPath = fileNode.getFilePath();
 
-        String newName = CustomInputDialog.showInputDialog(
-                this,
-                "Renombrar",
-                "Ingresa el nuevo nombre:",
-                currentName
-        );
+        String newName = CustomInputDialog.showInputDialog(this, "Renombrar", "Ingresa el nuevo nombre:", currentName);
 
         if (newName == null || newName.trim().isEmpty()) {
             return;
@@ -902,27 +884,22 @@ public class WorkspacePanel extends JPanel {
         String type = fileNode.isDirectory() ? "folder" : "archivo";
 
         // Use the ConfirmationNotifier system with callback
-        confirmationNotifier.confirm(
-                ModalType.WARNING,
-                "Confirmar eliminacion",
-                "Estas seguro que quieres eliminar el " + type + ": " + fileNode.getName() + " ?",
-                confirmed -> {
-                    if (confirmed) {
-                        String filePath = fileNode.getFilePath();
+        confirmationNotifier.confirm(ModalType.WARNING, "Confirmar eliminacion", "Estas seguro que quieres eliminar el " + type + ": " + fileNode.getName() + " ?", confirmed -> {
+            if (confirmed) {
+                String filePath = fileNode.getFilePath();
 
-                        if (!fileNode.isDirectory() && openEditors.containsKey(filePath)) {
-                            closeTab(filePath);
-                        }
-
-                        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-                        if (parent != null) {
-                            parent.remove(node);
-                            fileTreePanel.getFileNodes().remove(filePath);
-                            fileTreePanel.reloadTree();
-                        }
-                    }
+                if (!fileNode.isDirectory() && openEditors.containsKey(filePath)) {
+                    closeTab(filePath);
                 }
-        );
+
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+                if (parent != null) {
+                    parent.remove(node);
+                    fileTreePanel.getFileNodes().remove(filePath);
+                    fileTreePanel.reloadTree();
+                }
+            }
+        });
     }
 
     /**
@@ -958,9 +935,7 @@ public class WorkspacePanel extends JPanel {
         editor.setEditable(!isCompiledFile);
 
         editor.getEditor().setEditorContext(context);
-        editor.getEditor().setSyntaxHighlightListener(
-                SyntaxHighlightListenerFactory.createListener(fileNode.getExtension(), filePath, fileName)
-        );
+        editor.getEditor().setSyntaxHighlightListener(SyntaxHighlightListenerFactory.createListener(fileNode.getExtension(), filePath, fileName));
 
         tabbedPane.addTab(fileName, editor);
         openEditors.put(filePath, editor);
