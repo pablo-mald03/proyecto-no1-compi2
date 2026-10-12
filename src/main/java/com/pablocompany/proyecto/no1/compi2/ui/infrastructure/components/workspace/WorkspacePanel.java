@@ -34,7 +34,7 @@ public class WorkspacePanel extends JPanel {
     private final JSplitPane splitPane;
     private String projectName;
 
-    // Dedicated domain and infrastructure services
+    //Services
     private final WorkspaceCompilationService compilationService;
     private final WorkspaceEditorService editorService;
     private final WorkspaceFileService fileService;
@@ -50,23 +50,19 @@ public class WorkspacePanel extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Theme.SIDEBAR_DARKT.getColorSet());
 
-        // 1. Initialize file tree panel
         fileTreePanel = new FileTreePanel(notifier, this, projectName);
 
-        // 2. Initialize tabbed pane UI
         tabbedPane = new JTabbedPane();
         tabbedPane.setBackground(Theme.STATUS_BAR_DARK.getColorSet());
         tabbedPane.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         tabbedPane.setUI(new CustomTabbedPaneUI());
         tabbedPane.putClientProperty("JTabbedPane.tabType", "rounded");
 
-        // 3. Initialize dedicated services
         this.compilationService = new WorkspaceCompilationService(notifier, fileTreePanel);
         this.editorService = new WorkspaceEditorService(tabbedPane, fileTreePanel, notifier, compilationService);
         this.compilationService.setEditorService(editorService);
         this.fileService = new WorkspaceFileService(this, fileTreePanel, editorService, notifier, confirmationNotifier);
 
-        // 4. Setup layout
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileTreePanel, tabbedPane);
         splitPane.setDividerLocation(290);
         splitPane.setDividerSize(4);

@@ -1,5 +1,10 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.workspace;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.compilation.CompilationArtifact;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.factory.BackendFactory;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.service.CompilationService;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.GenerationOptions;
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.CompilationContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.SymbolCollectorOrchestrator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
@@ -46,6 +51,9 @@ public class WorkspaceCompilationService {
     private String mainClassPath;
     private FileNode mainClassNode;
 
+    private final CodeGeneratorOrchestrator orchestrator;
+    private final CompilationService compilationService;
+
     @Setter
     private WorkspaceEditorService editorService;
 
@@ -57,6 +65,8 @@ public class WorkspaceCompilationService {
         this.isCompiled = false;
         this.mainClassPath = null;
         this.mainClassNode = null;
+        this.compilationService = new CompilationService(BackendFactory.withDefaults());
+        this.orchestrator = new CodeGeneratorOrchestrator();
     }
 
     /**
@@ -290,21 +300,23 @@ public class WorkspaceCompilationService {
         // 3D CODE PHASE
         notifier.logInfo("Generacion de codigo 3D en curso...");
 
-        CodeGeneratorOrchestrator codeGen = new CodeGeneratorOrchestrator();
-        String finalCompiledCode = codeGen.generateAll(this.fileContexts, this.compilationContext.getSymbolTable(), this.compilationContext.getTypeAnnotations(), this.mainClassPath);
+        IntermediateProgram program = orchestrator.buildProgram(
+                fileContexts,
+                compilationContext.getSymbolTable(),
+                compilationContext.getTypeAnnotations(),
+                mainClassPath
+        );
 
-        notifier.logSuccess("Generacion de codigo 3D completado");
+        List<CompilationArtifact> artifacts = compilationService.generateAll(program, GenerationOptions.defaults());
 
-        if (finalCompiledCode != null && !finalCompiledCode.isEmpty()) {
-            this.compiledOutput = finalCompiledCode;
-            this.isCompiled = true;
-            generateCompiledFile(finalCompiledCode);
-            generateQuadruplesFile(codeGen.dumpQuadruplesAsText());
-        } else {
-            notifier.logError("No se genero codigo compilado");
-            return false;
+        for (CompilationArtifact artifact : artifacts) {
+            generateCompiledFile(artifact);
         }
 
+        generateQuadruplesFile(orchestrator.dumpInstructions());
+
+        this.isCompiled = true;
+        notifier.logSuccess("Generacion de codigo 3D completado");
         return true;
     }
 
@@ -478,10 +490,11 @@ public class WorkspaceCompilationService {
     /**
      * Generate the final .c compiled file in compiled/main.c
      */
-    private void generateCompiledFile(String compiledCode) {
-        try {
-            String compiledPath = "compiled/main.c";
+    private void generateCompiledFile(CompilationArtifact artifact) {
+        String compiledPath = "compiled/" + artifact.getFileName();
+        String compiledCode = artifact.getContent();
 
+        try {
             DefaultMutableTreeNode compiledFolderNode = fileTreePanel.findNodeByPath("compiled");
             if (compiledFolderNode == null) {
                 fileTreePanel.createNewFile("compiled", true);
@@ -501,14 +514,7 @@ public class WorkspaceCompilationService {
                     editorService.updateEditorContentIfOpen(compiledPath, compiledCode, false);
                 }
             } else {
-                FileNode newCompiledFile = new FileNode("main.c", false);
-                newCompiledFile.setFilePath(compiledPath);
-                newCompiledFile.setContent(compiledCode);
-                newCompiledFile.getEditorContext().setCompiledCode(compiledCode);
-                newCompiledFile.getEditorContext().setCompiled(true);
-                newCompiledFile.setModified(false);
-
-                fileTreePanel.createNewFile("main.c", false, "compiled");
+                fileTreePanel.createNewFile(artifact.getFileName(), false, "compiled");
 
                 DefaultMutableTreeNode newNode = fileTreePanel.getFileNodes().get(compiledPath);
                 if (newNode != null && newNode.getUserObject() instanceof FileNode node) {

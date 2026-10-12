@@ -70,7 +70,6 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.PrintStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.iostreams.ReadStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.loops.*;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.DefaultCaseNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
@@ -437,26 +436,50 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         return null;
     }
 
-    // TODO: ForInitAssignmentNodeY (for (i = 0; ...)) estaba vacío en el visitor original; sigue vacío (YNoOpVisitor).
-    // TODO: el switch original solo ejecutaba los cuerpos en secuencia, sin comparar el valor del case.
+
     @Override
     public Void visit(SwitchStatementNodeY node) {
-        if (node.getCases() != null) for (SwitchCaseNodeY c : node.getCases()) if (c != null) c.accept(this);
-        if (node.getDefaultCase() != null) node.getDefaultCase().accept(this);
+        String end = labels.nextLabel();
+        Value selector = eval(node.getSelector());
+        List<SwitchCaseNodeY> cases = node.getCases() != null ? node.getCases() : List.of();
+        List<String> bodyLabels = new ArrayList<>();
+
+        for (SwitchCaseNodeY c : cases) {
+            String bodyLabel = labels.nextLabel();
+            bodyLabels.add(bodyLabel);
+            Value caseValue = eval(c.getValue());
+            ValueType t = operandTypeOf(selector, caseValue);
+            Register a = Register.ax(t), b = Register.bx(t), r = Register.cx(ValueType.BOOLEAN);
+            values.load(selector, a);
+            values.load(caseValue, b);
+            ir.emit(new BinaryOperation(BinaryOperations.EQ, a, b, r));
+            ir.emit(new BranchIf(r, true, bodyLabel));
+        }
+        String defaultLabel = node.getDefaultCase() != null ? labels.nextLabel() : end;
+        ir.emit(new Jump(defaultLabel));
+
+        breakLabels.push(end);
+        for (int i = 0; i < cases.size(); i++) {
+            ir.emit(new MarkLabel(bodyLabels.get(i)));
+            visitAll(cases.get(i).getBody());
+        }
+        if (node.getDefaultCase() != null) {
+            ir.emit(new MarkLabel(defaultLabel));
+            visitAll(node.getDefaultCase().getBody());
+        }
+        breakLabels.pop();
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
-    public Void visit(SwitchCaseNodeY node) {
-        visitAll(node.getBody());
+    public Void visit(ForInitAssignmentNodeY node) {
+        Value value = eval(node.getExpr());
+        assign(node.getId(), value);
         return null;
     }
 
-    @Override
-    public Void visit(DefaultCaseNodeY node) {
-        visitAll(node.getBody());
-        return null;
-    }
+
 
     private void loopBody(List<? extends YAstNode> body, String breakLabel, String continueLabel) {
         breakLabels.push(breakLabel);
