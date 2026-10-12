@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.labels;
 
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.MarkLabel;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.labels.MarkLabel;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 

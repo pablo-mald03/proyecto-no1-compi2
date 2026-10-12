@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stack;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.IndexAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.IndexAddress;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;

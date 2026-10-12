@@ -6,6 +6,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Address;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Operand;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.*;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -29,6 +30,15 @@ public class CSyntax {
             case StringRef stringRef -> stringRef.getId();
             default -> throw new IllegalStateException("Valor no esperado: " + operator);
         };
+    }
+
+    /**
+     * Principal resolver for the address
+     *
+     */
+    public static String resolve(CodeWriter out, Address address) {
+        out.line("addr = " + address(address) + ";");
+        return "addr";
     }
 
     /**

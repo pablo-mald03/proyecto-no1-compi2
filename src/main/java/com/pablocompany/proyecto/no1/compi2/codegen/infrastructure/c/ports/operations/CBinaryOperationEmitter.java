@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.operations;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.BinaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.BinaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;

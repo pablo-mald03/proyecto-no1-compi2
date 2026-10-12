@@ -1,9 +1,12 @@
 package com.pablocompany.proyecto.no1.compi2.common.domain.semantic;
 
+import lombok.Getter;
+
 /**
  * Enum to represents abbreviated operation
  *
  */
+@Getter
 public enum ShortlyOperator {
 
     PLUS_ASSIGN("+="),
@@ -18,7 +21,4 @@ public enum ShortlyOperator {
         this.value = value;
     }
 
-    public String getValue() {
-        return value;
-    }
 }

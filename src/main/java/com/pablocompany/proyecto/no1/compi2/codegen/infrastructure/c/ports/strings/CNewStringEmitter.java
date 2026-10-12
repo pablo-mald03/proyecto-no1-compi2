@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.strings;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.NewString;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.NewString;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
@@ -17,6 +17,6 @@ public class CNewStringEmitter implements InstructionEmitter<NewString> {
 
     @Override
     public void emit(NewString instruction, CodeWriter out) {
-        out.line(CSyntax.registerTo(instruction.getDestination()) + " = (char*)malloc(64);");
+        out.line(CSyntax.registerTo(instruction.getDestination()) + " = malloc(64);");
     }
 }

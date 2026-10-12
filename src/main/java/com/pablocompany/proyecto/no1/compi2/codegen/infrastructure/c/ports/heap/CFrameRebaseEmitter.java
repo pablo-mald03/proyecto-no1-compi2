@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.heap;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.FrameRebase;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.FrameRebase;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 

@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.statements;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.BranchIf;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;

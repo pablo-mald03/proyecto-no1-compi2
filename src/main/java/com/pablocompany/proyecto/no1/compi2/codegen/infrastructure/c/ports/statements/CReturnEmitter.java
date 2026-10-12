@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.statements;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.Return;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 
@@ -16,6 +16,8 @@ public class CReturnEmitter implements InstructionEmitter<Return> {
 
     @Override
     public void emit(Return instruction, CodeWriter out) {
-        out.line("return;");
+        out.line("rasp = rasp - 1;");
+        out.line("ra = rastack[rasp];");
+        out.line("goto dispatch;");
     }
 }

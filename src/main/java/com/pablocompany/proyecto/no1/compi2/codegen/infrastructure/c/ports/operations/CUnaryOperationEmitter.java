@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.operations;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.UnaryOperator;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.UnaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.UnaryOperations;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
@@ -11,7 +11,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWri
  *
  */
 public class CUnaryOperationEmitter implements InstructionEmitter<UnaryOperation> {
-    
+
     @Override
     public Class<UnaryOperation> handles() {
         return UnaryOperation.class;
@@ -19,7 +19,7 @@ public class CUnaryOperationEmitter implements InstructionEmitter<UnaryOperation
 
     @Override
     public void emit(UnaryOperation instruction, CodeWriter out) {
-        String symbol = instruction.getOperator() == UnaryOperator.NEG ? "-" : "!";
+        String symbol = instruction.getOperator() == UnaryOperations.NEG ? "-" : "!";
         out.line(CSyntax.registerTo(instruction.getDestination()) + " = " + symbol + CSyntax.registerTo(instruction.getSource()) + ";");
     }
 }

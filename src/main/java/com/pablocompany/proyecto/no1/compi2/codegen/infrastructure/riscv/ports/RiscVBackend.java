@@ -2,9 +2,9 @@ package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Target;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StringConstant;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.modules.AbstractBackend;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateFunction;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.port.AbstractBackend;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.RiscVRuntime;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.EmitterRegistry;

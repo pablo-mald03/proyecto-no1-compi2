@@ -1,7 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stack;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.LoadIndexed;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.LoadIndexed;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
@@ -18,8 +18,9 @@ public class CLoadIndexedEmitter implements InstructionEmitter<LoadIndexed> {
 
     @Override
     public void emit(LoadIndexed instruction, CodeWriter out) {
-        String cell = CSyntax.memory(MemorySpace.STACK, instruction.getDestination().getType())
-                + "[" + CSyntax.address(instruction.getBase()) + " + " + CSyntax.registerTo(instruction.getIndex()) + "]";
-        out.line(CSyntax.registerTo(instruction.getDestination()) + " = " + cell + ";");
+        String array = CSyntax.memory(MemorySpace.STACK, instruction.getDestination().getType());
+        out.line("addr = " + CSyntax.address(instruction.getBase()) + ";");
+        out.line("addr = addr + " + CSyntax.registerTo(instruction.getIndex()) + ";");
+        out.line(CSyntax.registerTo(instruction.getDestination()) + " = " + array + "[addr];");
     }
 }

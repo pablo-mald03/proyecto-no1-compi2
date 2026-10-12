@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.assingation;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
@@ -17,6 +17,9 @@ public class CLoadEmitter implements InstructionEmitter<Load> {
 
     @Override
     public void emit(Load instruction, CodeWriter out) {
-        out.line(CSyntax.registerTo(instruction.getDestination()) + " = " + CSyntax.cell(instruction.getSpace(), instruction.getDestination().getType(), instruction.getAddress()) + ";");
+        String idx = CSyntax.resolve(out, instruction.getAddress());
+        String array = CSyntax.memory(instruction.getSpace(), instruction.getDestination().getType());
+        out.line(CSyntax.registerTo(instruction.getDestination()) + " = " + array + "[" + idx + "];");
     }
 }
+

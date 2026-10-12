@@ -2,10 +2,11 @@ package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.generate;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Target;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.CallSites;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StringConstant;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.modules.AbstractBackend;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateFunction;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.port.AbstractBackend;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.CSyntax;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.assingation.CLoadAddressEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.assingation.CLoadEmitter;
@@ -13,6 +14,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.assin
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.functions.CCallEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.gotoFunc.CJumpEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.heap.CFramePopEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.heap.CFramePushEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.heap.CFrameRebaseEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.heap.CHeapAllocEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.io.CPrintEmitter;
@@ -23,7 +25,6 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.opera
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.operations.CUnaryOperationEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.parses.CConvertToStringEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stack.CAdjustStackTopEmitter;
-import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stack.CFramePushEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stack.CIndexAddressEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stack.CLoadIndexedEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.statements.CBranchIfEmitter;
@@ -39,19 +40,22 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Backend a C: cada instrucción del IR se convierte en una sentencia C.
+ * Principal backend for the compiler to translate the high level code to the C code
  */
 public class CBackend extends AbstractBackend {
 
+    private final CallSites sites;
+
     public CBackend(GenerationOptions options) {
-        super(options, registry(), "  ");
+        this(options, new CallSites());
     }
 
-    /**
-     * Principal method to register the classes
-     *
-     */
-    private static EmitterRegistry registry() {
+    private CBackend(GenerationOptions o, CallSites sites) {
+        super(o, registry(sites), "  ");
+        this.sites = sites;
+    }
+
+    private static EmitterRegistry registry(CallSites callSites) {
         return new EmitterRegistry("C")
                 .register(new CMoveEmitter())
                 .register(new CLoadAddressEmitter())
@@ -67,7 +71,7 @@ public class CBackend extends AbstractBackend {
                 .register(new CMarkLabelEmitter())
                 .register(new CPrintEmitter())
                 .register(new CReadEmitter())
-                .register(new CCallEmitter())
+                .register(new CCallEmitter(callSites))
                 .register(new CReturnEmitter())
                 .register(new CFramePushEmitter())
                 .register(new CFramePopEmitter())
@@ -86,6 +90,7 @@ public class CBackend extends AbstractBackend {
 
     @Override
     protected void emitProgramStart(IntermediateProgram program, CodeWriter out) {
+        sites.reset();
         int stack = options.getStackSlots();
         int h = options.getHeapSlots();
         out.raw("#include <stdio.h>").raw("#include <stdlib.h>").raw("#include <string.h>").blank();
@@ -93,7 +98,13 @@ public class CBackend extends AbstractBackend {
         out.raw("int hptr = 0;");
         out.raw("int fp = " + options.getReservedSlots() + ";");
         out.raw("int fpstack[" + stack + "];");
-        out.raw("int fpsp = 0;").blank();
+        out.raw("int fpsp = 0;");
+        out.raw("int rastack[" + stack + "];");
+        out.raw("int rasp = 0;");
+        out.raw("int ra;");
+        out.raw("int addr;");
+        out.raw("int n1, n2;");
+        out.raw("char* tp;").blank();
         for (String space : new String[]{"stack", "heap"}) {
             int size = space.equals("stack") ? stack : h;
             out.raw("int " + space + "integer[" + size + "];");
@@ -112,25 +123,32 @@ public class CBackend extends AbstractBackend {
             out.raw("char* " + constant.getId() + " = \"" + CSyntax.escape(constant.getValue()) + "\";");
         }
         if (!program.getStrings().isEmpty()) out.blank();
-        for (IntermediateFunction func : program.getFunctions()) out.raw("void " + func.getName() + "();");
+
+        out.raw("int main() {");
+        out.line("rastack[rasp] = 0;");
+        out.line("rasp = rasp + 1;");
+        out.line("goto " + program.entryPoint().orElse("halt") + ";");
         out.blank();
     }
 
     @Override
     protected void emitFunctionStart(IntermediateFunction function, CodeWriter out) {
-        out.raw("void " + function.getName() + "() {");
+        out.raw(function.getName() + ":;");
     }
 
     @Override
     protected void emitFunctionEnd(IntermediateFunction function, CodeWriter out) {
-        out.raw("}").blank();
+        out.blank();
     }
 
     @Override
     protected void emitProgramEnd(IntermediateProgram program, CodeWriter out) {
-        if (!options.isEmitEntryPoint()) return;
-        out.raw("int main() {");
-        program.entryPoint().ifPresent(name -> out.line(name + "();"));
+        out.raw("dispatch:;");
+        out.line("if (ra == 0) goto halt;");
+        for (int id = 1; id <= sites.total(); id++) {
+            out.line("if (ra == " + id + ") goto ret_" + id + ";");
+        }
+        out.raw("halt:;");
         out.line("return 0;");
         out.raw("}");
     }

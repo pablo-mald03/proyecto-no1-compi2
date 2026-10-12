@@ -1,6 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.gotoFunc;
 
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.Jump;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.Jump;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 
