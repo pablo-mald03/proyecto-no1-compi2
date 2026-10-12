@@ -135,7 +135,7 @@ public class TopPanel extends JPanel {
                 "Ejecutar en Risc V",
                 e -> onExecuteRisc(),
                 UIColors.BORDER.getColorSet(),
-                new Color(150, 18, 142).brighter()
+                new Color(121, 6, 114).brighter()
         ));
     }
 

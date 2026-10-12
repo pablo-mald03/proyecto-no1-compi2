@@ -87,10 +87,12 @@ public class ExecutionService {
         ExecutionResult result = new ExecutionResult();
 
         try {
-            Path asmPath = Paths.get(projectDir.getAbsolutePath(), "compiled", "main.s");
-            Files.createDirectories(asmPath.getParent());
-            Files.writeString(asmPath, asmCode);
-            result.addStep("Archivo main.s escrito en " + asmPath);
+            File compiledDir = new File(projectDir, COMPILED_FOLDER);
+            if (!compiledDir.exists()) compiledDir.mkdirs();
+
+            File asmFile = new File(compiledDir, "main.s");
+            Files.writeString(asmFile.toPath(), asmCode);
+            result.addStep("Archivo main.s escrito en " + asmFile.getAbsolutePath());
 
             String javaBin = Paths.get(System.getProperty("java.home"), "bin", "java").toString();
             if (!Files.exists(Paths.get(javaBin))) {
@@ -101,7 +103,7 @@ public class ExecutionService {
             ProcessBuilder pb = new ProcessBuilder(
                     javaBin, "-jar", rarsJarPath,
                     "me",
-                    asmPath.toString()
+                    asmFile.getAbsolutePath()
             );
             pb.directory(projectDir);
             pb.redirectErrorStream(false);
@@ -156,6 +158,10 @@ public class ExecutionService {
         return result;
     }
 
+    /**
+     * Flag to verify if the RARS path is available
+     *
+     */
     public boolean isRARSAvailable(String rarsJarPath) {
         return rarsJarPath != null && Files.exists(Paths.get(rarsJarPath)) && rarsJarPath.endsWith(".jar");
     }

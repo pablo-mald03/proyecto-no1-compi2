@@ -450,7 +450,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     /**
-     * Principal method to execute the program
+     * Principal method to execute the program in C
      *
      */
     private void onExecuteC() {
@@ -486,6 +486,10 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         }
     }
 
+    /**
+     * Method to execute the Risc V code
+     *
+     */
     private void onExecuteRisc() {
         if (managementScreen == null) {
             alertToast("No hay ningún proyecto abierto", true);

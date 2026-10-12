@@ -273,8 +273,8 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         Cell cell = values.requireCell(target);
         ValueType type = cell.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
         Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
-        values.load(cell, a);
-        values.load(operand, b);
+        values.loadCoerced(cell, a);
+        values.loadCoerced(operand, b);
         ir.emit(new BinaryOperation(IntermediateTypes.shortly(node.getOperator()), a, b, c));
         ir.emit(new Store(MemorySpace.STACK, cell.getAddress(), c));
         return null;
@@ -315,7 +315,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         if (node.getExpression() == null) return null;
         Value value = eval(node.getExpression());
         Register reg = Register.ax(value.type());
-        values.load(value, reg);
+        values.loadCoerced(value, reg);
         ir.emit(new Print(reg, true));
         return null;
     }
@@ -537,8 +537,8 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         ValueType resultType = annotated != null ? annotated : (op.isComparison() || op.isLogical() ? ValueType.BOOLEAN : operandType);
 
         Register a = Register.ax(operandType), b = Register.bx(operandType), c = Register.cx(resultType);
-        values.load(left, a);
-        values.load(right, b);
+        values.loadCoerced(left, a);
+        values.loadCoerced(right, b);
         ir.emit(new BinaryOperation(op, a, b, c));
         last = values.spill(c);
         return null;
@@ -647,7 +647,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         }
         Value value = eval(arg);
         Register reg = Register.ax(value.type());
-        values.load(value, reg);
+        values.loadCoerced(value, reg);
         pushRegisterister(reg);
     }
 
@@ -693,15 +693,15 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
         Register idx = Register.ax(ValueType.INT);
         Register source = Register.cx(element);
-        values.load(index, idx);
+        values.loadCoerced(index, idx);
         if (info.isHeap()) {
             Register pointer = Register.bx(ValueType.INT);
             ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), pointer));
             ir.emit(new IndexAddress(pointer, idx, pointer));
-            values.load(value, source);
+            values.loadCoerced(value, source);
             ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, 0), source));
         } else {
-            values.load(value, source);
+            values.loadCoerced(value, source);
             ir.emit(new StoreIndexed(new Frame(info.getBaseOffset()), idx, source));
         }
     }
@@ -710,7 +710,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         Register pointer = Register.ax(ValueType.INT);
         Register source = Register.cx(type);
         ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
-        values.load(value, source);
+        values.loadCoerced(value, source);
         ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffset()), source));
     }
 

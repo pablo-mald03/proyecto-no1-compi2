@@ -1,12 +1,14 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Storage;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Cell;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Constant;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Text;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generatePort.Value;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.assingation.Store;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.convertion.Convert;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.enums.BinaryOperations;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.BinaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.ConvertToString;
@@ -32,6 +34,33 @@ public class ValueEmitter {
     }
 
     /**
+     * Method to load coerced types
+     *
+     */
+    public void loadCoerced(Value value, Register reg) {
+        ValueType src = value.type();
+        ValueType dst = reg.getType();
+
+        if (src == dst || src.getStorage() == dst.getStorage()) {
+            load(value, reg);
+            return;
+        }
+        if (src.getStorage() == Storage.WORD && dst.getStorage() == Storage.FLOAT) {
+            Register scratch = Register.ax(ValueType.INT);
+            load(value, scratch);
+            intermediate.emit(new Convert(scratch, reg, ValueType.FLOAT));
+            return;
+        }
+        if (src.getStorage() == Storage.FLOAT && dst.getStorage() == Storage.WORD) {
+            Register scratch = Register.ax(ValueType.FLOAT);
+            load(value, scratch);
+            intermediate.emit(new Convert(scratch, reg, ValueType.INT));
+            return;
+        }
+        throw new IllegalStateException("Coercion no soportada: " + src + " → " + dst);
+    }
+
+    /**
      * Assignation value
      */
     public void load(Value value, Register reg) {
@@ -52,10 +81,9 @@ public class ValueEmitter {
      */
     public void store(Value value, Cell dest) {
         Register scratch = Register.cx(dest.type());
-        load(value, scratch);
+        loadCoerced(value, scratch);
         intermediate.emit(new Store(MemorySpace.STACK, dest.getAddress(), scratch));
     }
-
     /**
      * Save the register as a temporal
      */
