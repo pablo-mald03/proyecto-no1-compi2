@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Instruction;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -10,6 +11,7 @@ import lombok.Getter;
  *
  */
 @Getter
+@AllArgsConstructor
 public class IndexAddress implements Instruction {
 
     private Register base;

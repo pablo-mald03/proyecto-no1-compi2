@@ -12,15 +12,11 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.codegen
 public class CodeGeneratorFactory {
     public static CodeGenerator create(String extension) {
         if (extension == null) return null;
-        switch (extension) {
-            case ".y":
-                return new YCodeGenerator();
-            case ".z":
-                return new ZCodeGenerator();
-            case ".pig":
-                return new PigLatinCodeGenerator();
-            default:
-                return null;
-        }
+        return switch (extension) {
+            case ".y" -> new YCodeGenerator();
+            case ".z" -> new ZCodeGenerator();
+            case ".pig" -> new PigLatinCodeGenerator();
+            default -> null;
+        };
     }
 }

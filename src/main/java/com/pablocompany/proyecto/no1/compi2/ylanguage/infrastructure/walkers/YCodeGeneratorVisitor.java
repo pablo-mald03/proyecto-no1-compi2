@@ -1,38 +1,69 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.walkers;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.UnaryOperations;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Cell;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Constant;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.FieldReference;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Text;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generatePort.Value;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.IndexAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.LoadIndexed;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.StoreIndexed;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.assingation.Store;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.enums.BinaryOperations;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.Call;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.Jump;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.FramePop;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.FramePush;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.FrameRebase;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.io.Print;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.io.Read;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.labels.MarkLabel;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.BinaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.StringConcat;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.LoadAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Indirect;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StackTop;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.ValueEmitter;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.*;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.ArrayInfo;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayValuesNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.StructInstanceNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructBodyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructPropertyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.TypeNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.*;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.ArrayCallExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.FunctionCallExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.IdentifierExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.LiteralExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.VariableDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.breakpoints.BreakStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.breakpoints.ContinueStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.breakpoints.ReturnStatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseBlockNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfListNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.ElseIfNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.conditionals.IfStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.*;
@@ -43,63 +74,46 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchCaseNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.switches.SwitchStatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.StatementNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions.FunctionsRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.visitor.YAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.codegen.YNoOperatorVisitor;
 
 import java.util.*;
 
 
 /**
- * Principal visitor to excecute the code generator
+ * Principal visitor to execute the code generator
  */
-public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
+public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
+
+    private static final int CALL_AREA = 200;
 
     private final GlobalSymbolTable table;
     private final EditorContext context;
     private final Map<AstNode, Type> typeAnnotations;
-    private final CodeGeneratorOutput output;
-    private final CodeGenContext ctx;
-    private final StringPool stringPool;
+    private final IntermediateBuilder ir;
+    private final CodeGenContext labels;
 
-    private int nextOffset = 1;
-
-    private final Map<String, Integer> localOffsets = new HashMap<>();
-
-    private final Map<String, Integer> paramOffsets = new HashMap<>();
-
-    private final Map<String, TypeKind> localTypes = new HashMap<>();
-
+    private final Map<String, List<String>> structLayouts = new HashMap<>();
+    private final Map<String, String> functionNames = new HashMap<>();
     private final Deque<String> breakLabels = new ArrayDeque<>();
     private final Deque<String> continueLabels = new ArrayDeque<>();
 
-    private String lastExpr;
+    private FunctionFrame frame = new FunctionFrame();
+    private ValueEmitter values;
+    private Value last;
 
-    private final Map<String, List<String>> structLayouts = new HashMap<>();
-
-    private final Map<String, StructInfo> structVariables = new HashMap<>();
-
-    private final Map<String, ArrayInfo> arrayInfos = new HashMap<>();
-
-
-    public YCodeGeneratorVisitor(GlobalSymbolTable table,
-                                 EditorContext context,
-                                 Map<AstNode, Type> typeAnnotations,
-                                 CodeGeneratorOutput output,
-                                 CodeGenContext ctx,
-                                 StringPool stringPool) {
+    public YCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
+                                 Map<AstNode, Type> typeAnnotations, IntermediateBuilder ir, CodeGenContext labels) {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
-        this.output = output;
-        this.ctx = ctx;
-        this.stringPool = stringPool;
+        this.ir = ir;
+        this.labels = labels;
+        this.values = new ValueEmitter(ir, frame);
     }
 
-    // ============================================================
-    // TOP-LEVEL
-    // ============================================================
+    // ============================================================ top level
 
     @Override
     public Void visit(ProgramNodeY node) {
@@ -111,29 +125,27 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     @Override
     public Void visit(StructuresRegionNodeY node) {
         if (node.getStructs() != null) {
-            for (StructDeclarationNodeY s : node.getStructs()) {
-                if (s != null) s.accept(this);
-            }
+            for (StructDeclarationNodeY s : node.getStructs()) if (s != null) s.accept(this);
         }
         return null;
     }
 
     @Override
     public Void visit(FunctionsRegionNodeY node) {
-        if (node.getFunctions() != null) {
-            for (YAstNode fn : node.getFunctions()) {
-                if (fn != null) fn.accept(this);
-            }
+        if (node.getFunctions() == null) return null;
+        for (YAstNode fn : node.getFunctions()) {
+            if (fn instanceof FunctionDeclarationNodeY f)
+                functionNames.putIfAbsent(f.getName(), uniqueName(f.getName(), f));
+            else if (fn instanceof ProcedureDeclarationNodeY p)
+                functionNames.putIfAbsent(p.getName(), uniqueName(p.getName(), p));
         }
+        for (YAstNode fn : node.getFunctions()) if (fn != null) fn.accept(this);
         return null;
     }
 
-    // ============================================================
-    // STRUCTS
-    // ============================================================
     @Override
     public Void visit(StructDeclarationNodeY node) {
-        List<String> fields = new ArrayList<>();
+        List<String> fields = new java.util.ArrayList<>();
         if (node.getBody() != null && node.getBody().getAttributes() != null) {
             for (StructAttributeNodeY attr : node.getBody().getAttributes()) {
                 if (attr != null) fields.add(attr.getIdentifier());
@@ -143,260 +155,153 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    // ============================================================
-    // FUNCTIONS
-    // ============================================================
+    // ============================================================ functions
 
     @Override
     public Void visit(FunctionDeclarationNodeY node) {
-        String funcName = uniqueFunctionName(node.getName(), node);
-        output.getFunctionNames().add(funcName);
-        output.emit("function_start", funcName, null, null);
-
-        int numArgs = node.getParameters() != null ? node.getParameters().size() : 0;
-        emitPrologue(numArgs);
-        resetFunctionState();
-
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null) {
-                    registerParameter(param.getIdentifier(), param);
-                }
-            }
-        }
-
-        if (node.getBody() != null) {
-            for (YAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        emitEpilogue(numArgs);
-        output.emit("return", null, null, null);
+        generateFunction(uniqueName(node.getName(), node), node.getParameters(), node.getBody());
         return null;
     }
 
     @Override
     public Void visit(ProcedureDeclarationNodeY node) {
-        String funcName = uniqueFunctionName(node.getName(), node);
-        output.getFunctionNames().add(funcName);
-        output.emit("function_start", funcName, null, null);
-
-        int numArgs = node.getParameters() != null ? node.getParameters().size() : 0;
-        emitPrologue(numArgs);
-        resetFunctionState();
-
-        if (node.getParameters() != null) {
-            for (ParameterNodeY param : node.getParameters()) {
-                if (param != null) {
-                    registerParameter(param.getIdentifier(), param);
-                }
-            }
-        }
-
-        if (node.getBody() != null) {
-            for (YAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        emitEpilogue(numArgs);
-        output.emit("return", null, null, null);
+        generateFunction(uniqueName(node.getName(), node), node.getParameters(), node.getBody());
         return null;
     }
 
-    private void emitPrologue(int numArgs) {
-        output.emit("fp_push", null, null, null);
-        output.emit("fp_set_offset", String.valueOf(numArgs + 1), null, null);
+    private void generateFunction(String name, List<? extends ParameterNodeY> params, List<? extends YAstNode> body) {
+        int numArgs = params != null ? params.size() : 0;
+
+        ir.beginFunction(name);
+        frame = new FunctionFrame();
+        values = new ValueEmitter(ir, frame);
+        breakLabels.clear();
+        continueLabels.clear();
+
+        ir.emit(new FramePush());
+        ir.emit(new FrameRebase(numArgs + 1));
+
+        if (params != null) {
+            for (ParameterNodeY p : params) if (p != null) registerParameter(p);
+        }
+        visitAll(body);
+
+        ir.emit(new FramePop());
+        ir.emit(new Return());
     }
 
-    private void emitEpilogue(int numArgs) {
-        output.emit("fp_pop", null, null, null);
+    private void registerParameter(ParameterNodeY param) {
+        ValueType type = ValueType.INT;
+        int offset = frame.peekOffset();
+        if (param instanceof PrimitiveParameterNodeY p && p.getType() != null) {
+            type = declaredType(p.getType());
+        } else if (param instanceof StructParameterNodeY sp && sp.getDataType() != null) {
+            frame.registerStruct(param.getIdentifier(), new StructInfo(sp.getDataType().getCustomTypeName(), offset, true));
+        } else if (param instanceof ArrayParameterNodeY ap && ap.getElementType() != null) {
+            TypeKind element = kindOf(ap.getElementType());
+            frame.registerArray(param.getIdentifier(), new ArrayInfo(offset, element, -1, true));
+        }
+        frame.declare(param.getIdentifier(), type);
     }
 
-    private void resetFunctionState() {
-        localOffsets.clear();
-        paramOffsets.clear();
-        localTypes.clear();
-        structVariables.clear();
-        arrayInfos.clear();
-        nextOffset = 1;
-    }
-
-    // ============================================================
-    // DECLARATIONS
-    // ============================================================
+    // ============================================================ declarations
 
     @Override
     public Void visit(VariableDeclarationNodeY node) {
-        String localName = node.getIdentifier();
-        allocateLocal(localName, node);
-
-        if (node.getInitializer() != null) {
-            if (node.getInitializer() instanceof ReadStatementNodeY) {
-                TypeKind kind = localTypes.getOrDefault(localName, TypeKind.INT);
-                Integer offset = localOffsets.get(localName);
-
-                if (offset == null) return null;
-
-                if (kind == TypeKind.STRING) {
-                    output.emit("read_string", String.valueOf(offset), null, null);
-                } else {
-                    output.emit("read_int", String.valueOf(offset), null, null);
-                }
-                return null;
-            }
-
-            String valueRef = exprToString(node.getInitializer());
-            String dest = getStackRefByName(localName);
-            storeValueTo(valueRef, dest);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(ArrayDeclarationNodeY node) {
-        int totalSize = 1;
-        boolean allLiteral = true;
-        if (node.getDimensions() != null) {
-            for (ExpressionNodeY dim : node.getDimensions()) {
-                Integer size = tryExtractIntLiteral(dim);
-                if (size == null) {
-                    allLiteral = false;
-                    break;
-                }
-                totalSize *= size;
-            }
-        }
-
-        if (!allLiteral) {
-
-            totalSize = 1;
-        }
-
-        int base = nextOffset;
-        nextOffset += totalSize;
-
-        TypeKind elementKind = mapTypeNodeToType(node.getDataType()).getKind();
-        arrayInfos.put(node.getIdentifier(),
-                new ArrayInfo(base, elementKind, totalSize, false));
-
-        if (node.getInitializer() != null
-                && node.getInitializer() instanceof ArrayInitExpressionNodeY init
-                && init.getElements() != null) {
-
-            List<ExpressionNodeY> values = init.getElements();
-            String suffix = kindToSuffix(elementKind);
-            String arrayStack = stackArrayForKind(elementKind);
-            String cxReg = "CX_" + suffix.toUpperCase();
-
-            for (int i = 0; i < values.size() && i < totalSize; i++) {
-                String valueRef = exprToString(values.get(i));
-                loadRegister(valueRef, cxReg);
-                output.emit("store_" + suffix, "fp + " + (base + i), null, cxReg);
-            }
-        }
+        declareAndInitialize(node.getIdentifier(), declaredType(node.getDataType()), node.getInitializer());
         return null;
     }
 
     @Override
     public Void visit(ForInitDeclarationNodeY node) {
-        String localName = node.getId();
-        allocateLocal(localName, node);
+        declareAndInitialize(node.getId(), declaredType(node.getType()), node.getExpr());
+        return null;
+    }
 
-        if (node.getExpr() != null) {
-            String valueRef = exprToString(node.getExpr());
-            String dest = getStackRefByName(localName);
-            storeValueTo(valueRef, dest);
+    private void declareAndInitialize(String name, ValueType type, ExpressionNodeY initializer) {
+        Cell variable = frame.declare(name, type);
+        if (initializer == null) return;
+        if (initializer instanceof ReadStatementNodeY) {
+            ir.emit(new Read(type, variable.getAddress()));
+            return;
         }
-        return null;
+        values.store(eval(initializer), variable);
     }
 
     @Override
-    public Void visit(ForInitAssignmentNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ForUpdateNodeY node) {
-        String targetRef = exprToString(node.getTarget());
-        switch (node.getOperator()) {
-            case INCREMENT:
-            case PREFIX_INCREMENT: {
-                int oneOffset = nextOffset++;
-                output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
-                String oneRef = "stackinteger[fp + " + oneOffset + "]";
-                loadRegister(targetRef, "AX_INT");
-                loadRegister(oneRef, "BX_INT");
-                output.emit("+", "AX_INT", "BX_INT", "CX_INT");
-                storeRegisterBack("CX_INT", targetRef);
-                break;
-            }
-            case DECREMENT:
-            case PREFIX_DECREMENT: {
-                int oneOffset = nextOffset++;
-                output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
-                String oneRef = "stackinteger[fp + " + oneOffset + "]";
-                loadRegister(targetRef, "AX_INT");
-                loadRegister(oneRef, "BX_INT");
-                output.emit("-", "AX_INT", "BX_INT", "CX_INT");
-                storeRegisterBack("CX_INT", targetRef);
-                break;
-            }
-            case ASSIGN:
-                if (node.getValue() != null) {
-                    String valueRef = exprToString(node.getValue());
-                    storeValueTo(valueRef, targetRef);
+    public Void visit(ArrayDeclarationNodeY node) {
+        int total = 1;
+        boolean allLiteral = true;
+        if (node.getDimensions() != null) {
+            for (ExpressionNodeY dim : node.getDimensions()) {
+                Integer size = literalInt(dim);
+                if (size == null) {
+                    allLiteral = false;
+                    break;
                 }
-                break;
+                total *= size;
+            }
+        }
+        if (!allLiteral) total = 1;
+
+        int base = frame.allocate(total);
+        TypeKind elementKind = kindOf(node.getDataType());
+        ValueType elementType = IntermediateTypes.of(elementKind);
+        frame.registerArray(node.getIdentifier(), new ArrayInfo(base, elementKind, total, false));
+
+        if (node.getInitializer() instanceof ArrayInitExpressionNodeY init && init.getElements() != null) {
+            List<ExpressionNodeY> elements = init.getElements();
+            for (int i = 0; i < elements.size() && i < total; i++) {
+                values.store(eval(elements.get(i)), new Cell(elementType, new Frame(base + i)));
+            }
         }
         return null;
     }
 
-    // ============================================================
-    // STATEMENTS
-    // ============================================================
+    // ============================================================ statements
 
     @Override
     public Void visit(VariableAssignmentNodeY node) {
-        String valueRef = exprToString(node.getExpressionNode());
-        String targetRef = exprToString(node.getIdentifier());
-        storeValueTo(valueRef, targetRef);
+        Value value = eval(node.getExpressionNode());
+        assign(node.getIdentifier(), value);
         return null;
     }
 
     @Override
     public Void visit(ShortlyOperationNodeY node) {
-        String targetRef = exprToString(node.getTarget());
-        String valueRef = exprToString(node.getValue());
-
-        loadRegister(targetRef, "AX_INT");
-        loadRegister(valueRef, "BX_INT");
-
-        String op = shortlyOpToBinary(node.getOperator());
-        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
+        Value target = eval(node.getTarget());
+        Value operand = eval(node.getValue());
+        Cell cell = values.requireCell(target);
+        ValueType type = cell.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
+        Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
+        values.load(cell, a);
+        values.load(operand, b);
+        ir.emit(new BinaryOperation(IntermediateTypes.shortly(node.getOperator()), a, b, c));
+        ir.emit(new Store(MemorySpace.STACK, cell.getAddress(), c));
         return null;
     }
 
-
+    @Override
     public Void visit(IncrementStatementNodeY node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "+");
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
         return null;
     }
 
+    @Override
     public Void visit(DecrementStatementNodeY node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "-");
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
         return null;
     }
 
+    @Override
     public Void visit(IncrementPrevStatementNodeY node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "+");
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
         return null;
     }
 
+    @Override
     public Void visit(DecrementPrevStatementNodeY node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "-");
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
         return null;
     }
 
@@ -408,631 +313,425 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(PrintStatementNodeY node) {
-        if (node.getExpression() != null) {
-            String valueRef = exprToString(node.getExpression());
-            Type t = typeAnnotations.get(node.getExpression());
-            String typeName = typeToString(t);
-            String register = registerFor(typeName);
-            loadRegister(valueRef, register);
-            output.emit("println", register, typeName, null);
-        }
+        if (node.getExpression() == null) return null;
+        Value value = eval(node.getExpression());
+        Register reg = Register.ax(value.type());
+        values.load(value, reg);
+        ir.emit(new Print(reg, true));
         return null;
     }
 
     @Override
     public Void visit(ReadStatementNodeY node) {
-        int offset = nextOffset++;
-        Type t = typeAnnotations.get(node);
-        TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-        String arrayName = stackArrayForKind(kind);
-
-        if (kind == TypeKind.STRING) {
-            output.emit("read_string", String.valueOf(offset), null, null);
-        } else {
-            output.emit("read_int", String.valueOf(offset), null, null);
-        }
-
-        lastExpr = arrayName + "[fp + " + offset + "]";
+        ValueType type = valueTypeOf(node);
+        Cell cell = frame.temp(type);
+        ir.emit(new Read(type, cell.getAddress()));
+        last = cell;
         return null;
     }
 
     @Override
     public Void visit(ReturnStatementNodeY node) {
         if (node.getValue() != null) {
-            String valueRef = exprToString(node.getValue());
-            Type t = typeAnnotations.get(node.getValue());
-            String arrayName = stackArrayForKind(t != null ? t.getKind() : TypeKind.INT);
-            String dest = arrayName + "[fp + 0]";
-            storeValueTo(valueRef, dest);
+            Value value = eval(node.getValue());
+            values.store(value, new Cell(value.type(), new Frame(0)));
         }
-        output.emit("fp_pop", null, null, null);
-        output.emit("return", null, null, null);
+        ir.emit(new FramePop());
+        ir.emit(new Return());
         return null;
     }
 
     @Override
     public Void visit(BreakStatementNodeY node) {
-        if (!breakLabels.isEmpty()) {
-            output.emit("goto", null, null, breakLabels.peek());
-        }
+        if (!breakLabels.isEmpty()) ir.emit(new Jump(breakLabels.peek()));
         return null;
     }
 
     @Override
     public Void visit(ContinueStatementNodeY node) {
-        if (!continueLabels.isEmpty()) {
-            output.emit("goto", null, null, continueLabels.peek());
-        }
+        if (!continueLabels.isEmpty()) ir.emit(new Jump(continueLabels.peek()));
         return null;
     }
 
-    // ============================================================
-    // CONTROL FLOW
-    // ============================================================
+    // ============================================================ control flow
 
     @Override
     public Void visit(IfStatementNodeY node) {
-        String endLabel = ctx.nextLabel();
+        String end = labels.nextLabel();
+        String next = labels.nextLabel();
 
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-
-        String elseLabel = ctx.nextLabel();
-        output.emit("ifFalse", "AX_INT", null, elseLabel);
-
-        if (node.getThenBody() != null) {
-            for (StatementNodeY s : node.getThenBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-        output.emit("goto", null, null, endLabel);
-        output.emit("label", elseLabel, null, null);
+        branch(node.getCondition(), false, next);
+        visitAll(node.getThenBody());
+        ir.emit(new Jump(end));
+        ir.emit(new MarkLabel(next));
 
         if (node.getElseIfs() != null) {
             for (ElseIfNodeY elseIf : node.getElseIfs()) {
                 if (elseIf == null) continue;
-
-                String condRef2 = exprToString(elseIf.getCondition());
-                loadRegister(condRef2, "AX_INT");
-
-                String nextElse = ctx.nextLabel();
-                output.emit("ifFalse", "AX_INT", null, nextElse);
-
-                if (elseIf.getBody() != null) {
-                    for (StatementNodeY s : elseIf.getBody()) {
-                        if (s != null) s.accept(this);
-                    }
-                }
-                output.emit("goto", null, null, endLabel);
-                output.emit("label", nextElse, null, null);
+                String skip = labels.nextLabel();
+                branch(elseIf.getCondition(), false, skip);
+                visitAll(elseIf.getBody());
+                ir.emit(new Jump(end));
+                ir.emit(new MarkLabel(skip));
             }
         }
-
-        if (node.getElseBlockNode() != null) {
-            if (node.getElseBlockNode().getBody() != null) {
-                for (StatementNodeY s : node.getElseBlockNode().getBody()) {
-                    if (s != null) s.accept(this);
-                }
-            }
-        }
-
-        output.emit("label", endLabel, null, null);
-        return null;
-    }
-
-    @Override
-    public Void visit(ElseIfNodeY node) {
-
-        return null;
-    }
-
-    @Override
-    public Void visit(ElseBlockNodeY node) {
+        if (node.getElseBlockNode() != null) visitAll(node.getElseBlockNode().getBody());
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
     public Void visit(WhileStatementNodeY node) {
-        String startLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String start = labels.nextLabel();
+        String end = labels.nextLabel();
 
-        output.emit("label", startLabel, null, null);
-
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-        output.emit("ifFalse", "AX_INT", null, endLabel);
-
-        breakLabels.push(endLabel);
-        continueLabels.push(startLabel);
-
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        continueLabels.pop();
-        breakLabels.pop();
-
-        output.emit("goto", null, null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new MarkLabel(start));
+        branch(node.getCondition(), false, end);
+        loopBody(node.getBody(), end, start);
+        ir.emit(new Jump(start));
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodeY node) {
-        String startLabel = ctx.nextLabel();
-        String condLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String start = labels.nextLabel();
+        String cond = labels.nextLabel();
+        String end = labels.nextLabel();
 
-        output.emit("label", startLabel, null, null);
-
-        breakLabels.push(endLabel);
-        continueLabels.push(condLabel);
-
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        continueLabels.pop();
-        breakLabels.pop();
-
-        output.emit("label", condLabel, null, null);
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-        output.emit("ifTrue", "AX_INT", null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new MarkLabel(start));
+        loopBody(node.getBody(), end, cond);
+        ir.emit(new MarkLabel(cond));
+        branch(node.getCondition(), true, start);
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodeY node) {
-        String startLabel = ctx.nextLabel();
-        String continueLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String start = labels.nextLabel();
+        String update = labels.nextLabel();
+        String end = labels.nextLabel();
 
         if (node.getInit() != null) node.getInit().accept(this);
-
-        output.emit("label", startLabel, null, null);
-
-        if (node.getCondition() != null) {
-            String condRef = exprToString(node.getCondition());
-            loadRegister(condRef, "AX_INT");
-            output.emit("ifFalse", "AX_INT", null, endLabel);
-        }
-
-        breakLabels.push(endLabel);
-        continueLabels.push(continueLabel);   // ← ahora continue salta al incremento
-
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        continueLabels.pop();
-        breakLabels.pop();
-
-        output.emit("label", continueLabel, null, null);
+        ir.emit(new MarkLabel(start));
+        if (node.getCondition() != null) branch(node.getCondition(), false, end);
+        loopBody(node.getBody(), end, update);
+        ir.emit(new MarkLabel(update));
         if (node.getUpdate() != null) node.getUpdate().accept(this);
-
-        output.emit("goto", null, null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new Jump(start));
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
-    public Void visit(SwitchStatementNodeY node) {
-        if (node.getCases() != null) {
-            for (SwitchCaseNodeY c : node.getCases()) if (c != null) c.accept(this);
+    public Void visit(ForUpdateNodeY node) {
+        Value target = eval(node.getTarget());
+        switch (node.getOperator()) {
+            case INCREMENT, PREFIX_INCREMENT -> values.incDec(target, BinaryOperations.ADD);
+            case DECREMENT, PREFIX_DECREMENT -> values.incDec(target, BinaryOperations.SUB);
+            case ASSIGN -> {
+                if (node.getValue() != null) values.store(eval(node.getValue()), values.requireCell(target));
+            }
         }
+        return null;
+    }
+
+    // TODO: ForInitAssignmentNodeY (for (i = 0; ...)) estaba vacío en el visitor original; sigue vacío (YNoOpVisitor).
+    // TODO: el switch original solo ejecutaba los cuerpos en secuencia, sin comparar el valor del case.
+    @Override
+    public Void visit(SwitchStatementNodeY node) {
+        if (node.getCases() != null) for (SwitchCaseNodeY c : node.getCases()) if (c != null) c.accept(this);
         if (node.getDefaultCase() != null) node.getDefaultCase().accept(this);
         return null;
     }
 
     @Override
     public Void visit(SwitchCaseNodeY node) {
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
-        }
+        visitAll(node.getBody());
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeY node) {
-        if (node.getBody() != null) {
-            for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
-        }
+        visitAll(node.getBody());
         return null;
     }
 
-    // ============================================================
-    // EXPRESSIONS
-    // ============================================================
-
-    @Override
-    public Void visit(ExpressionNodeY node) {
-        return null;
+    private void loopBody(List<? extends YAstNode> body, String breakLabel, String continueLabel) {
+        breakLabels.push(breakLabel);
+        continueLabels.push(continueLabel);
+        visitAll(body);
+        continueLabels.pop();
+        breakLabels.pop();
     }
+
+    private void branch(ExpressionNodeY condition, boolean jumpWhen, String label) {
+        Register reg = Register.ax(ValueType.BOOLEAN);
+        values.load(eval(condition), reg);
+        ir.emit(new BranchIf(reg, jumpWhen, label));
+    }
+
+    // ============================================================ expressions
 
     @Override
     public Void visit(LiteralExpressionNodeY node) {
-        Type t = typeAnnotations.get(node);
-        Object value = node.getDataValue();
-
-        if (t != null && t.getKind() == TypeKind.STRING) {
-            lastExpr = stringPool.intern(String.valueOf(value));
-        } else if (t != null && t.getKind() == TypeKind.BOOLEAN) {
-            lastExpr = Boolean.TRUE.equals(value) ? "1" : "0";
-        } else {
-            lastExpr = String.valueOf(value);
-        }
+        ValueType type = valueTypeOf(node);
+        Object v = node.getDataValue();
+        last = switch (type) {
+            case STRING -> new Text(ir.intern(String.valueOf(v)));
+            case BOOLEAN -> new Constant(Boolean.TRUE.equals(v) ? "1" : "0", ValueType.BOOLEAN);
+            case CHAR -> new Constant(charCode(v), ValueType.CHAR);
+            default -> new Constant(String.valueOf(v), type);
+        };
         return null;
     }
 
     @Override
     public Void visit(IdentifierExpressionNodeY node) {
-        lastExpr = getStackRefByName(node.getIdentifier());
+        Cell cell = frame.lookup(node.getIdentifier());
+        if (cell == null) {
+            throw new IllegalStateException("Identificador sin declarar: '" + node.getIdentifier()
+                    + "' (línea " + node.getLine() + ")");
+        }
+        last = cell;
         return null;
     }
 
     @Override
     public Void visit(BinaryExpressionNodeY node) {
-        Type leftType = typeAnnotations.get(node.getLeft());
-        Type rightType = typeAnnotations.get(node.getRight());
-        Type resultType = typeAnnotations.get(node);
+        Value left = eval(node.getLeft());
+        Value right = eval(node.getRight());
+        BinaryOperations op = IntermediateTypes.binary(node.getOperator());
+        ValueType annotated = typeAnnotations.containsKey(node) ? valueTypeOf(node) : null;
 
-        TypeKind leftKind = leftType != null ? leftType.getKind() : TypeKind.INT;
-        TypeKind rightKind = rightType != null ? rightType.getKind() : TypeKind.INT;
-
-        TypeKind resultKind = resultType != null ? resultType.getKind() : TypeKind.INT;
-        String resultSuffix = kindToSuffix(resultKind);
-        String cReg = "CX_" + resultSuffix.toUpperCase();
-
-        boolean isStringConcat = (resultKind == TypeKind.STRING
-                && node.getOperator() == BinaryOperator.PLUS);
-
-        String leftRef = exprToString(node.getLeft());
-        String rightRef = exprToString(node.getRight());
-
-        if (isStringConcat) {
-            String leftStr = ensureStringRef(leftRef, leftKind);
-            String rightStr = ensureStringRef(rightRef, rightKind);
-
-            loadRegister(leftStr, "AX_STRING");
-            loadRegister(rightStr, "BX_STRING");
-            output.emit("strcat", "AX_STRING", "BX_STRING", "CX_STRING");
-
-            int offset = nextOffset++;
-            output.emit("store_string", "fp + " + offset, null, "CX_STRING");
-            lastExpr = "stackstring[fp + " + offset + "]";
+        if (annotated == ValueType.STRING && op == BinaryOperations.ADD) {
+            last = concat(left, right);
             return null;
         }
 
-        String suffix = kindToSuffix(resultKind);
-        String aReg = "AX_" + suffix.toUpperCase();
-        String bReg = "BX_" + suffix.toUpperCase();
+        ValueType operandType = operandTypeOf(left, right);
+        ValueType resultType = annotated != null ? annotated : (op.isComparison() || op.isLogical() ? ValueType.BOOLEAN : operandType);
 
-        loadRegister(leftRef, aReg);
-        loadRegister(rightRef, bReg);
-
-        String op = binaryOpToSymbol(node.getOperator());
-        output.emit(op, aReg, bReg, cReg);
-
-        int offset = nextOffset++;
-        String dest = stackArrayForKind(resultKind) + "[fp + " + offset + "]";
-        output.emit("store_" + suffix, "fp + " + offset, null, cReg);
-
-        lastExpr = dest;
+        Register a = Register.ax(operandType), b = Register.bx(operandType), c = Register.cx(resultType);
+        values.load(left, a);
+        values.load(right, b);
+        ir.emit(new BinaryOperation(op, a, b, c));
+        last = values.spill(c);
         return null;
     }
 
-    private String ensureStringRef(String operandRef, TypeKind operandKind) {
-        if (operandKind == TypeKind.STRING) {
-            return operandRef;
-        }
-
-        String reg;
-        String opName;
-        switch (operandKind) {
-            case FLOAT -> {
-                reg = "AX_FLOAT";
-                opName = "to_string_float";
-            }
-            case CHAR -> {
-                reg = "AX_CHAR";
-                opName = "to_string_char";
-            }
-            case BOOLEAN -> {
-                reg = "AX_BOOLEAN";
-                opName = "to_string_boolean";
-            }
-            default -> {
-                reg = "AX_INT";
-                opName = "to_string_int";
-            }
-        }
-
-        loadRegister(operandRef, reg);
-
-        int bufOffset = nextOffset++;
-        output.emit("alloc_string", null, null, "CX_STRING");
-        output.emit("store_string", "fp + " + bufOffset, null, "CX_STRING");
-
-        output.emit(opName, reg, null, "stackstring[fp + " + bufOffset + "]");
-
-        return "stackstring[fp + " + bufOffset + "]";
+    private Value concat(Value left, Value right) {
+        Value l = values.asString(left);
+        Value r = values.asString(right);
+        Register a = Register.ax(ValueType.STRING), b = Register.bx(ValueType.STRING), c = Register.cx(ValueType.STRING);
+        values.load(l, a);
+        values.load(r, b);
+        ir.emit(new StringConcat(a, b, c));
+        return values.spill(c);
     }
 
     @Override
     public Void visit(UnaryExpressionNodeY node) {
-        String operandRef = exprToString(node.getExpressionNode());
-        loadRegister(operandRef, "AX_INT");
-
-        String op = unaryOpToSymbol(node.getOperator());
-        output.emit(op, "AX_INT", null, "CX_INT");
-
-        int offset = nextOffset++;
-        String dest = "stackinteger[fp + " + offset + "]";
-        output.emit("store_int", "fp + " + offset, null, "CX_INT");
-
-        lastExpr = dest;
+        Value operand = eval(node.getExpressionNode());
+        UnaryOperations op = IntermediateTypes.unary(node.getOperator());
+        ValueType type = op == UnaryOperations.NOT ? ValueType.BOOLEAN
+                : (operand.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT);
+        Register a = Register.ax(type), c = Register.cx(type);
+        values.load(operand, a);
+        ir.emit(new UnaryOperation(op, a, c));
+        last = values.spill(c);
         return null;
     }
 
-    // ============================================================
-    // STUBS
-    // ============================================================
     @Override
     public Void visit(FunctionCallExpressionNodeY node) {
-        String funcName = node.getFunctionName();
-        List<ExpressionNodeY> args = node.getArguments();
-        int numArgs = args != null ? args.size() : 0;
+        List<ExpressionNodeY> args = node.getArguments() != null ? node.getArguments() : List.of();
+        int n = args.size();
 
-        output.emit("sptr_inc", "200", null, null);
+        ir.emit(new AdjustStackTop(CALL_AREA));
+        for (ExpressionNodeY arg : args) pushArgument(arg);
+        ir.emit(new Call(functionNames.getOrDefault(node.getFunctionName(), node.getFunctionName())));
 
-        if (args != null) {
-            for (ExpressionNodeY arg : args) {
-                if (arg instanceof IdentifierExpressionNodeY id) {
-                    String name = id.getIdentifier();
-
-                    ArrayInfo aInfo = arrayInfos.get(name);
-                    if (aInfo != null) {
-                        if (!aInfo.isHeap()) {
-                            output.emit("+", "fp", String.valueOf(aInfo.getBaseOffset()), "AX_INT");
-                        } else {
-                            output.emit("load_int", "fp + " + aInfo.getBaseOffset(), null, "AX_INT"); // FIX
-                        }
-                        output.emit("store_int", "sptr", null, "AX_INT");
-                        output.emit("sptr_inc", "1", null, null);
-                        continue;
-                    }
-
-                    StructInfo sInfo = structVariables.get(name);
-                    if (sInfo != null) {
-                        if (!sInfo.isReference()) {
-                            output.emit("+", "fp", String.valueOf(sInfo.getBaseOffset()), "AX_INT");
-                        } else {
-                            output.emit("load_int", "fp + " + sInfo.getBaseOffset(), null, "AX_INT"); // FIX
-                        }
-                        output.emit("store_int", "sptr", null, "AX_INT");
-                        output.emit("sptr_inc", "1", null, null);
-                        continue;
-                    }
-                }
-
-                String argRef = exprToString(arg);
-                Type t = typeAnnotations.get(arg);
-                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-                String suffix = kindToSuffix(kind);
-                String axReg = "AX_" + suffix.toUpperCase();
-
-                loadRegister(argRef, axReg);
-                output.emit("store_" + suffix, "sptr", null, axReg);
-                output.emit("sptr_inc", "1", null, null);
-            }
-        }
-
-        String targetFunc = resolveFunctionName(funcName);
-        output.emit("call", targetFunc, null, null);
-
-        Type returnType = typeAnnotations.get(node);
-        TypeKind returnKind = returnType != null ? returnType.getKind() : TypeKind.INT;
-        String returnSuffix = kindToSuffix(returnKind);
-        String returnArray = stackArrayForKind(returnKind);
-        String cxReg = "CX_" + returnSuffix.toUpperCase();
-
-        int retOffset = numArgs + 1;
-
-        output.emit("load_" + returnSuffix, "sptr - " + retOffset, null, cxReg);
-
-        int destOffset = nextOffset++;
-        output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
-
-        output.emit("sptr_dec", String.valueOf(numArgs + 1), null, null);
-
-        String dest = returnArray + "[fp + " + destOffset + "]";
-        lastExpr = dest;
+        Register result = Register.cx(valueTypeOf(node));
+        ir.emit(new Load(MemorySpace.STACK, new StackTop(-(n + 1)), result));
+        last = values.spill(result);
+        ir.emit(new AdjustStackTop(-(n + CALL_AREA)));
         return null;
     }
 
     @Override
     public Void visit(ArrayCallExpressionNodeY node) {
-        String arrayName = node.getArrayName();
-        ArrayInfo info = arrayInfos.get(arrayName);
-        if (info == null) return null;
+        ArrayInfo info = requireArray(node.getArrayName());
+        ValueType element = IntermediateTypes.of(info.getElementType());
+        Register index = Register.ax(ValueType.INT);
+        Register result = Register.cx(element);
 
-        String suffix = kindToSuffix(info.getElementType());
-        String arrayStack = stackArrayForKind(info.getElementType());
-        String cxReg = "CX_" + suffix.toUpperCase();
-
-        int dest = nextOffset++;
-
+        values.load(eval(node.getIndexExpression()), index);
         if (info.isHeap()) {
-            output.emit("load_int", "fp + " + info.getBaseOffset(), null, "AX_INT");
-            String indexRef = exprToString(node.getIndexExpression());
-            loadRegister(indexRef, "BX_INT");
-            output.emit("+", "AX_INT", "BX_INT", "CX_INT");
-            output.emit("array_load_indirect_" + suffix, "CX_INT", null, cxReg);
+            Register pointer = Register.bx(ValueType.INT);
+            ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), pointer));
+            ir.emit(new IndexAddress(pointer, index, pointer));
+            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, 0), result));
         } else {
-            String indexRef = exprToString(node.getIndexExpression());
-            loadRegister(indexRef, "AX_INT");
-            output.emit("array_load_" + suffix,
-                    arrayStack + ", fp + " + info.getBaseOffset(),
-                    "AX_INT",
-                    cxReg);
+            ir.emit(new LoadIndexed(new Frame(info.getBaseOffset()), index, result));
         }
-
-        output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-        lastExpr = arrayStack + "[fp + " + dest + "]";
-        return null;
-    }
-
-    @Override
-    public Void visit(ArrayInitExpressionNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ArrayValuesNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructInstanceNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructLiteralExpressionNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructPropertyNodeY node) {
+        last = values.spill(result);
         return null;
     }
 
     @Override
     public Void visit(PropertyAccessExpressionNodeY node) {
-        ExpressionNodeY target = node.getTarget();
-        String fieldName = node.getPropertyName();
-
-        if (!(target instanceof IdentifierExpressionNodeY id)) {
-            return null;
+        FieldReference field = resolveField(node);
+        ValueType type = valueTypeOf(node);
+        if (field.getInfo().isReference()) {
+            Register pointer = Register.ax(ValueType.INT);
+            Register result = Register.cx(type);
+            ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
+            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, field.getOffset()), result));
+            last = values.spill(result);
+        } else {
+            last = new Cell(type, new Frame(field.getInfo().getBaseOffset() + field.getOffset()));
         }
+        return null;
+    }
 
-        StructInfo info = structVariables.get(id.getIdentifier());
-        if (info == null) return null;
+    // Helpers
 
+
+    private static ValueType operandTypeOf(Value left, Value right) {
+        if (left.type() == ValueType.STRING || right.type() == ValueType.STRING) return ValueType.STRING;
+        if (left.type() == ValueType.FLOAT || right.type() == ValueType.FLOAT) return ValueType.FLOAT;
+        return ValueType.INT;
+    }
+
+    /**
+     * Method to push the arguments for the arguments push
+     *
+     */
+    private void pushArgument(ExpressionNodeY arg) {
+        if (arg instanceof IdentifierExpressionNodeY id) {
+            ArrayInfo array = frame.arrayOf(id.getIdentifier());
+            if (array != null) {
+                pushReference(array.isHeap(), array.getBaseOffset());
+                return;
+            }
+            StructInfo struct = frame.structOf(id.getIdentifier());
+            if (struct != null) {
+                pushReference(struct.isReference(), struct.getBaseOffset());
+                return;
+            }
+        }
+        Value value = eval(arg);
+        Register reg = Register.ax(value.type());
+        values.load(value, reg);
+        pushRegisterister(reg);
+    }
+
+    /**
+     * Reference push array helper
+     */
+    private void pushReference(boolean alreadyReference, int baseOffset) {
+        Register reg = Register.ax(ValueType.INT);
+        if (alreadyReference) ir.emit(new Load(MemorySpace.STACK, new Frame(baseOffset), reg));
+        else ir.emit(new LoadAddress(new Frame(baseOffset), reg));
+        pushRegisterister(reg);
+    }
+
+    /**
+     * Push registerer helper
+     *
+     */
+    private void pushRegisterister(Register reg) {
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), reg));
+        ir.emit(new AdjustStackTop(1));
+    }
+
+
+    private void assign(ExpressionNodeY target, Value value) {
+        if (target instanceof ArrayCallExpressionNodeY array) {
+            assignArrayElement(array, value);
+            return;
+        }
+        if (target instanceof PropertyAccessExpressionNodeY prop) {
+            FieldReference field = resolveField(prop);
+            if (field.getInfo().isReference()) {
+                assignThroughPointer(field, valueTypeOf(prop), value);
+                return;
+            }
+        }
+        values.store(value, values.requireCell(eval(target)));
+    }
+
+    private void assignArrayElement(ArrayCallExpressionNodeY target, Value value) {
+        ArrayInfo info = requireArray(target.getArrayName());
+        ValueType element = IntermediateTypes.of(info.getElementType());
+        Value index = eval(target.getIndexExpression());
+
+        Register idx = Register.ax(ValueType.INT);
+        Register source = Register.cx(element);
+        values.load(index, idx);
+        if (info.isHeap()) {
+            Register pointer = Register.bx(ValueType.INT);
+            ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), pointer));
+            ir.emit(new IndexAddress(pointer, idx, pointer));
+            values.load(value, source);
+            ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, 0), source));
+        } else {
+            values.load(value, source);
+            ir.emit(new StoreIndexed(new Frame(info.getBaseOffset()), idx, source));
+        }
+    }
+
+    private void assignThroughPointer(FieldReference field, ValueType type, Value value) {
+        Register pointer = Register.ax(ValueType.INT);
+        Register source = Register.cx(type);
+        ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
+        values.load(value, source);
+        ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffset()), source));
+    }
+
+
+    private FieldReference resolveField(PropertyAccessExpressionNodeY node) {
+        if (!(node.getTarget() instanceof IdentifierExpressionNodeY id)) {
+            throw new IllegalStateException("Solo se soporta acceso a propiedades de una variable (línea " + node.getLine() + ")");
+        }
+        StructInfo info = frame.structOf(id.getIdentifier());
+        if (info == null) throw new IllegalStateException("'" + id.getIdentifier() + "' no es un struct conocido");
         List<String> layout = structLayouts.get(info.getStructTypeName());
-        if (layout == null) return null;
-
-        int fieldOffset = layout.indexOf(fieldName);
-        if (fieldOffset < 0) return null;
-
-        Type fieldType = typeAnnotations.get(node);
-        TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
-        String suffix = kindToSuffix(kind);
-        String arrayName = stackArrayForKind(kind);
-
-        if (info.isReference()) {
-            output.emit("load_int", "fp + " + info.getBaseOffset(), null, "AX_INT"); // FIX: agregado "fp + "
-            String cxReg = "CX_" + suffix.toUpperCase();
-            output.emit("field_load_indirect_" + suffix,
-                    "AX_INT + " + fieldOffset,
-                    null,
-                    cxReg);
-            int dest = nextOffset++;
-            output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-            lastExpr = arrayName + "[fp + " + dest + "]";
-        } else {
-            lastExpr = arrayName + "[fp + " + (info.getBaseOffset() + fieldOffset) + "]";
-        }
-        return null;
+        int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
+        if (offset < 0)
+            throw new IllegalStateException("El struct " + info.getStructTypeName() + " no tiene el campo '" + node.getPropertyName() + "'");
+        return new FieldReference(info, offset);
     }
 
-
-    @Override
-    public Void visit(MemberArrayAccessExpressionNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ArgumentsNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(TypeNodeY node) {
-        return null;
-    }
-
-
-    @Override
-    public Void visit(StructBodyNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructAttributeNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StructParameterNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(PrimitiveParameterNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ArrayParameterNodeY node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ElseIfListNodeY node) {
-        return null;
-    }
-
-    // ============================================================
-    // HELPERS
-    // ============================================================
-
-    private String exprToString(ExpressionNodeY node) {
+    private Value eval(ExpressionNodeY node) {
         node.accept(this);
-        return lastExpr;
+        return last;
     }
 
-    private String uniqueFunctionName(String baseName, YAstNode node) {
-        return baseName + "_" + node.getLine() + "_" + node.getColumn();
+    private void visitAll(List<? extends YAstNode> nodes) {
+        if (nodes == null) return;
+        for (YAstNode n : nodes) if (n != null) n.accept(this);
     }
 
-    private int allocateLocal(String name, YAstNode node) {
-        int offset = nextOffset++;
-        localOffsets.put(name, offset);
-
-        TypeKind kind = TypeKind.INT;
-        if (node instanceof VariableDeclarationNodeY decl && decl.getDataType() != null) {
-            Type t = mapTypeNodeToType(decl.getDataType());
-            if (t != null) kind = t.getKind();
-        } else if (node instanceof ForInitDeclarationNodeY f && f.getType() != null) {
-            Type t = mapTypeNodeToType(f.getType());
-            if (t != null) kind = t.getKind();
-        } else {
-            Type t = typeAnnotations.get(node);
-            if (t != null) kind = t.getKind();
-        }
-        localTypes.put(name, kind);
-        return offset;
+    private ValueType valueTypeOf(YAstNode node) {
+        Type t = typeAnnotations.get(node);
+        return t == null ? ValueType.INT : IntermediateTypes.of(t.getKind());
     }
 
+    private ValueType declaredType(TypeNodeY typeNode) {
+        return IntermediateTypes.of(kindOf(typeNode));
+    }
+
+    private TypeKind kindOf(TypeNodeY typeNode) {
+        Type t = mapTypeNodeToType(typeNode);
+        return t == null ? TypeKind.INT : t.getKind();
+    }
+
+    /**
+     * Map type node to type helper method
+     * */
     private Type mapTypeNodeToType(TypeNodeY typeNode) {
         if (typeNode == null) return null;
         return switch (typeNode.getDataType()) {
@@ -1047,228 +746,36 @@ public class YCodeGeneratorVisitor implements YAstVisitor<Void> {
     }
 
     /**
-     * Returns a stack reference string like "stackinteger[fp + 5]"
-     */
-    private String getStackRefByName(String name) {
-        Integer offset = localOffsets.get(name);
-        if (offset == null) offset = paramOffsets.get(name);
-        if (offset == null) return "0";
-
-        TypeKind kind = localTypes.get(name);
-        if (kind == null) kind = TypeKind.INT;
-        return stackArrayForKind(kind) + "[fp + " + offset + "]";
+     * Principal method to define the required array
+     * */
+    private ArrayInfo requireArray(String name) {
+        ArrayInfo info = frame.arrayOf(name);
+        if (info == null) throw new IllegalStateException("Arreglo no declarado: '" + name + "'");
+        return info;
     }
 
     /**
-     * Loads a value (either a stack reference, a register, or a literal)
-     */
-    private void loadRegister(String operandRef, String register) {
-        if (operandRef == null) return;
-
-        if (isRegister(operandRef)) {
-            output.emit("=", operandRef, null, register);
-            return;
-        }
-
-        if (operandRef.startsWith("stack")) {
-            int bs = operandRef.indexOf('[');
-            int be = operandRef.indexOf(']');
-            if (bs >= 0 && be > bs) {
-                String arrayName = operandRef.substring(0, bs);
-                String offsetExpr = operandRef.substring(bs + 1, be);
-                String suffix = suffixForArray(arrayName);
-                output.emit("load_" + suffix, offsetExpr, null, register);
-                return;
-            }
-        }
-
-        output.emit("=", operandRef, null, register);
+     * Literal int helper method
+     * */
+    private static Integer literalInt(ExpressionNodeY expr) {
+        if (expr instanceof LiteralExpressionNodeY lit && lit.getDataValue() instanceof Integer i) return i;
+        return null;
     }
 
     /**
-     * Stores a value into a destination stack slot.
-     */
-    private void storeValueTo(String valueRef, String destRef) {
-        if (destRef == null || !destRef.startsWith("stack")) return;
-
-        int bs = destRef.indexOf('[');
-        int be = destRef.indexOf(']');
-        if (bs < 0 || be <= bs) return;
-
-        String arrayName = destRef.substring(0, bs);
-        String offsetExpr = destRef.substring(bs + 1, be);
-        String suffix = suffixForArray(arrayName);
-        String cxRegister = "CX_" + suffix.toUpperCase();
-
-        if (isRegister(valueRef)) {
-            output.emit("store_" + suffix, offsetExpr, null, valueRef);
-        } else if (valueRef != null && valueRef.startsWith("stack")) {
-            loadRegister(valueRef, cxRegister);
-            output.emit("store_" + suffix, offsetExpr, null, cxRegister);
-        } else {
-            output.emit("=", valueRef, null, destRef);
-        }
-    }
-
-    private void storeRegisterBack(String register, String destRef) {
-        if (destRef == null || !destRef.startsWith("stack")) return;
-
-        int bs = destRef.indexOf('[');
-        int be = destRef.indexOf(']');
-        if (bs < 0 || be <= bs) return;
-
-        String arrayName = destRef.substring(0, bs);
-        String offsetExpr = destRef.substring(bs + 1, be);
-        String suffix = suffixForArray(arrayName);
-
-        output.emit("store_" + suffix, offsetExpr, null, register);
-    }
-
-    private boolean isRegister(String s) {
-        if (s == null) return false;
-        return s.startsWith("AX_") || s.startsWith("BX_") || s.startsWith("CX_");
-    }
-
-    private String suffixForArray(String arrayName) {
-        return switch (arrayName) {
-            case "stackstring" -> "string";
-            case "stackfloat" -> "float";
-            case "stackchar" -> "char";
-            case "stackboolean" -> "boolean";
-            default -> "int";
-        };
-    }
-
-    private String stackArrayForKind(TypeKind kind) {
-        if (kind == null) return "stackinteger";
-        return switch (kind) {
-            case STRING -> "stackstring";
-            case FLOAT -> "stackfloat";
-            case CHAR -> "stackchar";
-            case BOOLEAN -> "stackboolean";
-            default -> "stackinteger";
-        };
-    }
-
-    private String registerFor(String typeName) {
-        return switch (typeName) {
-            case "string" -> "AX_STRING";
-            case "float" -> "AX_FLOAT";
-            case "char" -> "AX_CHAR";
-            default -> "AX_INT";
-        };
-    }
-
-    private String binaryOpToSymbol(BinaryOperator op) {
-        return switch (op) {
-            case PLUS -> "+";
-            case MINUS -> "-";
-            case MULTIPLICATION -> "*";
-            case DIVIDE -> "/";
-            case MODULE -> "%";
-            case EQUALS -> "==";
-            case DIFFERENT -> "!=";
-            case LESS -> "<";
-            case GREATER -> ">";
-            case LESS_EQUALS -> "<=";
-            case GREATER_EQUALS -> ">=";
-            case AND -> "&&";
-            case OR -> "||";
-        };
-    }
-
-    private String unaryOpToSymbol(UnaryOperator op) {
-        return switch (op) {
-            case NEGATE -> "-";
-            case NOT -> "!";
-        };
-    }
-
-    private String shortlyOpToBinary(ShortlyOperator op) {
-        return switch (op) {
-            case PLUS_ASSIGN -> "+";
-            case MINUS_ASSIGN -> "-";
-            case MULTIPLY_ASSIGN -> "*";
-            case DIVIDE_ASSIGN -> "/";
-            case MODULO_ASSIGN -> "%";
-        };
-    }
-
-    private String typeToString(Type t) {
-        if (t == null) return "int";
-        return switch (t.getKind()) {
-            case STRING -> "string";
-            case FLOAT -> "float";
-            case CHAR -> "char";
-            case BOOLEAN -> "int";
-            default -> "int";
-        };
-    }
-
-    private String kindToSuffix(TypeKind kind) {
-        if (kind == null) return "int";
-        return switch (kind) {
-            case STRING -> "string";
-            case FLOAT -> "float";
-            case CHAR -> "char";
-            case BOOLEAN -> "boolean";
-            default -> "int";
-        };
-    }
-
-    private String resolveFunctionName(String bareName) {
-        for (String fname : output.getFunctionNames()) {
-            if (fname.startsWith(bareName + "_")) {
-                return fname;
-            }
-        }
-        return bareName;
-    }
-
-    private void emitIncDec(String targetRef, String op) {
-        int oneOffset = nextOffset++;
-        output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
-        loadRegister(targetRef, "AX_INT");
-        loadRegister("stackinteger[fp + " + oneOffset + "]", "BX_INT");
-        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
+     * Char ascii code
+     * */
+    private static String charCode(Object v) {
+        if (v instanceof Character c) return Integer.toString(c);
+        String s = String.valueOf(v);
+        return (s.length() == 1 && !Character.isDigit(s.charAt(0))) ? Integer.toString(s.charAt(0)) : s;
     }
 
     /**
-     * Parameters setter helper
+     * Helper method to bring a new unique name
      *
      */
-    private int registerParameter(String pname, ParameterNodeY param) {
-        TypeKind kind = TypeKind.INT;
-        int slots = 1;
-
-        if (param instanceof PrimitiveParameterNodeY p && p.getType() != null) {
-            kind = mapTypeNodeToType(p.getType()).getKind();
-        } else if (param instanceof StructParameterNodeY sp && sp.getDataType() != null) {
-            String structTypeName = sp.getDataType().getCustomTypeName();
-            kind = TypeKind.INT;
-            slots = 1;
-            structVariables.put(pname, new StructInfo(structTypeName, nextOffset, true));
-
-        } else if (param instanceof ArrayParameterNodeY ap && ap.getElementType() != null) {
-            TypeKind elementKind = mapTypeNodeToType(ap.getElementType()).getKind();
-            kind = TypeKind.INT;
-            slots = 1;
-            arrayInfos.put(pname, new ArrayInfo(nextOffset, elementKind, -1, true));
-        }
-
-        localTypes.put(pname, kind);
-        paramOffsets.put(pname, nextOffset);
-        nextOffset += slots;
-        return slots;
-    }
-
-
-    private Integer tryExtractIntLiteral(ExpressionNodeY expr) {
-        if (expr instanceof LiteralExpressionNodeY lit) {
-            Object v = lit.getDataValue();
-            if (v instanceof Integer i) return i;
-        }
-        return null;
+    private static String uniqueName(String baseName, YAstNode node) {
+        return baseName + "_" + node.getLine() + "_" + node.getColumn();
     }
 }

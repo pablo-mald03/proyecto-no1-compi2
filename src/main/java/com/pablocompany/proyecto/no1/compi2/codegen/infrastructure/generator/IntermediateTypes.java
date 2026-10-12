@@ -20,7 +20,7 @@ public class IntermediateTypes {
      * Principal method to evaluate the type and translate to the intermediate operation
      *
      */
-    static ValueType of(TypeKind kind) {
+    public static ValueType of(TypeKind kind) {
         if (kind == null) return ValueType.INT;
         return switch (kind) {
             case STRING -> ValueType.STRING;
@@ -35,7 +35,7 @@ public class IntermediateTypes {
      * Principal method to evaluate the binary operations and translate to the intermediate operation
      *
      */
-    static BinaryOperations binary(BinaryOperator op) {
+    public static BinaryOperations binary(BinaryOperator op) {
         return switch (op) {
             case PLUS -> BinaryOperations.ADD;
             case MINUS -> BinaryOperations.SUB;
@@ -57,7 +57,7 @@ public class IntermediateTypes {
      * Principal method to evaluate the shortly operations and translate to the intermediate operation
      *
      */
-    static BinaryOperations shortly(ShortlyOperator op) {
+    public static BinaryOperations shortly(ShortlyOperator op) {
         return switch (op) {
             case PLUS_ASSIGN -> BinaryOperations.ADD;
             case MINUS_ASSIGN -> BinaryOperations.SUB;
@@ -71,7 +71,7 @@ public class IntermediateTypes {
      * Principal method to evaluate the unary operations and translate to the intermediate operation
      *
      */
-    static UnaryOperations unary(UnaryOperator op) {
+    public static UnaryOperations unary(UnaryOperator op) {
         return switch (op) {
             case NEGATE -> UnaryOperations.NEG;
             case NOT -> UnaryOperations.NOT;

@@ -3,6 +3,7 @@ package com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operati
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.enums.BinaryOperations;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Instruction;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -10,6 +11,7 @@ import lombok.Data;
  *
  */
 @Data
+@AllArgsConstructor
 public class BinaryOperation implements Instruction {
 
     private BinaryOperations operator;

@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stateme
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Instruction;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -9,6 +10,7 @@ import lombok.Data;
  *
  */
 @Data
+@AllArgsConstructor
 public class BranchIf implements Instruction {
     private Register condition;
     private boolean jumpWhen;
