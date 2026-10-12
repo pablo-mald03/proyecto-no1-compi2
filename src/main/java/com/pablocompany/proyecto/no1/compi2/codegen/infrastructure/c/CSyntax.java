@@ -5,9 +5,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Address;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Operand;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StringRef;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.*;
 import lombok.NoArgsConstructor;
 
 /**
@@ -20,6 +18,10 @@ public class CSyntax {
         return register.legacyName();
     }
 
+    /**
+     * Method to generate the operand
+     *
+     */
     public String operand(Operand operator) {
         return switch (operator) {
             case Register register -> registerTo(register);
@@ -29,21 +31,29 @@ public class CSyntax {
         };
     }
 
- /*   public String address(Address a) {
+    /**
+     * Method to generate the address operation
+     *
+     */
+    public String address(Address a) {
         return switch (a) {
             case Frame framePtr -> withOffset("fp", framePtr.getOffset());
             case StackTop stackTop -> withOffset("sptr", stackTop.getOffset());
             case Indirect indirect -> withOffset(registerTo(indirect.getBase()), indirect.getOffset());
+            default -> throw new IllegalStateException("Valor no esperado: " + a);
         };
-    }*/
+    }
 
+    /**
+     * Method to update the offset
+     * */
     public String withOffset(String base, int offset) {
         if (offset == 0) return base;
         return offset > 0 ? base + " + " + offset : base + " - " + (-offset);
     }
 
     /**
-     * Nombre del arreglo global que respalda (espacio, tipo): stackinteger, heapfloat, ...
+     * Arrau global name for array memory method
      */
     public String memory(MemorySpace space, ValueType type) {
         String prefix = space == MemorySpace.STACK ? "stack" : "heap";
@@ -54,10 +64,16 @@ public class CSyntax {
         };
     }
 
+    /**
+     * Method to generate the  cell
+     * */
     public String cell(MemorySpace space, ValueType type, Address address) {
         return memory(space, type) + "[" + address(address) + "]";
     }
 
+    /**
+     * Method to generate the c type
+     * */
     public String cType(ValueType t) {
         return switch (t) {
             case INT, BOOLEAN -> "int";
@@ -67,6 +83,9 @@ public class CSyntax {
         };
     }
 
+    /**
+     * Method to print the data value
+     * */
     public String printfSpec(ValueType t) {
         return switch (t) {
             case STRING -> "%s";
@@ -76,6 +95,9 @@ public class CSyntax {
         };
     }
 
+    /**
+     * Method to scape the text
+     * */
     public String escape(String s) {
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
