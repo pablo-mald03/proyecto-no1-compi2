@@ -14,5 +14,5 @@ import lombok.Data;
 public class Store implements Instruction {
     private MemorySpace memorySpace;
     private Address address;
-    private Register register;
+    private Register source;
 }

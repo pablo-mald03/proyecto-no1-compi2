@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c;
+package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports;
 
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CSyntax {
 
-    public String registerTo(Register register) {
+    public static String registerTo(Register register) {
         return register.legacyName();
     }
 
@@ -22,7 +22,7 @@ public class CSyntax {
      * Method to generate the operand
      *
      */
-    public String operand(Operand operator) {
+    public static String operand(Operand operator) {
         return switch (operator) {
             case Register register -> registerTo(register);
             case Immediate immediate -> immediate.getLiteral();
@@ -35,7 +35,7 @@ public class CSyntax {
      * Method to generate the address operation
      *
      */
-    public String address(Address a) {
+    public static String address(Address a) {
         return switch (a) {
             case Frame framePtr -> withOffset("fp", framePtr.getOffset());
             case StackTop stackTop -> withOffset("sptr", stackTop.getOffset());
@@ -46,8 +46,9 @@ public class CSyntax {
 
     /**
      * Method to update the offset
-     * */
-    public String withOffset(String base, int offset) {
+     *
+     */
+    public static String withOffset(String base, int offset) {
         if (offset == 0) return base;
         return offset > 0 ? base + " + " + offset : base + " - " + (-offset);
     }
@@ -55,7 +56,7 @@ public class CSyntax {
     /**
      * Arrau global name for array memory method
      */
-    public String memory(MemorySpace space, ValueType type) {
+    public static String memory(MemorySpace space, ValueType type) {
         String prefix = space == MemorySpace.STACK ? "stack" : "heap";
         return prefix + switch (type.getStorage()) {
             case WORD -> "integer";
@@ -66,15 +67,17 @@ public class CSyntax {
 
     /**
      * Method to generate the  cell
-     * */
-    public String cell(MemorySpace space, ValueType type, Address address) {
+     *
+     */
+    public static String cell(MemorySpace space, ValueType type, Address address) {
         return memory(space, type) + "[" + address(address) + "]";
     }
 
     /**
      * Method to generate the c type
-     * */
-    public String cType(ValueType t) {
+     *
+     */
+    public static String cType(ValueType t) {
         return switch (t) {
             case INT, BOOLEAN -> "int";
             case FLOAT -> "float";
@@ -85,8 +88,9 @@ public class CSyntax {
 
     /**
      * Method to print the data value
-     * */
-    public String printfSpec(ValueType t) {
+     *
+     */
+    public static String printfSpec(ValueType t) {
         return switch (t) {
             case STRING -> "%s";
             case FLOAT -> "%f";
@@ -97,8 +101,9 @@ public class CSyntax {
 
     /**
      * Method to scape the text
-     * */
-    public String escape(String s) {
+     *
+     */
+    public static String escape(String s) {
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")

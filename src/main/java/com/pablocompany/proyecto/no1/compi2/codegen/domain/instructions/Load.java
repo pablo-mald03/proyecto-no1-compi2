@@ -14,5 +14,5 @@ public class Load implements Instruction {
 
     private MemorySpace space;
     private Address address;
-    private Register dest;
+    private Register destination;
 }

@@ -1,4 +1,4 @@
-package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c;
+package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stack;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.AdjustStackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;

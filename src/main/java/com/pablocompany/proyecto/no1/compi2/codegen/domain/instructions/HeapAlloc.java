@@ -12,5 +12,5 @@ import lombok.Data;
 public class HeapAlloc implements Instruction {
 
     private int slots;
-    private Register dest;
+    private Register destination;
 }

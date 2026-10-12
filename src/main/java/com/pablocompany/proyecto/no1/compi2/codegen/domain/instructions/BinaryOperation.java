@@ -12,8 +12,8 @@ import lombok.Data;
 @Data
 public class BinaryOperation implements Instruction {
 
-    private BinaryOperations op;
+    private BinaryOperations operator;
     private Register left;
     private Register right;
-    private Register dest;
+    private Register destination;
 }

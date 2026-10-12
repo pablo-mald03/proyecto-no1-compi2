@@ -43,7 +43,7 @@ public class EmitterRegistry {
     }
 
     /**
-     * Method to verification if the code generation was succeed.
+     * Method to verification if the code generation was succeeded.
      */
     public EmitterRegistry verifyComplete() {
         Set<Class<?>> missing = new LinkedHashSet<>(Arrays.asList(Instruction.class.getPermittedSubclasses()));

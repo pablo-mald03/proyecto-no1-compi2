@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.domain.parents;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StringConstant;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import java.util.Optional;
 /**
  * Programa completo; independiente del lenguaje destino.
  */
+@Getter
 public class IntermediateProgram {
 
     String sourceName;
