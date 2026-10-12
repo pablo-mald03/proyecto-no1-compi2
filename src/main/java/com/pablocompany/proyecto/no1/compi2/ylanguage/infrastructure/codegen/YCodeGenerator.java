@@ -29,7 +29,7 @@ public class YCodeGenerator implements CodeGenerator {
     @Override
     public void declare(EditorContext context, CodeGenContext codeGen) {
         if (context.getAstNode() instanceof ProgramNodeY program) {
-            new YDeclarationCollector().collect(program, context.getFilePath(), codeGen);
+//            new SymbolLookup().collect(program, context.getFilePath(), codeGen);
         }
     }
 }

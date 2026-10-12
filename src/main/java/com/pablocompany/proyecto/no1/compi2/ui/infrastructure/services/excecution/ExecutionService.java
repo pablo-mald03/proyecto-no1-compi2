@@ -1,8 +1,12 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.excecution;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Service for compiling and executing C code
@@ -13,6 +17,29 @@ public class ExecutionService {
 
     private static final String COMPILED_FOLDER = "compiled";
     private static final String OUTPUT_BINARY = "main";
+
+    // En ExecutionService o un ConfigService
+    private static final Path CONFIG_PATH = Paths.get(System.getProperty("user.home"), ".codex", "config.properties");
+
+    public static String getRarsPath() {
+        Properties props = new Properties();
+        try (InputStream in = Files.newInputStream(CONFIG_PATH)) {
+            props.load(in);
+            return props.getProperty("rars.jar.path");
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    public static void setRarsPath(String path) {
+        Properties props = new Properties();
+        props.setProperty("rars.jar.path", path);
+        try (OutputStream out = Files.newOutputStream(CONFIG_PATH)) {
+            props.store(out, "Codex Compiler Config");
+        } catch (IOException e) {
+            //Error
+        }
+    }
 
     /**
      * Compile and execute the C code in a native terminal
@@ -51,6 +78,88 @@ public class ExecutionService {
 
         return result;
     }
+
+    /**
+     * Principal method t run the assemler code with risc V
+     *
+     */
+    public ExecutionResult assembleAndRunRiscV(File projectDir, String asmCode, String rarsJarPath) {
+        ExecutionResult result = new ExecutionResult();
+
+        try {
+            Path asmPath = Paths.get(projectDir.getAbsolutePath(), "compiled", "main.s");
+            Files.createDirectories(asmPath.getParent());
+            Files.writeString(asmPath, asmCode);
+            result.addStep("Archivo main.s escrito en " + asmPath);
+
+            String javaBin = Paths.get(System.getProperty("java.home"), "bin", "java").toString();
+            if (!Files.exists(Paths.get(javaBin))) {
+                result.addStep("Java no encontrado en: " + javaBin);
+                return result;
+            }
+
+            ProcessBuilder pb = new ProcessBuilder(
+                    javaBin, "-jar", rarsJarPath,
+                    "me",
+                    asmPath.toString()
+            );
+            pb.directory(projectDir);
+            pb.redirectErrorStream(false);
+
+            result.addStep("Invocando RARS...");
+            Process process = pb.start();
+
+            StringBuilder stdout = new StringBuilder();
+            StringBuilder stderr = new StringBuilder();
+
+            Thread outThread = new Thread(() -> {
+                try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = r.readLine()) != null) stdout.append(line).append("\n");
+                } catch (IOException ignored) {
+                }
+            });
+            Thread errThread = new Thread(() -> {
+                try (BufferedReader r = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                    String line;
+                    while ((line = r.readLine()) != null) stderr.append(line).append("\n");
+                } catch (IOException ignored) {
+                }
+            });
+
+            outThread.start();
+            errThread.start();
+
+            int exitCode = process.waitFor();
+            outThread.join();
+            errThread.join();
+
+            String programOutput = stdout.toString().trim();
+            String rarsMessages = stderr.toString().trim();
+
+            if (exitCode == 0) {
+                result.setSuccess(true);
+                result.setOutput(programOutput.isEmpty() ? "(sin salida)" : programOutput);
+                result.addStep("Programa RISC-V ejecutado correctamente");
+            } else {
+                result.setSuccess(false);
+                result.setOutput(programOutput + (rarsMessages.isEmpty() ? "" : "\n--- MENSAJES DE RARS ---\n" + rarsMessages));
+                result.addStep("RARS terminó con código: " + exitCode);
+            }
+
+        } catch (Exception e) {
+            result.setSuccess(false);
+            result.setOutput("Error al ejecutar RARS: " + e.getMessage());
+            result.addStep("Fallo en la ejecución RISC-V");
+        }
+
+        return result;
+    }
+
+    public boolean isRARSAvailable(String rarsJarPath) {
+        return rarsJarPath != null && Files.exists(Paths.get(rarsJarPath)) && rarsJarPath.endsWith(".jar");
+    }
+
 
     /**
      * Compile C code using GCC

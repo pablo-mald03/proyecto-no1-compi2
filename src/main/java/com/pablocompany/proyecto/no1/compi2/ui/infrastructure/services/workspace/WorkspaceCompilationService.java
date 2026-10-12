@@ -1,6 +1,7 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.workspace;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.compilation.CompilationArtifact;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Target;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.factory.BackendFactory;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.service.CompilationService;
@@ -22,15 +23,13 @@ import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNot
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileNode;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileTreePanel;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.validator.ClassFileNameValidator;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Service responsible for compilation orchestration, context management and Main Class configuration.
@@ -45,7 +44,8 @@ public class WorkspaceCompilationService {
     private final Map<String, EditorContext> fileContexts;
 
     private CompilationContext compilationContext;
-    private String compiledOutput;
+    @Getter(AccessLevel.NONE)
+    private final Map<Target, String> compiledOutput;
     private boolean isCompiled;
 
     private String mainClassPath;
@@ -61,7 +61,7 @@ public class WorkspaceCompilationService {
         this.notifier = notifier;
         this.fileTreePanel = fileTreePanel;
         this.fileContexts = new HashMap<>();
-        this.compiledOutput = "";
+        this.compiledOutput = new EnumMap<>(Target.class);
         this.isCompiled = false;
         this.mainClassPath = null;
         this.mainClassNode = null;
@@ -115,6 +115,14 @@ public class WorkspaceCompilationService {
     public void clearMainClass() {
         this.mainClassPath = null;
         this.mainClassNode = null;
+    }
+
+    /**
+     * Method to get the compiled output
+     *
+     */
+    public String getCompiledOutput(Target target) {
+        return compiledOutput.get(target);
     }
 
     /**
@@ -197,7 +205,7 @@ public class WorkspaceCompilationService {
 
         this.compilationContext = new CompilationContext();
         this.clearAllCompilationData();
-        compiledOutput = "";
+        compiledOutput.clear();
         isCompiled = false;
 
         notifier.logWarning("Iniciando proceso de compilacion...");
@@ -309,7 +317,9 @@ public class WorkspaceCompilationService {
 
         List<CompilationArtifact> artifacts = compilationService.generateAll(program, GenerationOptions.defaults());
 
+        compiledOutput.clear();
         for (CompilationArtifact artifact : artifacts) {
+            compiledOutput.put(artifact.getTarget(), artifact.getContent());
             generateCompiledFile(artifact);
         }
 

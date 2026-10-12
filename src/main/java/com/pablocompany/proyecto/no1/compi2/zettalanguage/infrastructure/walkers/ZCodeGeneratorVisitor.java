@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.ArrayInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
@@ -98,6 +99,18 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         this.ctx = ctx;
         this.stringPool = stringPool;
         this.classLayouts = classLayouts;
+    }
+
+    public ZCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
+                                 Map<AstNode, Type> typeAnnotations, IntermediateBuilder ir, CodeGenContext labels) {
+        //TODO:::::::::::
+        this.table = table;
+        this.context = context;
+        this.typeAnnotations = typeAnnotations;
+        this.output = null;
+        this.ctx = null;
+        this.stringPool = null;
+        this.classLayouts = new HashMap<>();
     }
 
     // ============================================================

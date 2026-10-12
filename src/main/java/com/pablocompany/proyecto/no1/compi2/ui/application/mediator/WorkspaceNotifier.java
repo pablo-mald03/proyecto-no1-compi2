@@ -59,7 +59,9 @@ public interface WorkspaceNotifier {
     /**
      * Notify that the compiled code needs to be executed/run
      */
-    void notifyExecuteCompiledCode();
+    void notifyExecuteCompiledCodeC();
+
+    void notifyExecuteCompiledCodeRisc();
 
     /**
      * Save file notification

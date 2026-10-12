@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Target;
 import com.pablocompany.proyecto.no1.compi2.common.domain.compilation.CompilationContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
@@ -19,9 +20,6 @@ import java.util.Map;
 
 /**
  * Main workspace panel container coordinating file tree, editor tabs and domain services.
- * Follows Single Responsibility Principle by delegating file CRUD, editor tab lifecycle
- * and compilation orchestration to dedicated infrastructure services.
- *
  * @author pablo03
  */
 @Getter
@@ -168,8 +166,8 @@ public class WorkspacePanel extends JPanel {
         return compilationService.compileAllFiles();
     }
 
-    public String getCompiledOutput() {
-        return compilationService.getCompiledOutput();
+    public String getCompiledOutput(Target target) {
+        return compilationService.getCompiledOutput(target);
     }
 
     public boolean isCompiled() {

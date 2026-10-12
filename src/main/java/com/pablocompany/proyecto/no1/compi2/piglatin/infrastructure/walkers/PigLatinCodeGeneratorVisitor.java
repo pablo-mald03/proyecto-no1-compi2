@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.*;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
@@ -101,6 +102,17 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         this.classLayouts = classLayouts;
     }
 
+    public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
+                                        Map<AstNode, Type> typeAnnotations, IntermediateBuilder ir, CodeGenContext labels) {
+        //TODO:::::::::::
+        this.table = table;
+        this.context = context;
+        this.typeAnnotations = typeAnnotations;
+        this.output = null;
+        this.ctx = null;
+        this.stringPool = null;
+        this.classLayouts = new HashMap<>();
+    }
     // ============================================================
     // TOP-LEVEL
     // ============================================================

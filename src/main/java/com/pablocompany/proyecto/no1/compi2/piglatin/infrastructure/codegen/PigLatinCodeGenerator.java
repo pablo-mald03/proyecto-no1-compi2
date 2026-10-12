@@ -1,19 +1,16 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.codegen;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.models.CodeGenerator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
-import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers.PigLatinCodeGeneratorVisitor;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,36 +20,17 @@ import java.util.Map;
 public class PigLatinCodeGenerator implements CodeGenerator {
 
     @Override
-    public CodeGeneratorOutput generate(EditorContext context,
-                                        GlobalSymbolTable table,
-                                        Map<AstNode, Type> typeAnnotations,
-                                        StringPool stringPool) {
-        CodeGeneratorOutput output = new CodeGeneratorOutput(context.getFilePath());
-        CodeGenContext ctx = new CodeGenContext();
+    public void generate(EditorContext context, GlobalSymbolTable table, Map<AstNode, Type> typeAnnotations,
+                         IntermediateBuilder intermediate, CodeGenContext labels) {
 
-        PigLatinAstNode ast = (PigLatinAstNode) context.getAstNode();
-        if (ast instanceof ProgramNodePigLatin program) {
-            PigLatinCodeGeneratorVisitor visitor = new PigLatinCodeGeneratorVisitor(
-                    table, context, typeAnnotations, output, ctx, stringPool, new HashMap<>());
-            program.accept(visitor);
-        }
-        return output;
+        if (!(context.getAstNode() instanceof PigLatinAstNode pigAst)) return;
+        pigAst.accept(new PigLatinCodeGeneratorVisitor(table, context, typeAnnotations, intermediate, labels));
     }
 
-    public void generate(EditorContext context,
-                         GlobalSymbolTable table,
-                         Map<AstNode, Type> typeAnnotations,
-                         StringPool stringPool,
-                         Map<String, List<String>> classLayouts,
-                         CodeGeneratorOutput sharedOutput) {
-
-        CodeGenContext ctx = new CodeGenContext();
-
-        PigLatinAstNode ast = (PigLatinAstNode) context.getAstNode();
-        if (ast instanceof ProgramNodePigLatin program) {
-            PigLatinCodeGeneratorVisitor visitor = new PigLatinCodeGeneratorVisitor(
-                    table, context, typeAnnotations, sharedOutput, ctx, stringPool, classLayouts);
-            program.accept(visitor);
+    @Override
+    public void declare(EditorContext context, CodeGenContext codeGen) {
+        if (context.getAstNode() instanceof ProgramNodeY program) {
+//            new SymbolLookup().collect(program, context.getFilePath(), codeGen);
         }
     }
 }
