@@ -10,6 +10,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.factory.CodeGeneratorFactory;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -27,20 +28,27 @@ import java.util.Map;
 public class CodeGeneratorOrchestrator {
     private IntermediateProgram lastProgram;
 
-    public IntermediateProgram buildProgram(Map<String, EditorContext> allContexts, GlobalSymbolTable table, Map<AstNode, Type> typeAnnotations, String mainClassPath) {
+    public IntermediateProgram buildProgram(
+            Map<String, EditorContext> allContexts,
+            GlobalSymbolTable table,
+            Map<AstNode, Type> typeAnnotations,
+            Map<AstNode, Symbol> resolvedCalls,
+            String mainClassPath) {
+
         IntermediateBuilder intermediate = new IntermediateBuilder("program", "str");
         CodeGenContext labels = new CodeGenContext();
         Map<String, List<String>> layouts = collectClassLayouts(allContexts);
 
         for (EditorContext ctx : contextsOf(allContexts, ".y", mainClassPath)) {
-            CodeGeneratorFactory.create(".y").generate(ctx, table, typeAnnotations, intermediate, labels);
+            CodeGeneratorFactory.create(".y").generate(
+                    ctx, table, typeAnnotations, resolvedCalls, intermediate, labels);
         }
         for (EditorContext ctx : contextsOf(allContexts, ".z", mainClassPath)) {
-            CodeGeneratorFactory.create(".z").generate(ctx, table, typeAnnotations, intermediate, labels);
+            CodeGeneratorFactory.create(".z").generate(ctx, table, typeAnnotations, resolvedCalls, intermediate, labels);
         }
         EditorContext mainCtx = allContexts.get(mainClassPath);
         if (mainCtx != null) {
-            CodeGeneratorFactory.create(".pig").generate(mainCtx, table, typeAnnotations, intermediate, labels);
+            CodeGeneratorFactory.create(".pig").generate(mainCtx, table, typeAnnotations, resolvedCalls, intermediate, labels);
         }
         lastProgram = intermediate.build();
         return lastProgram;

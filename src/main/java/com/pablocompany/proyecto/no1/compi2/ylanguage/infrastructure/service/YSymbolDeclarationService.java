@@ -94,14 +94,30 @@ public class YSymbolDeclarationService {
         return s;
     }
 
-    private String resolveTypeName(TypeNodeY typeNode) {
+    /**
+     * Method to resolve the type name
+     *
+     */
+    public String resolveTypeName(TypeNodeY typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
-        if (typeNode.getDataType() != null) return typeNode.getDataType().getValue();
-        return null;
+        if (typeNode.getDataType() == null) return null;
+        return switch (typeNode.getDataType()) {
+            case INT -> "int";
+            case FLOAT -> "float";
+            case STRING -> "string";
+            case CHAR -> "char";
+            case BOOLEAN -> "boolean";
+            case DEF -> "void";
+            default -> null;
+        };
     }
 
-    private String resolveParameterType(ParameterNodeY node) {
+    /**
+     * Declarations resolver helper method service
+     *
+     */
+    public String resolveParameterType(ParameterNodeY node) {
         if (node instanceof StructParameterNodeY s) return resolveTypeName(s.getDataType());
         if (node instanceof ArrayParameterNodeY a) return resolveTypeName(a.getElementType());
         if (node instanceof PrimitiveParameterNodeY p) return resolveTypeName(p.getType());

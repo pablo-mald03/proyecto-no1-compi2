@@ -55,7 +55,6 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.exp
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeY;
-import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructAttributeNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.TypeNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.ArrayCallExpressionNodeY;
@@ -96,8 +95,6 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     private final IntermediateBuilder ir;
     private final CodeGenContext labels;
 
-    private final Map<String, List<String>> structLayouts = new HashMap<>();
-    private final Map<String, String> functionNames = new HashMap<>();
     private final Deque<String> breakLabels = new ArrayDeque<>();
     private final Deque<String> continueLabels = new ArrayDeque<>();
 
@@ -110,6 +107,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
     public YCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
                                  Map<AstNode, Type> typeAnnotations,
+                                 Map<AstNode, Symbol> resolvedCalls,
                                  IntermediateBuilder ir, CodeGenContext labels) {
         this.table = table;
         this.context = context;
@@ -117,7 +115,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         this.ir = ir;
         this.labels = labels;
         this.values = new ValueEmitter(ir, frame);
-        this.symbols = new SymbolLookup(table, Map.of());
+        this.symbols = new SymbolLookup(table, resolvedCalls);
     }
     // ============================================================ top level
 
@@ -139,25 +137,12 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     @Override
     public Void visit(FunctionsRegionNodeY node) {
         if (node.getFunctions() == null) return null;
-        for (YAstNode fn : node.getFunctions()) {
-            if (fn instanceof FunctionDeclarationNodeY f)
-                functionNames.putIfAbsent(f.getName(), uniqueName(f.getName(), f));
-            else if (fn instanceof ProcedureDeclarationNodeY p)
-                functionNames.putIfAbsent(p.getName(), uniqueName(p.getName(), p));
-        }
         for (YAstNode fn : node.getFunctions()) if (fn != null) fn.accept(this);
         return null;
     }
 
     @Override
     public Void visit(StructDeclarationNodeY node) {
-        List<String> fields = new java.util.ArrayList<>();
-        if (node.getBody() != null && node.getBody().getAttributes() != null) {
-            for (StructAttributeNodeY attr : node.getBody().getAttributes()) {
-                if (attr != null) fields.add(attr.getIdentifier());
-            }
-        }
-        structLayouts.put(node.getStructName(), fields);
         return null;
     }
 
@@ -357,7 +342,13 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     @Override
     public Void visit(ReturnStatementNodeY node) {
         if (node.getValue() != null) {
+
             Value value = eval(node.getValue());
+            System.out.println("[RET] value.type=" + value.type()
+                    + " | fn=" + currentFunctionSymbol.getName()
+                    + " | returnType=" + currentFunctionSymbol.getReturnType()
+                    + " | line=" + node.getLine());
+
             ValueType returnType = returnTypeOf(currentFunctionSymbol);
             Register scratch = Register.ax(returnType);
             values.loadCoerced(value, scratch);
@@ -602,7 +593,9 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
         ir.emit(new AdjustStackTop(CALL_AREA));
         for (ExpressionNodeY arg : args) pushArgument(arg);
-        ir.emit(new Call(functionNames.getOrDefault(node.getFunctionName(), node.getFunctionName())));
+
+        Symbol target = symbols.target(node);
+        ir.emit(new Call(NameMangler.functionName(target)));
 
         Register result = Register.cx(valueTypeOf(node));
         ir.emit(new Load(MemorySpace.STACK, new StackTop(-(n + 1)), result));
@@ -749,7 +742,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         }
         StructInfo info = frame.structOf(id.getIdentifier());
         if (info == null) throw new IllegalStateException("'" + id.getIdentifier() + "' no es un struct conocido");
-        List<String> layout = structLayouts.get(info.getStructTypeName());
+        List<String> layout = symbols.structFields(info.getStructTypeName());
         int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
         if (offset < 0)
             throw new IllegalStateException("El struct " + info.getStructTypeName() + " no tiene el campo '" + node.getPropertyName() + "'");
@@ -820,14 +813,6 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         if (v instanceof Character c) return Integer.toString(c);
         String s = String.valueOf(v);
         return (s.length() == 1 && !Character.isDigit(s.charAt(0))) ? Integer.toString(s.charAt(0)) : s;
-    }
-
-    /**
-     * Helper method to bring a new unique name
-     *
-     */
-    private static String uniqueName(String baseName, YAstNode node) {
-        return baseName + "_" + node.getLine() + "_" + node.getColumn();
     }
 
     /**

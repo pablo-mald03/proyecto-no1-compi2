@@ -81,24 +81,27 @@ public class YTypeMapperService {
     private Type resolveBaseTypeName(String typeName) {
         if (typeName == null) return Type.unknown();
         return switch (typeName) {
-            // PigLatin
-            case "numerus" -> Type.intType();
-            case "decimalis" -> Type.floatType();
-            case "textum" -> Type.stringType();
-            case "littera" -> Type.charType();
+            case "int" -> Type.intType();
+            case "float" -> Type.floatType();
+            case "string" -> Type.stringType();
+            case "char" -> Type.charType();
+            case "boolean" -> Type.booleanType();
 
-            // Y
+            // Legacy de Y
             case "entero" -> Type.intType();
             case "flotante" -> Type.floatType();
             case "cadena" -> Type.stringType();
             case "caracter" -> Type.charType();
             case "bool" -> Type.booleanType();
 
-            // Z
-            case "int" -> Type.intType();
+            // PigLatin (cuando migres)
+            case "numerus" -> Type.intType();
+            case "decimalis" -> Type.floatType();
+            case "textum" -> Type.stringType();
+            case "littera" -> Type.charType();
+
+            // Legacy de Z
             case "double" -> Type.floatType();
-            case "char" -> Type.charType();
-            case "boolean" -> Type.booleanType();
             case "String" -> Type.stringType();
 
             case "void" -> Type.voidType();

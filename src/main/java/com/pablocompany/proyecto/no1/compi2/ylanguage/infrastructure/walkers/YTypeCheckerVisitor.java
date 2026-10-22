@@ -74,9 +74,11 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
     private Type currentSwitchSelectorType;
     private Type currentReturnType;
 
+    private Map<AstNode, Symbol> resolvedCalls;
+
     public YTypeCheckerVisitor(GlobalSymbolTable table,
                                EditorContext context,
-                               Map<AstNode, Type> typeAnnotations) {
+                               Map<AstNode, Type> typeAnnotations, Map<AstNode, Symbol> resolvedCalls) {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
@@ -87,6 +89,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         this.compat = new YTypeCompatibilityService(mapper);
         this.calls = new YCallResolutionService(lookup, compat, reporter);
         this.scopes = new YScopeService(table, context);
+        this.resolvedCalls = resolvedCalls;
     }
 
     private void annotate(AstNode node, Type type) {
@@ -763,7 +766,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
                 argTypes.add(arg != null ? arg.accept(this) : Type.unknown());
             }
         }
-        Type result = calls.resolve(node, argTypes, resolvedCalls);
+        Type result = calls.resolve(node, argTypes, this.resolvedCalls);
         annotate(node, result);
         return result;
     }

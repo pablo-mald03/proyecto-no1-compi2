@@ -277,8 +277,13 @@ public class WorkspaceCompilationService {
         notifier.logInfo("Verificando tipos...");
 
         TypeCheckerOrchestrator typeChecker = new TypeCheckerOrchestrator();
-        typeChecker.checkAll(this.fileContexts, this.compilationContext.getDependencyGraph().getTopologicalOrder(), this.compilationContext.getSymbolTable(), this.compilationContext.getTypeAnnotations());
-
+        typeChecker.checkAll(
+                this.fileContexts,
+                this.compilationContext.getDependencyGraph().getTopologicalOrder(),
+                this.compilationContext.getSymbolTable(),
+                this.compilationContext.getTypeAnnotations(),
+                this.compilationContext.getResolvedCalls()
+        );
         boolean typeErrors = this.verifyErrors("Error de tipos: se encontraron: ");
         if (typeErrors) {
             return false;
@@ -312,6 +317,7 @@ public class WorkspaceCompilationService {
                 fileContexts,
                 compilationContext.getSymbolTable(),
                 compilationContext.getTypeAnnotations(),
+                compilationContext.getResolvedCalls(),
                 mainClassPath
         );
 
