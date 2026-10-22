@@ -1,12 +1,14 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.service;
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.FunctionCallExpressionNodeY;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Principal function call resolution service helper class
@@ -29,7 +31,8 @@ public class YCallResolutionService {
     /**
      * Method to evaluate the return Type of the chosen overload, or Type.unknown() on failure.
      */
-    public Type resolve(FunctionCallExpressionNodeY node, List<Type> argTypes) {
+    public Type resolve(FunctionCallExpressionNodeY node, List<Type> argTypes,
+                        Map<AstNode, Symbol> resolvedCalls) {
         String name = node.getFunctionName();
         List<Symbol> functions = filterFunctions(lookup.resolveByName(name));
 
@@ -53,7 +56,9 @@ public class YCallResolutionService {
         }
 
         if (compatible.size() == 1) {
-            return compatibility.resolveSymbolReturnType(compatible.get(0));
+            Symbol chosen = compatible.get(0);
+            resolvedCalls.put(node, chosen);
+            return compatibility.resolveSymbolReturnType(chosen);
         }
         if (compatible.size() > 1) {
             reporter.reportTypeError(name,

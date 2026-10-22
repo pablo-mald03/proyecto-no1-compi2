@@ -172,7 +172,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         declarations.declareFunction(node.getName(), node, paramTypes, returnType,
                 SymbolKind.FUNCTION, "funcion");
 
-        scopes.registerScope(node, SymbolScopeKind.FUNCTION);     // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.FUNCTION);
         try {
             if (node.getParameters() != null) {
                 for (ParameterNodeY p : node.getParameters()) if (p != null) p.accept(this);

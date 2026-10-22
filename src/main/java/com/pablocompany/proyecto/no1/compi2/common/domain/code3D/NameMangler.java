@@ -15,8 +15,11 @@ public class NameMangler {
     public static String functionName(Symbol s) {
         String base = (s.getQualifiedName() != null && !s.getQualifiedName().isBlank())
                 ? s.getQualifiedName() : s.getName();
-        String params = String.join("_", s.getParameterTypes());
-        String unique = Integer.toHexString((s.getFilePath() + "#" + s.getSignatureKey()).hashCode());
+        String params = s.getParameterTypes() == null || s.getParameterTypes().isEmpty()
+                ? "void"
+                : String.join("_", s.getParameterTypes());
+        String unique = Integer.toHexString(
+                (s.getFilePath() + "#" + s.getSignatureKey()).hashCode());
         return sanitize(base) + "_" + sanitize(params) + "_" + unique;
     }
 

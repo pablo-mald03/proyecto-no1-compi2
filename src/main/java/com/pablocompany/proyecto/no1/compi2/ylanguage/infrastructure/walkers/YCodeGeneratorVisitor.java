@@ -40,11 +40,13 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.Val
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.ArrayInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeY;
@@ -75,6 +77,7 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.sta
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.functions.FunctionsRegionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.principals.structs.StructuresRegionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.codegen.SymbolLookup;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.codegen.YNoOperatorVisitor;
 
 import java.util.*;
@@ -101,17 +104,21 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     private FunctionFrame frame = new FunctionFrame();
     private ValueEmitter values;
     private Value last;
+    private Symbol currentFunctionSymbol;
+
+    private final SymbolLookup symbols;
 
     public YCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
-                                 Map<AstNode, Type> typeAnnotations, IntermediateBuilder ir, CodeGenContext labels) {
+                                 Map<AstNode, Type> typeAnnotations,
+                                 IntermediateBuilder ir, CodeGenContext labels) {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
         this.ir = ir;
         this.labels = labels;
         this.values = new ValueEmitter(ir, frame);
+        this.symbols = new SymbolLookup(table, Map.of());
     }
-
     // ============================================================ top level
 
     @Override
@@ -154,28 +161,44 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         return null;
     }
 
-    // ============================================================ functions
+    // ==== Functions ===
 
     @Override
     public Void visit(FunctionDeclarationNodeY node) {
-        generateFunction(uniqueName(node.getName(), node), node.getParameters(), node.getBody());
+        Symbol fnSymbol = symbols.declaration(
+                context.getFilePath(),
+                node.getName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        generateFunction(fnSymbol, node.getParameters(), node.getBody());
         return null;
     }
 
     @Override
     public Void visit(ProcedureDeclarationNodeY node) {
-        generateFunction(uniqueName(node.getName(), node), node.getParameters(), node.getBody());
+        Symbol fnSymbol = symbols.declaration(
+                context.getFilePath(),
+                node.getName(),
+                node.getLine(),
+                node.getColumn()
+        );
+        generateFunction(fnSymbol, node.getParameters(), node.getBody());
         return null;
     }
 
-    private void generateFunction(String name, List<? extends ParameterNodeY> params, List<? extends YAstNode> body) {
+    private void generateFunction(Symbol fnSymbol,
+                                  List<? extends ParameterNodeY> params,
+                                  List<? extends YAstNode> body) {
         int numArgs = params != null ? params.size() : 0;
 
-        ir.beginFunction(name);
+        ir.beginFunction(NameMangler.functionName(fnSymbol));
         frame = new FunctionFrame();
         values = new ValueEmitter(ir, frame);
         breakLabels.clear();
         continueLabels.clear();
+
+        currentFunctionSymbol = fnSymbol;
 
         ir.emit(new FramePush());
         ir.emit(new FrameRebase(numArgs + 1));
@@ -187,6 +210,8 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
         ir.emit(new FramePop());
         ir.emit(new Return());
+
+        currentFunctionSymbol = null;
     }
 
     private void registerParameter(ParameterNodeY param) {
@@ -333,7 +358,10 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     public Void visit(ReturnStatementNodeY node) {
         if (node.getValue() != null) {
             Value value = eval(node.getValue());
-            values.store(value, new Cell(value.type(), new Frame(0)));
+            ValueType returnType = returnTypeOf(currentFunctionSymbol);
+            Register scratch = Register.ax(returnType);
+            values.loadCoerced(value, scratch);
+            ir.emit(new Store(MemorySpace.STACK, new Frame(0), scratch));
         }
         ir.emit(new FramePop());
         ir.emit(new Return());
@@ -800,5 +828,23 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
      */
     private static String uniqueName(String baseName, YAstNode node) {
         return baseName + "_" + node.getLine() + "_" + node.getColumn();
+    }
+
+    /**
+     * Helper resolver for the return type
+     */
+    private static ValueType returnTypeOf(Symbol fn) {
+        if (fn == null || fn.getReturnType() == null)
+            throw new IllegalStateException("Función sin tipo de retorno en la tabla: " + fn);
+        return switch (fn.getReturnType()) {
+            case "int" -> ValueType.INT;
+            case "float" -> ValueType.FLOAT;
+            case "char" -> ValueType.CHAR;
+            case "boolean" -> ValueType.BOOLEAN;
+            case "string" -> ValueType.STRING;
+            case "void" -> throw new IllegalStateException(
+                    "return con valor en función void: " + fn.getName());
+            default -> ValueType.INT;
+        };
     }
 }

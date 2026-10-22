@@ -763,7 +763,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
                 argTypes.add(arg != null ? arg.accept(this) : Type.unknown());
             }
         }
-        Type result = calls.resolve(node, argTypes);
+        Type result = calls.resolve(node, argTypes, resolvedCalls);
         annotate(node, result);
         return result;
     }
