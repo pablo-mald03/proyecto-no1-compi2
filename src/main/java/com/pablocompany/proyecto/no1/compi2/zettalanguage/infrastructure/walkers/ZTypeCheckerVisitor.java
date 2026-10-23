@@ -76,12 +76,16 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     private Type currentReturnType;
     private Symbol currentClass;
 
+    private Map<AstNode, Symbol> resolvedCalls;
+
     public ZTypeCheckerVisitor(GlobalSymbolTable table,
                                EditorContext context,
-                               Map<AstNode, Type> typeAnnotations) {
+                               Map<AstNode, Type> typeAnnotations,
+                               Map<AstNode, Symbol> resolvedCalls) {
         this.table = table;
         this.context = context;
         this.typeAnnotations = typeAnnotations;
+        this.resolvedCalls = resolvedCalls;
 
         this.reporter = new ZSemanticErrorReporter(context);
         this.mapper = new ZTypeMapperService();
@@ -776,6 +780,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         Symbol chosen = calls.resolveOverload(methods, argTypes, methodName, node);
         if (chosen == null) return Type.unknown();
 
+        resolvedCalls.put(node, chosen);
         Type returnType = compat.resolveSymbolReturnType(chosen);
         annotate(node, returnType);
         return returnType;
@@ -876,7 +881,7 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         List<Symbol> constructors = lookup.findConstructors(classSymbol);
         Symbol chosen = calls.resolveOverload(constructors, argTypes, className, node);
         if (chosen == null) return Type.unknown();
-
+        resolvedCalls.put(node, chosen);
         Type classType = Type.customType(className);
         annotate(node, classType);
         return classType;

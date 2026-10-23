@@ -4,7 +4,10 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.servic
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 
-
+/**
+ * Z Access Control Service helper class
+ *
+ */
 public class ZAccessControlService {
 
     private final EditorContext context;

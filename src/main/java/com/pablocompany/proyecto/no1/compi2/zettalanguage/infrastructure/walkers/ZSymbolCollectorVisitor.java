@@ -565,8 +565,17 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     private String resolveTypeName(TypeNodeZ typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
-        if (typeNode.getDataType() != null) return typeNode.getDataType().getValue();
-        return null;
+        if (typeNode.getDataType() == null) return null;
+        return switch (typeNode.getDataType()) {
+            case INT -> "int";
+            case DOUBLE -> "float";
+            case STRING -> "string";
+            case CHAR -> "char";
+            case BOOLEAN -> "boolean";
+            case VOID -> "void";
+            case NULL -> "null";
+            case CLASS -> null;
+        };
     }
 
     /**
