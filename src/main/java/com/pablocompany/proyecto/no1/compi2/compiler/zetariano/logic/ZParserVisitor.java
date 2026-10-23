@@ -59,6 +59,13 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConstructorDeclaration(ZParser.ConstructorDeclarationContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code SuperConstructorCall}
+	 * labeled alternative in {@link ZParser#super_call}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSuperConstructorCall(ZParser.SuperConstructorCallContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code MethodDeclaration}
 	 * labeled alternative in {@link ZParser#method_declaration}.
 	 * @param ctx the parse tree
@@ -142,6 +149,13 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStatementObjectPropertyCalling(ZParser.StatementObjectPropertyCallingContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code SuperCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSuperCallStatement(ZParser.SuperCallStatementContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ChainedCallStatement}
 	 * labeled alternative in {@link ZParser#call_statement}.
@@ -499,6 +513,20 @@ public interface ZParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBaseFunctionCall(ZParser.BaseFunctionCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BaseSuperProperty}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBaseSuperProperty(ZParser.BaseSuperPropertyContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code BaseSuperMethodCall}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBaseSuperMethodCall(ZParser.BaseSuperMethodCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code BaseIdentifier}
 	 * labeled alternative in {@link ZParser#object_values}.

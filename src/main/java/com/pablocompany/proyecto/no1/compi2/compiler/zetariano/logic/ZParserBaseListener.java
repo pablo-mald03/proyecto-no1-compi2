@@ -101,6 +101,18 @@ public class ZParserBaseListener implements ZParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSuperConstructorCall(ZParser.SuperConstructorCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSuperConstructorCall(ZParser.SuperConstructorCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterMethodDeclaration(ZParser.MethodDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -240,6 +252,18 @@ public class ZParserBaseListener implements ZParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitStatementObjectPropertyCalling(ZParser.StatementObjectPropertyCallingContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSuperCallStatement(ZParser.SuperCallStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSuperCallStatement(ZParser.SuperCallStatementContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -852,6 +876,30 @@ public class ZParserBaseListener implements ZParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitBaseFunctionCall(ZParser.BaseFunctionCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBaseSuperProperty(ZParser.BaseSuperPropertyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBaseSuperProperty(ZParser.BaseSuperPropertyContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterBaseSuperMethodCall(ZParser.BaseSuperMethodCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBaseSuperMethodCall(ZParser.BaseSuperMethodCallContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

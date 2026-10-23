@@ -90,6 +90,18 @@ public interface ZParserListener extends ParseTreeListener {
 	 */
 	void exitConstructorDeclaration(ZParser.ConstructorDeclarationContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code SuperConstructorCall}
+	 * labeled alternative in {@link ZParser#super_call}.
+	 * @param ctx the parse tree
+	 */
+	void enterSuperConstructorCall(ZParser.SuperConstructorCallContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SuperConstructorCall}
+	 * labeled alternative in {@link ZParser#super_call}.
+	 * @param ctx the parse tree
+	 */
+	void exitSuperConstructorCall(ZParser.SuperConstructorCallContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code MethodDeclaration}
 	 * labeled alternative in {@link ZParser#method_declaration}.
 	 * @param ctx the parse tree
@@ -233,6 +245,18 @@ public interface ZParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatementObjectPropertyCalling(ZParser.StatementObjectPropertyCallingContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code SuperCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterSuperCallStatement(ZParser.SuperCallStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code SuperCallStatement}
+	 * labeled alternative in {@link ZParser#call_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitSuperCallStatement(ZParser.SuperCallStatementContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code ChainedCallStatement}
 	 * labeled alternative in {@link ZParser#call_statement}.
@@ -845,6 +869,30 @@ public interface ZParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitBaseFunctionCall(ZParser.BaseFunctionCallContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BaseSuperProperty}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterBaseSuperProperty(ZParser.BaseSuperPropertyContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BaseSuperProperty}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitBaseSuperProperty(ZParser.BaseSuperPropertyContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code BaseSuperMethodCall}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void enterBaseSuperMethodCall(ZParser.BaseSuperMethodCallContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code BaseSuperMethodCall}
+	 * labeled alternative in {@link ZParser#object_values}.
+	 * @param ctx the parse tree
+	 */
+	void exitBaseSuperMethodCall(ZParser.BaseSuperMethodCallContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code BaseIdentifier}
 	 * labeled alternative in {@link ZParser#object_values}.

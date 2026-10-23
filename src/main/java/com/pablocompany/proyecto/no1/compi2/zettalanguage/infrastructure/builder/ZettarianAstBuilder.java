@@ -21,6 +21,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.SuperConstructorCallNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.enums.AccessModifierZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.enums.ZDataType;
@@ -180,11 +181,66 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         }
 
         List<ZAstNode> body = new ArrayList<>();
+        if (ctx.super_call() != null) {
+            body.add(ctx.super_call().accept(this));
+        }
+
         for (ZParser.StatementContext sCtx : ctx.statement()) {
             body.add(sCtx.accept(this));
         }
 
         return new ConstructorDeclarationNodeZ(line, column, name, params, body, modifier);
+    }
+
+
+    //========================
+    // SUPER
+    //========================
+
+    @Override
+    public ZAstNode visitSuperConstructorCall(ZParser.SuperConstructorCallContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        return new SuperConstructorCallNodeZ(line, column, buildArguments(ctx.arguments_list()));
+    }
+
+    /**
+     * super.campo
+     */
+    @Override
+    public ZAstNode visitBaseSuperProperty(ZParser.BaseSuperPropertyContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        SuperExpressionNodeZ target = new SuperExpressionNodeZ(line, column);
+        return new PropertyAccessExpressionNodeZ(line, column, target, ctx.ID().getText());
+    }
+
+    /**
+     * super.metodo(args) usado dentro de una expresión o de una cadena
+     */
+    @Override
+    public ZAstNode visitBaseSuperMethodCall(ZParser.BaseSuperMethodCallContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        SuperExpressionNodeZ target = new SuperExpressionNodeZ(line, column);
+        return new FunctionCallExpressionNodeZ(
+                line, column, target, ctx.ID().getText(), buildArguments(ctx.arguments_list()));
+    }
+
+    /**
+     * super.metodo(args); usado como sentencia sola
+     */
+    @Override
+    public ZAstNode visitSuperCallStatement(ZParser.SuperCallStatementContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        SuperExpressionNodeZ target = new SuperExpressionNodeZ(line, column);
+        return new FunctionCallExpressionNodeZ(
+                line, column, target, ctx.ID().getText(), buildArguments(ctx.arguments_list()));
     }
 
     @Override
@@ -1181,5 +1237,16 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
             return AccessModifierZ.PROTECTED;
         }
         return AccessModifierZ.PUBLIC;
+    }
+
+    /**
+     * Helper method to not repeat the arguments to the super instruction.
+     */
+    private List<ExpressionNodeZ> buildArguments(ZParser.Arguments_listContext argsCtx) {
+        if (argsCtx == null) {
+            return new ArrayList<>();
+        }
+        ArgumentsNodeZ argsNode = (ArgumentsNodeZ) argsCtx.accept(this);
+        return argsNode.getArguments();
     }
 }
