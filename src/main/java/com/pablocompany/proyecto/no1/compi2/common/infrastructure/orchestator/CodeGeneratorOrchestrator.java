@@ -37,7 +37,6 @@ public class CodeGeneratorOrchestrator {
 
         IntermediateBuilder intermediate = new IntermediateBuilder("program", "str");
         CodeGenContext labels = new CodeGenContext();
-        Map<String, List<String>> layouts = collectClassLayouts(allContexts);
 
         for (EditorContext ctx : contextsOf(allContexts, ".y", mainClassPath)) {
             CodeGeneratorFactory.create(".y").generate(

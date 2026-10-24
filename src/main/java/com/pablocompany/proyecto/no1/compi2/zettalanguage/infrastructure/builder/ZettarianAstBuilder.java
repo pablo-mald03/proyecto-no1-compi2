@@ -81,7 +81,7 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         int column = ctx.getStart().getCharPositionInLine();
 
         ClassDeclarationNodeZ classNode = (ClassDeclarationNodeZ) ctx.class_declaration().accept(this);
-        
+
         return new ProgramNodeZ(line, column, classNode);
     }
 
@@ -95,8 +95,16 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
         String parentName = ctx.parent != null ? ctx.parent.getText() : null;
 
         List<ZAstNode> members = new ArrayList<>();
+        boolean declaresConstructor = false;
         for (ZParser.Class_memberContext mCtx : ctx.class_member()) {
-            members.add(mCtx.accept(this));
+            ZAstNode member = mCtx.accept(this);
+            if (member instanceof ConstructorDeclarationNodeZ) declaresConstructor = true;
+            members.add(member);
+        }
+
+        if (!declaresConstructor) {
+            members.add(new ConstructorDeclarationNodeZ(
+                    line, column, className, new ArrayList<>(), new ArrayList<>(), modifier));
         }
 
         return new ClassDeclarationNodeZ(line, column, className, members, modifier, parentName);
