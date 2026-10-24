@@ -37,10 +37,10 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateB
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.ValueEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.ArrayInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
