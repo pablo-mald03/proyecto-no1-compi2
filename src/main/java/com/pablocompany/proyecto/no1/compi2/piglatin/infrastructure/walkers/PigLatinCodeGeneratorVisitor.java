@@ -740,12 +740,17 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             return null;
         }
 
+        // At this point value is guaranteed non-null
         last = switch (node.getValueType()) {
             case DECIMAL -> new Constant(String.valueOf(value), ValueType.FLOAT);
             case CHAR -> new Constant(charCode(value), ValueType.CHAR);
             case STRING -> new Text(ir.intern(String.valueOf(value)));
             case BOOLEAN -> new Constant(Boolean.TRUE.equals(value) ? "1" : "0", ValueType.BOOLEAN);
-            default -> new Constant(String.valueOf(value), ValueType.INT);
+            default -> {
+                String lit = String.valueOf(value);
+                // Defensive: if somehow value became null at this point, default to 0
+                yield new Constant(lit.equals("null") ? "0" : lit, ValueType.INT);
+            }
         };
         return null;
     }

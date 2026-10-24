@@ -31,6 +31,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.state
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.statements.CReturnEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stores.CStoreEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stores.CStoreIndexedEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.convertions.CConvertEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.strings.CNewStringEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.EmitterRegistry;
@@ -81,6 +82,7 @@ public class CBackend extends AbstractBackend {
                 .register(new CStringConcatEmitter())
                 .register(new CNewStringEmitter())
                 .register(new CConvertToStringEmitter())
+                .register(new CConvertEmitter())
                 .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.functions.CCallIndirectEmitter(callSites))
                 .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.labels.CLoadLabelAddressEmitter());
     }
