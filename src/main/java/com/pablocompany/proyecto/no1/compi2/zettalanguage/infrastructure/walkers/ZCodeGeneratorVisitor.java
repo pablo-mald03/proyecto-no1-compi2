@@ -912,6 +912,9 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     // ============================================================
 
     private void assign(ExpressionNodeZ target, Value value) {
+        if (value == null) {
+            throw new IllegalStateException("Asignación a '" + target + "' produjo un valor nulo (posible llamada void usada como expresión)");
+        }
         if (target instanceof IdentifierExpressionNodeZ id) {
             Cell cell = frame.lookup(id.getIdentifier());
             if (cell != null) {
@@ -1006,7 +1009,11 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     private Value eval(ExpressionNodeZ expr) {
         if (expr == null) return new Constant("0", ValueType.INT);
+        last = null;
         expr.accept(this);
+        if (last == null) {
+            return new Constant("0", ValueType.INT);
+        }
         return last;
     }
 

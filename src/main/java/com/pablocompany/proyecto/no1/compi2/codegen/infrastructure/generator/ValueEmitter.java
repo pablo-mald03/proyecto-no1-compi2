@@ -45,6 +45,13 @@ public class ValueEmitter {
             load(value, reg);
             return;
         }
+        // WORD ↔ POINTER: both are 32-bit values in RV32 (strings are pointer-sized words).
+        // Treat as physically compatible — just load without conversion.
+        if ((src.getStorage() == Storage.WORD || src.getStorage() == Storage.POINTER)
+                && (dst.getStorage() == Storage.WORD || dst.getStorage() == Storage.POINTER)) {
+            load(value, reg);
+            return;
+        }
         if (src.getStorage() == Storage.WORD && dst.getStorage() == Storage.FLOAT) {
             Register scratch = Register.ax(ValueType.INT);
             load(value, scratch);
@@ -133,9 +140,17 @@ public class ValueEmitter {
      *
      */
     private static void requireCompatible(ValueType memory, ValueType register) {
+        if (isWordAligned(memory) && isWordAligned(register)) return;
         if (memory.getStorage() != register.getStorage()) {
             throw new IllegalStateException("No se puede cargar " + memory + " en un registro " + register
                     + " sin conversión explícita (¿mezcla int/float sin cast?)");
         }
+    }
+
+    /**
+     * Method to returns true for types that are physically a 32-bit word (WORD or POINTER storage).
+     */
+    private static boolean isWordAligned(ValueType t) {
+        return t.getStorage() == Storage.WORD || t.getStorage() == Storage.POINTER;
     }
 }
