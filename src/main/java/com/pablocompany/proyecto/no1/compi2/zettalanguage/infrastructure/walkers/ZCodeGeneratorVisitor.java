@@ -26,6 +26,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.SuperConstructorCallNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -461,6 +462,16 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
         output.emit(op, "AX_INT", "BX_INT", "CX_INT");
         storeRegisterBack("CX_INT", targetRef);
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
         return null;
     }
 

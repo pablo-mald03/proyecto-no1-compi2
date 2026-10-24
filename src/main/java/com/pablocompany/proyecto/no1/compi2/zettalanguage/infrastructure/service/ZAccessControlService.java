@@ -4,6 +4,10 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.servic
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Function;
+
 /**
  * Z Access Control Service helper class
  *
@@ -12,12 +16,18 @@ public class ZAccessControlService {
 
     private final EditorContext context;
 
+    /**
+     * Resolves a class name to its symbol. Wired by ZSymbolLookupService
+     */
+    private Function<String, Symbol> typeResolver;
+
     public ZAccessControlService(EditorContext context) {
         this.context = context;
     }
 
+
     /**
-     * Returns true if `member` is accessible from the given context.
+     * Returns true if `member` is accessible from the given class.
      */
     public boolean isAccessible(Symbol member, Symbol accessingClass) {
         if (member == null) return false;
@@ -27,38 +37,69 @@ public class ZAccessControlService {
             return true;
         }
 
-        switch (member.getAccessModifier()) {
-            case PUBLIC:
+        if (member.getAccessModifier() == null) return true;   // no modifier -> public
+
+        switch (member.getAccessModifier().name()) {
+            case "PUBLIC":
                 return true;
-            case PROTECTED:
+            case "PROTECTED":
                 return isSubclassOf(accessingClass, member.getDeclaringClass());
-            case PRIVATE:
-                return false;
+            case "PRIVATE":
             default:
                 return false;
         }
     }
 
     /**
-     * Same-file check. Both symbols carry filePath.
+     * True if `accessingClass` is a STRICT descendant of `className` (walks the whole chain).
      */
-    private boolean sameFile(Symbol member) {
-        String memberFile = member.getFilePath();
-        String currentFile = context.getFilePath();
-        return memberFile != null && memberFile.equals(currentFile);
+    public boolean isSubclassOf(Symbol accessingClass, String className) {
+        if (accessingClass == null || className == null) return false;
+
+        Set<String> seen = new HashSet<>();
+        Symbol current = accessingClass;
+        while (current != null && seen.add(current.getName())) {
+            String parentName = current.getParentName();
+            if (parentName == null || parentName.isBlank()) return false;
+            if (className.equals(parentName)) return true;
+
+            Symbol next = typeResolver != null ? typeResolver.apply(parentName) : null;
+            if (next == null) next = current.getParentSymbol();
+            current = next;
+        }
+        return false;
     }
 
     /**
-     * Method check: walks the parent chain of `accessingClass` looking for
+     * Method to resolve the visibility ranking used by the override rule
      */
-    private boolean isSubclassOf(Symbol accessingClass, String className) {
-        if (accessingClass == null || className == null) return false;
+    public static int accessLevel(Object modifier) {
+        if (modifier == null) return 2;
+        String n = modifier instanceof Enum<?> e ? e.name() : modifier.toString();
+        return switch (n) {
+            case "PRIVATE" -> 0;
+            case "PROTECTED" -> 1;
+            default -> 2;
+        };
+    }
 
-        Symbol current = accessingClass;
-        while (current != null && current.getParentName() != null) {
-            if (className.equals(current.getParentName())) return true;
-            current = current.getParentSymbol();
-        }
-        return false;
+    /**
+     * True if `child` gives LESS visibility than `parent`
+     */
+    public static boolean isWeaker(Object child, Object parent) {
+        return accessLevel(child) < accessLevel(parent);
+    }
+
+    /**
+     * Human readable modifier name for error messages.
+     */
+    public static String label(Object modifier) {
+        if (modifier == null) return "public";
+        String n = modifier instanceof Enum<?> e ? e.name() : modifier.toString();
+        return n.toLowerCase();
+    }
+
+    public void setTypeResolver(Function<String, Symbol> typeResolver) {
+        this.typeResolver = typeResolver;
     }
 }

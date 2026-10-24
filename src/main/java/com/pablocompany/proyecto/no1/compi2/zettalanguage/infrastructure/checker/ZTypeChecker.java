@@ -23,7 +23,7 @@ public class ZTypeChecker implements TypeChecker {
         SymbolScope fileScope = table.getOrCreateFileScope(context.getFilePath());
         table.setCurrentScope(fileScope);
 
-        ZTypeCheckerVisitor visitor = new ZTypeCheckerVisitor(table, context, typeAnnotations);
+        ZTypeCheckerVisitor visitor = new ZTypeCheckerVisitor(table, context, typeAnnotations, resolvedCalls);
         zAst.accept(visitor);
 
         table.resetToGlobal();

@@ -23,8 +23,10 @@ public class ZTypeCompatibilityService {
         this.assignability = assignability;
     }
 
-    // -------- predicates --------
-
+    /**
+     * Predicate method to evaluate if the numeric is promotable
+     *
+     */
     public boolean isNumericOrPromotable(Type t) {
         if (t == null) return false;
         TypeKind k = t.getKind();
@@ -32,12 +34,19 @@ public class ZTypeCompatibilityService {
                 || k == TypeKind.CHAR || k == TypeKind.BOOLEAN;
     }
 
+    /**
+     * Method to evaluate if its int
+     *
+     */
     public boolean isIntLike(Type t) {
         if (t == null) return false;
         TypeKind k = t.getKind();
         return k == TypeKind.INT || k == TypeKind.CHAR || k == TypeKind.BOOLEAN;
     }
 
+    /**
+     * Method to evaluate to promote the numeric
+     * */
     public Type promoteNumeric(Type a, Type b) {
         if (a.getKind() == TypeKind.FLOAT || b.getKind() == TypeKind.FLOAT) {
             return Type.floatType();
@@ -69,7 +78,9 @@ public class ZTypeCompatibilityService {
     public Type resolveSymbolReturnType(Symbol function) {
         String rt = function.getReturnType();
         if (rt == null || "void".equals(rt)) return Type.voidType();
-        return mapper.resolveTypeName(rt);
+        Type base = mapper.resolveTypeName(rt);
+        int dims = function.getReturnDimensions();
+        return dims > 0 ? Type.arrayType(base, dims) : base;
     }
 
     // -------- binary inference --------

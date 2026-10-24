@@ -2,11 +2,14 @@ package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.servic
 
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.functions.ParameterNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.methods.MethodDeclarationNodeZ;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Overridable methods service checker class
@@ -28,7 +31,7 @@ public class ZOverrideService {
     }
 
     /**
-     * Validates the @Override constraint.
+     * Method to validates the @Override constraint.
      */
     public void validate(MethodDeclarationNodeZ node,
                          Symbol parentClass,
@@ -50,6 +53,7 @@ public class ZOverrideService {
         }
 
         Symbol parentMethod = findMethodInClass(parentClass, node.getName(), paramTypes(node));
+        boolean inheritable = parentMethod != null && !isPrivate(parentMethod);
 
         if (node.isOverride()) {
             if (parentMethod == null) {
@@ -60,21 +64,44 @@ public class ZOverrideService {
                                 + "' no tiene un metodo con esa firma", node);
                 return;
             }
+            if (!inheritable) {
+                reporter.reportTypeError(node.getName(),
+                        "El metodo '" + node.getName()
+                                + "' esta marcado con @Override pero el metodo de la superclase '"
+                                + parentMethod.getDeclaringClass()
+                                + "' es private y no se hereda", node);
+                return;
+            }
 
             validateReturnType(node, parentMethod, parentClass);
+            validateVisibility(node, parentMethod);
         } else {
-            if (parentMethod != null) {
+            if (inheritable) {
                 reporter.reportTypeError(node.getName(),
                         "El metodo '" + node.getName()
                                 + "' sobreescribe un metodo de la superclase '"
-                                + parentClass.getName()
+                                + parentMethod.getDeclaringClass()
                                 + "' pero no tiene la anotacion @Override", node);
             }
         }
     }
 
     /**
-     * Validates that the child's return type is compatible with the parent's.
+     * Method to validate the overriding method cannot be less visible than the overridden one.
+     */
+    private void validateVisibility(MethodDeclarationNodeZ node, Symbol parentMethod) {
+        if (ZAccessControlService.isWeaker(node.getModifier(), parentMethod.getAccessModifier())) {
+            reporter.reportTypeError(node.getName(),
+                    "No se puede reducir la visibilidad del metodo '" + node.getName()
+                            + "': en la superclase '" + parentMethod.getDeclaringClass() + "' es "
+                            + ZAccessControlService.label(parentMethod.getAccessModifier())
+                            + " y aqui es " + ZAccessControlService.label(node.getModifier()),
+                    node);
+        }
+    }
+
+    /**
+     * Method to validates that the child's return type is compatible with the parent's.
      */
     private void validateReturnType(MethodDeclarationNodeZ node,
                                     Symbol parentMethod,
@@ -83,7 +110,7 @@ public class ZOverrideService {
         String childReturn = resolveReturnTypeName(node);
         String parentReturn = parentMethod.getReturnType();
         int childDims = node.getReturnDimensions();
-        int parentDims = parentMethod.getDimensions();
+        int parentDims = parentMethod.getReturnDimensions();
 
         if (childDims != parentDims) {
             reporter.reportTypeError(node.getName(),
@@ -106,21 +133,35 @@ public class ZOverrideService {
     }
 
     /**
-     * Returns the child's declared return type as a string, or "void" if absent.
+     * Method to declares the using the SAME canonical names the symbol collector stores.
      */
     private String resolveReturnTypeName(MethodDeclarationNodeZ node) {
-        if (node.getType() == null) return "void";
-        if (node.getType().getCustomTypeName() != null) {
-            return node.getType().getCustomTypeName();
-        }
-        if (node.getType().getDataType() != null) {
-            return node.getType().getDataType().getValue();
-        }
-        return "void";
+        String name = canonicalTypeName(node.getType());
+        return name != null ? name : "void";
     }
 
     /**
-     * Covariance checker method. rule: `child` is assignable to `parent` helper.
+     * Method to map the same mapping types that types read from the AST
+     */
+    private String canonicalTypeName(TypeNodeZ typeNode) {
+        if (typeNode == null) return null;
+        if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
+        var dt = typeNode.getDataType();
+        if (dt == null) return null;
+        return switch (dt) {
+            case INT -> "int";
+            case DOUBLE -> "float";
+            case STRING -> "string";
+            case CHAR -> "char";
+            case BOOLEAN -> "boolean";
+            case VOID -> "void";
+            case NULL -> "null";
+            case CLASS -> null;
+        };
+    }
+
+    /**
+     * Method to evaluate the covariance checker method. rule: `child` is assignable to `parent` helper.
      */
     private boolean isReturnCovariant(String child, String parent) {
         if (child == null || parent == null) return false;
@@ -131,16 +172,24 @@ public class ZOverrideService {
         return isSubclassOf(child, parent);
     }
 
+    /**
+     * Method to check if the value is primitive
+     *
+     */
     private boolean isPrimitive(String typeName) {
         return switch (typeName) {
-            case "int", "double", "char", "boolean", "void", "String" -> true;
+            case "int", "float", "double", "char", "boolean", "void", "string", "String", "null" -> true;
             default -> false;
         };
     }
 
+    /**
+     * Method to check the subclass of the principal class
+     *
+     */
     private boolean isSubclassOf(String childName, String parentName) {
         String current = childName;
-        java.util.Set<String> seen = new java.util.HashSet<>();
+        Set<String> seen = new HashSet<>();
         while (current != null && !seen.contains(current)) {
             seen.add(current);
             if (current.equals(parentName)) return true;
@@ -151,13 +200,23 @@ public class ZOverrideService {
         return false;
     }
 
+    /**
+     * Method to format the type
+     * */
     private String formatType(String type, int dims) {
         if (dims <= 0) return type;
         return type + "[]".repeat(dims);
     }
 
-    // -------- helpers --------
 
+    private boolean isPrivate(Symbol m) {
+        return m.getAccessModifier() != null && "PRIVATE".equals(m.getAccessModifier().name());
+    }
+
+    /**
+     * Method to find in class
+     *
+     */
     private Symbol findMethodInClass(Symbol classSymbol, String name, List<String> paramTypes) {
         if (classSymbol == null || classSymbol.getMembers() == null) return null;
         for (Symbol m : classSymbol.getMembers()) {
@@ -169,31 +228,19 @@ public class ZOverrideService {
     }
 
     /**
-     * Param types helper method
-     *
+     * Method for the param types helper method
      */
     private List<String> paramTypes(MethodDeclarationNodeZ node) {
         List<String> result = new ArrayList<>();
         if (node.getParams() != null) {
-            for (var p : node.getParams()) {
+            for (ParameterNodeZ p : node.getParams()) {
                 if (p == null) continue;
-                String t = resolveParamType(p);
+                String t = canonicalTypeName(p.getType());
+                if (t == null) t = "?";
                 if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
                 result.add(t);
             }
         }
         return result;
-    }
-
-    /**
-     * Helper method to resolve the param type
-     *
-     */
-    private String resolveParamType(ParameterNodeZ p) {
-        var t = p.getType();
-        if (t == null) return "?";
-        if (t.getCustomTypeName() != null) return t.getCustomTypeName();
-        if (t.getDataType() != null) return t.getDataType().getValue();
-        return "?";
     }
 }
