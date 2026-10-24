@@ -148,9 +148,9 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
         TypeNodeY typeNode = node.getType();
         if (typeNode != null && typeNode.getDataType() == YDataType.CUSTOM) {
             String customName = typeNode.getCustomTypeName();
-            if (customName != null && lookup.findType(customName) == null) {
+            if (customName != null && lookup.findStruct(customName) == null) {
                 reporter.reportTypeError(node.getIdentifier(),
-                        "El tipo '" + customName + "' del atributo no existe", node);
+                        "El tipo '" + customName + "' del atributo no existe o no es un struct", node);
             }
         }
 

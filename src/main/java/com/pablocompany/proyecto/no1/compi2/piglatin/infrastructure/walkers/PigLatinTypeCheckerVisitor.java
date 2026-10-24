@@ -961,6 +961,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (base == null) return Type.unknown();
 
         int dims = symbol.getDimensions();
+        if (dims <= 0 && symbol.isArray()) dims = 1;
         if (dims > 0) return Type.arrayType(base, dims);
         return base;
     }
@@ -1111,10 +1112,6 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         return best;
     }
 
-    /**
-     * Helper method to evaluate if the instruction is more specific
-     *
-     */
     private boolean isMoreSpecific(Symbol a, Symbol b) {
         List<String> pa = a.getParameterTypes();
         List<String> pb = b.getParameterTypes();
@@ -1127,10 +1124,6 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         return true;
     }
 
-    /**
-     * Method to resolve the symbol return type
-     *
-     */
     private Type resolveSymbolReturnType(Symbol fn) {
         String rt = fn.getReturnType();
         if (rt == null || "void".equals(rt)) return Type.voidType();
@@ -1139,9 +1132,6 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         return dims > 0 ? Type.arrayType(base, dims) : base;
     }
 
-    /**
-     * Method to evaluate the member type
-     * */
     private Symbol findMemberInType(Type customType, String memberName) {
         if (customType == null || !customType.isCustom()) return null;
         if (memberName == null) return null;

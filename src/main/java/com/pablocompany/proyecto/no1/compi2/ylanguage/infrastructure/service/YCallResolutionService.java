@@ -61,6 +61,11 @@ public class YCallResolutionService {
             return compatibility.resolveSymbolReturnType(chosen);
         }
         if (compatible.size() > 1) {
+            Symbol best = pickMostSpecific(compatible);
+            if (best != null) {
+                resolvedCalls.put(node, best);
+                return compatibility.resolveSymbolReturnType(best);
+            }
             reporter.reportTypeError(name,
                     "Llamada ambigua a '" + name + "': hay " + compatible.size()
                             + " sobrecargas compatibles", node);
@@ -94,5 +99,24 @@ public class YCallResolutionService {
             if (f.getParameterTypes().size() == arity) result.add(f);
         }
         return result;
+    }
+
+    private Symbol pickMostSpecific(List<Symbol> candidates) {
+        Symbol best = null;
+        for (Symbol a : candidates) {
+            boolean beatsAll = true;
+            for (Symbol b : candidates) {
+                if (a == b) continue;
+                if (!compatibility.isMoreSpecific(a, b)) {
+                    beatsAll = false;
+                    break;
+                }
+            }
+            if (beatsAll) {
+                if (best != null) return null;
+                best = a;
+            }
+        }
+        return best;
     }
 }
