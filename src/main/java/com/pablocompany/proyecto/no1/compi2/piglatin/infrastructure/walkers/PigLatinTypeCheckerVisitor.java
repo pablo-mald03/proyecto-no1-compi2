@@ -655,7 +655,7 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             if (targetType.isUnknown() || !targetType.isCustom()) {
                 return Type.unknown();
             }
-            Symbol classSymbol = lookup.findTypeSymbolGlobal(
+            Symbol classSymbol = lookup.findLinkedType(
                     context.getFilePath(), targetType.getCustomName());
             if (classSymbol == null) return Type.unknown();
 
@@ -675,7 +675,20 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
                 return Type.unknown();
             }
 
-            Symbol chosen = resolveOverload(methods, argTypes, name, node);
+            // Only reachable overloads take part in the resolution (like Java).
+            List<Symbol> visible = new ArrayList<>();
+            for (Symbol m : methods) {
+                if (lookup.isPubliclyAccessible(m)) visible.add(m);
+            }
+            if (visible.isEmpty()) {
+                reporter.reportTypeError(name,
+                        "El metodo '" + name + "' de la clase " + classSymbol.getName() + " es "
+                                + lookup.accessLabel(methods.get(0)) + " y no es accesible desde aqui",
+                        node);
+                return Type.unknown();
+            }
+
+            Symbol chosen = resolveOverload(visible, argTypes, name, node);
             if (chosen == null) return Type.unknown();
 
             Type returnType = resolveSymbolReturnType(chosen);
@@ -723,6 +736,13 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (member.getKind() != SymbolKind.ATTRIBUTE) {
             reporter.reportTypeError(node.getPropertyName(),
                     "'" + node.getPropertyName() + "' no es un atributo", node);
+            return Type.unknown();
+        }
+
+        if (!lookup.isPubliclyAccessible(member)) {
+            reporter.reportTypeError(node.getPropertyName(),
+                    "El atributo '" + node.getPropertyName() + "' de " + targetType.getCustomName()
+                            + " es " + lookup.accessLabel(member) + " y no es accesible desde aqui", node);
             return Type.unknown();
         }
 
@@ -816,7 +836,19 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             }
         }
 
-        Symbol chosen = resolveOverload(constructors, argTypes, className, node);
+        List<Symbol> visibleCtors = new ArrayList<>();
+        for (Symbol c : constructors) {
+            if (lookup.isPubliclyAccessible(c)) visibleCtors.add(c);
+        }
+        if (!constructors.isEmpty() && visibleCtors.isEmpty()) {
+            reporter.reportTypeError(className,
+                    "Los constructores de '" + className + "' son "
+                            + lookup.accessLabel(constructors.get(0)) + " y no son accesibles desde aqui",
+                    node);
+            return Type.unknown();
+        }
+
+        Symbol chosen = resolveOverload(visibleCtors, argTypes, className, node);
         if (chosen == null) return Type.unknown();
 
         Type classType = Type.customType(className);
@@ -1046,6 +1078,8 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
 
         if (compatible.size() == 1) return compatible.get(0);
         if (compatible.size() > 1) {
+            Symbol best = pickMostSpecific(compatible);
+            if (best != null) return best;
             reporter.reportTypeError(name, "Llamada ambigua a '" + name + "'", node);
             return null;
         }
@@ -1055,17 +1089,64 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         return null;
     }
 
+    /**
+     * Method to evaluate the candidate whose parameter types are assignable to EVERY other candidate's parameter types.
+     */
+    private Symbol pickMostSpecific(List<Symbol> candidates) {
+        Symbol best = null;
+        for (Symbol a : candidates) {
+            boolean beatsAll = true;
+            for (Symbol b : candidates) {
+                if (a == b) continue;
+                if (!isMoreSpecific(a, b)) {
+                    beatsAll = false;
+                    break;
+                }
+            }
+            if (beatsAll) {
+                if (best != null) return null;
+                best = a;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Helper method to evaluate if the instruction is more specific
+     *
+     */
+    private boolean isMoreSpecific(Symbol a, Symbol b) {
+        List<String> pa = a.getParameterTypes();
+        List<String> pb = b.getParameterTypes();
+        if (pa.size() != pb.size()) return false;
+        for (int i = 0; i < pa.size(); i++) {
+            Type ta = mapper.resolveRawTypeName(pa.get(i));
+            Type tb = mapper.resolveRawTypeName(pb.get(i));
+            if (!assignability.isAssignable(ta, tb)) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Method to resolve the symbol return type
+     *
+     */
     private Type resolveSymbolReturnType(Symbol fn) {
         String rt = fn.getReturnType();
         if (rt == null || "void".equals(rt)) return Type.voidType();
-        return mapper.resolveRawTypeName(rt);
+        Type base = mapper.resolveRawTypeName(rt);
+        int dims = fn.getReturnDimensions();
+        return dims > 0 ? Type.arrayType(base, dims) : base;
     }
 
+    /**
+     * Method to evaluate the member type
+     * */
     private Symbol findMemberInType(Type customType, String memberName) {
         if (customType == null || !customType.isCustom()) return null;
         if (memberName == null) return null;
 
-        Symbol typeSymbol = lookup.findTypeSymbolGlobal(
+        Symbol typeSymbol = lookup.findLinkedType(
                 context.getFilePath(), customType.getCustomName());
         if (typeSymbol == null) return null;
 
