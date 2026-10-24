@@ -278,16 +278,6 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(SuperExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperConstructorCallNodeZ node) {
-        return null;
-    }
-
-    @Override
     public Void visit(IncrementStatementNodeZ node) {
         CFGNode n = createStatementNode("++", NodeType.STATEMENT, node);
         connectPendingExitsTo(n);
@@ -762,6 +752,19 @@ public class ZCFGBuilderVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ParameterNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        CFGNode n = createStatementNode("llamada a super(...)", NodeType.STATEMENT, node);
+        connectPendingExitsTo(n);
+        addPendingExit(n);
         return null;
     }
 }

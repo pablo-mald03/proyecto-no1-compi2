@@ -37,7 +37,7 @@ public class ZAccessControlService {
             return true;
         }
 
-        if (member.getAccessModifier() == null) return true;   // no modifier -> public
+        if (member.getAccessModifier() == null) return true;
 
         switch (member.getAccessModifier().name()) {
             case "PUBLIC":

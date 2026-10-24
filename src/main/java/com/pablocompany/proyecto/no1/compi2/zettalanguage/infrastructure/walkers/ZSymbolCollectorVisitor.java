@@ -460,16 +460,6 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visit(SuperExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperConstructorCallNodeZ node) {
-        return null;
-    }
-
 
     @Override
     public Void visit(ExpressionStatementNodeZ node) {
@@ -629,5 +619,15 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         SymbolScope scope = table.getCurrentScope();
         while (scope != null && scope.getKind() != SymbolScopeKind.CLASS) scope = scope.getParent();
         return scope != null ? scope.getClassName() : null;
+    }
+    
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        return null;
     }
 }

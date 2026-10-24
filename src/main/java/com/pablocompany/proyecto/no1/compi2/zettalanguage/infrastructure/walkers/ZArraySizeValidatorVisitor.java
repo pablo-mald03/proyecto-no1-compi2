@@ -473,16 +473,6 @@ public class ZArraySizeValidatorVisitor implements ZAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(SuperExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperConstructorCallNodeZ node) {
-        return null;
-    }
-
-    @Override
     public Void visit(IncrementStatementNodeZ node) {
         if (node.getTargetVariable() != null) node.getTargetVariable().accept(this);
         return null;
@@ -585,6 +575,19 @@ public class ZArraySizeValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfListNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        if (node.getArguments() != null) {
+            for (ExpressionNodeZ a : node.getArguments()) if (a != null) a.accept(this);
+        }
         return null;
     }
 }

@@ -61,7 +61,7 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
     @Override
     public Void visit(ProgramNodeZ node) {
         if (node.getClassNode() != null) {
-                node.getClassNode().accept(this);
+            node.getClassNode().accept(this);
         }
         return null;
     }
@@ -168,7 +168,7 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
     public Void visit(IdentifierExpressionNodeZ node) {
         return null;
     }
-    
+
     @Override
     public Void visit(FunctionCallExpressionNodeZ node) {
         return null;
@@ -202,16 +202,6 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ShortlyOperationNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperConstructorCallNodeZ node) {
         return null;
     }
 
@@ -304,7 +294,7 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
     public Void visit(ForUpdateNodeZ node) {
         return null;
     }
-    
+
 
     @Override
     public Void visit(ParameterNodeZ node) {
@@ -341,4 +331,13 @@ public class ClassFileNameValidatorVisitor implements ZAstVisitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        return null;
+    }
 }

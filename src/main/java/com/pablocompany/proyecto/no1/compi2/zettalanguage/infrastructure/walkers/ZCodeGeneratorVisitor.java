@@ -14,6 +14,9 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperat
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodeZ;
@@ -77,7 +80,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     private String lastExpr;
 
-    // Z-specific
     private final Map<String, ObjectInfo> objectVariables = new HashMap<>();
     private final Map<String, ArrayInfo> arrayInfos = new HashMap<>();
 
@@ -219,6 +221,13 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        boolean explicitSuper = node.getBody() != null
+                && !node.getBody().isEmpty()
+                && node.getBody().get(0) instanceof SuperConstructorCallNodeZ;
+        if (!explicitSuper) {
+            emitImplicitSuperCall();
+        }
+
         if (node.getBody() != null) {
             for (ZAstNode s : node.getBody()) {
                 if (s != null) s.accept(this);
@@ -291,6 +300,34 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ThisExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;   // only meaningful as the target of a member access (see evalObjectPointerToReg)
+    }
+
+    /**
+     * super(args); -> call to the parent constructor with the SAME object pointer as 'this'.
+     */
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        if (currentSelfSlot == null) return null;
+
+        String parent = node.getParentClass();
+        if (parent == null) {
+            Symbol p = findParentOf(currentClassName);
+            parent = p != null ? p.getName() : null;
+        }
+        if (parent == null) return null;
+
+        List<ExpressionNodeZ> args = node.getArguments() != null ? node.getArguments() : new ArrayList<>();
+
+        // Parent without declared constructors: its implicit default constructor does nothing.
+        if (args.isEmpty() && !declaresConstructors(parent)) return null;
+
+        emitSuperConstructorCall(parent, args);
         return null;
     }
 
@@ -412,6 +449,11 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        if (node.getIdentifier() instanceof PropertyAccessExpressionNodeZ prop
+                && tryEmitPropertyStore(prop, node.getExpressionNode())) {
+            return null;
+        }
+
         String valueRef = exprToString(node.getExpressionNode());
         String targetRef = exprToString(node.getIdentifier());
         storeValueTo(valueRef, targetRef);
@@ -462,16 +504,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
         output.emit(op, "AX_INT", "BX_INT", "CX_INT");
         storeRegisterBack("CX_INT", targetRef);
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperConstructorCallNodeZ node) {
         return null;
     }
 
@@ -1046,7 +1078,10 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
                 return null;
             }
 
-            targetFunc = className + "_" + funcName + "_" + numArgs;
+            // super.m(...) must NOT go through the vtable: it calls the superclass implementation directly.
+            targetFunc = (node.getTarget() instanceof SuperExpressionNodeZ)
+                    ? resolveSuperTarget(className, funcName, numArgs)
+                    : className + "_" + funcName + "_" + numArgs;
 
             output.emit("sptr_inc", "1", null, null);
             output.emit("store_int", "sptr", null, "AX_INT");
@@ -1136,6 +1171,13 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
      */
     private boolean evalObjectPointerToReg(ExpressionNodeZ target, String reg) {
         if (target == null) return false;
+
+        // this / super: both are the current object pointer (they only differ in the STATIC type).
+        if (target instanceof ThisExpressionNodeZ || target instanceof SuperExpressionNodeZ) {
+            if (currentSelfSlot == null) return false;
+            output.emit("load_int", currentSelfSlot, null, reg);
+            return true;
+        }
 
         // Caso 1: identifier local/param que es objeto.
         if (target instanceof IdentifierExpressionNodeZ id) {
@@ -1513,5 +1555,137 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     private void emitHeapFieldStore(String selfReg, int fieldOffset, TypeKind kind, String srcReg) {
         String suffix = kindToSuffix(kind);
         output.emit("heap_store_" + suffix, selfReg + " + " + fieldOffset, null, srcReg);
+    }
+
+    // ============================================================
+    // INHERITANCE / SUPER HELPERS
+    // ============================================================
+
+    /**
+     * Same call convention as a method call inside the class and as the constructor call of 'new':
+     * [200 scratch][return slot][self][args...]  ->  call  ->  sptr_dec(numArgs + 2 + 200).
+     */
+    private void emitSuperConstructorCall(String parentName, List<ExpressionNodeZ> args) {
+        int numArgs = args != null ? args.size() : 0;
+        String target = parentName + "_" + parentName + "_" + numArgs;
+
+        output.emit("sptr_inc", "200", null, null);
+        output.emit("sptr_inc", "1", null, null);
+        output.emit("load_int", currentSelfSlot, null, "AX_INT");
+        output.emit("store_int", "sptr", null, "AX_INT");
+        output.emit("sptr_inc", "1", null, null);
+
+        if (args != null) {
+            for (ExpressionNodeZ arg : args) {
+                String argRef = exprToString(arg);
+                Type t = typeAnnotations.get(arg);
+                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
+                String suffix = kindToSuffix(kind);
+                String axReg = "AX_" + suffix.toUpperCase();
+                loadRegister(argRef, axReg);
+                output.emit("store_" + suffix, "sptr", null, axReg);
+                output.emit("sptr_inc", "1", null, null);
+            }
+        }
+
+        output.emit("call", target, null, null);
+        output.emit("sptr_dec", String.valueOf(numArgs + 2 + 200), null, null);
+    }
+
+    /**
+     * Implicit super(): only emitted when the parent really declares a constructor without parameters.
+     */
+    private void emitImplicitSuperCall() {
+        if (currentSelfSlot == null) return;
+        Symbol parent = findParentOf(currentClassName);
+        if (parent == null) return;
+
+        if (parent.getMembers() != null) {
+            for (Symbol m : parent.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR
+                        && m.getParameterTypes().isEmpty()
+                        && parent.getName().equals(m.getDeclaringClass())) {
+                    emitSuperConstructorCall(parent.getName(), new ArrayList<>());
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * Label of the implementation that super.name(...) must call. The parent's merged member list
+     */
+    private String resolveSuperTarget(String parentClassName, String methodName, int numArgs) {
+        Symbol parent = findClassSymbol(parentClassName);
+        if (parent != null && parent.getMembers() != null) {
+            for (Symbol m : parent.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD
+                        && m.getName().equals(methodName)
+                        && m.getParameterTypes().size() == numArgs) {
+                    if (m.getCodeLabel() != null) return m.getCodeLabel();
+                    return m.getDeclaringClass() + "_" + methodName + "_" + numArgs;
+                }
+            }
+        }
+        return parentClassName + "_" + methodName + "_" + numArgs;
+    }
+
+    private boolean declaresConstructors(String className) {
+        Symbol cls = findClassSymbol(className);
+        if (cls == null || cls.getMembers() == null) return false;
+        for (Symbol m : cls.getMembers()) {
+            if (m.getKind() == SymbolKind.CONSTRUCTOR && className.equals(m.getDeclaringClass())) return true;
+        }
+        return false;
+    }
+
+    private Symbol findParentOf(String className) {
+        Symbol cls = findClassSymbol(className);
+        if (cls == null || cls.getParentName() == null || cls.getParentName().isBlank()) return null;
+        return findClassSymbol(cls.getParentName());
+    }
+
+    private Symbol findClassSymbol(String className) {
+        if (className == null) return null;
+        for (SymbolScope fileScope : table.getFileScopes().values()) {
+            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
+                for (Symbol s : bucket) {
+                    if (s.getKind() == SymbolKind.CLASS && className.equals(s.getName())) return s;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * obj.x = v, this.x = v, super.x = v: stores into the heap using the field slot of the STATIC type
+     */
+    private boolean tryEmitPropertyStore(PropertyAccessExpressionNodeZ prop, ExpressionNodeZ valueExpr) {
+        Type targetType = typeAnnotations.get(prop.getTarget());
+        if (targetType == null || !targetType.isCustom()) return false;
+
+        List<String> layout = classLayouts.get(targetType.getCustomName());
+        if (layout == null) return false;
+        int fieldOffset = layout.indexOf(prop.getPropertyName());
+        if (fieldOffset < 0) return false;
+
+        if (!evalObjectPointerToReg(prop.getTarget(), "BX_INT")) return false;
+        int ptrSlot = nextOffset++;
+        output.emit("store_int", "fp + " + ptrSlot, null, "BX_INT");
+
+        String valueRef = exprToString(valueExpr);
+
+        Type fieldType = typeAnnotations.get(prop);
+        Type valueType = typeAnnotations.get(valueExpr);
+        TypeKind kind = fieldType != null ? fieldType.getKind()
+                : (valueType != null ? valueType.getKind() : TypeKind.INT);
+        if (kind == TypeKind.NULL || kind == TypeKind.CUSTOM) kind = TypeKind.INT;
+        String suffix = kindToSuffix(kind);
+        String axReg = "AX_" + suffix.toUpperCase();
+
+        loadRegister(valueRef, axReg);
+        output.emit("load_int", "fp + " + ptrSlot, null, "BX_INT");
+        emitHeapFieldStore("BX_INT", fieldOffset, kind, axReg);
+        return true;
     }
 }

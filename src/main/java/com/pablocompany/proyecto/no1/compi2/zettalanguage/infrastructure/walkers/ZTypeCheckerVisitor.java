@@ -77,6 +77,14 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     private Type currentReturnType;
     private Symbol currentClass;
 
+    private final ZInheritanceService inheritance;
+    private final ZConstructorChainService constructorChain;
+    /**
+     * true while the arguments of super(...) are being checked
+     */
+    private boolean inExplicitCtorArgs;
+    private ConstructorDeclarationNodeZ currentConstructor;
+
     private Map<AstNode, Symbol> resolvedCalls;
 
     public ZTypeCheckerVisitor(GlobalSymbolTable table,
@@ -97,6 +105,8 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         this.calls = new ZCallResolutionService(compat, reporter);
         this.scopes = new ZScopeService(table, context);
         this.overrides = new ZOverrideService(reporter, lookup);
+        this.inheritance = new ZInheritanceService(lookup);
+        this.constructorChain = new ZConstructorChainService(lookup, access, calls, reporter);
     }
 
     private void annotate(AstNode node, Type type) {
@@ -132,8 +142,12 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             }
         }
 
-        if (parent != null && currentClass != null) {
-            mergeInheritedMembers(currentClass, parent);
+        boolean hierarchyOk = true;
+        if (currentClass != null) {
+            hierarchyOk = inheritance.link(currentClass);
+            if (!hierarchyOk && currentClass.getInheritanceError() != null) {
+                reporter.reportTypeError(node.getClassName(), currentClass.getInheritanceError(), node);
+            }
         }
 
         scopes.withScope(node, () -> {
@@ -141,6 +155,11 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
                 for (ZAstNode m : node.getMembers()) if (m != null) m.accept(this);
             }
         });
+
+        if (parent != null && hierarchyOk && currentClass != null
+                && lookup.findConstructors(currentClass).isEmpty()) {
+            constructorChain.validateImplicitSuper(currentClass, parent, node, "clase");
+        }
 
         currentClass = previousClass;
         return Type.voidType();
@@ -195,16 +214,107 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
     public Type visit(ConstructorDeclarationNodeZ node) {
         scopes.withScope(node, () -> {
             Type previousReturn = currentReturnType;
+            ConstructorDeclarationNodeZ previousCtor = currentConstructor;
             currentReturnType = null;
+            currentConstructor = node;
+
             if (node.getParams() != null) {
                 for (ParameterNodeZ p : node.getParams()) if (p != null) p.accept(this);
             }
+
+            // No explicit super(...) -> implicit super(): the parent needs an accessible no-arg constructor.
+            Symbol parent = lookup.getParentClass(currentClass);
+            boolean explicitSuper = node.getBody() != null
+                    && !node.getBody().isEmpty()
+                    && node.getBody().get(0) instanceof SuperConstructorCallNodeZ;
+            if (parent != null && !explicitSuper
+                    && currentClass != null && currentClass.getInheritanceError() == null) {
+                constructorChain.validateImplicitSuper(currentClass, parent, node, "constructor");
+            }
+
             if (node.getBody() != null) {
                 for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
             }
+            currentConstructor = previousCtor;
             currentReturnType = previousReturn;
         });
         return Type.voidType();
+    }
+
+    // ============================================================
+    // SUPER
+    // ============================================================
+
+    /**
+     * Super arguments validation
+     */
+    @Override
+    public Type visit(SuperConstructorCallNodeZ node) {
+        Symbol parent = lookup.getParentClass(currentClass);
+
+        boolean previousFlag = inExplicitCtorArgs;
+        inExplicitCtorArgs = true;
+        List<Type> argTypes = new ArrayList<>();
+        if (node.getArguments() != null) {
+            for (ExpressionNodeZ arg : node.getArguments()) {
+                argTypes.add(arg != null ? arg.accept(this) : Type.unknown());
+            }
+        }
+        inExplicitCtorArgs = previousFlag;
+
+        if (currentConstructor == null
+                || currentConstructor.getBody() == null
+                || currentConstructor.getBody().isEmpty()
+                || currentConstructor.getBody().get(0) != node) {
+            reporter.reportTypeError("super",
+                    "super(...) solo puede ser la primera instruccion de un constructor", node);
+            return Type.voidType();
+        }
+
+        if (parent == null) {
+            reporter.reportTypeError("super",
+                    "super(...) solo puede usarse en una clase que extiende otra clase; '"
+                            + (currentClass != null ? currentClass.getName() : "?")
+                            + "' no tiene superclase", node);
+            return Type.voidType();
+        }
+
+        node.setParentClass(parent.getName());
+        Symbol chosen = constructorChain.resolveExplicitSuperCall(currentClass, parent, argTypes, node);
+        if (chosen != null) resolvedCalls.put(node, chosen);
+        return Type.voidType();
+    }
+
+    /**
+     * Super field validation
+     */
+    @Override
+    public Type visit(SuperExpressionNodeZ node) {
+        if (currentClass == null) {
+            reporter.reportTypeError("super",
+                    "'super' solo puede usarse dentro de una clase", node);
+            return Type.unknown();
+        }
+
+        Symbol parent = lookup.getParentClass(currentClass);
+        if (parent == null) {
+            reporter.reportTypeError("super",
+                    "'super' no puede usarse en la clase '" + currentClass.getName()
+                            + "' porque no extiende ninguna superclase", node);
+            return Type.unknown();
+        }
+
+        if (inExplicitCtorArgs) {
+            reporter.reportTypeError("super",
+                    "No se puede referenciar 'super' antes de que se invoque al constructor de la superclase",
+                    node);
+        }
+
+        node.setEnclosingClass(currentClass.getName());
+        node.setParentClass(parent.getName());
+        Type t = Type.customType(parent.getName());
+        annotate(node, t);
+        return t;
     }
 
     @Override
@@ -270,6 +380,11 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             reporter.reportTypeError("this",
                     "'this' solo puede usarse dentro de una clase", node);
             return Type.unknown();
+        }
+        if (inExplicitCtorArgs) {
+            reporter.reportTypeError("this",
+                    "No se puede referenciar 'this' antes de que se invoque al constructor de la superclase",
+                    node);
         }
         node.setEnclosingClass(currentClass.getName());
         Type t = Type.customType(currentClass.getName());
@@ -390,16 +505,6 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
                 break;
         }
         return Type.voidType();
-    }
-
-    @Override
-    public Type visit(SuperExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Type visit(SuperConstructorCallNodeZ node) {
-        return null;
     }
 
     @Override
@@ -676,9 +781,32 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
 
     @Override
     public Type visit(IdentifierExpressionNodeZ node) {
-        List<Symbol> found = lookup.resolveByName(node.getIdentifier());
-        if (found.isEmpty()) return Type.unknown();
-        Type t = mapper.mapSymbolToType(found.get(0));
+        String id = node.getIdentifier();
+        List<Symbol> found = lookup.resolveByName(id);
+        Symbol symbol = found.isEmpty() ? null : found.get(0);
+
+        if (symbol == null && currentClass != null) {
+            Symbol inherited = inheritance.findMemberByName(currentClass, id);
+            if (inherited != null && inherited.getKind() == SymbolKind.ATTRIBUTE) {
+                if (!access.isAccessible(inherited, currentClass)) {
+                    reporter.reportTypeError(id,
+                            "El atributo '" + id + "' de la clase " + inherited.getDeclaringClass()
+                                    + " es " + ZAccessControlService.label(inherited.getAccessModifier())
+                                    + " y no es accesible desde '" + currentClass.getName() + "'", node);
+                    return Type.unknown();
+                }
+                symbol = inherited;
+            }
+        }
+        if (symbol == null) return Type.unknown();
+
+        if (inExplicitCtorArgs && symbol.getKind() == SymbolKind.ATTRIBUTE) {
+            reporter.reportTypeError(id,
+                    "No se puede referenciar el atributo '" + id
+                            + "' antes de que se invoque al constructor de la superclase", node);
+        }
+
+        Type t = mapper.mapSymbolToType(symbol);
         annotate(node, t);
         return t;
     }
@@ -756,6 +884,12 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         }
 
         String methodName = node.getFunctionName();
+
+        if (inExplicitCtorArgs && node.getTarget() == null) {
+            reporter.reportTypeError(methodName,
+                    "No se puede llamar al metodo de instancia '" + methodName
+                            + "' antes de que se invoque al constructor de la superclase", node);
+        }
 
         Symbol classSymbol;
         if (node.getTarget() != null) {
@@ -970,27 +1104,4 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
         return Type.unknown();
     }
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
-
-    private void mergeInheritedMembers(Symbol child, Symbol parent) {
-        if (child.getMembers() == null) child.setMembers(new ArrayList<>());
-        if (parent.getMembers() == null) return;
-
-        for (Symbol inherited : parent.getMembers()) {
-            if (inherited.getKind() == SymbolKind.CONSTRUCTOR) continue;
-
-            boolean overridden = false;
-            for (Symbol own : child.getMembers()) {
-                if (own.getKind() == inherited.getKind()
-                        && own.getName().equals(inherited.getName())
-                        && own.getParameterTypes().equals(inherited.getParameterTypes())) {
-                    overridden = true;
-                    break;
-                }
-            }
-            if (!overridden) child.getMembers().add(inherited);
-        }
-    }
 }
