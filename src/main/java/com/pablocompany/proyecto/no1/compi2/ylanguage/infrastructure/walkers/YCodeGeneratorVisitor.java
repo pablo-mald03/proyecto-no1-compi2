@@ -344,11 +344,6 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         if (node.getValue() != null) {
 
             Value value = eval(node.getValue());
-            System.out.println("[RET] value.type=" + value.type()
-                    + " | fn=" + currentFunctionSymbol.getName()
-                    + " | returnType=" + currentFunctionSymbol.getReturnType()
-                    + " | line=" + node.getLine());
-
             ValueType returnType = returnTypeOf(currentFunctionSymbol);
             Register scratch = Register.ax(returnType);
             values.loadCoerced(value, scratch);

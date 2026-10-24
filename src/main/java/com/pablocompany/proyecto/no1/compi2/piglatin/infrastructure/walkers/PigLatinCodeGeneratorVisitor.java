@@ -174,7 +174,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         }
 
         ir.emit(new Return());
-        ir.endFunction();
         return null;
     }
 
@@ -277,12 +276,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         Cell cell = frame.declare(name, vType);
         if (node.getInitializer() != null) {
-            if (node.getInitializer() instanceof ReadStatementNodePigLatin) {
-                ir.emit(new Read(vType, cell.getAddress()));
-            } else {
-                Value initVal = eval(node.getInitializer());
-                values.store(initVal, cell);
-            }
+            Value initVal = eval(node.getInitializer());
+            values.store(initVal, cell);
         }
         return null;
     }
@@ -379,18 +374,12 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ForUpdateNodePigLatin node) {
-        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
-            Cell cell = frame.lookup(id.getIdentifier());
-            if (cell != null) {
-                switch (node.getOperator()) {
-                    case INCREMENT, PREFIX_INCREMENT -> emitStep(cell, 1);
-                    case DECREMENT, PREFIX_DECREMENT -> emitStep(cell, -1);
-                    case ASSIGN -> {
-                        if (node.getValue() != null) {
-                            Value val = eval(node.getValue());
-                            values.store(val, cell);
-                        }
-                    }
+        switch (node.getOperator()) {
+            case INCREMENT, PREFIX_INCREMENT -> values.incDec(eval(node.getTarget()), BinaryOperations.ADD);
+            case DECREMENT, PREFIX_DECREMENT -> values.incDec(eval(node.getTarget()), BinaryOperations.SUB);
+            case ASSIGN -> {
+                if (node.getValue() != null) {
+                    assign(node.getTarget(), eval(node.getValue()));
                 }
             }
         }
@@ -496,66 +485,40 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ShortlyOperationNodePigLatin node) {
-        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
-            Cell cell = frame.lookup(id.getIdentifier());
-            if (cell != null) {
-                Value right = eval(node.getValue());
-                BinaryOperations bop = shortlyOpToBinary(node.getOperator());
-                Register a = Register.ax(cell.getType()), b = Register.bx(cell.getType()), c = Register.cx(cell.getType());
-                values.load(cell, a);
-                values.loadCoerced(right, b);
-                ir.emit(new BinaryOperation(bop, a, b, c));
-                values.store(c, cell);
-            }
-        }
+        Value target = eval(node.getTarget());
+        Value operand = eval(node.getValue());
+        Cell cell = values.requireCell(target);
+        ValueType type = cell.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
+        Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
+        values.loadCoerced(cell, a);
+        values.loadCoerced(operand, b);
+        ir.emit(new BinaryOperation(IntermediateTypes.shortly(node.getOperator()), a, b, c));
+        ir.emit(new Store(MemorySpace.STACK, cell.getAddress(), c));
         return null;
     }
 
     @Override
     public Void visit(IncrementStatementNodePigLatin node) {
-        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
-            Cell cell = frame.lookup(id.getIdentifier());
-            if (cell != null) emitStep(cell, 1);
-        }
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
         return null;
     }
 
     @Override
     public Void visit(DecrementStatementNodePigLatin node) {
-        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
-            Cell cell = frame.lookup(id.getIdentifier());
-            if (cell != null) emitStep(cell, -1);
-        }
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
         return null;
     }
 
     @Override
     public Void visit(IncrementPrevStatementNodePigLatin node) {
-        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
-            Cell cell = frame.lookup(id.getIdentifier());
-            if (cell != null) emitStep(cell, 1);
-        }
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
         return null;
     }
 
     @Override
     public Void visit(DecrementPrevStatementNodePigLatin node) {
-        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
-            Cell cell = frame.lookup(id.getIdentifier());
-            if (cell != null) emitStep(cell, -1);
-        }
+        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
         return null;
-    }
-
-    private void emitStep(Cell cell, int delta) {
-        Register r = Register.ax(cell.getType());
-        values.load(cell, r);
-        Register one = Register.bx(cell.getType());
-        values.load(new Constant(String.valueOf(Math.abs(delta)), cell.getType()), one);
-        Register result = Register.cx(cell.getType());
-        BinaryOperations op = delta > 0 ? BinaryOperations.ADD : BinaryOperations.SUB;
-        ir.emit(new BinaryOperation(op, r, one, result));
-        values.store(result, cell);
     }
 
     @Override
@@ -571,7 +534,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 Value val = eval(expr);
                 Register reg = Register.ax(val.type());
                 values.load(val, reg);
-                ir.emit(new Print(val.type(), reg));
+                ir.emit(new Print(reg, true));
             }
         }
         return null;
@@ -582,7 +545,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
             Cell cell = frame.lookup(id.getIdentifier());
             if (cell != null) {
-                ir.emit(new Read(cell.getType(), cell.getAddress()));
+                ir.emit(new Read(cell.type(), cell.getAddress()));
             }
         } else {
             Cell temp = frame.temp(ValueType.STRING);
@@ -613,16 +576,19 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         return null;
     }
 
+    private void branch(ExpressionNodePigLatin condition, boolean jumpWhen, String label) {
+        Register reg = Register.ax(ValueType.BOOLEAN);
+        values.load(eval(condition), reg);
+        ir.emit(new BranchIf(reg, jumpWhen, label));
+    }
+
     @Override
     public Void visit(IfStatementNodePigLatin node) {
         String endLabel = labels.nextLabel();
-        String nextLabel = node.getElseIfs() != null && !node.getElseIfs().isEmpty() || node.getElseBlockNode() != null
+        String nextLabel = (node.getElseIfs() != null && !node.getElseIfs().isEmpty()) || node.getElseBlockNode() != null
                 ? labels.nextLabel() : endLabel;
 
-        Value cond = eval(node.getCondition());
-        Register condReg = Register.ax(ValueType.BOOLEAN);
-        values.loadCoerced(cond, condReg);
-        ir.emit(new BranchIf(BranchCondition.FALSE, condReg, nextLabel));
+        branch(node.getCondition(), false, nextLabel);
 
         if (node.getThenBody() != null) {
             for (PigLatinAstNode s : node.getThenBody()) if (s != null) s.accept(this);
@@ -636,10 +602,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 for (ElseIfNodePigLatin elseIf : node.getElseIfs()) {
                     if (elseIf == null) continue;
                     String elseIfNext = labels.nextLabel();
-                    Value elseIfCond = eval(elseIf.getCondition());
-                    Register elseIfReg = Register.ax(ValueType.BOOLEAN);
-                    values.loadCoerced(elseIfCond, elseIfReg);
-                    ir.emit(new BranchIf(BranchCondition.FALSE, elseIfReg, elseIfNext));
+                    branch(elseIf.getCondition(), false, elseIfNext);
 
                     if (elseIf.getBody() != null) {
                         for (PigLatinAstNode s : elseIf.getBody()) if (s != null) s.accept(this);
@@ -681,10 +644,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         String endLabel = labels.nextLabel();
 
         ir.emit(new MarkLabel(startLabel));
-        Value cond = eval(node.getCondition());
-        Register condReg = Register.ax(ValueType.BOOLEAN);
-        values.loadCoerced(cond, condReg);
-        ir.emit(new BranchIf(BranchCondition.FALSE, condReg, endLabel));
+        branch(node.getCondition(), false, endLabel);
 
         breakLabels.push(endLabel);
         continueLabels.push(startLabel);
@@ -711,10 +671,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         breakLabels.pop();
 
         ir.emit(new MarkLabel(condLabel));
-        Value cond = eval(node.getCondition());
-        Register condReg = Register.ax(ValueType.BOOLEAN);
-        values.loadCoerced(cond, condReg);
-        ir.emit(new BranchIf(BranchCondition.TRUE, condReg, startLabel));
+        branch(node.getCondition(), true, startLabel);
         ir.emit(new MarkLabel(endLabel));
         return null;
     }
@@ -729,10 +686,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         ir.emit(new MarkLabel(startLabel));
         if (node.getCondition() != null) {
-            Value cond = eval(node.getCondition());
-            Register condReg = Register.ax(ValueType.BOOLEAN);
-            values.loadCoerced(cond, condReg);
-            ir.emit(new BranchIf(BranchCondition.FALSE, condReg, endLabel));
+            branch(node.getCondition(), false, endLabel);
         }
 
         breakLabels.push(endLabel);
@@ -1368,15 +1322,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         };
     }
 
-    private BinaryOperations shortlyOpToBinary(ShortlyOperator op) {
-        return switch (op) {
-            case PLUS_ASSIGN -> BinaryOperations.ADD;
-            case MINUS_ASSIGN -> BinaryOperations.SUB;
-            case MULTIPLY_ASSIGN -> BinaryOperations.MUL;
-            case DIVIDE_ASSIGN -> BinaryOperations.DIV;
-            case MODULO_ASSIGN -> BinaryOperations.MOD;
-        };
-    }
 
     private UnaryOperations unaryOpToIntermediate(UnaryOperator op) {
         return switch (op) {
