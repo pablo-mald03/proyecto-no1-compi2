@@ -25,6 +25,6 @@ public class PigLatinCodeGenerator implements CodeGenerator {
                          Map<AstNode, Symbol> resolvedCalls, IntermediateBuilder intermediate, CodeGenContext labels){
 
         if (!(context.getAstNode() instanceof PigLatinAstNode pigAst)) return;
-        pigAst.accept(new PigLatinCodeGeneratorVisitor(table, context, typeAnnotations, intermediate, labels));
+        pigAst.accept(new PigLatinCodeGeneratorVisitor(table, context, typeAnnotations, resolvedCalls, intermediate, labels));
     }
 }

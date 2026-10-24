@@ -24,8 +24,7 @@ public class NameMangler {
     }
 
     /**
-     * Principal Method to generate a unique, deterministic code label for symbols (methods, constructors, functions).
-     * Follows the single naming scheme required for C and RISC-V targets.
+     * Principal Method to generate a unique, deterministic code label for symbols.
      */
     public static String codeLabel(Symbol s) {
         if (s == null) return "unknown";
@@ -48,6 +47,20 @@ public class NameMangler {
                 + sanitize(name) + "_" + sanitize(params);
         s.setCodeLabel(label);
         return label;
+    }
+
+    /**
+     * Principal method to resolve the target function label for a call, taking into account whether
+     */
+    public static String resolveCallLabel(Symbol s) {
+        if (s == null) return "unknown";
+        if (s.getCodeLabel() != null && !s.getCodeLabel().isBlank()) {
+            return s.getCodeLabel();
+        }
+        if (s.getKind() == com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind.FUNCTION) {
+            return functionName(s);
+        }
+        return codeLabel(s);
     }
 
     /**

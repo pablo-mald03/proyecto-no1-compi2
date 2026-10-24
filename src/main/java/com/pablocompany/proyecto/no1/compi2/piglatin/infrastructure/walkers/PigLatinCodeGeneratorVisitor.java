@@ -1,11 +1,48 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.UnaryOperations;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Cell;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Constant;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Text;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generatePort.Value;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.IndexAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.LoadIndexed;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.StoreIndexed;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.assingation.Store;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.enums.BinaryOperations;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.Call;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.CallIndirect;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.Jump;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.HeapAlloc;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.io.Print;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.io.Read;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.labels.LoadLabelAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.labels.MarkLabel;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.BinaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.StringConcat;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.LoadAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Indirect;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.ValueEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.*;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.ArrayInfo;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
+import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
-import com.pablocompany.proyecto.no1.compi2.common.domain.factory.ObjectInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
@@ -14,7 +51,6 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalS
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
-import com.pablocompany.proyecto.no1.compi2.common.infrastructure.services.SymbolInheritanceLinkerService;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
@@ -54,8 +90,12 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesBodyNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.principals.variables.VariablesSectionNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.visitor.PigLatinAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZClassLayoutService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZInheritanceService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZSymbolLookupService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Principal pig latin code generator
@@ -63,59 +103,54 @@ import java.util.*;
  */
 public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
+    private static final int CALL_AREA = 200;
+
     private final GlobalSymbolTable table;
     private final EditorContext context;
     private final Map<AstNode, Type> typeAnnotations;
-    private final CodeGeneratorOutput output;
-    private final CodeGenContext ctx;
-    private final StringPool stringPool;
-
-    private int nextOffset = 1;
-
-    private final Map<String, Integer> localOffsets = new HashMap<>();
-    private final Map<String, Integer> paramOffsets = new HashMap<>();
-    private final Map<String, TypeKind> localTypes = new HashMap<>();
+    private final Map<AstNode, Symbol> resolvedCalls;
+    private final IntermediateBuilder ir;
+    private final CodeGenContext labels;
 
     private final Deque<String> breakLabels = new ArrayDeque<>();
     private final Deque<String> continueLabels = new ArrayDeque<>();
 
-    private String lastExpr;
+    private FunctionFrame frame = new FunctionFrame();
+    private ValueEmitter values;
+    private Value last;
 
-    private final Map<String, ObjectInfo> objectVariables = new HashMap<>();
-    private final Map<String, StructInfo> structVariables = new HashMap<>();
-    private final Map<String, ArrayInfo> arrayInfos = new HashMap<>();
-
-    private final Map<String, List<String>> classLayouts;
+    private final Map<String, String> objectClassMap = new HashMap<>();
+    private final ZInheritanceService inheritance;
+    private final ZClassLayoutService layoutService;
+    private Map<String, List<String>> structFieldLayouts;
 
     public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table,
                                         EditorContext context,
                                         Map<AstNode, Type> typeAnnotations,
-                                        CodeGeneratorOutput output,
-                                        CodeGenContext ctx,
-                                        StringPool stringPool,
-                                        Map<String, List<String>> classLayouts) {
+                                        Map<AstNode, Symbol> resolvedCalls,
+                                        IntermediateBuilder ir,
+                                        CodeGenContext labels) {
         this.table = table;
         this.context = context;
-        this.typeAnnotations = typeAnnotations;
-        this.output = output;
-        this.ctx = ctx;
-        this.stringPool = stringPool;
-        this.classLayouts = classLayouts;
+        this.typeAnnotations = typeAnnotations != null ? typeAnnotations : Map.of();
+        this.resolvedCalls = resolvedCalls != null ? resolvedCalls : Map.of();
+        this.ir = ir;
+        this.labels = labels != null ? labels : new CodeGenContext();
+        this.values = new ValueEmitter(ir, frame);
+        this.inheritance = new ZInheritanceService(new ZSymbolLookupService(table, context));
+        this.layoutService = new ZClassLayoutService(table, inheritance);
     }
 
-    public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
-                                        Map<AstNode, Type> typeAnnotations, IntermediateBuilder ir, CodeGenContext labels) {
-        //TODO:::::::::::
-        this.table = table;
-        this.context = context;
-        this.typeAnnotations = typeAnnotations;
-        this.output = null;
-        this.ctx = null;
-        this.stringPool = null;
-        this.classLayouts = new HashMap<>();
+    public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table,
+                                        EditorContext context,
+                                        Map<AstNode, Type> typeAnnotations,
+                                        IntermediateBuilder ir,
+                                        CodeGenContext labels) {
+        this(table, context, typeAnnotations, Map.of(), ir, labels);
     }
+
     // ============================================================
-    // TOP-LEVEL
+    // TOP-LEVEL & MAIN ORCHESTRATION
     // ============================================================
 
     @Override
@@ -126,27 +161,20 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(BodyNodePigLatin node) {
-        output.getFunctionNames().add("main");
-        output.emit("function_start", "main", null, null);
-
-        output.emit("=", "0", null, "sptr");
-        output.emit("=", "0", null, "fp");
-        nextOffset = 1;
+        ir.beginFunction("main");
+        frame = new FunctionFrame();
+        values = new ValueEmitter(ir, frame);
 
         if (node.getVariablesSection() != null) {
             node.getVariablesSection().accept(this);
-        }
-
-        int slotsToReserve = nextOffset;
-        if (slotsToReserve > 1) {
-            output.emit("sptr_inc", String.valueOf(slotsToReserve), null, null);
         }
 
         if (node.getMaiorSection() != null) {
             node.getMaiorSection().accept(this);
         }
 
-        output.emit("return", null, null, null);
+        ir.emit(new Return());
+        ir.endFunction();
         return null;
     }
 
@@ -186,7 +214,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ImportNodePigLatin node) {
-        // Already merged by the orchestrator.
+        return null;
+    }
+
+    @Override
+    public Void visit(AccessorNodePigLatin node) {
         return null;
     }
 
@@ -204,12 +236,9 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         }
 
         Type declaredType = mapTypeNodeToType(dataType);
+        ValueType vType = declaredType != null ? declaredValueType(declaredType) : ValueType.INT;
 
-        boolean isObject = declaredType != null
-                && declaredType.isCustom()
-                && !"String".equals(declaredType.getCustomName());
-
-
+        boolean isObject = declaredType != null && declaredType.isCustom() && !"String".equals(declaredType.getCustomName());
         boolean isStruct = false;
         if (isObject) {
             Symbol sym = findTypeSymbolGlobal(declaredType.getCustomName());
@@ -219,19 +248,40 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             }
         }
 
-        int offset = allocateLocal(name, node);
-
         if (isObject) {
-            objectVariables.put(name, new ObjectInfo(declaredType.getCustomName(), offset));
-        } else if (isStruct) {
-            structVariables.put(name, new StructInfo(declaredType.getCustomName(), offset, false));
+            objectClassMap.put(name, declaredType.getCustomName());
+            Cell cell = frame.declare(name, ValueType.INT);
+            if (node.getInitializer() != null) {
+                Value initVal = eval(node.getInitializer());
+                values.store(initVal, cell);
+            }
+            return null;
         }
 
+        if (isStruct) {
+            String structTypeName = declaredType.getCustomName();
+            List<String> fields = structFields(structTypeName);
+            int numFields = fields != null ? fields.size() : 1;
+            int base = frame.allocate(numFields);
+            frame.registerStruct(name, new StructInfo(structTypeName, base, false));
+            frame.declare(name, ValueType.INT);
+
+            if (node.getInitializer() instanceof StructLiteralExpressionNodePigLatin lit) {
+                populateStructLiteral(base, fields, lit);
+            } else if (node.getInitializer() != null) {
+                Value initVal = eval(node.getInitializer());
+                values.store(initVal, frame.lookup(name));
+            }
+            return null;
+        }
+
+        Cell cell = frame.declare(name, vType);
         if (node.getInitializer() != null) {
-            String valueRef = exprToString(node.getInitializer());
-            if (valueRef != null) {
-                String dest = getStackRefByName(name);
-                storeValueTo(valueRef, dest);
+            if (node.getInitializer() instanceof ReadStatementNodePigLatin) {
+                ir.emit(new Read(vType, cell.getAddress()));
+            } else {
+                Value initVal = eval(node.getInitializer());
+                values.store(initVal, cell);
             }
         }
         return null;
@@ -239,7 +289,6 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayDeclarationNodePigLatin node) {
-
         int totalSize = 1;
         boolean allLiteral = true;
         if (node.getDimensions() != null) {
@@ -254,25 +303,20 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         }
         if (!allLiteral) totalSize = 1;
 
-        int base = nextOffset;
-        nextOffset += totalSize;
-
+        int base = frame.allocate(totalSize);
         TypeKind elementKind = mapTypeNodeToType(node.getDataType()).getKind();
         if (elementKind == TypeKind.CUSTOM) elementKind = TypeKind.INT;
+        ValueType elementType = IntermediateTypes.of(elementKind);
 
-        arrayInfos.put(node.getIdentifier(),
-                new ArrayInfo(base, elementKind, totalSize, false));
-
-        System.out.println("  → registered base=" + base + " totalSize=" + totalSize);
+        frame.registerArray(node.getIdentifier(), new ArrayInfo(base, elementKind, totalSize, false));
+        frame.declare(node.getIdentifier(), ValueType.INT);
 
         if (node.getInitializer() != null && node.getInitializer().getElements() != null) {
-            List<ExpressionNodePigLatin> values = node.getInitializer().getElements();
-            String suffix = kindToSuffix(elementKind);
-            String cxReg = "CX_" + suffix.toUpperCase();
-            for (int i = 0; i < values.size() && i < totalSize; i++) {
-                String valueRef = exprToString(values.get(i));
-                loadRegister(valueRef, cxReg);
-                output.emit("store_" + suffix, "fp + " + (base + i), null, cxReg);
+            List<ExpressionNodePigLatin> valuesList = node.getInitializer().getElements();
+            for (int i = 0; i < valuesList.size() && i < totalSize; i++) {
+                Value elemVal = eval(valuesList.get(i));
+                Cell targetCell = new Cell(elementType, new Frame(base + i));
+                values.store(elemVal, targetCell);
             }
         }
         return null;
@@ -280,45 +324,43 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(StructInstanceNodePigLatin node) {
-        // struct declaration with literal -> stack struct
         String name = node.getIdentifier();
         String structType = node.getStructType();
-        List<String> layout = classLayouts.get(structType);
-        int numFields = layout != null ? layout.size() : 0;
+        List<String> fields = structFields(structType);
+        int numFields = fields != null ? fields.size() : 0;
 
-        int base = nextOffset;
-        nextOffset += numFields;
-        structVariables.put(name, new StructInfo(structType, base, false));
+        int base = frame.allocate(numFields);
+        frame.registerStruct(name, new StructInfo(structType, base, false));
+        frame.declare(name, ValueType.INT);
 
-        // Fill fields (positional).
-        if (node.getLiteral() != null && node.getLiteral().getProperties() != null) {
-            List<StructPropertyNodePigLatin> props = node.getLiteral().getProperties();
-            for (int i = 0; i < props.size() && i < numFields; i++) {
-                StructPropertyNodePigLatin prop = props.get(i);
-                if (prop.getValue() == null) continue;
-
-                Type fieldType = typeAnnotations.get(prop.getValue());
-                TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
-                if (kind == TypeKind.CUSTOM || kind == TypeKind.NULL) kind = TypeKind.INT;
-                String suffix = kindToSuffix(kind);
-                String cxReg = "CX_" + suffix.toUpperCase();
-
-                String valueRef = exprToString(prop.getValue());
-                loadRegister(valueRef, cxReg);
-                output.emit("store_" + suffix, "fp + " + (base + i), null, cxReg);
-            }
+        if (node.getLiteral() != null) {
+            populateStructLiteral(base, fields, node.getLiteral());
         }
         return null;
+    }
+
+    private void populateStructLiteral(int baseOffset, List<String> fields, StructLiteralExpressionNodePigLatin lit) {
+        if (lit.getProperties() == null || fields == null) return;
+        List<StructPropertyNodePigLatin> props = lit.getProperties();
+        int count = Math.min(props.size(), fields.size());
+        for (int i = 0; i < count; i++) {
+            StructPropertyNodePigLatin prop = props.get(i);
+            if (prop.getValue() == null) continue;
+            Value val = eval(prop.getValue());
+            Cell targetCell = new Cell(val.type(), new Frame(baseOffset + i));
+            values.store(val, targetCell);
+        }
     }
 
     @Override
     public Void visit(ForInitDeclarationNodePigLatin node) {
         String name = node.getId();
-        allocateLocal(name, node);
+        Type declaredType = mapTypeNodeToType(node.getType());
+        ValueType vType = declaredType != null ? declaredValueType(declaredType) : ValueType.INT;
+        Cell cell = frame.declare(name, vType);
         if (node.getExpr() != null) {
-            String valueRef = exprToString(node.getExpr());
-            String dest = getStackRefByName(name);
-            storeValueTo(valueRef, dest);
+            Value initVal = eval(node.getExpr());
+            values.store(initVal, cell);
         }
         return null;
     }
@@ -326,31 +368,31 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
     @Override
     public Void visit(ForInitAssignmentNodePigLatin node) {
         if (node.getId() != null && node.getExpr() != null) {
-            String targetRef = getStackRefByName(node.getId());
-            String valueRef = exprToString(node.getExpr());
-            storeValueTo(valueRef, targetRef);
+            Cell cell = frame.lookup(node.getId());
+            if (cell != null) {
+                Value val = eval(node.getExpr());
+                values.store(val, cell);
+            }
         }
         return null;
     }
 
     @Override
     public Void visit(ForUpdateNodePigLatin node) {
-        String targetRef = exprToString(node.getTarget());
-        switch (node.getOperator()) {
-            case INCREMENT:
-            case PREFIX_INCREMENT:
-                emitIncDec(targetRef, "+");
-                break;
-            case DECREMENT:
-            case PREFIX_DECREMENT:
-                emitIncDec(targetRef, "-");
-                break;
-            case ASSIGN:
-                if (node.getValue() != null) {
-                    String valueRef = exprToString(node.getValue());
-                    storeValueTo(valueRef, targetRef);
+        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) {
+                switch (node.getOperator()) {
+                    case INCREMENT, PREFIX_INCREMENT -> emitStep(cell, 1);
+                    case DECREMENT, PREFIX_DECREMENT -> emitStep(cell, -1);
+                    case ASSIGN -> {
+                        if (node.getValue() != null) {
+                            Value val = eval(node.getValue());
+                            values.store(val, cell);
+                        }
+                    }
                 }
-                break;
+            }
         }
         return null;
     }
@@ -361,70 +403,159 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(VariableAssignmentNodePigLatin node) {
-        if (node.getIdentifier() instanceof MemberArrayAccessExpressionNodePigLatin arrAccess) {
-            if (!(arrAccess.getTarget() instanceof IdentifierExpressionNodePigLatin id)) return null;
-            String arrayName = id.getIdentifier();
-            ArrayInfo info = arrayInfos.get(arrayName);
-            if (info == null) return null;
+        assign(node.getIdentifier(), eval(node.getExpressionNode()));
+        return null;
+    }
 
-            String suffix = kindToSuffix(info.getElementType());
-            String arrayStack = stackArrayForKind(info.getElementType());
-            String cxReg = "CX_" + suffix.toUpperCase();
-
-            String valueRef = exprToString(node.getExpressionNode());
-            loadRegister(valueRef, cxReg);
-
-            String indexRef = exprToString(arrAccess.getIndex());
-            loadRegister(indexRef, "AX_INT");
-
-            output.emit("array_store_" + suffix,
-                    arrayStack + ", fp + " + info.getBaseOffset(),
-                    "AX_INT",
-                    cxReg);
-            return null;
+    private void assign(ExpressionNodePigLatin target, Value value) {
+        if (target instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell == null) {
+                throw new IllegalStateException("Variable no declarada: " + id.getIdentifier());
+            }
+            values.store(value, cell);
+            return;
         }
 
-        String valueRef = exprToString(node.getExpressionNode());
-        String targetRef = exprToString(node.getIdentifier());
-        storeValueTo(valueRef, targetRef);
-        return null;
+        if (target instanceof PropertyAccessExpressionNodePigLatin prop) {
+            assignProperty(prop, value);
+            return;
+        }
+
+        if (target instanceof MemberArrayAccessExpressionNodePigLatin memberArr) {
+            assignArrayElement(memberArr.getTarget(), memberArr.getIndex(), value);
+            return;
+        }
+
+        if (target instanceof ArrayCallExpressionNodePigLatin arrCall) {
+            ArrayInfo info = frame.arrayOf(arrCall.getArrayName());
+            if (info != null) {
+                assignArrayElementByName(info, arrCall.getIndexExpression(), value);
+            }
+            return;
+        }
+
+        throw new IllegalStateException("Destino de asignación no soportado: " + target);
+    }
+
+    private void assignProperty(PropertyAccessExpressionNodePigLatin prop, Value value) {
+        ExpressionNodePigLatin targetExpr = prop.getTarget();
+        String propName = prop.getPropertyName();
+
+        if (targetExpr instanceof IdentifierExpressionNodePigLatin id) {
+            StructInfo sinfo = frame.structOf(id.getIdentifier());
+            if (sinfo != null) {
+                List<String> layout = structFields(sinfo.getStructTypeName());
+                int offset = layout != null ? layout.indexOf(propName) : -1;
+                if (offset >= 0) {
+                    Cell cell = new Cell(value.type(), new Frame(sinfo.getBaseOffset() + offset));
+                    values.store(value, cell);
+                    return;
+                }
+            }
+        }
+
+        Value objVal = eval(targetExpr);
+        Symbol cls = classSymbolOf(targetExpr);
+        if (cls != null) {
+            Symbol field = findFieldSymbol(cls, propName);
+            storeFieldToHeap(objVal, field, value);
+            return;
+        }
+
+        throw new IllegalStateException("Propiedad no resuelta: " + propName);
+    }
+
+    private void assignArrayElement(ExpressionNodePigLatin target, ExpressionNodePigLatin indexExpr, Value value) {
+        if (target instanceof IdentifierExpressionNodePigLatin id) {
+            ArrayInfo info = frame.arrayOf(id.getIdentifier());
+            if (info != null) {
+                assignArrayElementByName(info, indexExpr, value);
+                return;
+            }
+        }
+        throw new IllegalStateException("Asignación a arreglo no soportada para: " + target);
+    }
+
+    private void assignArrayElementByName(ArrayInfo info, ExpressionNodePigLatin indexExpr, Value value) {
+        ValueType element = IntermediateTypes.of(info.getElementType());
+        Register index = Register.ax(ValueType.INT);
+        values.load(eval(indexExpr), index);
+        Register regValue = Register.cx(element);
+        values.loadCoerced(value, regValue);
+
+        if (info.isHeap()) {
+            Register pointer = Register.bx(ValueType.INT);
+            ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), pointer));
+            ir.emit(new IndexAddress(pointer, index, pointer));
+            ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, 0), regValue));
+        } else {
+            ir.emit(new StoreIndexed(new Frame(info.getBaseOffset()), index, regValue));
+        }
     }
 
     @Override
     public Void visit(ShortlyOperationNodePigLatin node) {
-        String targetRef = exprToString(node.getTarget());
-        String valueRef = exprToString(node.getValue());
-        String op = shortlyOpToBinary(node.getOperator());
-
-        loadRegister(targetRef, "AX_INT");
-        loadRegister(valueRef, "BX_INT");
-        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
+        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) {
+                Value right = eval(node.getValue());
+                BinaryOperations bop = shortlyOpToBinary(node.getOperator());
+                Register a = Register.ax(cell.getType()), b = Register.bx(cell.getType()), c = Register.cx(cell.getType());
+                values.load(cell, a);
+                values.loadCoerced(right, b);
+                ir.emit(new BinaryOperation(bop, a, b, c));
+                values.store(c, cell);
+            }
+        }
         return null;
     }
 
     @Override
     public Void visit(IncrementStatementNodePigLatin node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "+");
+        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) emitStep(cell, 1);
+        }
         return null;
     }
 
     @Override
     public Void visit(DecrementStatementNodePigLatin node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "-");
+        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) emitStep(cell, -1);
+        }
         return null;
     }
 
     @Override
     public Void visit(IncrementPrevStatementNodePigLatin node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "+");
+        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) emitStep(cell, 1);
+        }
         return null;
     }
 
     @Override
     public Void visit(DecrementPrevStatementNodePigLatin node) {
-        emitIncDec(exprToString(node.getTargetVariable()), "-");
+        if (node.getTargetVariable() instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) emitStep(cell, -1);
+        }
         return null;
+    }
+
+    private void emitStep(Cell cell, int delta) {
+        Register r = Register.ax(cell.getType());
+        values.load(cell, r);
+        Register one = Register.bx(cell.getType());
+        values.load(new Constant(String.valueOf(Math.abs(delta)), cell.getType()), one);
+        Register result = Register.cx(cell.getType());
+        BinaryOperations op = delta > 0 ? BinaryOperations.ADD : BinaryOperations.SUB;
+        ir.emit(new BinaryOperation(op, r, one, result));
+        values.store(result, cell);
     }
 
     @Override
@@ -437,12 +568,10 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
     public Void visit(PrintStatementNodePigLatin node) {
         if (node.getExpressionList() != null) {
             for (ExpressionNodePigLatin expr : node.getExpressionList()) {
-                String valueRef = exprToString(expr);
-                Type t = typeAnnotations.get(expr);
-                String typeName = typeToString(t);
-                String register = registerFor(typeName);
-                loadRegister(valueRef, register);
-                output.emit("println", register, typeName, null);
+                Value val = eval(expr);
+                Register reg = Register.ax(val.type());
+                values.load(val, reg);
+                ir.emit(new Print(val.type(), reg));
             }
         }
         return null;
@@ -450,96 +579,84 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ReadStatementNodePigLatin node) {
-        if (node.getTarget() != null) {
-            String targetRef = exprToString(node.getTarget());
-            Type t = typeAnnotations.get(node.getTarget());
-            TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-            if (kind == TypeKind.STRING) {
-                output.emit("read_string_to", targetRef, null, null);
-            } else {
-                output.emit("read_int_to", targetRef, null, null);
+        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) {
+                ir.emit(new Read(cell.getType(), cell.getAddress()));
             }
         } else {
-            int offset = nextOffset++;
-            output.emit("read_string", String.valueOf(offset), null, null);
+            Cell temp = frame.temp(ValueType.STRING);
+            ir.emit(new Read(ValueType.STRING, temp.getAddress()));
         }
         return null;
     }
 
     @Override
     public Void visit(ReturnStatementNodePigLatin node) {
-        if (node.getValue() != null) {
-            String valueRef = exprToString(node.getValue());
-            Type t = typeAnnotations.get(node.getValue());
-            String arrayName = stackArrayForKind(t != null ? t.getKind() : TypeKind.INT);
-            String dest = arrayName + "[fp + 0]";
-            storeValueTo(valueRef, dest);
-        }
-        output.emit("return", null, null, null);
+        ir.emit(new Return());
         return null;
     }
 
     @Override
     public Void visit(BreakStatementNodePigLatin node) {
-        if (!breakLabels.isEmpty()) output.emit("goto", null, null, breakLabels.peek());
+        if (!breakLabels.isEmpty()) {
+            ir.emit(new Jump(breakLabels.peek()));
+        }
         return null;
     }
 
     @Override
     public Void visit(ContinueStatementNodePigLatin node) {
-        if (!continueLabels.isEmpty()) output.emit("goto", null, null, continueLabels.peek());
+        if (!continueLabels.isEmpty()) {
+            ir.emit(new Jump(continueLabels.peek()));
+        }
         return null;
     }
 
-    // ============================================================
-    // CONTROL FLOW
-    // ============================================================
-
     @Override
     public Void visit(IfStatementNodePigLatin node) {
-        String endLabel = ctx.nextLabel();
+        String endLabel = labels.nextLabel();
+        String nextLabel = node.getElseIfs() != null && !node.getElseIfs().isEmpty() || node.getElseBlockNode() != null
+                ? labels.nextLabel() : endLabel;
 
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-
-        String elseLabel = ctx.nextLabel();
-        output.emit("ifFalse", "AX_INT", null, elseLabel);
+        Value cond = eval(node.getCondition());
+        Register condReg = Register.ax(ValueType.BOOLEAN);
+        values.loadCoerced(cond, condReg);
+        ir.emit(new BranchIf(BranchCondition.FALSE, condReg, nextLabel));
 
         if (node.getThenBody() != null) {
-            for (PigLatinAstNode s : node.getThenBody()) {
-                if (s != null) s.accept(this);
-            }
+            for (PigLatinAstNode s : node.getThenBody()) if (s != null) s.accept(this);
         }
-        output.emit("goto", null, null, endLabel);
-        output.emit("label", elseLabel, null, null);
 
-        if (node.getElseIfs() != null) {
-            for (ElseIfNodePigLatin elseIf : node.getElseIfs()) {
-                if (elseIf == null) continue;
+        if (nextLabel != endLabel) {
+            ir.emit(new Jump(endLabel));
+            ir.emit(new MarkLabel(nextLabel));
 
-                String condRef2 = exprToString(elseIf.getCondition());
-                loadRegister(condRef2, "AX_INT");
+            if (node.getElseIfs() != null) {
+                for (ElseIfNodePigLatin elseIf : node.getElseIfs()) {
+                    if (elseIf == null) continue;
+                    String elseIfNext = labels.nextLabel();
+                    Value elseIfCond = eval(elseIf.getCondition());
+                    Register elseIfReg = Register.ax(ValueType.BOOLEAN);
+                    values.loadCoerced(elseIfCond, elseIfReg);
+                    ir.emit(new BranchIf(BranchCondition.FALSE, elseIfReg, elseIfNext));
 
-                String nextElse = ctx.nextLabel();
-                output.emit("ifFalse", "AX_INT", null, nextElse);
-
-                if (elseIf.getBody() != null) {
-                    for (PigLatinAstNode s : elseIf.getBody()) {
-                        if (s != null) s.accept(this);
+                    if (elseIf.getBody() != null) {
+                        for (PigLatinAstNode s : elseIf.getBody()) if (s != null) s.accept(this);
                     }
+                    ir.emit(new Jump(endLabel));
+                    ir.emit(new MarkLabel(elseIfNext));
                 }
-                output.emit("goto", null, null, endLabel);
-                output.emit("label", nextElse, null, null);
+            }
+
+            if (node.getElseBlockNode() != null && node.getElseBlockNode().getBody() != null) {
+                for (PigLatinAstNode s : node.getElseBlockNode().getBody()) {
+                    if (s != null) s.accept(this);
+                }
             }
         }
 
-        if (node.getElseBlockNode() != null && node.getElseBlockNode().getBody() != null) {
-            for (PigLatinAstNode s : node.getElseBlockNode().getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        output.emit("label", endLabel, null, null);
+        ir.emit(new MarkLabel(endLabel));
         return null;
     }
 
@@ -560,77 +677,74 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(WhileStatementNodePigLatin node) {
-        String startLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String startLabel = labels.nextLabel();
+        String endLabel = labels.nextLabel();
 
-        output.emit("label", startLabel, null, null);
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-        output.emit("ifFalse", "AX_INT", null, endLabel);
+        ir.emit(new MarkLabel(startLabel));
+        Value cond = eval(node.getCondition());
+        Register condReg = Register.ax(ValueType.BOOLEAN);
+        values.loadCoerced(cond, condReg);
+        ir.emit(new BranchIf(BranchCondition.FALSE, condReg, endLabel));
 
         breakLabels.push(endLabel);
         continueLabels.push(startLabel);
-
         if (node.getBody() != null) node.getBody().accept(this);
-
         continueLabels.pop();
         breakLabels.pop();
 
-        output.emit("goto", null, null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new Jump(startLabel));
+        ir.emit(new MarkLabel(endLabel));
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodePigLatin node) {
-        String startLabel = ctx.nextLabel();
-        String condLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String startLabel = labels.nextLabel();
+        String condLabel = labels.nextLabel();
+        String endLabel = labels.nextLabel();
 
-        output.emit("label", startLabel, null, null);
+        ir.emit(new MarkLabel(startLabel));
         breakLabels.push(endLabel);
         continueLabels.push(condLabel);
-
         if (node.getBody() != null) node.getBody().accept(this);
-
         continueLabels.pop();
         breakLabels.pop();
 
-        output.emit("label", condLabel, null, null);
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-        output.emit("ifTrue", "AX_INT", null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new MarkLabel(condLabel));
+        Value cond = eval(node.getCondition());
+        Register condReg = Register.ax(ValueType.BOOLEAN);
+        values.loadCoerced(cond, condReg);
+        ir.emit(new BranchIf(BranchCondition.TRUE, condReg, startLabel));
+        ir.emit(new MarkLabel(endLabel));
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodePigLatin node) {
-        String startLabel = ctx.nextLabel();
-        String continueLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String startLabel = labels.nextLabel();
+        String updateLabel = labels.nextLabel();
+        String endLabel = labels.nextLabel();
 
         if (node.getInit() != null) node.getInit().accept(this);
-        output.emit("label", startLabel, null, null);
 
+        ir.emit(new MarkLabel(startLabel));
         if (node.getCondition() != null) {
-            String condRef = exprToString(node.getCondition());
-            loadRegister(condRef, "AX_INT");
-            output.emit("ifFalse", "AX_INT", null, endLabel);
+            Value cond = eval(node.getCondition());
+            Register condReg = Register.ax(ValueType.BOOLEAN);
+            values.loadCoerced(cond, condReg);
+            ir.emit(new BranchIf(BranchCondition.FALSE, condReg, endLabel));
         }
 
         breakLabels.push(endLabel);
-        continueLabels.push(continueLabel);
-
+        continueLabels.push(updateLabel);
         if (node.getBody() != null) node.getBody().accept(this);
-
         continueLabels.pop();
         breakLabels.pop();
 
-        output.emit("label", continueLabel, null, null);
+        ir.emit(new MarkLabel(updateLabel));
         if (node.getUpdate() != null) node.getUpdate().accept(this);
-        output.emit("goto", null, null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new Jump(startLabel));
+        ir.emit(new MarkLabel(endLabel));
         return null;
     }
 
@@ -649,117 +763,99 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         Object value = node.getDataValue();
 
         if (t != null && t.getKind() == TypeKind.STRING) {
-            lastExpr = stringPool.intern(String.valueOf(value));
+            last = new Text(ir.intern(String.valueOf(value)));
             return null;
         }
         if (t != null && t.getKind() == TypeKind.BOOLEAN) {
-            lastExpr = Boolean.TRUE.equals(value) ? "1" : "0";
+            last = new Constant(Boolean.TRUE.equals(value) ? "1" : "0", ValueType.BOOLEAN);
             return null;
         }
         if (t != null && t.getKind() == TypeKind.NULL) {
-            lastExpr = "0";
+            last = new Constant("0", ValueType.INT);
             return null;
         }
 
         if (value == null) {
-            if (node.getValueType() == DataType.INT) lastExpr = "0";
-            else if (node.getValueType() == DataType.DECIMAL) lastExpr = "0.0";
-            else if (node.getValueType() == DataType.CHAR) lastExpr = "'\\0'";
-            else if (node.getValueType() == DataType.STRING) lastExpr = "\"\"";
-            else if (node.getValueType() == DataType.BOOLEAN) lastExpr = "0";
-            else lastExpr = "0";
+            last = switch (node.getValueType()) {
+                case DECIMAL -> new Constant("0.0", ValueType.FLOAT);
+                case CHAR -> new Constant("0", ValueType.CHAR);
+                case STRING -> new Text(ir.intern(""));
+                case BOOLEAN -> new Constant("0", ValueType.BOOLEAN);
+                default -> new Constant("0", ValueType.INT);
+            };
             return null;
         }
 
-        lastExpr = String.valueOf(value);
+        last = switch (node.getValueType()) {
+            case DECIMAL -> new Constant(String.valueOf(value), ValueType.FLOAT);
+            case CHAR -> new Constant(charCode(value), ValueType.CHAR);
+            case STRING -> new Text(ir.intern(String.valueOf(value)));
+            case BOOLEAN -> new Constant(Boolean.TRUE.equals(value) ? "1" : "0", ValueType.BOOLEAN);
+            default -> new Constant(String.valueOf(value), ValueType.INT);
+        };
         return null;
     }
 
     @Override
     public Void visit(IdentifierExpressionNodePigLatin node) {
-        lastExpr = getStackRefByName(node.getIdentifier());
+        Cell cell = frame.lookup(node.getIdentifier());
+        if (cell == null) {
+            last = new Constant("0", ValueType.INT);
+            return null;
+        }
+        last = cell;
         return null;
     }
 
     @Override
     public Void visit(BinaryExpressionNodePigLatin node) {
-        Type leftType = typeAnnotations.get(node.getLeft());
-        Type rightType = typeAnnotations.get(node.getRight());
-        Type resultType = typeAnnotations.get(node);
+        Value left = eval(node.getLeft());
+        Value right = eval(node.getRight());
+        BinaryOperations op = binaryOpToIntermediate(node.getOperator());
+        Type resultTypeAnn = typeAnnotations.get(node);
+        ValueType annotated = resultTypeAnn != null ? declaredValueType(resultTypeAnn) : null;
 
-        TypeKind leftKind = leftType != null ? leftType.getKind() : TypeKind.INT;
-        TypeKind rightKind = rightType != null ? rightType.getKind() : TypeKind.INT;
-
-        TypeKind operandKind;
-        if (leftKind == TypeKind.NULL || leftKind == TypeKind.CUSTOM
-                || rightKind == TypeKind.NULL || rightKind == TypeKind.CUSTOM) {
-            operandKind = TypeKind.INT;
-        } else if (leftKind == TypeKind.STRING || rightKind == TypeKind.STRING) {
-            operandKind = TypeKind.STRING;
-        } else if (leftKind == TypeKind.FLOAT || rightKind == TypeKind.FLOAT) {
-            operandKind = TypeKind.FLOAT;
-        } else {
-            operandKind = TypeKind.INT;
-        }
-
-        TypeKind resultKind = resultType != null ? resultType.getKind() : TypeKind.INT;
-        String resultSuffix = kindToSuffix(resultKind);
-        String cReg = "CX_" + resultSuffix.toUpperCase();
-
-        boolean isStringConcat = (resultKind == TypeKind.STRING
-                && node.getOperator() == BinaryOperator.PLUS);
-
-        String leftRef = exprToString(node.getLeft());
-        String rightRef = exprToString(node.getRight());
-
-        if (isStringConcat) {
-            String leftStr = ensureStringRef(leftRef, leftKind);
-            String rightStr = ensureStringRef(rightRef, rightKind);
-
-            loadRegister(leftStr, "AX_STRING");
-            loadRegister(rightStr, "BX_STRING");
-            output.emit("strcat", "AX_STRING", "BX_STRING", "CX_STRING");
-
-            int offset = nextOffset++;
-            output.emit("store_string", "fp + " + offset, null, "CX_STRING");
-            lastExpr = "stackstring[fp + " + offset + "]";
+        if (annotated == ValueType.STRING && op == BinaryOperations.ADD) {
+            last = concat(left, right);
             return null;
         }
 
-        String operandSuffix = kindToSuffix(operandKind);
-        String aReg = "AX_" + operandSuffix.toUpperCase();
-        String bReg = "BX_" + operandSuffix.toUpperCase();
+        ValueType operandType = operandTypeOf(left, right);
+        ValueType resultType = annotated != null ? annotated : (op.isComparison() || op.isLogical() ? ValueType.BOOLEAN : operandType);
 
-        loadRegister(leftRef, aReg);
-        loadRegister(rightRef, bReg);
-
-        String op = binaryOpToSymbol(node.getOperator());
-        output.emit(op, aReg, bReg, cReg);
-
-        int offset = nextOffset++;
-        String dest = stackArrayForKind(resultKind) + "[fp + " + offset + "]";
-        output.emit("store_" + resultSuffix, "fp + " + offset, null, cReg);
-        lastExpr = dest;
+        Register a = Register.ax(operandType), b = Register.bx(operandType), c = Register.cx(resultType);
+        values.loadCoerced(left, a);
+        values.loadCoerced(right, b);
+        ir.emit(new BinaryOperation(op, a, b, c));
+        last = values.spill(c);
         return null;
+    }
+
+    private Value concat(Value left, Value right) {
+        Value l = values.asString(left);
+        Value r = values.asString(right);
+        Register a = Register.ax(ValueType.STRING), b = Register.bx(ValueType.STRING), c = Register.cx(ValueType.STRING);
+        values.load(l, a);
+        values.load(r, b);
+        ir.emit(new StringConcat(a, b, c));
+        return values.spill(c);
     }
 
     @Override
     public Void visit(UnaryExpressionNodePigLatin node) {
-        String operandRef = exprToString(node.getExpressionNode());
-        loadRegister(operandRef, "AX_INT");
-
-        String op = unaryOpToSymbol(node.getOperator());
-        output.emit(op, "AX_INT", null, "CX_INT");
-
-        int offset = nextOffset++;
-        String dest = "stackinteger[fp + " + offset + "]";
-        output.emit("store_int", "fp + " + offset, null, "CX_INT");
-        lastExpr = dest;
+        Value operand = eval(node.getExpressionNode());
+        UnaryOperations op = unaryOpToIntermediate(node.getOperator());
+        ValueType type = op == UnaryOperations.NOT ? ValueType.BOOLEAN
+                : (operand.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT);
+        Register a = Register.ax(type), c = Register.cx(type);
+        values.load(operand, a);
+        ir.emit(new UnaryOperation(op, a, c));
+        last = values.spill(c);
         return null;
     }
 
     // ============================================================
-    // OBJECTS AND STRUCTS
+    // OBJECTS (Z), FUNCTIONS (Y) & STRUCTS
     // ============================================================
 
     @Override
@@ -768,252 +864,212 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         if ("String".equals(className)) {
             if (node.getArguments() != null && !node.getArguments().isEmpty()) {
-                lastExpr = exprToString(node.getArguments().get(0));
+                last = eval(node.getArguments().get(0));
             } else {
-                lastExpr = "\"\"";
+                last = new Text(ir.intern(""));
             }
             return null;
         }
 
-        output.emit("sptr_inc", "200", null, null);
+        emitObjectCreation(className, node.getArguments(), node);
+        return null;
+    }
 
-        List<String> fields = classLayouts.get(className);
-        int numFields = fields != null ? fields.size() : 0;
+    private void emitObjectCreation(String className, List<ExpressionNodePigLatin> args, AstNode callNode) {
+        Symbol cls = findClassSymbol(className);
+        if (cls == null) throw new IllegalStateException("Clase no encontrada: " + className);
+        inheritance.link(cls);
 
-        output.emit("heap_alloc", String.valueOf(numFields), null, "AX_INT");
+        int slots = cls.getFieldSlots().size() + 1;
 
-        int ptrSlot = nextOffset++;
-        output.emit("store_int", "fp + " + ptrSlot, null, "AX_INT");
+        Register objPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(slots, objPtr));
 
-        List<ExpressionNodePigLatin> args = node.getArguments();
-        int numArgs = args != null ? args.size() : 0;
+        Register vptrReg = Register.bx(ValueType.INT);
+        ir.emit(new LoadLabelAddress(cls.getVtableLabel(), vptrReg));
+        ir.emit(new Store(MemorySpace.HEAP, new Indirect(objPtr, 0), vptrReg));
 
-        output.emit("sptr_inc", "1", null, null);
-        output.emit("load_int", "fp + " + ptrSlot, null, "AX_INT");
-        output.emit("store_int", "sptr", null, "AX_INT");
-        output.emit("sptr_inc", "1", null, null);
+        Symbol ctor = resolvedCalls.get(callNode);
+        if (ctor == null) {
+            ctor = findConstructorByParams(cls, args != null ? args : List.of());
+        }
+
+        ir.emit(new AdjustStackTop(CALL_AREA));
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), objPtr));
+        ir.emit(new AdjustStackTop(1));
 
         if (args != null) {
-            for (ExpressionNodePigLatin arg : args) {
-                String argRef = exprToString(arg);
-                Type t = typeAnnotations.get(arg);
-                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-                String suffix = kindToSuffix(kind);
-                String axReg = "AX_" + suffix.toUpperCase();
-                loadRegister(argRef, axReg);
-                output.emit("store_" + suffix, "sptr", null, axReg);
-                output.emit("sptr_inc", "1", null, null);
+            for (ExpressionNodePigLatin arg : args) pushArgument(arg);
+        }
+
+        String ctorLabel = NameMangler.codeLabel(ctor);
+        ir.emit(new Call(ctorLabel));
+
+        int totalArgs = 1 + (args != null ? args.size() : 0);
+        ir.emit(new AdjustStackTop(-(totalArgs + CALL_AREA)));
+
+        last = values.spill(objPtr);
+    }
+
+    @Override
+    public Void visit(FunctionCallExpressionNodePigLatin node) {
+        boolean isMethodCall = node.getTarget() != null;
+        List<ExpressionNodePigLatin> args = node.getArguments() != null ? node.getArguments() : List.of();
+
+        if (isMethodCall) {
+            emitMethodCall(node, args);
+        } else {
+            emitFunctionCall(node, args);
+        }
+        return null;
+    }
+
+    private void emitMethodCall(FunctionCallExpressionNodePigLatin node, List<ExpressionNodePigLatin> args) {
+        Value selfVal = eval(node.getTarget());
+        Register selfReg = Register.ax(ValueType.INT);
+        values.load(selfVal, selfReg);
+
+        Symbol targetMethod = resolvedCalls.get(node);
+        if (targetMethod == null) {
+            Symbol targetClass = classSymbolOf(node.getTarget());
+            if (targetClass != null) {
+                targetMethod = findMethodInClass(targetClass, node.getFunctionName(), args.size());
             }
         }
 
-        String ctorName = className + "_" + className + "_" + numArgs;
-        output.emit("call", ctorName, null, null);
-        output.emit("sptr_dec", String.valueOf(numArgs + 2 + 200), null, null);
+        if (targetMethod == null) {
+            throw new IllegalStateException("Método no resuelto para la llamada: " + node.getFunctionName() + " en línea " + node.getLine());
+        }
 
-        lastExpr = "stackinteger[fp + " + ptrSlot + "]";
-        return null;
+        ir.emit(new AdjustStackTop(CALL_AREA));
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), selfReg));
+        ir.emit(new AdjustStackTop(1));
+
+        for (ExpressionNodePigLatin arg : args) pushArgument(arg);
+
+        int totalArgs = 1 + args.size();
+
+        if (!targetMethod.isVirtual()) {
+            ir.emit(new Call(NameMangler.codeLabel(targetMethod)));
+        } else {
+            Register vptr = Register.bx(ValueType.INT);
+            Register fnPtr = Register.cx(ValueType.INT);
+            ir.emit(new Load(MemorySpace.HEAP, new Indirect(selfReg, 0), vptr));
+            ir.emit(new Load(MemorySpace.HEAP, new Indirect(vptr, targetMethod.getVtableIndex()), fnPtr));
+            ir.emit(new CallIndirect(fnPtr));
+        }
+
+        if (!"void".equalsIgnoreCase(targetMethod.getReturnType())) {
+            ValueType retType = returnTypeOf(targetMethod);
+            Register result = Register.cx(retType);
+            ir.emit(new Load(MemorySpace.STACK, new StackTop(-(totalArgs + 1)), result));
+            last = values.spill(result);
+        } else {
+            last = null;
+        }
+
+        ir.emit(new AdjustStackTop(-(totalArgs + CALL_AREA)));
+    }
+
+    private void emitFunctionCall(FunctionCallExpressionNodePigLatin node, List<ExpressionNodePigLatin> args) {
+        Symbol targetFn = resolvedCalls.get(node);
+        if (targetFn == null) {
+            targetFn = findFunctionByName(node.getFunctionName(), args.size());
+        }
+
+        int n = args.size();
+        ir.emit(new AdjustStackTop(CALL_AREA));
+        for (ExpressionNodePigLatin arg : args) pushArgument(arg);
+
+        String callLabel = targetFn != null ? NameMangler.resolveCallLabel(targetFn) : node.getFunctionName();
+        ir.emit(new Call(callLabel));
+
+        Type retTypeAnn = typeAnnotations.get(node);
+        ValueType retType = retTypeAnn != null ? declaredValueType(retTypeAnn) : (targetFn != null ? returnTypeOf(targetFn) : ValueType.INT);
+
+        if (retTypeAnn == null || retTypeAnn.getKind() != TypeKind.VOID) {
+            Register result = Register.cx(retType);
+            ir.emit(new Load(MemorySpace.STACK, new StackTop(-(n + 1)), result));
+            last = values.spill(result);
+        } else {
+            last = null;
+        }
+
+        ir.emit(new AdjustStackTop(-(n + CALL_AREA)));
     }
 
     @Override
     public Void visit(PropertyAccessExpressionNodePigLatin node) {
-        ExpressionNodePigLatin target = node.getTarget();
-        String fieldName = node.getPropertyName();
+        String prop = node.getPropertyName();
 
-        if (!(target instanceof IdentifierExpressionNodePigLatin id)) return null;
-        String idName = id.getIdentifier();
-
-        ObjectInfo oinfo = objectVariables.get(idName);
-        if (oinfo != null) {
-            List<String> layout = classLayouts.get(oinfo.getClassName());
-            if (layout == null) return null;
-            int fieldOffset = layout.indexOf(fieldName);
-            if (fieldOffset < 0) return null;
-
-            Type fieldType = typeAnnotations.get(node);
-            TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
-            String suffix = kindToSuffix(kind);
-            String cxReg = "CX_" + suffix.toUpperCase();
-
-            output.emit("load_int", "fp + " + oinfo.getPtrSlot(), null, "AX_INT");
-            output.emit("heap_load_" + suffix,
-                    "stackinteger[AX_INT] + " + fieldOffset, null, cxReg);
-
-            int dest = nextOffset++;
-            output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-            lastExpr = stackArrayForKind(kind) + "[fp + " + dest + "]";
-            return null;
+        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+            StructInfo sinfo = frame.structOf(id.getIdentifier());
+            if (sinfo != null) {
+                List<String> layout = structFields(sinfo.getStructTypeName());
+                int offset = layout != null ? layout.indexOf(prop) : -1;
+                if (offset >= 0) {
+                    Type fieldType = typeAnnotations.get(node);
+                    ValueType vType = fieldType != null ? declaredValueType(fieldType) : ValueType.INT;
+                    if (sinfo.isReference()) {
+                        Register pointer = Register.ax(ValueType.INT);
+                        Register result = Register.cx(vType);
+                        ir.emit(new Load(MemorySpace.STACK, new Frame(sinfo.getBaseOffset()), pointer));
+                        ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, offset), result));
+                        last = values.spill(result);
+                    } else {
+                        last = new Cell(vType, new Frame(sinfo.getBaseOffset() + offset));
+                    }
+                    return null;
+                }
+            }
         }
 
-        StructInfo sinfo = structVariables.get(idName);
-        if (sinfo != null) {
-            List<String> layout = classLayouts.get(sinfo.getStructTypeName());
-            if (layout == null) return null;
-            int fieldOffset = layout.indexOf(fieldName);
-            if (fieldOffset < 0) return null;
-
-            Type fieldType = typeAnnotations.get(node);
-            TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
-            String arrayName = stackArrayForKind(kind);
-            lastExpr = arrayName + "[fp + " + (sinfo.getBaseOffset() + fieldOffset) + "]";
-            return null;
-        }
-
+        Value targetVal = eval(node.getTarget());
+        Symbol targetClass = classSymbolOf(node.getTarget());
+        Symbol field = findFieldSymbol(targetClass, prop);
+        last = loadFieldFromHeap(targetVal, field);
         return null;
     }
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodePigLatin node) {
-        if (!(node.getTarget() instanceof IdentifierExpressionNodePigLatin id)) {
-            return null;
+        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+            ArrayInfo info = frame.arrayOf(id.getIdentifier());
+            if (info != null) {
+                loadArrayElement(info, node.getIndex());
+                return null;
+            }
         }
-        String arrayName = id.getIdentifier();
-        ArrayInfo info = arrayInfos.get(arrayName);
-        if (info == null) return null;
-
-        String suffix = kindToSuffix(info.getElementType());
-        String arrayStack = stackArrayForKind(info.getElementType());
-        String cxReg = "CX_" + suffix.toUpperCase();
-        int dest = nextOffset++;
-
-        String indexRef = exprToString(node.getIndex());
-        loadRegister(indexRef, "AX_INT");
-
-        output.emit("array_load_" + suffix,
-                arrayStack + ", fp + " + info.getBaseOffset(),
-                "AX_INT",
-                cxReg);
-
-        output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-        lastExpr = arrayStack + "[fp + " + dest + "]";
+        last = new Constant("0", ValueType.INT);
         return null;
     }
 
     @Override
     public Void visit(ArrayCallExpressionNodePigLatin node) {
-        System.out.println("ARRAY CALL: " + node.getArrayName() + " info=" + arrayInfos.get(node.getArrayName()));
-        String arrayName = node.getArrayName();
-        ArrayInfo info = arrayInfos.get(arrayName);
-        if (info == null) return null;
-
-        String suffix = kindToSuffix(info.getElementType());
-        String arrayStack = stackArrayForKind(info.getElementType());
-        String cxReg = "CX_" + suffix.toUpperCase();
-        int dest = nextOffset++;
-
-        String indexRef = exprToString(node.getIndexExpression());
-        loadRegister(indexRef, "AX_INT");
-        output.emit("array_load_" + suffix,
-                arrayStack + ", fp + " + info.getBaseOffset(),
-                "AX_INT",
-                cxReg);
-
-        output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-        lastExpr = arrayStack + "[fp + " + dest + "]";
+        ArrayInfo info = frame.arrayOf(node.getArrayName());
+        if (info != null) {
+            loadArrayElement(info, node.getIndexExpression());
+            return null;
+        }
+        last = new Constant("0", ValueType.INT);
         return null;
     }
 
-    @Override
-    public Void visit(FunctionCallExpressionNodePigLatin node) {
+    private void loadArrayElement(ArrayInfo info, ExpressionNodePigLatin indexExpr) {
+        ValueType element = IntermediateTypes.of(info.getElementType());
+        Register index = Register.ax(ValueType.INT);
+        Register result = Register.cx(element);
 
-        String funcName = node.getFunctionName();
-        List<ExpressionNodePigLatin> args = node.getArguments();
-        int numArgs = args != null ? args.size() : 0;
-
-        boolean isMethodCall = node.getTarget() != null;
-        String targetFunc;
-        boolean pushSelf = false;
-
-        output.emit("sptr_inc", "200", null, null);
-
-        if (isMethodCall) {
-            String className = null;
-            String selfPtrExpr = null;
-
-            if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
-                ObjectInfo oinfo = objectVariables.get(id.getIdentifier());
-                if (oinfo != null) {
-                    className = oinfo.getClassName();
-                    selfPtrExpr = "fp + " + oinfo.getPtrSlot();
-                }
-            }
-
-            if (className == null || selfPtrExpr == null) {
-                output.emit("sptr_dec", "200", null, null);
-                return null;
-            }
-
-            // an inherited method lives in the DECLARING class (Padre_metodo_n), not in the variable's class
-            targetFunc = resolveMethodLabel(className, funcName, numArgs);
-            pushSelf = true;
-
-            output.emit("sptr_inc", "1", null, null);
-            output.emit("load_int", selfPtrExpr, null, "AX_INT");
-            output.emit("store_int", "sptr", null, "AX_INT");
-            output.emit("sptr_inc", "1", null, null);
+        values.load(eval(indexExpr), index);
+        if (info.isHeap()) {
+            Register pointer = Register.bx(ValueType.INT);
+            ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), pointer));
+            ir.emit(new IndexAddress(pointer, index, pointer));
+            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, 0), result));
         } else {
-            targetFunc = resolveFunctionName(funcName);
-            output.emit("sptr_inc", "1", null, null);
+            ir.emit(new LoadIndexed(new Frame(info.getBaseOffset()), index, result));
         }
-
-        if (args != null) {
-            for (ExpressionNodePigLatin arg : args) {
-                if (arg instanceof IdentifierExpressionNodePigLatin id) {         // FIX: mismo bloque que Y
-                    String name = id.getIdentifier();
-
-                    ArrayInfo aInfo = arrayInfos.get(name);
-                    if (aInfo != null) {
-                        output.emit("+", "fp", String.valueOf(aInfo.getBaseOffset()), "AX_INT");
-                        output.emit("store_int", "sptr", null, "AX_INT");
-                        output.emit("sptr_inc", "1", null, null);
-                        continue;
-                    }
-
-                    StructInfo sInfo = structVariables.get(name);
-                    if (sInfo != null) {
-                        output.emit("+", "fp", String.valueOf(sInfo.getBaseOffset()), "AX_INT");
-                        output.emit("store_int", "sptr", null, "AX_INT");
-                        output.emit("sptr_inc", "1", null, null);
-                        continue;
-                    }
-                }
-
-                String argRef = exprToString(arg);
-                Type t = typeAnnotations.get(arg);
-                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-                if (kind == TypeKind.CUSTOM || kind == TypeKind.NULL) kind = TypeKind.INT;
-                String suffix = kindToSuffix(kind);
-                String axReg = "AX_" + suffix.toUpperCase();
-                loadRegister(argRef, axReg);
-                output.emit("store_" + suffix, "sptr", null, axReg);
-                output.emit("sptr_inc", "1", null, null);
-            }
-        }
-
-        output.emit("call", targetFunc, null, null);
-
-        Type returnType = typeAnnotations.get(node);
-        TypeKind returnKind = returnType != null ? returnType.getKind() : TypeKind.INT;
-        int extra = pushSelf ? 1 : 0;
-        int retOffset = numArgs + 1 + extra;
-        int cleanup = numArgs + 1 + extra + 200;
-
-        if (returnKind == TypeKind.VOID) {
-            output.emit("sptr_dec", String.valueOf(cleanup), null, null);
-            lastExpr = null;
-            return null;
-        }
-
-        String returnSuffix = kindToSuffix(returnKind);
-        String returnArray = stackArrayForKind(returnKind);
-        String cxReg = "CX_" + returnSuffix.toUpperCase();
-
-        output.emit("load_" + returnSuffix, "sptr - " + retOffset, null, cxReg);
-        int destOffset = nextOffset++;
-        output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
-        output.emit("sptr_dec", String.valueOf(cleanup), null, null);
-
-        lastExpr = returnArray + "[fp + " + destOffset + "]";
-        return null;
+        last = values.spill(result);
     }
 
     @Override
@@ -1056,37 +1112,193 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visit(AccessorNodePigLatin node) {
+    // ============================================================
+    // HEAP / FIELD ACCESS HELPERS
+    // ============================================================
+
+    private Value loadFieldFromHeap(Value objRef, Symbol field) {
+        if (field == null) throw new IllegalStateException("Campo nulo al intentar leer de heap");
+        int slot = field.getFieldIndex() + 1;
+        ValueType type = declaredType(field.getType());
+        Register objReg = Register.ax(ValueType.INT);
+        values.load(objRef, objReg);
+
+        Register result = Register.cx(type);
+        ir.emit(new Load(MemorySpace.HEAP, new Indirect(objReg, slot), result));
+        return values.spill(result);
+    }
+
+    private void storeFieldToHeap(Value objRef, Symbol field, Value value) {
+        if (field == null) throw new IllegalStateException("Campo nulo al intentar escribir en heap");
+        int slot = field.getFieldIndex() + 1;
+        ValueType type = declaredType(field.getType());
+
+        Register objReg = Register.bx(ValueType.INT);
+        values.load(objRef, objReg);
+
+        Register scratch = Register.cx(type);
+        values.loadCoerced(value, scratch);
+        ir.emit(new Store(MemorySpace.HEAP, new Indirect(objReg, slot), scratch));
+    }
+
+    private void pushArgument(ExpressionNodePigLatin arg) {
+        if (arg instanceof IdentifierExpressionNodePigLatin id) {
+            ArrayInfo array = frame.arrayOf(id.getIdentifier());
+            if (array != null) {
+                pushReference(array.isHeap(), array.getBaseOffset());
+                return;
+            }
+            StructInfo struct = frame.structOf(id.getIdentifier());
+            if (struct != null) {
+                pushReference(struct.isReference(), struct.getBaseOffset());
+                return;
+            }
+        }
+        Value val = eval(arg);
+        Register reg = Register.ax(val.type());
+        values.loadCoerced(val, reg);
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), reg));
+        ir.emit(new AdjustStackTop(1));
+    }
+
+    private void pushReference(boolean alreadyReference, int baseOffset) {
+        Register reg = Register.ax(ValueType.INT);
+        if (alreadyReference) ir.emit(new Load(MemorySpace.STACK, new Frame(baseOffset), reg));
+        else ir.emit(new LoadAddress(new Frame(baseOffset), reg));
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), reg));
+        ir.emit(new AdjustStackTop(1));
+    }
+
+    // ============================================================
+    // EVALUATION & TYPE HELPERS
+    // ============================================================
+
+    private Value eval(ExpressionNodePigLatin expr) {
+        if (expr == null) return new Constant("0", ValueType.INT);
+        last = null;
+        expr.accept(this);
+        if (last == null) {
+            return new Constant("0", ValueType.INT);
+        }
+        return last;
+    }
+
+    private Symbol classSymbolOf(ExpressionNodePigLatin expr) {
+        Type t = typeAnnotations.get(expr);
+        if (t != null && t.isCustom()) {
+            return findClassSymbol(t.getCustomName());
+        }
+        if (expr instanceof IdentifierExpressionNodePigLatin id) {
+            String className = objectClassMap.get(id.getIdentifier());
+            if (className != null) return findClassSymbol(className);
+        }
         return null;
     }
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
-
-    private String exprToString(ExpressionNodePigLatin node) {
-        node.accept(this);
-        return lastExpr;
+    private Symbol findFieldSymbol(Symbol classSymbol, String fieldName) {
+        if (classSymbol == null) return null;
+        inheritance.link(classSymbol);
+        if (classSymbol.getMembers() != null) {
+            for (Symbol m : classSymbol.getMembers()) {
+                if (m.getKind() == SymbolKind.ATTRIBUTE && m.getName().equals(fieldName)) {
+                    return m;
+                }
+            }
+        }
+        return null;
     }
 
-    private int allocateLocal(String name, PigLatinAstNode node) {
-        int offset = nextOffset++;
-        localOffsets.put(name, offset);
-
-        TypeKind kind = TypeKind.INT;
-        if (node instanceof VariableDeclarationNodePigLatin decl && decl.getDataType() != null) {
-            Type t = mapTypeNodeToType(decl.getDataType());
-            if (t != null) kind = (t.getKind() == TypeKind.CUSTOM) ? TypeKind.INT : t.getKind();
-        } else if (node instanceof ForInitDeclarationNodePigLatin f && f.getType() != null) {
-            Type t = mapTypeNodeToType(f.getType());
-            if (t != null) kind = (t.getKind() == TypeKind.CUSTOM) ? TypeKind.INT : t.getKind();
-        } else {
-            Type t = typeAnnotations.get(node);
-            if (t != null) kind = (t.getKind() == TypeKind.CUSTOM) ? TypeKind.INT : t.getKind();
+    private Symbol findClassSymbol(String name) {
+        if (name == null) return null;
+        for (SymbolScope fileScope : table.getFileScopes().values()) {
+            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
+                for (Symbol s : bucket) {
+                    if (s.getKind() == SymbolKind.CLASS && s.getName().equals(name)) return s;
+                }
+            }
         }
-        localTypes.put(name, kind);
-        return offset;
+        for (List<Symbol> bucket : table.getGlobalScope().getSymbols().values()) {
+            for (Symbol s : bucket) {
+                if (s.getKind() == SymbolKind.CLASS && s.getName().equals(name)) return s;
+            }
+        }
+        return null;
+    }
+
+    private Symbol findConstructorByParams(Symbol classSymbol, List<? extends AstNode> args) {
+        if (classSymbol == null) return null;
+        inheritance.link(classSymbol);
+        int argCount = args != null ? args.size() : 0;
+        Symbol fallback = null;
+        if (classSymbol.getMembers() != null) {
+            for (Symbol m : classSymbol.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR) {
+                    if (m.getParameterTypes().size() == argCount) return m;
+                    fallback = m;
+                }
+            }
+        }
+        return fallback;
+    }
+
+    private Symbol findMethodInClass(Symbol classSymbol, String methodName, int argCount) {
+        if (classSymbol == null) return null;
+        inheritance.link(classSymbol);
+        if (classSymbol.getMembers() != null) {
+            for (Symbol m : classSymbol.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(methodName)) {
+                    if (m.getParameterTypes().size() == argCount) return m;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Symbol findFunctionByName(String name, int argCount) {
+        List<Symbol> found = table.resolveByName(name);
+        for (Symbol s : found) {
+            if (s.getKind() == SymbolKind.FUNCTION) {
+                if (s.getParameterTypes() != null && s.getParameterTypes().size() == argCount) {
+                    return s;
+                }
+            }
+        }
+        for (Symbol s : found) {
+            if (s.getKind() == SymbolKind.FUNCTION) return s;
+        }
+        return null;
+    }
+
+    private Symbol findTypeSymbolGlobal(String typeName) {
+        if (typeName == null) return null;
+        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), typeName);
+        for (Symbol s : found) {
+            if (s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT) return s;
+        }
+        for (SymbolScope fileScope : table.getFileScopes().values()) {
+            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
+                for (Symbol symbol : bucket) {
+                    if ((symbol.getKind() == SymbolKind.CLASS || symbol.getKind() == SymbolKind.STRUCT)
+                            && symbol.getName().equals(typeName)) {
+                        return symbol;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private List<String> structFields(String structName) {
+        if (structFieldLayouts == null) {
+            structFieldLayouts = new HashMap<>();
+            for (Symbol s : table.getAllSymbols()) {
+                if (s.getKind() == SymbolKind.STRUCT && s.getMembers() != null) {
+                    structFieldLayouts.putIfAbsent(s.getName(),
+                            s.getMembers().stream().map(Symbol::getName).collect(Collectors.toList()));
+                }
+            }
+        }
+        return structFieldLayouts.get(structName);
     }
 
     private Type mapTypeNodeToType(TypeNodePigLatin typeNode) {
@@ -1104,277 +1316,88 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         };
     }
 
-    private String getStackRefByName(String name) {
-        Integer offset = localOffsets.get(name);
-        if (offset == null) offset = paramOffsets.get(name);
-        if (offset == null) return "0";
-
-        TypeKind kind = localTypes.get(name);
-        if (kind == null) kind = TypeKind.INT;
-        return stackArrayForKind(kind) + "[fp + " + offset + "]";
-    }
-
-    private void loadRegister(String operandRef, String register) {
-        if (operandRef == null) return;
-
-        if (isRegister(operandRef)) {
-            output.emit("=", operandRef, null, register);
-            return;
-        }
-
-        if (operandRef.startsWith("stack")) {
-            int bs = operandRef.indexOf('[');
-            int be = operandRef.indexOf(']');
-            if (bs >= 0 && be > bs) {
-                String arrayName = operandRef.substring(0, bs);
-                String offsetExpr = operandRef.substring(bs + 1, be);
-                String suffix = suffixForArray(arrayName);
-                output.emit("load_" + suffix, offsetExpr, null, register);
-                return;
-            }
-        }
-
-        output.emit("=", operandRef, null, register);
-    }
-
-    private void storeValueTo(String valueRef, String destRef) {
-        if (destRef == null || !destRef.startsWith("stack")) return;
-
-        int bs = destRef.indexOf('[');
-        int be = destRef.indexOf(']');
-        if (bs < 0 || be <= bs) return;
-
-        String arrayName = destRef.substring(0, bs);
-        String offsetExpr = destRef.substring(bs + 1, be);
-        String suffix = suffixForArray(arrayName);
-        String cxRegister = "CX_" + suffix.toUpperCase();
-
-        if (isRegister(valueRef)) {
-            output.emit("store_" + suffix, offsetExpr, null, valueRef);
-        } else if (valueRef != null && valueRef.startsWith("stack")) {
-            loadRegister(valueRef, cxRegister);
-            output.emit("store_" + suffix, offsetExpr, null, cxRegister);
-        } else {
-            output.emit("=", valueRef, null, destRef);
-        }
-    }
-
-    private void storeRegisterBack(String register, String destRef) {
-        if (destRef == null || !destRef.startsWith("stack")) return;
-
-        int bs = destRef.indexOf('[');
-        int be = destRef.indexOf(']');
-        if (bs < 0 || be <= bs) return;
-
-        String arrayName = destRef.substring(0, bs);
-        String offsetExpr = destRef.substring(bs + 1, be);
-        String suffix = suffixForArray(arrayName);
-        output.emit("store_" + suffix, offsetExpr, null, register);
-    }
-
-    private boolean isRegister(String s) {
-        if (s == null) return false;
-        return s.startsWith("AX_") || s.startsWith("BX_") || s.startsWith("CX_");
-    }
-
-    private String suffixForArray(String arrayName) {
-        return switch (arrayName) {
-            case "stackstring" -> "string";
-            case "stackfloat" -> "float";
-            case "stackchar" -> "char";
-            case "stackboolean" -> "boolean";
-            default -> "int";
+    private ValueType declaredValueType(Type type) {
+        if (type == null) return ValueType.INT;
+        return switch (type.getKind()) {
+            case STRING -> ValueType.STRING;
+            case FLOAT -> ValueType.FLOAT;
+            case CHAR -> ValueType.CHAR;
+            case BOOLEAN -> ValueType.BOOLEAN;
+            case VOID -> ValueType.INT;
+            default -> ValueType.INT;
         };
     }
 
-    private String stackArrayForKind(TypeKind kind) {
-        if (kind == null) return "stackinteger";
-        return switch (kind) {
-            case STRING -> "stackstring";
-            case FLOAT -> "stackfloat";
-            case CHAR -> "stackchar";
-            case BOOLEAN -> "stackboolean";
-            default -> "stackinteger";
+    private ValueType declaredType(String typeName) {
+        if (typeName == null) return ValueType.INT;
+        return switch (typeName.toLowerCase()) {
+            case "int" -> ValueType.INT;
+            case "float", "decimal" -> ValueType.FLOAT;
+            case "string" -> ValueType.STRING;
+            case "char" -> ValueType.CHAR;
+            case "boolean", "bool" -> ValueType.BOOLEAN;
+            default -> ValueType.INT;
         };
     }
 
-    private String registerFor(String typeName) {
-        return switch (typeName) {
-            case "string" -> "AX_STRING";
-            case "float" -> "AX_FLOAT";
-            case "char" -> "AX_CHAR";
-            default -> "AX_INT";
-        };
+    private ValueType returnTypeOf(Symbol method) {
+        return declaredType(method.getReturnType());
     }
 
-    private String binaryOpToSymbol(BinaryOperator op) {
+    private static ValueType operandTypeOf(Value left, Value right) {
+        if (left.type() == ValueType.STRING || right.type() == ValueType.STRING) return ValueType.STRING;
+        if (left.type() == ValueType.FLOAT || right.type() == ValueType.FLOAT) return ValueType.FLOAT;
+        return ValueType.INT;
+    }
+
+    private BinaryOperations binaryOpToIntermediate(BinaryOperator op) {
         return switch (op) {
-            case PLUS -> "+";
-            case MINUS -> "-";
-            case MULTIPLICATION -> "*";
-            case DIVIDE -> "/";
-            case MODULE -> "%";
-            case EQUALS -> "==";
-            case DIFFERENT -> "!=";
-            case LESS -> "<";
-            case GREATER -> ">";
-            case LESS_EQUALS -> "<=";
-            case GREATER_EQUALS -> ">=";
-            case AND -> "&&";
-            case OR -> "||";
+            case PLUS -> BinaryOperations.ADD;
+            case MINUS -> BinaryOperations.SUB;
+            case MULTIPLICATION -> BinaryOperations.MUL;
+            case DIVIDE -> BinaryOperations.DIV;
+            case MODULE -> BinaryOperations.MOD;
+            case EQUALS -> BinaryOperations.EQ;
+            case DIFFERENT -> BinaryOperations.NE;
+            case LESS -> BinaryOperations.LT;
+            case LESS_EQUALS -> BinaryOperations.LE;
+            case GREATER -> BinaryOperations.GT;
+            case GREATER_EQUALS -> BinaryOperations.GE;
+            case AND -> BinaryOperations.AND;
+            case OR -> BinaryOperations.OR;
         };
     }
 
-    private String unaryOpToSymbol(UnaryOperator op) {
+    private BinaryOperations shortlyOpToBinary(ShortlyOperator op) {
         return switch (op) {
-            case NEGATE -> "neg";
-            case NOT -> "!";
+            case PLUS_ASSIGN -> BinaryOperations.ADD;
+            case MINUS_ASSIGN -> BinaryOperations.SUB;
+            case MULTIPLY_ASSIGN -> BinaryOperations.MUL;
+            case DIVIDE_ASSIGN -> BinaryOperations.DIV;
+            case MODULO_ASSIGN -> BinaryOperations.MOD;
         };
     }
 
-    private String shortlyOpToBinary(ShortlyOperator op) {
+    private UnaryOperations unaryOpToIntermediate(UnaryOperator op) {
         return switch (op) {
-            case PLUS_ASSIGN -> "+";
-            case MINUS_ASSIGN -> "-";
-            case MULTIPLY_ASSIGN -> "*";
-            case DIVIDE_ASSIGN -> "/";
-            case MODULO_ASSIGN -> "%";
+            case NEGATE -> UnaryOperations.NEG;
+            case NOT -> UnaryOperations.NOT;
         };
     }
 
-    private String typeToString(Type t) {
-        if (t == null) return "int";
-        return switch (t.getKind()) {
-            case STRING -> "string";
-            case FLOAT -> "float";
-            case CHAR -> "char";
-            case BOOLEAN -> "int";
-            default -> "int";
-        };
-    }
-
-    private String kindToSuffix(TypeKind kind) {
-        if (kind == null) return "int";
-        return switch (kind) {
-            case STRING -> "string";
-            case FLOAT -> "float";
-            case CHAR -> "char";
-            case BOOLEAN -> "boolean";
-            default -> "int";
-        };
-    }
-
-    private String resolveFunctionName(String bareName) {
-        for (String fname : output.getFunctionNames()) {
-            if (fname.startsWith(bareName + "_")) return fname;
-        }
-        return bareName;
-    }
-
-    private void emitIncDec(String targetRef, String op) {
-        int oneOffset = nextOffset++;
-        output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
-        loadRegister(targetRef, "AX_INT");
-        loadRegister("stackinteger[fp + " + oneOffset + "]", "BX_INT");
-        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
+    private String charCode(Object value) {
+        if (value instanceof Character c) return String.valueOf((int) c);
+        if (value instanceof Number n) return String.valueOf(n.intValue());
+        String s = String.valueOf(value);
+        return s.isEmpty() ? "0" : String.valueOf((int) s.charAt(0));
     }
 
     private Integer tryExtractIntLiteral(ExpressionNodePigLatin expr) {
         if (expr instanceof LiteralExpressionNodePigLatin lit) {
             Object v = lit.getDataValue();
             if (v instanceof Integer i) return i;
+            if (v instanceof Number n) return n.intValue();
         }
         return null;
-    }
-
-    /**
-     * Label of the function resolver
-     */
-    private String resolveMethodLabel(String className, String methodName, int numArgs) {
-        Symbol cls = findTypeSymbolGlobal(className);
-        if (cls != null && cls.getKind() == SymbolKind.CLASS) {
-            new SymbolInheritanceLinkerService(this::findTypeSymbolGlobal).link(cls);
-            if (cls.getMembers() != null) {
-                for (Symbol m : cls.getMembers()) {
-                    if (m.getKind() == SymbolKind.METHOD
-                            && m.getName().equals(methodName)
-                            && m.getParameterTypes().size() == numArgs) {
-                        if (m.getCodeLabel() != null) return m.getCodeLabel();
-                        return m.getDeclaringClass() + "_" + methodName + "_" + numArgs;
-                    }
-                }
-            }
-        }
-        return className + "_" + methodName + "_" + numArgs;
-    }
-
-    private Symbol findTypeSymbolGlobal(String typeName) {
-        if (typeName == null) return null;
-
-        List<Symbol> found = table.resolveDeepInFile(context.getFilePath(), typeName);
-        for (Symbol s : found) {
-            if (s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT) return s;
-        }
-
-        for (SymbolScope fileScope : table.getFileScopes().values()) {
-            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
-                for (Symbol symbol : bucket) {
-                    if ((symbol.getKind() == SymbolKind.CLASS || symbol.getKind() == SymbolKind.STRUCT)
-                            && symbol.getName().equals(typeName)) {
-                        return symbol;
-                    }
-                }
-            }
-        }
-
-        SymbolScope global = table.getGlobalScope();
-        for (List<Symbol> bucket : global.getSymbols().values()) {
-            for (Symbol s : bucket) {
-                if ((s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT)
-                        && s.getName().equals(typeName)) {
-                    return s;
-                }
-            }
-        }
-        return null;
-    }
-
-
-    private String ensureStringRef(String operandRef, TypeKind operandKind) {
-        if (operandKind == TypeKind.STRING) {
-            return operandRef;
-        }
-
-        String reg;
-        String opName;
-        switch (operandKind) {
-            case FLOAT -> {
-                reg = "AX_FLOAT";
-                opName = "to_string_float";
-            }
-            case CHAR -> {
-                reg = "AX_CHAR";
-                opName = "to_string_char";
-            }
-            case BOOLEAN -> {
-                reg = "AX_BOOLEAN";
-                opName = "to_string_boolean";
-            }
-            default -> {
-                reg = "AX_INT";
-                opName = "to_string_int";
-            }
-        }
-
-        loadRegister(operandRef, reg);
-
-        int bufOffset = nextOffset++;
-        output.emit("alloc_string", null, null, "CX_STRING");
-        output.emit("store_string", "fp + " + bufOffset, null, "CX_STRING");
-
-        output.emit(opName, reg, null, "stackstring[fp + " + bufOffset + "]");
-
-        return "stackstring[fp + " + bufOffset + "]";
     }
 }

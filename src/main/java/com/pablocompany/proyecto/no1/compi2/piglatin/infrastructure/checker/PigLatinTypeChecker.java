@@ -28,7 +28,7 @@ public class PigLatinTypeChecker implements TypeChecker {
         table.setCurrentScope(fileScope);
 
         PigLatinTypeCheckerVisitor visitor =
-                new PigLatinTypeCheckerVisitor(table, context, typeAnnotations);
+                new PigLatinTypeCheckerVisitor(table, context, typeAnnotations, resolvedCalls);
         pigAst.accept(visitor);
 
         table.resetToGlobal();
