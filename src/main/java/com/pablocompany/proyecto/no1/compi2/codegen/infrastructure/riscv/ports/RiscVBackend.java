@@ -19,6 +19,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.h
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.io.RvPrintEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.io.RvReadEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvBinaryOperationEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvConvertEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvMoveEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvUnaryOperationEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.stack.*;
@@ -71,6 +72,7 @@ public class RiscVBackend extends AbstractBackend {
                 .register(new RvStringConcatEmitter())
                 .register(new RvNewStringEmitter())
                 .register(new RvConvertToStringEmitter())
+                .register(new RvConvertEmitter())
                 .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.functions.RvCallIndirectEmitter())
                 .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.brands.RvLoadLabelAddressEmitter());
     }

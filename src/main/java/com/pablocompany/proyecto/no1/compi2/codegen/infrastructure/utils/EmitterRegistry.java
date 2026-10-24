@@ -44,9 +44,6 @@ public class EmitterRegistry {
 
     /**
      * Method to verification if the code generation was succeeded.
-     * Note: only performs completeness check when Instruction is a sealed interface
-     * (i.e. getPermittedSubclasses() returns non-null). If Instruction is a plain
-     * interface this is a no-op, since there is no exhaustive list to compare against.
      */
     public EmitterRegistry verifyComplete() {
         Class<?>[] permitted = Instruction.class.getPermittedSubclasses();

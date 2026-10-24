@@ -580,11 +580,24 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     public Void visit(LiteralExpressionNodeZ node) {
         ValueType type = valueTypeOf(node);
         Object v = node.getDataValue();
+        if (v == null) {
+            last = switch (type) {
+                case STRING  -> new Text(ir.intern(""));
+                case FLOAT   -> new Constant("0.0", ValueType.FLOAT);
+                case CHAR    -> new Constant("0",   ValueType.CHAR);
+                case BOOLEAN -> new Constant("0",   ValueType.BOOLEAN);
+                default      -> new Constant("0",   type);
+            };
+            return null;
+        }
         last = switch (type) {
-            case STRING -> new Text(ir.intern(String.valueOf(v)));
+            case STRING  -> new Text(ir.intern(String.valueOf(v)));
             case BOOLEAN -> new Constant(Boolean.TRUE.equals(v) ? "1" : "0", ValueType.BOOLEAN);
-            case CHAR -> new Constant(charCode(v), ValueType.CHAR);
-            default -> new Constant(String.valueOf(v), type);
+            case CHAR    -> new Constant(charCode(v), ValueType.CHAR);
+            default -> {
+                String lit = String.valueOf(v);
+                yield new Constant(lit.equals("null") ? "0" : lit, type);
+            }
         };
         return null;
     }
