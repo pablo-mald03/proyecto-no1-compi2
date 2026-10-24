@@ -5,6 +5,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.highlight.ErrorType;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolScopeKind;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
@@ -18,6 +19,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.SuperConstructorCallNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -41,6 +43,9 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parent
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZAccessControlService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZInheritanceService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZSymbolLookupService;
 
 import java.util.List;
 
@@ -53,9 +58,14 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     private final GlobalSymbolTable table;
     private final EditorContext context;
 
+    private final ZSymbolLookupService lookup;
+    private final ZInheritanceService inheritance;
+
     public ZReferenceResolverVisitor(GlobalSymbolTable table, EditorContext context) {
         this.table = table;
         this.context = context;
+        this.lookup = new ZSymbolLookupService(table, context, new ZAccessControlService(context));
+        this.inheritance = new ZInheritanceService(lookup);
     }
 
     // ============================================================
@@ -163,7 +173,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
     public Void visit(IdentifierExpressionNodeZ node) {
         String name = node.getIdentifier();
         List<Symbol> found = table.resolveByName(name);
-        if (found.isEmpty()) {
+        if (found.isEmpty() && !isInheritedMember(name)) {
             reportUndeclared(name, node);
         }
         return null;
@@ -176,7 +186,7 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
         } else {
             String name = node.getFunctionName();
             List<Symbol> found = table.resolveByName(name);
-            if (found.isEmpty()) {
+            if (found.isEmpty() && !isInheritedMember(name)) {
                 reportUndeclared(name, node);
             }
         }
@@ -738,4 +748,31 @@ public class ZReferenceResolverVisitor implements ZAstVisitor<Void> {
         context.getSemanticErrors().add(error);
     }
 
+
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        if (node.getArguments() != null) {
+            for (ExpressionNodeZ a : node.getArguments()) if (a != null) a.accept(this);
+        }
+        return null;
+    }
+
+    /**
+     * Principal validation for the inherited member
+     */
+    private boolean isInheritedMember(String name) {
+        SymbolScope scope = table.getCurrentScope();
+        while (scope != null && scope.getKind() != SymbolScopeKind.CLASS) {
+            scope = scope.getParent();
+        }
+        if (scope == null || scope.getClassName() == null) return false;
+
+        Symbol cls = lookup.findType(scope.getClassName());
+        return inheritance.findMemberByName(cls, name) != null;
+    }
 }

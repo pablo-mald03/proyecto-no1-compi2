@@ -111,7 +111,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
         declarations.declareStruct(node.getStructName(), node, memberSymbols);
 
-        scopes.registerScope(node, SymbolScopeKind.STRUCT);      // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.STRUCT);
         try {
             if (body != null) body.accept(this);
         } finally {
@@ -133,7 +133,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         Symbol attr = new Symbol();
         attr.setName(node.getIdentifier());
         attr.setKind(SymbolKind.ATTRIBUTE);
-        attr.setType(resolveTypeName(node.getType()));
+        attr.setType(declarations.resolveTypeName(node.getType()));
         attr.setFilePath(context.getFilePath());
         attr.setFileName(context.getFileName());
         attr.setLine(node.getLine());
@@ -159,20 +159,20 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         if (node.getParameters() != null) {
             for (ParameterNodeY p : node.getParameters()) {
                 if (p == null) continue;
-                String t = resolveParameterType(p);
+                String t = declarations.resolveParameterType(p);
                 if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
                 paramTypes.add(t);
             }
         }
 
         String returnType = node.getReturnType() != null
-                ? resolveTypeName(node.getReturnType())
+                ? declarations.resolveTypeName(node.getReturnType())
                 : "void";
 
         declarations.declareFunction(node.getName(), node, paramTypes, returnType,
                 SymbolKind.FUNCTION, "funcion");
 
-        scopes.registerScope(node, SymbolScopeKind.FUNCTION);     // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.FUNCTION);
         try {
             if (node.getParameters() != null) {
                 for (ParameterNodeY p : node.getParameters()) if (p != null) p.accept(this);
@@ -192,7 +192,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         if (node.getParameters() != null) {
             for (ParameterNodeY p : node.getParameters()) {
                 if (p == null) continue;
-                String t = resolveParameterType(p);
+                String t = declarations.resolveParameterType(p);
                 if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
                 paramTypes.add(t);
             }
@@ -200,7 +200,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         declarations.declareFunction(node.getName(), node, paramTypes, "void",
                 SymbolKind.FUNCTION, "procedimiento");
 
-        scopes.registerScope(node, SymbolScopeKind.FUNCTION);     // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.FUNCTION);
         try {
             if (node.getParameters() != null) {
                 for (ParameterNodeY p : node.getParameters()) if (p != null) p.accept(this);
@@ -263,7 +263,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(IfStatementNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getCondition() != null) node.getCondition().accept(this);
             if (node.getThenBody() != null) {
@@ -281,7 +281,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ElseIfNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getCondition() != null) node.getCondition().accept(this);
             if (node.getBody() != null) {
@@ -295,7 +295,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ElseBlockNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getBody() != null) {
                 for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
@@ -308,7 +308,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(WhileStatementNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getCondition() != null) node.getCondition().accept(this);
             if (node.getBody() != null) {
@@ -322,7 +322,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(DoWhileStatementNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getBody() != null) {
                 for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
@@ -336,7 +336,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(ForStatementNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getInit() != null) node.getInit().accept(this);
             if (node.getCondition() != null) node.getCondition().accept(this);
@@ -352,7 +352,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchStatementNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getSelector() != null) node.getSelector().accept(this);
             if (node.getCases() != null) {
@@ -367,7 +367,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(SwitchCaseNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getBody() != null) {
                 for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
@@ -380,7 +380,7 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
 
     @Override
     public Void visit(DefaultCaseNodeY node) {
-        scopes.registerScope(node, SymbolScopeKind.BLOCK);        // <-- FIX
+        scopes.registerScope(node, SymbolScopeKind.BLOCK);
         try {
             if (node.getBody() != null) {
                 for (StatementNodeY s : node.getBody()) if (s != null) s.accept(this);
@@ -538,19 +538,4 @@ public class YSymbolCollectorVisitor implements YAstVisitor<Void> {
         return null;
     }
 
-    // -------- HELPERS --------
-
-    private String resolveTypeName(TypeNodeY typeNode) {
-        if (typeNode == null) return null;
-        if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
-        if (typeNode.getDataType() != null) return typeNode.getDataType().getValue();
-        return null;
-    }
-
-    private String resolveParameterType(ParameterNodeY node) {
-        if (node instanceof StructParameterNodeY s) return resolveTypeName(s.getDataType());
-        if (node instanceof ArrayParameterNodeY a) return resolveTypeName(a.getElementType());
-        if (node instanceof PrimitiveParameterNodeY p) return resolveTypeName(p.getType());
-        return resolveTypeName(node.getType());
-    }
 }

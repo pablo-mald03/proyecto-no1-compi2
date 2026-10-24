@@ -23,7 +23,8 @@ public class TopPanel extends JPanel {
     private final Runnable onCloseProject;
     private final Runnable onSave;
     private final Runnable onCompile;
-    private final Runnable onExecute;
+    private final Runnable onExecuteC;
+    private final Runnable onExecuteRisc;
     private final Runnable onExit;
     private final Runnable onSaveAll;
 
@@ -38,7 +39,8 @@ public class TopPanel extends JPanel {
             Runnable onCloseProject,
             Runnable onSave,
             Runnable onCompile,
-            Runnable onExecute,
+            Runnable onExecuteC,
+            Runnable onExecuteRisc,
             Runnable onExit,
             Runnable onSaveAll
     ) {
@@ -49,7 +51,8 @@ public class TopPanel extends JPanel {
         this.onCloseProject = onCloseProject;
         this.onSave = onSave;
         this.onCompile = onCompile;
-        this.onExecute = onExecute;
+        this.onExecuteC = onExecuteC;
+        this.onExecuteRisc = onExecuteRisc;
         this.onExit = onExit;
 
         setLayout(new BorderLayout());
@@ -121,10 +124,18 @@ public class TopPanel extends JPanel {
 
         // Execute button
         toolBar.add(createToolbarButton(
-                "Ejecutar",
-                e -> onExecute(),
+                "Ejecutar en C",
+                e -> onExecuteC(),
                 UIColors.ACCENT.getColorSet(),
                 new Color(152, 89, 7).brighter()
+        ));
+
+        // Execute button
+        toolBar.add(createToolbarButton(
+                "Ejecutar en Risc V",
+                e -> onExecuteRisc(),
+                UIColors.BORDER.getColorSet(),
+                new Color(121, 6, 114).brighter()
         ));
     }
 
@@ -176,9 +187,12 @@ public class TopPanel extends JPanel {
                 e -> notifier.notifyDownloadCompiledCode(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK)));
         editMenu.addSeparator();
-        editMenu.add(createMenuItem("Ejecutar Compilado", KeyEvent.VK_R,
-                e -> notifier.notifyExecuteCompiledCode(),
+        editMenu.add(createMenuItem("Ejecutar Compilado en C", KeyEvent.VK_R,
+                e -> notifier.notifyExecuteCompiledCodeC(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.add(createMenuItem("Ejecutar Compilado en Risc V", KeyEvent.VK_T,
+                e -> notifier.notifyExecuteCompiledCodeRisc(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_DOWN_MASK)));
 
         menuBar.add(editMenu);
 
@@ -193,7 +207,8 @@ public class TopPanel extends JPanel {
         // Tools Menu
         JMenu toolsMenu = createMenu("Herramientas", KeyEvent.VK_H);
         toolsMenu.add(createMenuItem("Compilar", KeyEvent.VK_C, e -> onCompile(), KeyStroke.getKeyStroke(KeyEvent.VK_B, KeyEvent.CTRL_DOWN_MASK)));
-        toolsMenu.add(createMenuItem("Ejecutar", KeyEvent.VK_E, e -> onExecute(), KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)));
+        toolsMenu.add(createMenuItem("Ejecutar C", KeyEvent.VK_E, e -> onExecuteC(), KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)));
+        toolsMenu.add(createMenuItem("Ejecutar Risc V", KeyEvent.VK_R, e -> onExecuteRisc(), KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
         menuBar.add(toolsMenu);
 
         // Help Menu
@@ -337,8 +352,12 @@ public class TopPanel extends JPanel {
         if (onCompile != null) onCompile.run();
     }
 
-    private void onExecute() {
-        if (onExecute != null) onExecute.run();
+    private void onExecuteC() {
+        if (onExecuteC != null) onExecuteC.run();
+    }
+
+    private void onExecuteRisc() {
+        if (onExecuteRisc != null) onExecuteRisc.run();
     }
 
     private void onExit() {

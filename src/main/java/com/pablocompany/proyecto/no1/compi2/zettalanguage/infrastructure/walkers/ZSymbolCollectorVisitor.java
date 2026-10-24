@@ -18,6 +18,7 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.FieldDeclarationNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.instances.SuperConstructorCallNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.TypeNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.values.*;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
@@ -565,8 +566,17 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
     private String resolveTypeName(TypeNodeZ typeNode) {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
-        if (typeNode.getDataType() != null) return typeNode.getDataType().getValue();
-        return null;
+        if (typeNode.getDataType() == null) return null;
+        return switch (typeNode.getDataType()) {
+            case INT -> "int";
+            case DOUBLE -> "float";
+            case STRING -> "string";
+            case CHAR -> "char";
+            case BOOLEAN -> "boolean";
+            case VOID -> "void";
+            case NULL -> "null";
+            case CLASS -> null;
+        };
     }
 
     /**
@@ -609,5 +619,15 @@ public class ZSymbolCollectorVisitor implements ZAstVisitor<Void> {
         SymbolScope scope = table.getCurrentScope();
         while (scope != null && scope.getKind() != SymbolScopeKind.CLASS) scope = scope.getParent();
         return scope != null ? scope.getClassName() : null;
+    }
+    
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        return null;
     }
 }

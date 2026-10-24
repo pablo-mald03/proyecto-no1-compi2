@@ -29,6 +29,7 @@ PRIVATE: 'private';
 EXTENDS: 'extends';
 OVERRIDE: '@Override';
 THIS: 'this';
+SUPER: 'super';
 
 //SECTION OF FUNCTION ACTIONS
 

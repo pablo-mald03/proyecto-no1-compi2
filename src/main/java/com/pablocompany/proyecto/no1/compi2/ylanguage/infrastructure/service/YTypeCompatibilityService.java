@@ -20,8 +20,10 @@ public class YTypeCompatibilityService {
         this.mapper = mapper;
     }
 
-    // -------- predicates --------
-
+    /**
+     * Method to evaluate if the type is numeric or promotable
+     *
+     */
     public boolean isNumericOrPromotable(Type t) {
         if (t == null) return false;
         TypeKind k = t.getKind();
@@ -31,6 +33,9 @@ public class YTypeCompatibilityService {
                 || k == TypeKind.BOOLEAN;
     }
 
+    /**
+     * Method to evaluate if the int is like another value
+     * */
     public boolean isIntLike(Type t) {
         if (t == null) return false;
         TypeKind k = t.getKind();
@@ -39,6 +44,10 @@ public class YTypeCompatibilityService {
                 || k == TypeKind.BOOLEAN;
     }
 
+    /**
+     * Method to evaluate if the numeric value is promotable to another numeric value
+     *
+     */
     public Type promoteNumeric(Type a, Type b) {
         if (a.getKind() == TypeKind.FLOAT || b.getKind() == TypeKind.FLOAT) {
             return Type.floatType();
@@ -46,8 +55,10 @@ public class YTypeCompatibilityService {
         return Type.intType();
     }
 
-    // -------- call compatibility --------
-
+    /**
+     * Method to evaluate if the call is compatible with the type
+     *
+     */
     public boolean isCallCompatible(Symbol function, List<Type> argTypes) {
         List<String> paramTypes = function.getParameterTypes();
         if (paramTypes.size() != argTypes.size()) return false;
@@ -57,6 +68,21 @@ public class YTypeCompatibilityService {
             Type argType = argTypes.get(i);
             if (argType.isUnknown()) continue;
             if (!argType.isAssignableTo(paramType)) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Method to evaluate if every parameter type of `a` is assignable to the matching parameter type of `b`
+     */
+    public boolean isMoreSpecific(Symbol a, Symbol b) {
+        List<String> pa = a.getParameterTypes();
+        List<String> pb = b.getParameterTypes();
+        if (pa.size() != pb.size()) return false;
+        for (int i = 0; i < pa.size(); i++) {
+            Type ta = mapper.resolveTypeName(pa.get(i));
+            Type tb = mapper.resolveTypeName(pb.get(i));
+            if (!ta.isAssignableTo(tb)) return false;
         }
         return true;
     }

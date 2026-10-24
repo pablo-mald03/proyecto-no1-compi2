@@ -27,6 +27,16 @@ public class ZSymbolLookupService {
         this.table = table;
         this.context = context;
         this.access = access;
+        if (access != null) access.setTypeResolver(this::findType);
+    }
+
+    /**
+     * Method to evaluates the direct superclass of `cls`, or null if it has none / it is not declared.
+     */
+    public Symbol getParentClass(Symbol cls) {
+        if (cls == null || cls.getParentName() == null || cls.getParentName().isBlank()) return null;
+        Symbol parent = findType(cls.getParentName());
+        return (parent != null && parent.getKind() == SymbolKind.CLASS) ? parent : null;
     }
 
 

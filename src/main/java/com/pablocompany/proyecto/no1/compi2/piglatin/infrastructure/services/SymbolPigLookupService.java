@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalS
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.services.SymbolInheritanceLinkerService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,35 @@ public class SymbolPigLookupService {
         return null;
     }
 
+
+    /**
+     * Principal method to find the linked type for the different classes
+     */
+    public Symbol findLinkedType(String filePath, String typeName) {
+        Symbol s = findTypeSymbolGlobal(filePath, typeName);
+        if (s != null && s.getKind() == SymbolKind.CLASS) {
+            new SymbolInheritanceLinkerService(n -> findTypeSymbolGlobal(filePath, n)).link(s);
+        }
+        return s;
+    }
+
+    /**
+     * Method to check the PigLatin code lives outside every class, so only PUBLIC members of a class are reachable
+     */
+    public boolean isPubliclyAccessible(Symbol member) {
+        if (member == null) return false;
+        if (member.getAccessModifier() == null) return true;
+        return "PUBLIC".equals(member.getAccessModifier().name());
+    }
+
+    /**
+     * Method to check the access level
+     *
+     */
+    public String accessLabel(Symbol member) {
+        if (member == null || member.getAccessModifier() == null) return "public";
+        return member.getAccessModifier().name().toLowerCase();
+    }
 
     /**
      * Look up to the imports

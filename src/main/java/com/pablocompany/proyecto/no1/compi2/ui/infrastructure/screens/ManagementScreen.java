@@ -32,7 +32,8 @@ public class ManagementScreen extends JPanel {
             Runnable onCloseProject,
             Runnable onSave,
             Runnable onCompile,
-            Runnable onExecute,
+            Runnable onExecuteC,
+            Runnable onExecuteRisc,
             Runnable onExit,
             Runnable onSaveAll
     ) {
@@ -46,7 +47,8 @@ public class ManagementScreen extends JPanel {
                 onCloseProject,
                 onSave,
                 onCompile,
-                onExecute,
+                onExecuteC,
+                onExecuteRisc,
                 onExit,
                 onSaveAll
         );

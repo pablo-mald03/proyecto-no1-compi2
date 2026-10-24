@@ -75,6 +75,16 @@ public class ZTypeMapperService {
     private Type resolveBaseTypeName(String typeName) {
         if (typeName == null) return Type.unknown();
         return switch (typeName) {
+
+            case "int" -> Type.intType();
+            case "float" -> Type.floatType();
+            case "string" -> Type.stringType();
+            case "char" -> Type.charType();
+            case "boolean" -> Type.booleanType();
+            case "void" -> Type.voidType();
+            case "null" -> Type.nullType();
+
+
             case "numerus" -> Type.intType();
             case "decimalis" -> Type.floatType();
             case "textum" -> Type.stringType();
@@ -86,13 +96,8 @@ public class ZTypeMapperService {
             case "caracter" -> Type.charType();
             case "bool" -> Type.booleanType();
 
-            case "int" -> Type.intType();
             case "double" -> Type.floatType();
-            case "char" -> Type.charType();
-            case "boolean" -> Type.booleanType();
-            case "void" -> Type.voidType();
             case "String" -> Type.stringType();
-            case "null" -> Type.nullType();
             default -> Type.customType(typeName);
         };
     }

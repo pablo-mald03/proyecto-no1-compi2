@@ -40,6 +40,7 @@ public class ZSymbolDeclarationService {
         symbol.setQualifiedName(node.getClassName());
         symbol.setAccessModifier(node.getModifier());
         symbol.setParentName(node.getParentName());
+        symbol.setVtableLabel("vtable_" + node.getClassName());
 
         if (!table.declare(symbol)) {
             reporter.reportDuplicate(node.getClassName(), "clase", node);
@@ -62,6 +63,7 @@ public class ZSymbolDeclarationService {
         symbol.setAccessModifier(node.getModifier());
         symbol.setOverriding(node.isOverride());
         symbol.setDeclaringClass(currentClassName());
+        symbol.setCodeLabel(currentClassName() + "_" + node.getName() + "_" + parameterTypes.size());
 
         if (!table.declare(symbol)) {
             reporter.reportDuplicate(node.getName(), "metodo", node);
@@ -101,6 +103,7 @@ public class ZSymbolDeclarationService {
         symbol.getParameterTypes().addAll(parameterTypes);
         symbol.setAccessModifier(node.getModifier());
         symbol.setDeclaringClass(currentClassName());
+        symbol.setCodeLabel(currentClassName() + "_" + name + "_" + parameterTypes.size());
 
         if (!table.declare(symbol)) {
             reporter.reportDuplicate(name, "constructor", node);

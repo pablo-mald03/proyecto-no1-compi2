@@ -107,6 +107,10 @@ public class TypePigResolutionService {
             case "boolean" -> Type.booleanType();
             case "String" -> Type.stringType();
 
+            case "float" -> Type.floatType();
+            case "string" -> Type.stringType();
+            case "null" -> Type.nullType();
+
             case "void" -> Type.voidType();
             default -> Type.customType(typeName);
         };

@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.*;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
@@ -13,6 +14,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalS
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
+import com.pablocompany.proyecto.no1.compi2.common.infrastructure.services.SymbolInheritanceLinkerService;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.childs.expressions.access.InstanceCreationExpressionNodePigLatin;
@@ -101,6 +103,17 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         this.classLayouts = classLayouts;
     }
 
+    public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
+                                        Map<AstNode, Type> typeAnnotations, IntermediateBuilder ir, CodeGenContext labels) {
+        //TODO:::::::::::
+        this.table = table;
+        this.context = context;
+        this.typeAnnotations = typeAnnotations;
+        this.output = null;
+        this.ctx = null;
+        this.stringPool = null;
+        this.classLayouts = new HashMap<>();
+    }
     // ============================================================
     // TOP-LEVEL
     // ============================================================
@@ -774,7 +787,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         List<ExpressionNodePigLatin> args = node.getArguments();
         int numArgs = args != null ? args.size() : 0;
-        
+
         output.emit("sptr_inc", "1", null, null);
         output.emit("load_int", "fp + " + ptrSlot, null, "AX_INT");
         output.emit("store_int", "sptr", null, "AX_INT");
@@ -929,7 +942,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 return null;
             }
 
-            targetFunc = className + "_" + funcName + "_" + numArgs;
+            // an inherited method lives in the DECLARING class (Padre_metodo_n), not in the variable's class
+            targetFunc = resolveMethodLabel(className, funcName, numArgs);
             pushSelf = true;
 
             output.emit("sptr_inc", "1", null, null);
@@ -1272,6 +1286,27 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             if (v instanceof Integer i) return i;
         }
         return null;
+    }
+
+    /**
+     * Label of the function resolver
+     */
+    private String resolveMethodLabel(String className, String methodName, int numArgs) {
+        Symbol cls = findTypeSymbolGlobal(className);
+        if (cls != null && cls.getKind() == SymbolKind.CLASS) {
+            new SymbolInheritanceLinkerService(this::findTypeSymbolGlobal).link(cls);
+            if (cls.getMembers() != null) {
+                for (Symbol m : cls.getMembers()) {
+                    if (m.getKind() == SymbolKind.METHOD
+                            && m.getName().equals(methodName)
+                            && m.getParameterTypes().size() == numArgs) {
+                        if (m.getCodeLabel() != null) return m.getCodeLabel();
+                        return m.getDeclaringClass() + "_" + methodName + "_" + numArgs;
+                    }
+                }
+            }
+        }
+        return className + "_" + methodName + "_" + numArgs;
     }
 
     private Symbol findTypeSymbolGlobal(String typeName) {

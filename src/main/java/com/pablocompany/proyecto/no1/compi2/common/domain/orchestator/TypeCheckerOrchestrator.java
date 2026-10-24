@@ -27,7 +27,8 @@ public class TypeCheckerOrchestrator {
     public void checkAll(Map<String, EditorContext> allContexts,
                          List<String> topologicalOrder,
                          GlobalSymbolTable table,
-                         Map<AstNode, Type> typeAnnotations) {
+                         Map<AstNode, Type> typeAnnotations,
+                         Map<AstNode, Symbol> resolvedCalls) {
 
         registerBuiltinClasses(table);
         Set<String> processed = new HashSet<>();
@@ -38,7 +39,7 @@ public class TypeCheckerOrchestrator {
             if (ctx == null) continue;
             String ext = ctx.getFileExtension();
             if (".y".equals(ext) || ".z".equals(ext)) {
-                checkOne(filePath, allContexts, table, typeAnnotations);
+                checkOne(filePath, allContexts, table, typeAnnotations, resolvedCalls);
                 processed.add(filePath);
             }
         }
@@ -46,7 +47,7 @@ public class TypeCheckerOrchestrator {
         // Pass 2: .pig in topological order
         for (String filePath : topologicalOrder) {
             if (!processed.contains(filePath)) {
-                checkOne(filePath, allContexts, table, typeAnnotations);
+                checkOne(filePath, allContexts, table, typeAnnotations, resolvedCalls);
                 processed.add(filePath);
             }
         }
@@ -54,10 +55,9 @@ public class TypeCheckerOrchestrator {
         // Pass 3: remaining.
         for (String filePath : allContexts.keySet()) {
             if (!processed.contains(filePath)) {
-                checkOne(filePath, allContexts, table, typeAnnotations);
+                checkOne(filePath, allContexts, table, typeAnnotations, resolvedCalls);
             }
         }
-
 
         CFGOrchestrator cfgOrchestrator = new CFGOrchestrator();
         Map<String, CFG> cfgs = cfgOrchestrator.buildAll(allContexts);
@@ -77,7 +77,8 @@ public class TypeCheckerOrchestrator {
     private void checkOne(String filePath,
                           Map<String, EditorContext> allContexts,
                           GlobalSymbolTable table,
-                          Map<AstNode, Type> typeAnnotations) {
+                          Map<AstNode, Type> typeAnnotations,
+                          Map<AstNode, Symbol> resolvedCalls) {
         EditorContext context = allContexts.get(filePath);
         if (context == null) return;
 
@@ -87,7 +88,7 @@ public class TypeCheckerOrchestrator {
         TypeChecker checker = TypeCheckerFactory.create(extension);
         if (checker == null) return;
 
-        checker.check(context, table, typeAnnotations);
+        checker.check(context, table, typeAnnotations, resolvedCalls);
     }
 
 

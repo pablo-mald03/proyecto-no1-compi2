@@ -4,6 +4,7 @@
  */
 package com.pablocompany.proyecto.no1.compi2.ui.frame;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Target;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
@@ -27,6 +28,7 @@ import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.io.Projec
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.io.ProjectService;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -287,7 +289,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
                 this::onCloseProject,
                 this::onSave,
                 this::onCompile,
-                this::onExecute,
+                this::onExecuteC,
+                this::onExecuteRisc,
                 this::onExit,
                 this::onSaveAll
         );
@@ -447,13 +450,13 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     /**
-     * Principal method to execute the program
+     * Principal method to execute the program in C
      *
      */
-    private void onExecute() {
+    private void onExecuteC() {
         if (managementScreen != null) {
             WorkspacePanel workspace = managementScreen.getWorkspacePanel();
-            String compiledCode = workspace.getCompiledOutput();
+            String compiledCode = workspace.getCompiledOutput(Target.C);
 
             if (compiledCode == null || compiledCode.isEmpty()) {
                 alertToast("No hay codigo compilado. Presiona 'Compilar' primero.", true);
@@ -481,6 +484,54 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         } else {
             alertToast("No hay ningun proyecto abierto", true);
         }
+    }
+
+    /**
+     * Method to execute the Risc V code
+     *
+     */
+    private void onExecuteRisc() {
+        if (managementScreen == null) {
+            alertToast("No hay ningún proyecto abierto", true);
+            return;
+        }
+
+        WorkspacePanel workspace = managementScreen.getWorkspacePanel();
+        String compiledCode = workspace.getCompiledOutput(Target.RISCV);
+
+        if (compiledCode == null || compiledCode.isEmpty()) {
+            alertToast("No hay código RISC-V compilado. Presiona 'Compilar' primero.", true);
+            return;
+        }
+
+        String rarsPath = ExecutionService.getRarsPath();
+        if (rarsPath == null || !executionService.isRARSAvailable(rarsPath)) {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Selecciona rars.jar (RISC-V Simulator)");
+            chooser.setFileFilter(new FileNameExtensionFilter("JAR files", "jar"));
+            int result = chooser.showOpenDialog(this);
+            if (result != JFileChooser.APPROVE_OPTION) {
+                alertToast("RARS no configurado. Ejecución cancelada.", true);
+                return;
+            }
+            rarsPath = chooser.getSelectedFile().getAbsolutePath();
+            ExecutionService.setRarsPath(rarsPath);
+        }
+
+        final String finalRarsPath = rarsPath;
+        logInfo("Ejecutando en RARS...");
+
+        new Thread(() -> {
+            ExecutionResult result = executionService.assembleAndRunRiscV(
+                    currentProjectDir,
+                    compiledCode,
+                    finalRarsPath
+            );
+
+            SwingUtilities.invokeLater(() -> {
+                notifyShowExecutionResult(result);
+            });
+        }).start();
     }
 
     @Override
@@ -512,8 +563,13 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     @Override
-    public void notifyExecuteCompiledCode() {
-        this.onExecute();
+    public void notifyExecuteCompiledCodeC() {
+        this.onExecuteC();
+    }
+
+    @Override
+    public void notifyExecuteCompiledCodeRisc() {
+        this.onExecuteRisc();
     }
 
     @Override

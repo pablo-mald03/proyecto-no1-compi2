@@ -23,8 +23,9 @@ public class ZTypeCompatibilityService {
         this.assignability = assignability;
     }
 
-    // -------- predicates --------
-
+    /**
+     * Method to evaluate if the value is promotable from numeric value
+     * */
     public boolean isNumericOrPromotable(Type t) {
         if (t == null) return false;
         TypeKind k = t.getKind();
@@ -32,12 +33,19 @@ public class ZTypeCompatibilityService {
                 || k == TypeKind.CHAR || k == TypeKind.BOOLEAN;
     }
 
+    /**
+     * Method to evaluate if its int
+     *
+     */
     public boolean isIntLike(Type t) {
         if (t == null) return false;
         TypeKind k = t.getKind();
         return k == TypeKind.INT || k == TypeKind.CHAR || k == TypeKind.BOOLEAN;
     }
 
+    /**
+     * Method to evaluate to promote the numeric
+     * */
     public Type promoteNumeric(Type a, Type b) {
         if (a.getKind() == TypeKind.FLOAT || b.getKind() == TypeKind.FLOAT) {
             return Type.floatType();
@@ -63,17 +71,36 @@ public class ZTypeCompatibilityService {
     }
 
     /**
+     * True if every parameter type of `a` is assignable to the matching parameter type of `b` more specific type value
+     */
+    public boolean isMoreSpecific(Symbol a, Symbol b) {
+        List<String> pa = a.getParameterTypes();
+        List<String> pb = b.getParameterTypes();
+        if (pa.size() != pb.size()) return false;
+        for (int i = 0; i < pa.size(); i++) {
+            Type ta = mapper.resolveTypeName(pa.get(i));
+            Type tb = mapper.resolveTypeName(pb.get(i));
+            if (!assignability.isAssignable(ta, tb)) return false;
+        }
+        return true;
+    }
+
+    /**
      * Method to resolve the return type
      *
      */
     public Type resolveSymbolReturnType(Symbol function) {
         String rt = function.getReturnType();
         if (rt == null || "void".equals(rt)) return Type.voidType();
-        return mapper.resolveTypeName(rt);
+        Type base = mapper.resolveTypeName(rt);
+        int dims = function.getReturnDimensions();
+        return dims > 0 ? Type.arrayType(base, dims) : base;
     }
 
-    // -------- binary inference --------
-
+    /**
+     * Method to evaluate the binary type
+     *
+     */
     public Type inferBinaryType(Type left, Type right,
                                 BinaryOperator op,
                                 ZSemanticErrorReporter reporter,

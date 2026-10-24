@@ -30,7 +30,13 @@ field_declaration
 
 /*------ CONSTRUCTOR PRODUCTION ------*/
 constructor_declaration
-    : access_modifier? ID INIT_PARENT parameter_list? FINAL_PARENT INIT_BRACE statement* FINAL_BRACE   # ConstructorDeclaration
+    : access_modifier? ID INIT_PARENT parameter_list? FINAL_PARENT
+      INIT_BRACE super_call? statement* FINAL_BRACE   # ConstructorDeclaration
+    ;
+
+/*------ SUPER CONSTRUCTOR CALL ------*/
+super_call
+    : SUPER INIT_PARENT arguments_list? FINAL_PARENT DOT_COMMA   # SuperConstructorCall
     ;
 
 /*------ METHOD PRODUCTION (OVERRIDE OPTIONAL) ------*/
@@ -63,9 +69,10 @@ statement
     | call_statement DOT_COMMA          # StatementObjectPropertyCalling
     ;
 
-/*------ CALL AS STATEMENT (solo llamadas, nunca acceso plano) ------*/
+/*------ CALL AS STATEMENT------*/
 call_statement
-    : object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT   # ChainedCallStatement
+    : SUPER DOT ID INIT_PARENT arguments_list? FINAL_PARENT           # SuperCallStatement
+    | object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT   # ChainedCallStatement
     | ID INIT_PARENT arguments_list? FINAL_PARENT                     # DirectCallStatement
     ;
 
@@ -218,6 +225,8 @@ object_values
     | object_values DOT ID INIT_PARENT arguments_list? FINAL_PARENT         # ObjectMethodChain
     | object_values INIT_BRACKET expression FINAL_BRACKET                   # ObjectArrayAccessChain
     | ID INIT_PARENT arguments_list? FINAL_PARENT                           # BaseFunctionCall
+    | SUPER DOT ID INIT_PARENT arguments_list? FINAL_PARENT                 # BaseSuperMethodCall
+    | SUPER DOT ID                                                          # BaseSuperProperty
     | THIS                                                                  # BaseThis
     | ID                                                                    # BaseIdentifier
     ;

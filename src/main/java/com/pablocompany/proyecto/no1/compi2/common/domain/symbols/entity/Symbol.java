@@ -4,6 +4,8 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKi
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.statements.functions.enums.ParameterKind;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.expressions.types.enums.AccessModifierZ;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +49,61 @@ public class Symbol {
 
     String parentName;
 
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     Symbol parentSymbol;
+
+    private boolean inheritanceLinked;
+    /**
+     * Non-null when the hierarchy is invalid
+     */
+    private String inheritanceError;
+
+    /**
+     * Unique id of the class
+     */
+    private int classId = -1;
+    /**
+     * Label of the class virtual table
+     */
+    private String vtableLabel;
+    /**
+     * Virtual table
+     */
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private List<Symbol> vtable = new ArrayList<>();
+    /**
+     * Every attribute of the object in memory order: inherited ones FIRST
+     */
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private List<Symbol> fieldSlots = new ArrayList<>();
+
+    /**
+     * Label of the emitted function
+     */
+    private String codeLabel;
+    /**
+     * true if it goes through the vtable
+     */
+    private boolean virtual;
+    /**
+     * Slot in the vtable of its class
+     */
+    private int vtableIndex = -1;
+    /**
+     * Method of the superclass that this one overrides
+     */
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Symbol overriddenMethod;
+
+    // ---------- ATTRIBUTE ----------
+    /**
+     * 0-based position among the object's fields -1 if not a field.
+     */
+    private int fieldIndex = -1;
 
 
     public Symbol() {

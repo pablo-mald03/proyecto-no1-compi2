@@ -50,12 +50,34 @@ public class ZCallResolutionService {
 
         if (compatible.size() == 1) return compatible.get(0);
         if (compatible.size() > 1) {
-            reporter.reportTypeError(name, "Llamada ambigua a '" + name + "'", null);
+            // Polymorphism: pick the MOST SPECIFIC candidate (Java); ambiguous only without a unique winner.
+            Symbol best = pickMostSpecific(compatible);
+            if (best != null) return best;
+            reporter.reportTypeError(name, "Llamada ambigua a '" + name + "'", node);
             return null;
         }
 
         reporter.reportTypeError(name,
                 "No existe una version de '" + name + "' compatible con los argumentos", node);
         return null;
+    }
+
+    private Symbol pickMostSpecific(List<Symbol> candidates) {
+        Symbol best = null;
+        for (Symbol a : candidates) {
+            boolean beatsAll = true;
+            for (Symbol b : candidates) {
+                if (a == b) continue;
+                if (!compatibility.isMoreSpecific(a, b)) {
+                    beatsAll = false;
+                    break;
+                }
+            }
+            if (beatsAll) {
+                if (best != null) return null;
+                best = a;
+            }
+        }
+        return best;
     }
 }

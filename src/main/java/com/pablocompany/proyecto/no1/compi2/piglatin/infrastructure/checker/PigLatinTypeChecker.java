@@ -5,6 +5,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.checker.TypeChecker;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.walkers.PigLatinTypeCheckerVisitor;
@@ -18,9 +19,9 @@ import java.util.Map;
 public class PigLatinTypeChecker implements TypeChecker {
 
     @Override
-    public void check(EditorContext context,
-                      GlobalSymbolTable table,
-                      Map<AstNode, Type> typeAnnotations) {
+    public void check(EditorContext context, GlobalSymbolTable table,
+                      Map<AstNode, Type> typeAnnotations,
+                      Map<AstNode, Symbol> resolvedCalls) {
         if (!(context.getAstNode() instanceof PigLatinAstNode pigAst)) return;
 
         SymbolScope fileScope = table.getOrCreateFileScope(context.getFilePath());
