@@ -9,6 +9,7 @@ import lombok.Data;
  *
  */
 @Data
+@lombok.AllArgsConstructor
 public class HeapAlloc implements Instruction {
 
     private int slots;

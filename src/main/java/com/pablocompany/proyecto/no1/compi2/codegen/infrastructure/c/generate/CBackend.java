@@ -80,7 +80,9 @@ public class CBackend extends AbstractBackend {
                 .register(new CHeapAllocEmitter())
                 .register(new CStringConcatEmitter())
                 .register(new CNewStringEmitter())
-                .register(new CConvertToStringEmitter());
+                .register(new CConvertToStringEmitter())
+                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.functions.CCallIndirectEmitter(callSites))
+                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.labels.CLoadLabelAddressEmitter());
     }
 
     @Override
@@ -125,6 +127,12 @@ public class CBackend extends AbstractBackend {
         if (!program.getStrings().isEmpty()) out.blank();
 
         out.raw("int main() {");
+        for (com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition vt : program.getVtables()) {
+            String elements = vt.getEntries().stream()
+                    .map(e -> "&&" + e)
+                    .collect(java.util.stream.Collectors.joining(", "));
+            out.line("void* " + vt.getName() + "[] = { " + elements + " };");
+        }
         out.line("rastack[rasp] = 0;");
         out.line("rasp = rasp + 1;");
         out.line("goto " + program.entryPoint().orElse("halt") + ";");

@@ -30,6 +30,21 @@ public class ZSymbolLookupService {
         if (access != null) access.setTypeResolver(this::findType);
     }
 
+    public ZSymbolLookupService(GlobalSymbolTable table, EditorContext context) {
+        this(table, context, new ZAccessControlService(context));
+    }
+
+    /**
+     * Global (context-less) constructor for use when there is no single file context,
+     * e.g. in the orchestrator when building VTables across all linked classes.
+     * findType will skip the per-file lookup and go straight to the global scan.
+     */
+    public ZSymbolLookupService(GlobalSymbolTable table) {
+        this.table = table;
+        this.context = null;
+        this.access = null;
+    }
+
     /**
      * Method to evaluates the direct superclass of `cls`, or null if it has none / it is not declared.
      */
@@ -50,10 +65,13 @@ public class ZSymbolLookupService {
     public Symbol findType(String typeName) {
         if (typeName == null) return null;
 
-        List<Symbol> inFile = table.resolveDeepInFile(context.getFilePath(), typeName);
-        for (Symbol s : inFile) {
-            if (s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT) {
-                return s;
+        // Per-file priority lookup — only when we have a file context
+        if (context != null) {
+            List<Symbol> inFile = table.resolveDeepInFile(context.getFilePath(), typeName);
+            for (Symbol s : inFile) {
+                if (s.getKind() == SymbolKind.CLASS || s.getKind() == SymbolKind.STRUCT) {
+                    return s;
+                }
             }
         }
 
