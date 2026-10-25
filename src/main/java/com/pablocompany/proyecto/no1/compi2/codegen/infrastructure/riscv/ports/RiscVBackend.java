@@ -154,6 +154,6 @@ public class RiscVBackend extends AbstractBackend {
      * Method to escape the action
      * */
     private static String escape(String string) {
-        return string.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\t", "\\t");
+        return com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil.escape(string);
     }
 }

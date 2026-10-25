@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.builder;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AbreviationOperator;
@@ -983,7 +984,7 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     public PigLatinAstNode visitValChar(PigLatinParser.ValCharContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodePigLatin(line, column, DataType.CHAR, ctx.CHAR().getText().charAt(0));
+        return new LiteralExpressionNodePigLatin(line, column, DataType.CHAR, StringEscapeUtil.parseCharLiteral(ctx.CHAR().getText()));
     }
 
     @Override

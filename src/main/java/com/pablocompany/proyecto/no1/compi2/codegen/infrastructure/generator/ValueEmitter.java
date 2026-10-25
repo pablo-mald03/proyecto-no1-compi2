@@ -45,8 +45,6 @@ public class ValueEmitter {
             load(value, reg);
             return;
         }
-        // WORD ↔ POINTER: both are 32-bit values in RV32 (strings are pointer-sized words).
-        // Treat as physically compatible — just load without conversion.
         if ((src.getStorage() == Storage.WORD || src.getStorage() == Storage.POINTER)
                 && (dst.getStorage() == Storage.WORD || dst.getStorage() == Storage.POINTER)) {
             load(value, reg);

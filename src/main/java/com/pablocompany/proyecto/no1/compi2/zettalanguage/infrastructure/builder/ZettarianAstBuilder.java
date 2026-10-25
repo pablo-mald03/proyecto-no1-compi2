@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.builder;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AbreviationOperator;
@@ -1170,7 +1171,8 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
     public ZAstNode visitValChar(ZParser.ValCharContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodeZ(line, column, ZDataType.CHAR, ctx.CHAR().getText().charAt(0));
+        return new LiteralExpressionNodeZ(line, column, ZDataType.CHAR,
+                StringEscapeUtil.parseCharLiteral(ctx.CHAR().getText()));
     }
 
     @Override
