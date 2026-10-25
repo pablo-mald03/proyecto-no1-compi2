@@ -17,6 +17,6 @@ public class CLoadLabelAddressEmitter implements InstructionEmitter<LoadLabelAdd
 
     @Override
     public void emit(LoadLabelAddress instruction, CodeWriter out) {
-        out.line(CSyntax.registerTo(instruction.getDestination()) + " = (long)" + instruction.getLabel() + ";");
+        out.line(CSyntax.registerTo(instruction.getDestination()) + " = " + instruction.getLabel() + ";");
     }
 }

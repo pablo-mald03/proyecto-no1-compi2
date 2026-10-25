@@ -111,7 +111,7 @@ public class CBackend extends AbstractBackend {
         out.raw("char* tp;").blank();
         for (String space : new String[]{"stack", "heap"}) {
             int size = space.equals("stack") ? stack : h;
-            out.raw("int " + space + "integer[" + size + "];");
+            out.raw("long " + space + "integer[" + size + "];");
             out.raw("char* " + space + "string[" + size + "];");
             out.raw("float " + space + "float[" + size + "];").blank();
         }
@@ -119,7 +119,7 @@ public class CBackend extends AbstractBackend {
             String names = Stream.of("AX", "BX", "CX")
                     .map(r -> (type == ValueType.STRING ? "*" : "") + r + "_" + type.name())
                     .collect(Collectors.joining(", "));
-            String base = type == ValueType.STRING ? "char " : CSyntax.cType(type) + " ";
+            String base = type == ValueType.STRING ? "char " : (type == ValueType.INT || type == ValueType.BOOLEAN ? "long " : CSyntax.cType(type) + " ");
             out.raw(base + names + ";");
         }
         out.blank();
@@ -128,12 +128,23 @@ public class CBackend extends AbstractBackend {
         }
         if (!program.getStrings().isEmpty()) out.blank();
 
-        out.raw("int main() {");
+        int vtableOffset = 0;
         for (com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition vt : program.getVtables()) {
-            String elements = vt.getEntries().stream()
-                    .map(e -> "&&" + e)
-                    .collect(java.util.stream.Collectors.joining(", "));
-            out.line("void* " + vt.getName() + "[] = { " + elements + " };");
+            out.raw("int " + vt.getName() + " = " + vtableOffset + ";");
+            vtableOffset += vt.getEntries().size();
+        }
+        if (!program.getVtables().isEmpty()) out.blank();
+
+        out.raw("int main() {");
+        int vtOffset = 0;
+        for (com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition vt : program.getVtables()) {
+            for (String entry : vt.getEntries()) {
+                out.line("heapinteger[" + vtOffset + "] = (long)&&" + entry + ";");
+                vtOffset++;
+            }
+        }
+        if (vtOffset > 0) {
+            out.line("hptr = " + vtOffset + ";");
         }
         out.line("rastack[rasp] = 0;");
         out.line("rasp = rasp + 1;");

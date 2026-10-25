@@ -105,7 +105,7 @@ public class CSyntax {
             case STRING -> "%s";
             case FLOAT -> "%f";
             case CHAR -> "%c";
-            case INT, BOOLEAN -> "%d";
+            case INT, BOOLEAN -> "%ld";
         };
     }
 

@@ -728,12 +728,16 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         ir.emit(new LoadLabelAddress(cls.getVtableLabel(), vptrReg));
         ir.emit(new Store(MemorySpace.HEAP, new Indirect(objPtr, 0), vptrReg));
 
+        // Preserve the newly allocated object reference across argument evaluations and constructor call
+        Value savedObj = values.spill(objPtr);
+
         Symbol ctor = resolvedCalls.get(callNode);
         if (ctor == null) {
             ctor = findConstructorByParams(cls, args != null ? args : List.of());
         }
 
         ir.emit(new AdjustStackTop(CALL_AREA));
+        values.load(savedObj, objPtr);
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), objPtr));
         ir.emit(new AdjustStackTop(1));
 
@@ -747,7 +751,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         int totalArgs = 1 + (args != null ? args.size() : 0);
         ir.emit(new AdjustStackTop(-(totalArgs + CALL_AREA)));
 
-        last = values.spill(objPtr);
+        last = savedObj;
     }
 
     @Override
@@ -822,8 +826,16 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             selfVal = eval(node.getTarget());
         }
 
+        Cell preservedSelf;
+        if (selfVal instanceof Cell c) {
+            preservedSelf = c;
+        } else {
+            preservedSelf = frame.temp(selfVal.type());
+            values.store(selfVal, preservedSelf);
+        }
+
         Register selfReg = Register.ax(ValueType.INT);
-        values.load(selfVal, selfReg);
+        values.load(preservedSelf, selfReg);
 
         ir.emit(new AdjustStackTop(CALL_AREA));
 
@@ -839,6 +851,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         } else {
             Register vptr = Register.bx(ValueType.INT);
             Register fnPtr = Register.cx(ValueType.INT);
+            values.load(preservedSelf, selfReg);
             ir.emit(new Load(MemorySpace.HEAP, new Indirect(selfReg, 0), vptr));
             ir.emit(new Load(MemorySpace.HEAP, new Indirect(vptr, targetMethod.getVtableIndex()), fnPtr));
             ir.emit(new CallIndirect(fnPtr));

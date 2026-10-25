@@ -85,7 +85,7 @@ public class ExecutionService {
             File asmFile = prepareAsm(projectDir, asmCode, rarsJarPath, result);
             if (asmFile == null) return result;
 
-            List<String> cmd = List.of(javaBin(), "-jar", rarsJarPath, "nc", asmFile.getName());
+            List<String> cmd = List.of(javaBin(), "-jar", rarsJarPath, "nc", "sm", asmFile.getName());
             TerminalLauncher.launch(asmFile.getParentFile(), cmd, "Programa RISC-V");
 
             result.addStep("Terminal abierta ejecutando " + asmFile.getName() + " con RARS");
