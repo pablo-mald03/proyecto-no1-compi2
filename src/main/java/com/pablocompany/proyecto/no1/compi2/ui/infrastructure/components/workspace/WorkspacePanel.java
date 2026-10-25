@@ -186,6 +186,25 @@ public class WorkspacePanel extends JPanel {
     // PROJECT MANAGEMENT
     // ==========================================
 
+    public void selectNextTab() {
+        int count = tabbedPane.getTabCount();
+        if (count < 2) return;
+        tabbedPane.setSelectedIndex((tabbedPane.getSelectedIndex() + 1) % count);
+        focusSelectedTab();
+    }
+
+    public void selectPreviousTab() {
+        int count = tabbedPane.getTabCount();
+        if (count < 2) return;
+        tabbedPane.setSelectedIndex((tabbedPane.getSelectedIndex() - 1 + count) % count);
+        focusSelectedTab();
+    }
+
+    private void focusSelectedTab() {
+        Component selected = tabbedPane.getSelectedComponent();
+        if (selected != null) selected.requestFocusInWindow();
+    }
+
     public void updateProjectName(String newName) {
         this.projectName = newName;
         fileTreePanel.updateProjectName(newName);

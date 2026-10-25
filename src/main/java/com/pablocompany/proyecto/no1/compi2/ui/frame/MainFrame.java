@@ -31,6 +31,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -89,6 +90,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         // Root Layer Setup
         // ==========================
         setupRootLayer();
+        installTabShortcuts();
 
         // ==========================
         // Final Setup
@@ -100,6 +102,34 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         if (!executionService.isGCCAvailable()) {
             alertToast("GCC no encontrado. Instala GCC para ejecutar el codigo compilado.", true);
         }
+    }
+
+
+    /**
+     * Principal method to install the tab shortcuts
+     *
+     */
+    private void installTabShortcuts() {
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (e.getID() != KeyEvent.KEY_PRESSED
+                    || e.getKeyCode() != KeyEvent.VK_TAB
+                    || !e.isControlDown()) {
+                return false;
+            }
+
+            if (managementScreen == null || !managementScreen.isShowing()) return false;
+
+            Component focus = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+            if (focus == null || SwingUtilities.getWindowAncestor(focus) != this) return false;
+
+            WorkspacePanel workspace = managementScreen.getWorkspacePanel();
+            if (e.isShiftDown()) {
+                workspace.selectPreviousTab();
+            } else {
+                workspace.selectNextTab();
+            }
+            return true;
+        });
     }
 
     /**
