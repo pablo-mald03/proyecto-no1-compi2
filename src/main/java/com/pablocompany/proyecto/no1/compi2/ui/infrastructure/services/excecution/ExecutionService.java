@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.excecution;
 
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.enums.RarsHelpers;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.shell.TerminalLauncher;
 
 import java.io.*;
@@ -85,8 +86,12 @@ public class ExecutionService {
             File asmFile = prepareAsm(projectDir, asmCode, rarsJarPath, result);
             if (asmFile == null) return result;
 
-            List<String> cmd = List.of(javaBin(), "-jar", rarsJarPath, "nc", "sm", asmFile.getName());
-            TerminalLauncher.launch(asmFile.getParentFile(), cmd, "Programa RISC-V");
+            File dir = asmFile.getParentFile();
+            Files.writeString(new File(dir, "RarsRun.java").toPath(), RarsHelpers.RARS_RUN_SOURCE.getValue());
+
+            List<String> cmd = List.of(javaBin(), "-cp", rarsJarPath, "RarsRun.java",
+                    "nc", "sm", asmFile.getName());
+            TerminalLauncher.launch(dir, cmd, "Programa RISC-V");
 
             result.addStep("Terminal abierta ejecutando " + asmFile.getName() + " con RARS");
             result.setSuccess(true);
@@ -96,7 +101,7 @@ public class ExecutionService {
         }
         return result;
     }
-
+    
     /**
      * Method to write the main.s and opens it in the RARS GUI
      */
