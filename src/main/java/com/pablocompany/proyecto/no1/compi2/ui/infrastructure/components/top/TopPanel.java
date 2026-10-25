@@ -27,6 +27,7 @@ public class TopPanel extends JPanel {
     private final Runnable onExecuteRisc;
     private final Runnable onExit;
     private final Runnable onSaveAll;
+    private final Runnable onOpenRars;
 
     private final JMenuBar menuBar;
     private final JToolBar toolBar;
@@ -41,6 +42,7 @@ public class TopPanel extends JPanel {
             Runnable onCompile,
             Runnable onExecuteC,
             Runnable onExecuteRisc,
+            Runnable onOpenRars,
             Runnable onExit,
             Runnable onSaveAll
     ) {
@@ -52,6 +54,7 @@ public class TopPanel extends JPanel {
         this.onSave = onSave;
         this.onCompile = onCompile;
         this.onExecuteC = onExecuteC;
+        this.onOpenRars = onOpenRars;
         this.onExecuteRisc = onExecuteRisc;
         this.onExit = onExit;
 
@@ -137,6 +140,13 @@ public class TopPanel extends JPanel {
                 UIColors.BORDER.getColorSet(),
                 new Color(121, 6, 114).brighter()
         ));
+
+        toolBar.add(createToolbarButton(
+                "Abrir en RARS",
+                e -> onOpenRars(),
+                new Color(30, 110, 90),
+                new Color(30, 110, 90).brighter()
+        ));
     }
 
     /**
@@ -181,7 +191,7 @@ public class TopPanel extends JPanel {
         fileMenu.add(createMenuItem("Salir", KeyEvent.VK_X, e -> onExit()));
         menuBar.add(fileMenu);
 
-        // Edit Menu - Now with compiled code actions
+        // Edit Menu
         JMenu editMenu = createMenu("Editar", KeyEvent.VK_E);
         editMenu.add(createMenuItem("Exportar Proyecto", KeyEvent.VK_D,
                 e -> notifier.notifyDownloadCompiledCode(),
@@ -209,6 +219,8 @@ public class TopPanel extends JPanel {
         toolsMenu.add(createMenuItem("Compilar", KeyEvent.VK_C, e -> onCompile(), KeyStroke.getKeyStroke(KeyEvent.VK_B, KeyEvent.CTRL_DOWN_MASK)));
         toolsMenu.add(createMenuItem("Ejecutar C", KeyEvent.VK_E, e -> onExecuteC(), KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)));
         toolsMenu.add(createMenuItem("Ejecutar Risc V", KeyEvent.VK_R, e -> onExecuteRisc(), KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
+        toolsMenu.add(createMenuItem("Abrir en RARS", KeyEvent.VK_A, e -> onOpenRars(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)));
         menuBar.add(toolsMenu);
 
         // Help Menu
@@ -331,6 +343,10 @@ public class TopPanel extends JPanel {
     // ==========================================
     // ACTION METHODS
     // ==========================================
+
+    private void onOpenRars() {
+        if (onOpenRars != null) onOpenRars.run();
+    }
 
     private void onNewProject() {
         if (onNewProject != null) onNewProject.run();

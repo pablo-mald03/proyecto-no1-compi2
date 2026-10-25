@@ -57,6 +57,12 @@ public interface WorkspaceNotifier {
     void notifyDownloadCompiledCode();
 
     /**
+     * Notify the open compiled code in RARS
+     *
+     */
+    void notifyOpenCompiledInRars();
+
+    /**
      * Notify that the compiled code needs to be executed/run
      */
     void notifyExecuteCompiledCodeC();

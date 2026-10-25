@@ -30,6 +30,7 @@ import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.io.Projec
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -291,6 +292,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
                 this::onCompile,
                 this::onExecuteC,
                 this::onExecuteRisc,
+                this::onOpenRars,
                 this::onExit,
                 this::onSaveAll
         );
@@ -442,7 +444,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             this.logInfo(result.getFormattedOutput());
 
             if (result.isSuccess()) {
-                logSuccess("Programa compilado. Ejecutando en terminal...");
+                logSuccess("Operación completada.");
             } else {
                 logError("Error en la ejecución");
             }
@@ -487,51 +489,93 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     /**
-     * Method to execute the Risc V code
-     *
+     * Runs the RISC-V code with RARS (CLI) in the native terminal
      */
     private void onExecuteRisc() {
-        if (managementScreen == null) {
-            alertToast("No hay ningún proyecto abierto", true);
-            return;
-        }
+        String asmCode = getRiscCodeOrWarn();
+        if (asmCode == null) return;
 
-        WorkspacePanel workspace = managementScreen.getWorkspacePanel();
-        String compiledCode = workspace.getCompiledOutput(Target.RISCV);
+        String rarsPath = resolveRarsPath();
+        if (rarsPath == null) return;
 
-        if (compiledCode == null || compiledCode.isEmpty()) {
-            alertToast("No hay código RISC-V compilado. Presiona 'Compilar' primero.", true);
-            return;
-        }
-
-        String rarsPath = ExecutionService.getRarsPath();
-        if (rarsPath == null || !executionService.isRARSAvailable(rarsPath)) {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Selecciona rars.jar (RISC-V Simulator)");
-            chooser.setFileFilter(new FileNameExtensionFilter("JAR files", "jar"));
-            int result = chooser.showOpenDialog(this);
-            if (result != JFileChooser.APPROVE_OPTION) {
-                alertToast("RARS no configurado. Ejecución cancelada.", true);
-                return;
-            }
-            rarsPath = chooser.getSelectedFile().getAbsolutePath();
-            ExecutionService.setRarsPath(rarsPath);
-        }
-
-        final String finalRarsPath = rarsPath;
-        logInfo("Ejecutando en RARS...");
+        logInfo("Abriendo terminal con RARS...");
 
         new Thread(() -> {
-            ExecutionResult result = executionService.assembleAndRunRiscV(
+            ExecutionResult result = executionService.runRiscVInTerminal(
                     currentProjectDir,
-                    compiledCode,
-                    finalRarsPath
+                    asmCode,
+                    rarsPath
             );
+            SwingUtilities.invokeLater(() -> notifyShowExecutionResult(result));
+        }).start();
+    }
+
+    /**
+     * Method to open the generated main.s in the RARS GUI
+     */
+    private void onOpenRars() {
+        String asmCode = getRiscCodeOrWarn();
+        if (asmCode == null) return;
+
+        String rarsPath = resolveRarsPath();
+        if (rarsPath == null) return;
+
+        logInfo("Abriendo RARS...");
+
+        new Thread(() -> {
+            ExecutionResult result = executionService.openInRars(
+                    currentProjectDir, asmCode, rarsPath);
 
             SwingUtilities.invokeLater(() -> {
                 notifyShowExecutionResult(result);
+                if (result.isSuccess()) {
+                    String asmPath = new File(new File(currentProjectDir, "compiled"), "main.s").getAbsolutePath();
+                    Toolkit.getDefaultToolkit().getSystemClipboard()
+                            .setContents(new StringSelection(asmPath), null);
+                    alertToast("RARS abierto. Usa File > Open (ruta copiada al portapapeles)", false);
+                }
             });
         }).start();
+    }
+
+    /**
+     * Method to returns the compiled RISC-V code, or null if there is none
+     */
+    private String getRiscCodeOrWarn() {
+        if (managementScreen == null) {
+            alertToast("No hay ningún proyecto abierto", true);
+            return null;
+        }
+
+        String compiledCode = managementScreen.getWorkspacePanel().getCompiledOutput(Target.RISCV);
+        if (compiledCode == null || compiledCode.isEmpty()) {
+            alertToast("No hay código RISC-V compilado. Presiona 'Compilar' primero.", true);
+            return null;
+        }
+        return compiledCode;
+    }
+
+    /**
+     * Method to returns a valid rars.jar path, asking the user for it if it is not configured.
+     */
+    private String resolveRarsPath() {
+        String rarsPath = ExecutionService.getRarsPath();
+        if (rarsPath != null && executionService.isRARSAvailable(rarsPath)) {
+            return rarsPath;
+        }
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Selecciona rars.jar (RISC-V Simulator)");
+        chooser.setFileFilter(new FileNameExtensionFilter("JAR files", "jar"));
+
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
+            alertToast("RARS no configurado. Operación cancelada.", true);
+            return null;
+        }
+
+        rarsPath = chooser.getSelectedFile().getAbsolutePath();
+        ExecutionService.setRarsPath(rarsPath);
+        return rarsPath;
     }
 
     @Override
@@ -570,6 +614,11 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     @Override
     public void notifyExecuteCompiledCodeRisc() {
         this.onExecuteRisc();
+    }
+
+    @Override
+    public void notifyOpenCompiledInRars() {
+        this.onOpenRars();
     }
 
     @Override
