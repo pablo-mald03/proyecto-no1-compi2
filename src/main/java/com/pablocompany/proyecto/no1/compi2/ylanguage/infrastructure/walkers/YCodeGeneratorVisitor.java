@@ -26,6 +26,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operatio
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Move;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.LoadAddress;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
@@ -49,6 +50,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalS
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayDeclarationNodeY;
@@ -648,7 +650,60 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         return null;
     }
 
-    // Helpers
+    @Override
+    public Void visit(MemberArrayAccessExpressionNodeY node) {
+        if (node.getTarget() instanceof PropertyAccessExpressionNodeY prop) {
+            FieldReference field = resolveField(prop);
+            ValueType type = valueTypeOf(node);
+            Value index = eval(node.getIndex());
+            Register idx = Register.ax(ValueType.INT);
+            Register result = Register.cx(type);
+            values.loadCoerced(index, idx);
+
+            if (field.getInfo().isReference()) {
+                Register pointer = Register.bx(ValueType.INT);
+                ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
+                if (field.getOffset() > 0) {
+                    Register offsetReg = Register.ax(ValueType.INT);
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset()), ValueType.INT), offsetReg));
+                    ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
+                    values.loadCoerced(index, idx);
+                }
+                ir.emit(new IndexAddress(pointer, idx, pointer));
+                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, 0), result));
+            } else {
+                int base = field.getInfo().getBaseOffset() + field.getOffset();
+                ir.emit(new LoadIndexed(new Frame(base), idx, result));
+            }
+            last = values.spill(result);
+            return null;
+        }
+
+        if (node.getTarget() instanceof IdentifierExpressionNodeY id) {
+            ArrayInfo info = frame.arrayOf(id.getIdentifier());
+            if (info != null) {
+                return visit(new ArrayCallExpressionNodeY(node.getLine(), node.getColumn(), id.getIdentifier(), node.getIndex()));
+            }
+        }
+
+        Value targetVal = eval(node.getTarget());
+        Cell preservedTarget = (targetVal instanceof Cell c) ? c : frame.temp(targetVal.type());
+        if (!(targetVal instanceof Cell)) values.store(targetVal, preservedTarget);
+
+        Value indexVal = eval(node.getIndex());
+        Register targetReg = Register.bx(ValueType.INT);
+        Register indexReg = Register.ax(ValueType.INT);
+        values.load(preservedTarget, targetReg);
+        values.load(indexVal, indexReg);
+
+        ValueType element = valueTypeOf(node);
+        Register result = Register.cx(element);
+        Register addr = Register.ax(ValueType.INT);
+        ir.emit(new IndexAddress(targetReg, indexReg, addr));
+        ir.emit(new Load(MemorySpace.STACK, new Indirect(addr, 0), result));
+        last = values.spill(result);
+        return null;
+    }
 
 
     private static ValueType operandTypeOf(Value left, Value right) {
@@ -705,6 +760,10 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             assignArrayElement(array, value);
             return;
         }
+        if (target instanceof MemberArrayAccessExpressionNodeY memberArr) {
+            assignMemberArrayElement(memberArr, value);
+            return;
+        }
         if (target instanceof PropertyAccessExpressionNodeY prop) {
             FieldReference field = resolveField(prop);
             if (field.getInfo().isReference()) {
@@ -713,6 +772,60 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             }
         }
         values.store(value, values.requireCell(eval(target)));
+    }
+
+    private void assignMemberArrayElement(MemberArrayAccessExpressionNodeY node, Value value) {
+        if (node.getTarget() instanceof PropertyAccessExpressionNodeY prop) {
+            FieldReference field = resolveField(prop);
+            ValueType type = valueTypeOf(node);
+            Value index = eval(node.getIndex());
+            Register idx = Register.ax(ValueType.INT);
+            Register source = Register.cx(type);
+            values.loadCoerced(index, idx);
+            values.loadCoerced(value, source);
+
+            if (field.getInfo().isReference()) {
+                Register pointer = Register.bx(ValueType.INT);
+                ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
+                if (field.getOffset() > 0) {
+                    Register offsetReg = Register.ax(ValueType.INT);
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset()), ValueType.INT), offsetReg));
+                    ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
+                    values.loadCoerced(index, idx);
+                }
+                ir.emit(new IndexAddress(pointer, idx, pointer));
+                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, 0), source));
+            } else {
+                int base = field.getInfo().getBaseOffset() + field.getOffset();
+                ir.emit(new StoreIndexed(new Frame(base), idx, source));
+            }
+            return;
+        }
+
+        if (node.getTarget() instanceof IdentifierExpressionNodeY id) {
+            ArrayInfo info = frame.arrayOf(id.getIdentifier());
+            if (info != null) {
+                assignArrayElement(new ArrayCallExpressionNodeY(node.getLine(), node.getColumn(), id.getIdentifier(), node.getIndex()), value);
+                return;
+            }
+        }
+
+        Value targetVal = eval(node.getTarget());
+        Cell preservedTarget = (targetVal instanceof Cell c) ? c : frame.temp(targetVal.type());
+        if (!(targetVal instanceof Cell)) values.store(targetVal, preservedTarget);
+
+        Value indexVal = eval(node.getIndex());
+        Register targetReg = Register.bx(ValueType.INT);
+        Register indexReg = Register.ax(ValueType.INT);
+        values.load(preservedTarget, targetReg);
+        values.load(indexVal, indexReg);
+
+        Register addr = Register.ax(ValueType.INT);
+        ir.emit(new IndexAddress(targetReg, indexReg, addr));
+
+        Register source = Register.cx(value.type());
+        values.loadCoerced(value, source);
+        ir.emit(new Store(MemorySpace.STACK, new Indirect(addr, 0), source));
     }
 
     private void assignArrayElement(ArrayCallExpressionNodeY target, Value value) {

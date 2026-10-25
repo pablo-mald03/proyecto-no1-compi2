@@ -25,6 +25,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operatio
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Move;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.LoadAddress;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
@@ -461,6 +462,39 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             if (info != null) {
                 assignArrayElementByName(info, indexExpr, value);
                 return;
+            }
+        }
+        if (target instanceof PropertyAccessExpressionNodePigLatin prop) {
+            if (prop.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+                StructInfo sinfo = frame.structOf(id.getIdentifier());
+                if (sinfo != null) {
+                    List<String> layout = structFields(sinfo.getStructTypeName());
+                    int offset = layout != null ? layout.indexOf(prop.getPropertyName()) : -1;
+                    if (offset >= 0) {
+                        Value indexVal = eval(indexExpr);
+                        Register idx = Register.ax(ValueType.INT);
+                        values.loadCoerced(indexVal, idx);
+                        Register regValue = Register.cx(value.type());
+                        values.loadCoerced(value, regValue);
+
+                        if (sinfo.isReference()) {
+                            Register ptr = Register.bx(ValueType.INT);
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(sinfo.getBaseOffset()), ptr));
+                            if (offset > 0) {
+                                Register offsetReg = Register.ax(ValueType.INT);
+                                ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(offset), ValueType.INT), offsetReg));
+                                ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
+                                values.loadCoerced(indexVal, idx);
+                            }
+                            ir.emit(new IndexAddress(ptr, idx, ptr));
+                            ir.emit(new Store(MemorySpace.STACK, new Indirect(ptr, 0), regValue));
+                        } else {
+                            int base = sinfo.getBaseOffset() + offset;
+                            ir.emit(new StoreIndexed(new Frame(base), idx, regValue));
+                        }
+                        return;
+                    }
+                }
             }
         }
         throw new IllegalStateException("Asignación a arreglo no soportada para: " + target);
@@ -1009,6 +1043,40 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             if (info != null) {
                 loadArrayElement(info, node.getIndex());
                 return null;
+            }
+        }
+        if (node.getTarget() instanceof PropertyAccessExpressionNodePigLatin prop) {
+            if (prop.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+                StructInfo sinfo = frame.structOf(id.getIdentifier());
+                if (sinfo != null) {
+                    List<String> layout = structFields(sinfo.getStructTypeName());
+                    int offset = layout != null ? layout.indexOf(prop.getPropertyName()) : -1;
+                    if (offset >= 0) {
+                        ValueType elemType = ValueType.INT;
+                        Value indexVal = eval(node.getIndex());
+                        Register idx = Register.ax(ValueType.INT);
+                        values.loadCoerced(indexVal, idx);
+                        Register result = Register.cx(elemType);
+
+                        if (sinfo.isReference()) {
+                            Register ptr = Register.bx(ValueType.INT);
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(sinfo.getBaseOffset()), ptr));
+                            if (offset > 0) {
+                                Register offsetReg = Register.ax(ValueType.INT);
+                                ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(offset), ValueType.INT), offsetReg));
+                                ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
+                                values.loadCoerced(indexVal, idx);
+                            }
+                            ir.emit(new IndexAddress(ptr, idx, ptr));
+                            ir.emit(new Load(MemorySpace.STACK, new Indirect(ptr, 0), result));
+                        } else {
+                            int base = sinfo.getBaseOffset() + offset;
+                            ir.emit(new LoadIndexed(new Frame(base), idx, result));
+                        }
+                        last = values.spill(result);
+                        return null;
+                    }
+                }
             }
         }
         last = new Constant("0", ValueType.INT);

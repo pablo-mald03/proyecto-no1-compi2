@@ -288,7 +288,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     }
 
     // ============================================================
-    // SENTENCIAS Y CONTROL DE FLUJO
+    // STATEMENTS AND CONTROL STATEMENTS
     // ============================================================
 
     @Override
@@ -573,7 +573,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     }
 
     // ============================================================
-    // EXPRESIONES BÁSICAS
+    // EXPRESSIONS
     // ============================================================
 
     @Override
@@ -728,7 +728,6 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         ir.emit(new LoadLabelAddress(cls.getVtableLabel(), vptrReg));
         ir.emit(new Store(MemorySpace.HEAP, new Indirect(objPtr, 0), vptrReg));
 
-        // Preserve the newly allocated object reference across argument evaluations and constructor call
         Value savedObj = values.spill(objPtr);
 
         Symbol ctor = resolvedCalls.get(callNode);
@@ -892,33 +891,135 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ArrayInitExpressionNodeZ node) {
+        List<ExpressionNodeZ> elements = node.getElements();
+        int size = elements != null ? elements.size() : 0;
+        Register arrPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(size, arrPtr));
+        Value savedArr = values.spill(arrPtr);
+
+        if (elements != null) {
+            for (int i = 0; i < elements.size(); i++) {
+                Value elemVal = eval(elements.get(i));
+                Register tempArr = Register.bx(ValueType.INT);
+                values.load(savedArr, tempArr);
+                Register valReg = Register.cx(elemVal.type());
+                values.loadCoerced(elemVal, valReg);
+                ir.emit(new Store(MemorySpace.HEAP, new Indirect(tempArr, i), valReg));
+            }
+        }
+        last = savedArr;
         return null;
     }
 
     @Override
     public Void visit(ArrayValuesNodeZ node) {
+        List<ExpressionNodeZ> elements = node.getValues();
+        int size = elements != null ? elements.size() : 0;
+        Register arrPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(size, arrPtr));
+        Value savedArr = values.spill(arrPtr);
+
+        if (elements != null) {
+            for (int i = 0; i < elements.size(); i++) {
+                Value elemVal = eval(elements.get(i));
+                Register tempArr = Register.bx(ValueType.INT);
+                values.load(savedArr, tempArr);
+                Register valReg = Register.cx(elemVal.type());
+                values.loadCoerced(elemVal, valReg);
+                ir.emit(new Store(MemorySpace.HEAP, new Indirect(tempArr, i), valReg));
+            }
+        }
+        last = savedArr;
         return null;
     }
 
     @Override
     public Void visit(ArrayInstantiationNodeZ node) {
+        if (node.getDimensions() == null || node.getDimensions().isEmpty()) {
+            Register zero = Register.ax(ValueType.INT);
+            ir.emit(new HeapAlloc(0, zero));
+            last = values.spill(zero);
+            return null;
+        }
+        last = allocateArrayRecursively(node.getDimensions(), 0);
         return null;
+    }
+
+    private Value allocateArrayRecursively(List<ExpressionNodeZ> dims, int dimIndex) {
+        ExpressionNodeZ dimExpr = dims.get(dimIndex);
+        Value dimVal = eval(dimExpr);
+        Register dimReg = Register.bx(ValueType.INT);
+        values.loadCoerced(dimVal, dimReg);
+
+        Register arrPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(dimReg, arrPtr));
+        Value savedArr = values.spill(arrPtr);
+
+        if (dimIndex == dims.size() - 1) {
+            return savedArr;
+        }
+
+        Cell loopVar = frame.temp(ValueType.INT);
+        values.store(new Constant("0", ValueType.INT), loopVar);
+
+        Cell sizeCell = frame.temp(ValueType.INT);
+        values.store(dimVal, sizeCell);
+
+        String startLabel = labels.nextLabel();
+        String endLabel = labels.nextLabel();
+
+        ir.emit(new MarkLabel(startLabel));
+
+        Register iReg = Register.ax(ValueType.INT);
+        Register sReg = Register.bx(ValueType.INT);
+        values.load(loopVar, iReg);
+        values.load(sizeCell, sReg);
+        Register condReg = Register.cx(ValueType.BOOLEAN);
+        ir.emit(new BinaryOperation(BinaryOperations.LT, iReg, sReg, condReg));
+        ir.emit(new com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf(condReg, false, endLabel));
+
+        Value subArr = allocateArrayRecursively(dims, dimIndex + 1);
+
+        Register baseReg = Register.bx(ValueType.INT);
+        values.load(savedArr, baseReg);
+        values.load(loopVar, iReg);
+        Register addrReg = Register.ax(ValueType.INT);
+        ir.emit(new IndexAddress(baseReg, iReg, addrReg));
+
+        Register subReg = Register.cx(ValueType.INT);
+        values.load(subArr, subReg);
+        ir.emit(new Store(MemorySpace.HEAP, new Indirect(addrReg, 0), subReg));
+
+        values.incDec(loopVar, BinaryOperations.ADD);
+        ir.emit(new Jump(startLabel));
+
+        ir.emit(new MarkLabel(endLabel));
+        return savedArr;
     }
 
     @Override
     public Void visit(MemberArrayAccessExpressionNodeZ node) {
         Value targetVal = eval(node.getTarget());
+        Cell preservedTarget;
+        if (targetVal instanceof Cell c) {
+            preservedTarget = c;
+        } else {
+            preservedTarget = frame.temp(targetVal.type());
+            values.store(targetVal, preservedTarget);
+        }
+
         Value indexVal = eval(node.getIndex());
+
         Register targetReg = Register.bx(ValueType.INT);
         Register indexReg = Register.ax(ValueType.INT);
-        values.load(targetVal, targetReg);
+        values.load(preservedTarget, targetReg);
         values.load(indexVal, indexReg);
 
         ValueType element = valueTypeOf(node);
         Register result = Register.cx(element);
         Register addr = Register.ax(ValueType.INT);
         ir.emit(new IndexAddress(targetReg, indexReg, addr));
-        ir.emit(new Load(MemorySpace.STACK, new Indirect(addr, 0), result));
+        ir.emit(new Load(MemorySpace.HEAP, new Indirect(addr, 0), result));
         last = values.spill(result);
         return null;
     }
@@ -978,10 +1079,19 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
         if (target instanceof MemberArrayAccessExpressionNodeZ arr) {
             Value targetVal = eval(arr.getTarget());
+            Cell preservedTarget;
+            if (targetVal instanceof Cell c) {
+                preservedTarget = c;
+            } else {
+                preservedTarget = frame.temp(targetVal.type());
+                values.store(targetVal, preservedTarget);
+            }
+
             Value indexVal = eval(arr.getIndex());
+
             Register targetReg = Register.bx(ValueType.INT);
             Register indexReg = Register.ax(ValueType.INT);
-            values.load(targetVal, targetReg);
+            values.load(preservedTarget, targetReg);
             values.load(indexVal, indexReg);
 
             Register addr = Register.ax(ValueType.INT);
@@ -989,7 +1099,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
             Register valReg = Register.cx(value.type());
             values.loadCoerced(value, valReg);
-            ir.emit(new Store(MemorySpace.STACK, new Indirect(addr, 0), valReg));
+            ir.emit(new Store(MemorySpace.HEAP, new Indirect(addr, 0), valReg));
             return;
         }
 
