@@ -668,7 +668,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         BinaryOperations op = IntermediateTypes.binary(node.getOperator());
         ValueType annotated = typeAnnotations.containsKey(node) ? valueTypeOf(node) : null;
 
-        if (annotated == ValueType.STRING && op == BinaryOperations.ADD) {
+        if ((annotated == ValueType.STRING || left.type() == ValueType.STRING || right.type() == ValueType.STRING) && op == BinaryOperations.ADD) {
             last = concat(left, right);
             return null;
         }
@@ -727,12 +727,28 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         String className = node.getType() != null
                 ? (node.getType().getCustomTypeName() != null ? node.getType().getCustomTypeName() : (node.getType().getDataType() != null ? node.getType().getDataType().getValue() : null))
                 : null;
+        if ("String".equalsIgnoreCase(className)) {
+            if (node.getArguments() != null && !node.getArguments().isEmpty()) {
+                last = eval(node.getArguments().get(0));
+            } else {
+                last = new Text(ir.intern(""));
+            }
+            return null;
+        }
         emitObjectCreation(className, node.getArguments(), node);
         return null;
     }
 
     @Override
     public Void visit(InstanceCreationExpressionNodeZ node) {
+        if ("String".equalsIgnoreCase(node.getClassName())) {
+            if (node.getArguments() != null && !node.getArguments().isEmpty()) {
+                last = eval(node.getArguments().get(0));
+            } else {
+                last = new Text(ir.intern(""));
+            }
+            return null;
+        }
         emitObjectCreation(node.getClassName(), node.getArguments(), node);
         return null;
     }
@@ -1290,10 +1306,10 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     private ValueType declaredType(String typeName) {
         if (typeName == null) return ValueType.INT;
         return switch (typeName.toLowerCase()) {
-            case "int" -> ValueType.INT;
-            case "float", "double" -> ValueType.FLOAT;
-            case "boolean", "bool" -> ValueType.BOOLEAN;
-            case "char" -> ValueType.CHAR;
+            case "int", "entero", "numerus" -> ValueType.INT;
+            case "float", "double", "decimal", "decimalis" -> ValueType.FLOAT;
+            case "boolean", "bool", "booleano" -> ValueType.BOOLEAN;
+            case "char", "caracter" -> ValueType.CHAR;
             case "string" -> ValueType.STRING;
             default -> ValueType.INT;
         };
@@ -1301,6 +1317,13 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     private ValueType declaredType(TypeNodeZ typeNode) {
         if (typeNode == null) return ValueType.INT;
+        if (typeNode.getCustomTypeName() != null) {
+            String custom = typeNode.getCustomTypeName();
+            ValueType customType = declaredType(custom);
+            if (customType != ValueType.INT || "int".equalsIgnoreCase(custom) || "entero".equalsIgnoreCase(custom) || "numerus".equalsIgnoreCase(custom)) {
+                return customType;
+            }
+        }
         if (typeNode.getDataType() != null) {
             return switch (typeNode.getDataType()) {
                 case INT -> ValueType.INT;
@@ -1308,6 +1331,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
                 case BOOLEAN -> ValueType.BOOLEAN;
                 case CHAR -> ValueType.CHAR;
                 case STRING -> ValueType.STRING;
+                case CLASS -> typeNode.getCustomTypeName() != null ? declaredType(typeNode.getCustomTypeName()) : ValueType.INT;
                 default -> ValueType.INT;
             };
         }
@@ -1315,15 +1339,28 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     }
 
     private TypeKind kindOf(TypeNodeZ typeNode) {
-        if (typeNode == null || typeNode.getDataType() == null) return TypeKind.INT;
-        return switch (typeNode.getDataType()) {
-            case INT -> TypeKind.INT;
-            case DOUBLE -> TypeKind.FLOAT;
-            case BOOLEAN -> TypeKind.BOOLEAN;
-            case CHAR -> TypeKind.CHAR;
-            case STRING -> TypeKind.STRING;
-            default -> TypeKind.CUSTOM;
-        };
+        if (typeNode == null) return TypeKind.INT;
+        if (typeNode.getCustomTypeName() != null) {
+            String custom = typeNode.getCustomTypeName().toLowerCase();
+            switch (custom) {
+                case "string": return TypeKind.STRING;
+                case "float", "double", "decimal", "decimalis": return TypeKind.FLOAT;
+                case "int", "entero", "numerus": return TypeKind.INT;
+                case "boolean", "bool", "booleano": return TypeKind.BOOLEAN;
+                case "char", "caracter": return TypeKind.CHAR;
+            }
+        }
+        if (typeNode.getDataType() != null) {
+            return switch (typeNode.getDataType()) {
+                case INT -> TypeKind.INT;
+                case DOUBLE -> TypeKind.FLOAT;
+                case BOOLEAN -> TypeKind.BOOLEAN;
+                case CHAR -> TypeKind.CHAR;
+                case STRING -> TypeKind.STRING;
+                default -> TypeKind.CUSTOM;
+            };
+        }
+        return TypeKind.CUSTOM;
     }
 
     private static ValueType operandTypeOf(Value left, Value right) {
