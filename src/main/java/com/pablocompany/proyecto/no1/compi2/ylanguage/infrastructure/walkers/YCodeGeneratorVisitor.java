@@ -735,11 +735,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             Register pointer = Register.ax(ValueType.INT);
             Register result = Register.cx(type);
             ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
-            int byteOffset = field.getInfo().getStructTypeName() != null
-                    ? layout.fieldOffsetBytes(field.getInfo().getStructTypeName(), node.getPropertyName())
-                    : field.getOffsetBytes();
-            if (byteOffset < 0) byteOffset = field.getOffsetBytes();
-            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, byteOffset), result));
+            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, field.getOffset()), result));
             last = values.spill(result);
         } else {
             last = new Cell(type, new Frame(field.getInfo().getBaseOffset() + field.getOffset()));
@@ -1007,7 +1003,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         Register source = Register.cx(type);
         ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
         values.loadCoerced(value, source);
-        ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffsetBytes()), source));
+        ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffset()), source));
     }
 
 

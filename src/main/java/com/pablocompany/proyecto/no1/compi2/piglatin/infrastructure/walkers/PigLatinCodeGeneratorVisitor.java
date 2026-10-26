@@ -457,11 +457,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 Register reg = Register.cx(value.type());
                 ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
                 values.loadCoerced(value, reg);
-                int byteOffset = structField.getInfo().getStructTypeName() != null
-                        ? structLayout.fieldOffsetBytes(structField.getInfo().getStructTypeName(), propName)
-                        : structField.getOffsetBytes();
-                if (byteOffset < 0) byteOffset = structField.getOffsetBytes();
-                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, byteOffset), reg));
+                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, structField.getOffset()), reg));
             } else {
                 Cell cell = new Cell(value.type(), new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
                 values.store(value, cell);
@@ -1075,11 +1071,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 Register pointer = Register.ax(ValueType.INT);
                 Register result = Register.cx(vType);
                 ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
-                int byteOffset = structField.getInfo().getStructTypeName() != null
-                        ? structLayout.fieldOffsetBytes(structField.getInfo().getStructTypeName(), prop)
-                        : structField.getOffsetBytes();
-                if (byteOffset < 0) byteOffset = structField.getOffsetBytes();
-                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, byteOffset), result));
+                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, structField.getOffset()), result));
                 last = values.spill(result);
             } else {
                 last = new Cell(vType, new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
