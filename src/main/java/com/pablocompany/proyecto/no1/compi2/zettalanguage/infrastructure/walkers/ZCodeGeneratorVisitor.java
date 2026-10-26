@@ -779,8 +779,12 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), objPtr));
         ir.emit(new AdjustStackTop(1));
 
+        List<String> paramTypes = ctor != null ? ctor.getParameterTypes() : null;
         if (args != null) {
-            for (ExpressionNodeZ arg : args) pushArgument(arg);
+            for (int i = 0; i < args.size(); i++) {
+                ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+                pushArgument(args.get(i), expected);
+            }
         }
 
         String ctorLabel = NameMangler.codeLabel(ctor);
@@ -814,8 +818,12 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), thisReg));
         ir.emit(new AdjustStackTop(1));
 
+        List<String> paramTypes = ctor != null ? ctor.getParameterTypes() : null;
         if (args != null) {
-            for (ExpressionNodeZ arg : args) pushArgument(arg);
+            for (int i = 0; i < args.size(); i++) {
+                ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+                pushArgument(args.get(i), expected);
+            }
         }
 
         ir.emit(new Call(NameMangler.codeLabel(ctor)));
@@ -880,7 +888,11 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), selfReg));
         ir.emit(new AdjustStackTop(1));
 
-        for (ExpressionNodeZ arg : args) pushArgument(arg);
+        List<String> paramTypes = targetMethod != null ? targetMethod.getParameterTypes() : null;
+        for (int i = 0; i < args.size(); i++) {
+            ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+            pushArgument(args.get(i), expected);
+        }
 
         int totalArgs = 1 + args.size();
 
@@ -1170,9 +1182,10 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         ir.emit(new Store(MemorySpace.HEAP, new Indirect(objReg, slot), scratch));
     }
 
-    private void pushArgument(ExpressionNodeZ arg) {
+    private void pushArgument(ExpressionNodeZ arg, ValueType expectedType) {
         Value val = eval(arg);
-        Register reg = Register.ax(val.type());
+        ValueType targetType = (expectedType != null) ? expectedType : val.type();
+        Register reg = Register.ax(targetType);
         values.loadCoerced(val, reg);
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), reg));
         ir.emit(new AdjustStackTop(1));

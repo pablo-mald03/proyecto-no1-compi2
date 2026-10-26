@@ -623,10 +623,18 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         List<ExpressionNodeY> args = node.getArguments() != null ? node.getArguments() : List.of();
         int n = args.size();
 
-        ir.emit(new AdjustStackTop(CALL_AREA));
-        for (ExpressionNodeY arg : args) pushArgument(arg);
-
         Symbol target = symbols.target(node);
+        List<String> paramTypes = target != null ? target.getParameterTypes() : null;
+
+        ir.emit(new AdjustStackTop(CALL_AREA));
+        for (int i = 0; i < n; i++) {
+            ExpressionNodeY arg = args.get(i);
+            ValueType expectedType = (paramTypes != null && i < paramTypes.size())
+                    ? paramValueType(paramTypes.get(i))
+                    : null;
+            pushArgument(arg, expectedType);
+        }
+
         ir.emit(new Call(NameMangler.functionName(target)));
 
         Register result = Register.cx(valueTypeOf(node));
@@ -738,7 +746,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
      * Method to push the arguments for the arguments push
      *
      */
-    private void pushArgument(ExpressionNodeY arg) {
+    private void pushArgument(ExpressionNodeY arg, ValueType expectedType) {
         if (arg instanceof IdentifierExpressionNodeY id) {
             ArrayInfo array = frame.arrayOf(id.getIdentifier());
             if (array != null) {
@@ -752,7 +760,8 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             }
         }
         Value value = eval(arg);
-        Register reg = Register.ax(value.type());
+        ValueType targetType = (expectedType != null) ? expectedType : value.type();
+        Register reg = Register.ax(targetType);
         values.loadCoerced(value, reg);
         pushRegisterister(reg);
     }
@@ -958,18 +967,30 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         return (s.length() == 1 && !Character.isDigit(s.charAt(0))) ? Integer.toString(s.charAt(0)) : s;
     }
 
+    private static ValueType paramValueType(String typeName) {
+        if (typeName == null) return null;
+        return switch (typeName.toLowerCase()) {
+            case "float", "flotante", "double", "decimal", "decimalis" -> ValueType.FLOAT;
+            case "string", "cadena" -> ValueType.STRING;
+            case "boolean", "bool", "booleano" -> ValueType.BOOLEAN;
+            case "char", "caracter" -> ValueType.CHAR;
+            case "int", "entero", "numerus" -> ValueType.INT;
+            default -> ValueType.INT;
+        };
+    }
+
     /**
      * Helper resolver for the return type
      */
     private static ValueType returnTypeOf(Symbol fn) {
         if (fn == null || fn.getReturnType() == null)
             throw new IllegalStateException("Función sin tipo de retorno en la tabla: " + fn);
-        return switch (fn.getReturnType()) {
-            case "int" -> ValueType.INT;
-            case "float" -> ValueType.FLOAT;
-            case "char" -> ValueType.CHAR;
-            case "boolean" -> ValueType.BOOLEAN;
-            case "string" -> ValueType.STRING;
+        return switch (fn.getReturnType().toLowerCase()) {
+            case "int", "entero", "numerus" -> ValueType.INT;
+            case "float", "flotante", "double", "decimal", "decimalis" -> ValueType.FLOAT;
+            case "char", "caracter" -> ValueType.CHAR;
+            case "boolean", "bool", "booleano" -> ValueType.BOOLEAN;
+            case "string", "cadena" -> ValueType.STRING;
             case "void" -> throw new IllegalStateException(
                     "return con valor en función void: " + fn.getName());
             default -> ValueType.INT;

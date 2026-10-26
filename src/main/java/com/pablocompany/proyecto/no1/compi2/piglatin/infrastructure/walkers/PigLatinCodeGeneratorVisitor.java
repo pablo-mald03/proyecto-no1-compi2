@@ -917,8 +917,12 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), objPtr));
         ir.emit(new AdjustStackTop(1));
 
+        List<String> paramTypes = ctor != null ? ctor.getParameterTypes() : null;
         if (args != null) {
-            for (ExpressionNodePigLatin arg : args) pushArgument(arg);
+            for (int i = 0; i < args.size(); i++) {
+                ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+                pushArgument(args.get(i), expected);
+            }
         }
 
         String ctorLabel = NameMangler.codeLabel(ctor);
@@ -971,7 +975,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), selfReg));
         ir.emit(new AdjustStackTop(1));
 
-        for (ExpressionNodePigLatin arg : args) pushArgument(arg);
+        List<String> paramTypes = targetMethod != null ? targetMethod.getParameterTypes() : null;
+        for (int i = 0; i < args.size(); i++) {
+            ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+            pushArgument(args.get(i), expected);
+        }
 
         int totalArgs = 1 + args.size();
 
@@ -1006,7 +1014,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         int n = args.size();
         ir.emit(new AdjustStackTop(CALL_AREA));
-        for (ExpressionNodePigLatin arg : args) pushArgument(arg);
+        List<String> paramTypes = targetFn != null ? targetFn.getParameterTypes() : null;
+        for (int i = 0; i < args.size(); i++) {
+            ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+            pushArgument(args.get(i), expected);
+        }
 
         String callLabel = targetFn != null ? NameMangler.resolveCallLabel(targetFn) : node.getFunctionName();
         ir.emit(new Call(callLabel));
@@ -1202,7 +1214,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         ir.emit(new Store(MemorySpace.HEAP, new Indirect(objReg, slot), scratch));
     }
 
-    private void pushArgument(ExpressionNodePigLatin arg) {
+    private void pushArgument(ExpressionNodePigLatin arg, ValueType expectedType) {
         if (arg instanceof IdentifierExpressionNodePigLatin id) {
             ArrayInfo array = frame.arrayOf(id.getIdentifier());
             if (array != null) {
@@ -1216,7 +1228,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             }
         }
         Value val = eval(arg);
-        Register reg = Register.ax(val.type());
+        ValueType targetType = (expectedType != null) ? expectedType : val.type();
+        Register reg = Register.ax(targetType);
         values.loadCoerced(val, reg);
         ir.emit(new Store(MemorySpace.STACK, new StackTop(0), reg));
         ir.emit(new AdjustStackTop(1));
@@ -1392,11 +1405,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
     private ValueType declaredType(String typeName) {
         if (typeName == null) return ValueType.INT;
         return switch (typeName.toLowerCase()) {
-            case "int" -> ValueType.INT;
-            case "float", "decimal" -> ValueType.FLOAT;
-            case "string" -> ValueType.STRING;
-            case "char" -> ValueType.CHAR;
-            case "boolean", "bool" -> ValueType.BOOLEAN;
+            case "int", "entero", "numerus" -> ValueType.INT;
+            case "float", "flotante", "double", "decimal", "decimalis" -> ValueType.FLOAT;
+            case "string", "cadena" -> ValueType.STRING;
+            case "char", "caracter" -> ValueType.CHAR;
+            case "boolean", "bool", "booleano" -> ValueType.BOOLEAN;
             default -> ValueType.INT;
         };
     }
