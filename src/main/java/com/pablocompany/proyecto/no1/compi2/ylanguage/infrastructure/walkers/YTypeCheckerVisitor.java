@@ -556,7 +556,7 @@ public class YTypeCheckerVisitor implements YAstVisitor<Type> {
                         "La condicion del 'if' debe ser booleana", node);
             }
             if (node.getThenBody() != null) {
-                for (StatementNodeY s : node.getThenBody()) if (s != null) s.accept(this);
+                for (YAstNode s : node.getThenBody()) if (s != null) s.accept(this);
             }
             if (node.getElseIfs() != null) {
                 for (ElseIfNodeY e : node.getElseIfs()) if (e != null) e.accept(this);

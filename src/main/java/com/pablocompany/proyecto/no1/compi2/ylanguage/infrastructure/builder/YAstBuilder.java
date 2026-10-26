@@ -345,9 +345,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
         ExpressionNodeY condition = (ExpressionNodeY) ctx.expression().accept(this);
 
-        List<StatementNodeY> thenBody = new ArrayList<>();
+        List<YAstNode> thenBody = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            thenBody.add((StatementNodeY) sCtx.accept(this));
+            thenBody.add( sCtx.accept(this));
         }
 
         List<ElseIfNodeY> elseIfs = new ArrayList<>();
