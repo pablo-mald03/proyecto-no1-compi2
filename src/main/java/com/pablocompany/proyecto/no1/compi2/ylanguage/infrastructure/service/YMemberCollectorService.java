@@ -52,6 +52,14 @@ public class YMemberCollectorService {
             int dims = attr.getDimensions() != null ? attr.getDimensions().size() : 1;
             m.setDimensions(dims);
             m.setArray(true);
+            if (attr.getDimensions() != null) {
+                java.util.List<Integer> sizes = new java.util.ArrayList<>();
+                for (var dimExpr : attr.getDimensions()) {
+                    Integer sz = extractLiteralInt(dimExpr);
+                    sizes.add(sz != null ? sz : -1);
+                }
+                m.setDimensionSizes(sizes);
+            }
         }
         return m;
     }
@@ -64,6 +72,17 @@ public class YMemberCollectorService {
         if (typeNode == null) return null;
         if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
         if (typeNode.getDataType() != null) return typeNode.getDataType().getValue();
+        return null;
+    }
+
+    /**
+     * Method to try to extract an integer literal value from a dimension expression
+     */
+    private static Integer extractLiteralInt(com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.parents.ExpressionNodeY expr) {
+        if (expr instanceof com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.LiteralExpressionNodeY lit
+                && lit.getDataValue() instanceof Integer i) {
+            return i;
+        }
         return null;
     }
 

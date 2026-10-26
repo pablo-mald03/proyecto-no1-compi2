@@ -38,6 +38,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.StructLayout;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.ValueEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
@@ -59,7 +60,10 @@ import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.exp
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.StructInstanceNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructPropertyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.TypeNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.ArrayCallExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.FunctionCallExpressionNodeY;
@@ -108,6 +112,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     private Symbol currentFunctionSymbol;
 
     private final SymbolLookup symbols;
+    private final StructLayout layout;
 
     public YCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
                                  Map<AstNode, Type> typeAnnotations,
@@ -120,6 +125,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         this.labels = labels;
         this.values = new ValueEmitter(ir, frame);
         this.symbols = new SymbolLookup(table, resolvedCalls);
+        this.layout = new StructLayout(table);
     }
     // ============================================================ top level
 
@@ -148,6 +154,62 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     @Override
     public Void visit(StructDeclarationNodeY node) {
         return null;
+    }
+
+    @Override
+    public Void visit(StructInstanceNodeY node) {
+        String name = node.getIdentifier();
+        String structType = node.getStructType();
+        int totalCells = layout.structSizeCells(structType);
+        int base = frame.allocate(totalCells);
+        frame.registerStruct(name, new StructInfo(structType, base, false));
+        frame.declare(name, ValueType.INT);
+
+        if (node.getLiteral() != null) {
+            populateStructLiteral(base, structType, node.getLiteral());
+        }
+        return null;
+    }
+
+    private void populateStructLiteral(int base, String structType, StructLiteralExpressionNodeY lit) {
+        if (lit.getProperties() == null) return;
+        List<Symbol> members = layout.members(structType);
+        List<StructPropertyNodeY> props = lit.getProperties();
+        int count = Math.min(props.size(), members != null ? members.size() : 0);
+        for (int i = 0; i < count; i++) {
+            StructPropertyNodeY prop = props.get(i);
+            if (prop.getValue() == null) continue;
+            Symbol member = members.get(i);
+            int cellOff = layout.fieldOffsetCells(structType, member.getName());
+            if (member.isArray()) {
+                // Embedded array: copy source elements into struct slots
+                int arrayCells = layout.fieldSizeCells(structType, member.getName());
+                ArrayInfo srcInfo = (prop.getValue() instanceof IdentifierExpressionNodeY id)
+                        ? frame.arrayOf(id.getIdentifier()) : null;
+                if (srcInfo != null) {
+                    // copy from source array
+                    ValueType elemType = IntermediateTypes.of(srcInfo.getElementType());
+                    Register idx = Register.ax(ValueType.INT);
+                    Register val = Register.cx(elemType);
+                    for (int j = 0; j < arrayCells; j++) {
+                        ir.emit(new Move(new Immediate(String.valueOf(j), ValueType.INT), idx));
+                        if (srcInfo.isHeap()) {
+                            Register ptr = Register.bx(ValueType.INT);
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(srcInfo.getBaseOffset()), ptr));
+                            ir.emit(new IndexAddress(ptr, idx, ptr));
+                            ir.emit(new Load(MemorySpace.STACK, new Indirect(ptr, 0), val));
+                        } else {
+                            ir.emit(new LoadIndexed(new Frame(srcInfo.getBaseOffset()), idx, val));
+                        }
+                        ir.emit(new Store(MemorySpace.STACK, new Frame(base + cellOff + j), val));
+                    }
+                }
+                // else: source not known at compile time, skip initialization
+            } else {
+                Value val = eval(prop.getValue());
+                values.store(val, new Cell(val.type(), new Frame(base + cellOff)));
+            }
+        }
     }
 
     // ==== Functions ===
@@ -673,7 +735,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             Register pointer = Register.ax(ValueType.INT);
             Register result = Register.cx(type);
             ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
-            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, field.getOffset()), result));
+            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, field.getOffset() * 4), result));
             last = values.spill(result);
         } else {
             last = new Cell(type, new Frame(field.getInfo().getBaseOffset() + field.getOffset()));
@@ -770,6 +832,36 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             if (struct != null) {
                 pushReference(struct.isReference(), struct.getBaseOffset());
                 return;
+            }
+        }
+        // Passing an embedded struct array-field as argument: need to pass its address
+        if (arg instanceof PropertyAccessExpressionNodeY prop) {
+            FieldReference field = resolveField(prop);
+            if (field != null) {
+                StructInfo info = field.getInfo();
+                String structType = info.getStructTypeName();
+                String fieldName = prop.getPropertyName();
+                if (structType != null) {
+                    Symbol memberSym = layout.members(structType) == null ? null
+                            : layout.members(structType).stream()
+                                    .filter(m -> m.getName().equals(fieldName)).findFirst().orElse(null);
+                    if (memberSym != null && memberSym.isArray()) {
+                        // Embedded array field: pass address = base_ptr + field_byte_offset
+                        Register addr = Register.ax(ValueType.INT);
+                        if (info.isReference()) {
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), addr));
+                            if (field.getOffset() > 0) {
+                                Register off = Register.bx(ValueType.INT);
+                                ir.emit(new Move(new Immediate(String.valueOf(field.getOffset()), ValueType.INT), off));
+                                ir.emit(new BinaryOperation(BinaryOperations.ADD, addr, off, addr));
+                            }
+                        } else {
+                            ir.emit(new LoadAddress(new Frame(info.getBaseOffset() + layout.fieldOffsetCells(structType, fieldName)), addr));
+                        }
+                        pushRegisterister(addr);
+                        return;
+                    }
+                }
             }
         }
         Value value = eval(arg);
@@ -909,7 +1001,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         Register source = Register.cx(type);
         ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
         values.loadCoerced(value, source);
-        ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffset()), source));
+        ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffset() * 4), source));
     }
 
 
@@ -917,27 +1009,23 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         if (node.getTarget() instanceof IdentifierExpressionNodeY id) {
             StructInfo info = frame.structOf(id.getIdentifier());
             if (info == null) throw new IllegalStateException("'" + id.getIdentifier() + "' no es un struct conocido");
-            List<String> layout = symbols.structFields(info.getStructTypeName());
-            int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
-            if (offset < 0)
+            int offsetCells = layout.fieldOffsetCells(info.getStructTypeName(), node.getPropertyName());
+            if (offsetCells < 0)
                 throw new IllegalStateException("El struct " + info.getStructTypeName() + " no tiene el campo '" + node.getPropertyName() + "'");
-            return new FieldReference(info, offset);
+            return new FieldReference(info, offsetCells);
         } else if (node.getTarget() instanceof PropertyAccessExpressionNodeY parentProp) {
             FieldReference parentRef = resolveField(parentProp);
             String parentStructType = parentRef.getInfo().getStructTypeName();
-            Symbol structSym = table.getAllSymbols().stream()
-                    .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(parentStructType))
-                    .findFirst().orElse(null);
-            Symbol memberSym = (structSym != null && structSym.getMembers() != null)
-                    ? structSym.getMembers().stream().filter(m -> m.getName().equals(parentProp.getPropertyName())).findFirst().orElse(null)
+            List<Symbol> parentMembers = layout.members(parentStructType);
+            Symbol memberSym = (parentMembers != null)
+                    ? parentMembers.stream().filter(m -> m.getName().equals(parentProp.getPropertyName())).findFirst().orElse(null)
                     : null;
             String memberType = memberSym != null ? memberSym.getType() : null;
-            List<String> layout = memberType != null ? symbols.structFields(memberType) : null;
-            int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
-            if (offset < 0)
+            int innerOffsetCells = memberType != null ? layout.fieldOffsetCells(memberType, node.getPropertyName()) : -1;
+            if (innerOffsetCells < 0)
                 throw new IllegalStateException("El struct " + memberType + " no tiene el campo '" + node.getPropertyName() + "'");
             StructInfo nestedInfo = new StructInfo(memberType, parentRef.getInfo().getBaseOffset(), parentRef.getInfo().isReference());
-            return new FieldReference(nestedInfo, parentRef.getOffset() + offset);
+            return new FieldReference(nestedInfo, parentRef.getOffset() + innerOffsetCells);
         }
         throw new IllegalStateException("Solo se soporta acceso a propiedades de una variable (línea " + node.getLine() + ")");
     }

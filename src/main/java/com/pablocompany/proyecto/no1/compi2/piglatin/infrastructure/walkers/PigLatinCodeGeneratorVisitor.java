@@ -30,6 +30,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.*;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.StructLayout;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.ValueEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
@@ -116,6 +117,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
     private final Map<String, String> objectClassMap = new HashMap<>();
     private final ZInheritanceService inheritance;
     private final ZClassLayoutService layoutService;
+    private final StructLayout structLayout;
     private Map<String, List<String>> structFieldLayouts;
 
     public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table,
@@ -133,6 +135,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         this.values = new ValueEmitter(ir, frame);
         this.inheritance = new ZInheritanceService(new ZSymbolLookupService(table, context));
         this.layoutService = new ZClassLayoutService(table, inheritance);
+        this.structLayout = new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.StructLayout(table);
     }
 
     public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table,
@@ -253,14 +256,13 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         if (isStruct) {
             String structTypeName = declaredType.getCustomName();
-            List<String> fields = structFields(structTypeName);
-            int numFields = fields != null ? fields.size() : 1;
-            int base = frame.allocate(numFields);
+            int totalCells = structLayout.structSizeCells(structTypeName);
+            int base = frame.allocate(totalCells);
             frame.registerStruct(name, new StructInfo(structTypeName, base, false));
             frame.declare(name, ValueType.INT);
 
             if (node.getInitializer() instanceof StructLiteralExpressionNodePigLatin lit) {
-                populateStructLiteral(base, fields, lit);
+                populateStructLiteral(base, structTypeName, lit);
             } else if (node.getInitializer() != null) {
                 Value initVal = eval(node.getInitializer());
                 values.store(initVal, frame.lookup(name));
@@ -315,29 +317,52 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
     public Void visit(StructInstanceNodePigLatin node) {
         String name = node.getIdentifier();
         String structType = node.getStructType();
-        List<String> fields = structFields(structType);
-        int numFields = fields != null ? fields.size() : 0;
-
-        int base = frame.allocate(numFields);
+        int totalCells = structLayout.structSizeCells(structType);
+        int base = frame.allocate(totalCells);
         frame.registerStruct(name, new StructInfo(structType, base, false));
         frame.declare(name, ValueType.INT);
 
         if (node.getLiteral() != null) {
-            populateStructLiteral(base, fields, node.getLiteral());
+            populateStructLiteral(base, structType, node.getLiteral());
         }
         return null;
     }
 
-    private void populateStructLiteral(int baseOffset, List<String> fields, StructLiteralExpressionNodePigLatin lit) {
-        if (lit.getProperties() == null || fields == null) return;
+    private void populateStructLiteral(int base, String structType, StructLiteralExpressionNodePigLatin lit) {
+        if (lit.getProperties() == null) return;
+        java.util.List<Symbol> members = structLayout.members(structType);
         List<StructPropertyNodePigLatin> props = lit.getProperties();
-        int count = Math.min(props.size(), fields.size());
+        int count = Math.min(props.size(), members != null ? members.size() : 0);
         for (int i = 0; i < count; i++) {
             StructPropertyNodePigLatin prop = props.get(i);
             if (prop.getValue() == null) continue;
-            Value val = eval(prop.getValue());
-            Cell targetCell = new Cell(val.type(), new Frame(baseOffset + i));
-            values.store(val, targetCell);
+            Symbol member = members.get(i);
+            int cellOff = structLayout.fieldOffsetCells(structType, member.getName());
+            if (member.isArray()) {
+                int arrayCells = structLayout.fieldSizeCells(structType, member.getName());
+                ArrayInfo srcInfo = (prop.getValue() instanceof IdentifierExpressionNodePigLatin id)
+                        ? frame.arrayOf(id.getIdentifier()) : null;
+                if (srcInfo != null) {
+                    ValueType elemType = IntermediateTypes.of(srcInfo.getElementType());
+                    Register idx = Register.ax(ValueType.INT);
+                    Register val = Register.cx(elemType);
+                    for (int j = 0; j < arrayCells; j++) {
+                        ir.emit(new Move(new Immediate(String.valueOf(j), ValueType.INT), idx));
+                        if (srcInfo.isHeap()) {
+                            Register ptr = Register.bx(ValueType.INT);
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(srcInfo.getBaseOffset()), ptr));
+                            ir.emit(new IndexAddress(ptr, idx, ptr));
+                            ir.emit(new Load(MemorySpace.STACK, new Indirect(ptr, 0), val));
+                        } else {
+                            ir.emit(new LoadIndexed(new Frame(srcInfo.getBaseOffset()), idx, val));
+                        }
+                        ir.emit(new Store(MemorySpace.STACK, new Frame(base + cellOff + j), val));
+                    }
+                }
+            } else {
+                Value val = eval(prop.getValue());
+                values.store(val, new Cell(val.type(), new Frame(base + cellOff)));
+            }
         }
     }
 
@@ -432,7 +457,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 Register reg = Register.cx(value.type());
                 ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
                 values.loadCoerced(value, reg);
-                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, structField.getOffset()), reg));
+                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, structField.getOffset() * 4), reg));
             } else {
                 Cell cell = new Cell(value.type(), new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
                 values.store(value, cell);
@@ -1046,7 +1071,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 Register pointer = Register.ax(ValueType.INT);
                 Register result = Register.cx(vType);
                 ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
-                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, structField.getOffset()), result));
+                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, structField.getOffset() * 4), result));
                 last = values.spill(result);
             } else {
                 last = new Cell(vType, new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
@@ -1219,6 +1244,36 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 return;
             }
         }
+        // Pass address for embedded struct array-field arguments
+        if (arg instanceof PropertyAccessExpressionNodePigLatin prop) {
+            FieldReference field = resolveField(prop);
+            if (field != null) {
+                StructInfo info = field.getInfo();
+                String structType = info.getStructTypeName();
+                String fieldName = prop.getPropertyName();
+                if (structType != null) {
+                    Symbol memberSym = structLayout.members(structType) == null ? null
+                            : structLayout.members(structType).stream()
+                            .filter(m -> m.getName().equals(fieldName)).findFirst().orElse(null);
+                    if (memberSym != null && memberSym.isArray()) {
+                        Register addr = Register.ax(ValueType.INT);
+                        if (info.isReference()) {
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), addr));
+                            if (field.getOffset() > 0) {
+                                Register off = Register.bx(ValueType.INT);
+                                ir.emit(new Move(new Immediate(String.valueOf(field.getOffset()), ValueType.INT), off));
+                                ir.emit(new BinaryOperation(BinaryOperations.ADD, addr, off, addr));
+                            }
+                        } else {
+                            ir.emit(new LoadAddress(new Frame(info.getBaseOffset() + structLayout.fieldOffsetCells(structType, fieldName)), addr));
+                        }
+                        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), addr));
+                        ir.emit(new AdjustStackTop(1));
+                        return;
+                    }
+                }
+            }
+        }
         Value val = eval(arg);
         ValueType targetType = (expectedType != null) ? expectedType : val.type();
         Register reg = Register.ax(targetType);
@@ -1371,26 +1426,22 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
             StructInfo info = frame.structOf(id.getIdentifier());
             if (info == null) return null;
-            List<String> layout = structFields(info.getStructTypeName());
-            int offset = layout != null ? layout.indexOf(node.getPropertyName()) : -1;
-            if (offset < 0) return null;
-            return new FieldReference(info, offset);
+            int offsetCells = structLayout.fieldOffsetCells(info.getStructTypeName(), node.getPropertyName());
+            if (offsetCells < 0) return null;
+            return new FieldReference(info, offsetCells);
         } else if (node.getTarget() instanceof PropertyAccessExpressionNodePigLatin parentProp) {
             FieldReference parentRef = resolveField(parentProp);
             if (parentRef == null) return null;
             String parentStructType = parentRef.getInfo().getStructTypeName();
-            Symbol structSym = table.getAllSymbols().stream()
-                    .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(parentStructType))
-                    .findFirst().orElse(null);
-            Symbol memberSym = (structSym != null && structSym.getMembers() != null)
-                    ? structSym.getMembers().stream().filter(m -> m.getName().equals(parentProp.getPropertyName())).findFirst().orElse(null)
+            java.util.List<Symbol> parentMembers = structLayout.members(parentStructType);
+            Symbol memberSym = (parentMembers != null)
+                    ? parentMembers.stream().filter(m -> m.getName().equals(parentProp.getPropertyName())).findFirst().orElse(null)
                     : null;
             String memberType = memberSym != null ? memberSym.getType() : null;
-            List<String> layout = memberType != null ? structFields(memberType) : null;
-            int offset = layout != null ? layout.indexOf(node.getPropertyName()) : -1;
-            if (offset < 0) return null;
+            int innerOffset = memberType != null ? structLayout.fieldOffsetCells(memberType, node.getPropertyName()) : -1;
+            if (innerOffset < 0) return null;
             StructInfo nestedInfo = new StructInfo(memberType, parentRef.getInfo().getBaseOffset(), parentRef.getInfo().isReference());
-            return new FieldReference(nestedInfo, parentRef.getOffset() + offset);
+            return new FieldReference(nestedInfo, parentRef.getOffset() + innerOffset);
         }
         return null;
     }
