@@ -14,4 +14,7 @@ public class FieldReference {
     private StructInfo info;
     private int offset;
 
+    public int getOffsetBytes() {
+        return offset * 4;
+    }
 }

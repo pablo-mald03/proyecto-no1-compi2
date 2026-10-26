@@ -457,7 +457,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 Register reg = Register.cx(value.type());
                 ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
                 values.loadCoerced(value, reg);
-                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, structField.getOffset() * 4), reg));
+                int byteOffset = structField.getInfo().getStructTypeName() != null
+                        ? structLayout.fieldOffsetBytes(structField.getInfo().getStructTypeName(), propName)
+                        : structField.getOffsetBytes();
+                if (byteOffset < 0) byteOffset = structField.getOffsetBytes();
+                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, byteOffset), reg));
             } else {
                 Cell cell = new Cell(value.type(), new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
                 values.store(value, cell);
@@ -498,7 +502,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                     ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), ptr));
                     if (field.getOffset() > 0) {
                         Register offsetReg = Register.ax(ValueType.INT);
-                        ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
+                        ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffsetBytes()), ValueType.INT), offsetReg));
                         ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
                         values.loadCoerced(indexVal, idx);
                     }
@@ -1071,7 +1075,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                 Register pointer = Register.ax(ValueType.INT);
                 Register result = Register.cx(vType);
                 ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
-                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, structField.getOffset() * 4), result));
+                int byteOffset = structField.getInfo().getStructTypeName() != null
+                        ? structLayout.fieldOffsetBytes(structField.getInfo().getStructTypeName(), prop)
+                        : structField.getOffsetBytes();
+                if (byteOffset < 0) byteOffset = structField.getOffsetBytes();
+                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, byteOffset), result));
                 last = values.spill(result);
             } else {
                 last = new Cell(vType, new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
@@ -1116,7 +1124,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                     ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), ptr));
                     if (field.getOffset() > 0) {
                         Register offsetReg = Register.ax(ValueType.INT);
-                        ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
+                        ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffsetBytes()), ValueType.INT), offsetReg));
                         ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
                         values.loadCoerced(indexVal, idx);
                     }
@@ -1259,9 +1267,11 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
                         Register addr = Register.ax(ValueType.INT);
                         if (info.isReference()) {
                             ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), addr));
-                            if (field.getOffset() > 0) {
+                            int byteOffset = structLayout.fieldOffsetBytes(structType, fieldName);
+                            if (byteOffset < 0) byteOffset = field.getOffsetBytes();
+                            if (byteOffset > 0) {
                                 Register off = Register.bx(ValueType.INT);
-                                ir.emit(new Move(new Immediate(String.valueOf(field.getOffset()), ValueType.INT), off));
+                                ir.emit(new Move(new Immediate(String.valueOf(byteOffset), ValueType.INT), off));
                                 ir.emit(new BinaryOperation(BinaryOperations.ADD, addr, off, addr));
                             }
                         } else {

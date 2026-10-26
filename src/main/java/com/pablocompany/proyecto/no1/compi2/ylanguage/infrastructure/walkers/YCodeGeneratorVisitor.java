@@ -735,7 +735,11 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             Register pointer = Register.ax(ValueType.INT);
             Register result = Register.cx(type);
             ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
-            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, field.getOffset() * 4), result));
+            int byteOffset = field.getInfo().getStructTypeName() != null
+                    ? layout.fieldOffsetBytes(field.getInfo().getStructTypeName(), node.getPropertyName())
+                    : field.getOffsetBytes();
+            if (byteOffset < 0) byteOffset = field.getOffsetBytes();
+            ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, byteOffset), result));
             last = values.spill(result);
         } else {
             last = new Cell(type, new Frame(field.getInfo().getBaseOffset() + field.getOffset()));
@@ -770,7 +774,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
                 ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
                 if (field.getOffset() > 0) {
                     Register offsetReg = Register.ax(ValueType.INT);
-                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffsetBytes()), ValueType.INT), offsetReg));
                     ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
                     values.loadCoerced(index, idx);
                 }
@@ -850,9 +854,11 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
                         Register addr = Register.ax(ValueType.INT);
                         if (info.isReference()) {
                             ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), addr));
-                            if (field.getOffset() > 0) {
+                            int byteOffset = layout.fieldOffsetBytes(structType, fieldName);
+                            if (byteOffset < 0) byteOffset = field.getOffsetBytes();
+                            if (byteOffset > 0) {
                                 Register off = Register.bx(ValueType.INT);
-                                ir.emit(new Move(new Immediate(String.valueOf(field.getOffset()), ValueType.INT), off));
+                                ir.emit(new Move(new Immediate(String.valueOf(byteOffset), ValueType.INT), off));
                                 ir.emit(new BinaryOperation(BinaryOperations.ADD, addr, off, addr));
                             }
                         } else {
@@ -937,7 +943,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
                 ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
                 if (field.getOffset() > 0) {
                     Register offsetReg = Register.ax(ValueType.INT);
-                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffsetBytes()), ValueType.INT), offsetReg));
                     ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
                     values.loadCoerced(index, idx);
                 }
@@ -1001,7 +1007,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         Register source = Register.cx(type);
         ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
         values.loadCoerced(value, source);
-        ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffset() * 4), source));
+        ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, field.getOffsetBytes()), source));
     }
 
 
