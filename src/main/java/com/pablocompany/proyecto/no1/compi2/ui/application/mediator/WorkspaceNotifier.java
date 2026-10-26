@@ -84,4 +84,21 @@ public interface WorkspaceNotifier {
      */
     String getMainClassName();
 
+    /**
+     * Notifier for the zoom in
+     *
+     */
+    void notifyZoomIn();
+
+    /**
+     * Notifier for the zoom out
+     *
+     */
+    void notifyZoomOut();
+
+    /**
+     * Notifier to reset the zoom to the default config
+     *
+     */
+    void notifyZoomReset();
 }

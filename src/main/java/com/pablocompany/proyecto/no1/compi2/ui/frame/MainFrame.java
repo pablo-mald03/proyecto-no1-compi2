@@ -106,29 +106,28 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
 
 
     /**
-     * Principal method to install the tab shortcuts
-     *
+     * Principal method to install the Ctrl+Tab switcher.
      */
     private void installTabShortcuts() {
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(e -> {
+            if (managementScreen == null || !managementScreen.isShowing()) return false;
+
+            WorkspacePanel workspace = managementScreen.getWorkspacePanel();
+
+            if (workspace.isTabSwitcherOpen()) {
+                return workspace.handleTabSwitchKey(e);
+            }
+
             if (e.getID() != KeyEvent.KEY_PRESSED
                     || e.getKeyCode() != KeyEvent.VK_TAB
                     || !e.isControlDown()) {
                 return false;
             }
 
-            if (managementScreen == null || !managementScreen.isShowing()) return false;
-
             Component focus = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
             if (focus == null || SwingUtilities.getWindowAncestor(focus) != this) return false;
 
-            WorkspacePanel workspace = managementScreen.getWorkspacePanel();
-            if (e.isShiftDown()) {
-                workspace.selectPreviousTab();
-            } else {
-                workspace.selectNextTab();
-            }
-            return true;
+            return workspace.handleTabSwitchKey(e);
         });
     }
 
@@ -644,6 +643,24 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     @Override
     public void notifyExecuteCompiledCodeRisc() {
         this.onExecuteRisc();
+    }
+
+    // ==========================================
+    // ZOOM
+    // ==========================================
+    @Override
+    public void notifyZoomIn() {
+        if (managementScreen != null) managementScreen.getWorkspacePanel().zoomIn();
+    }
+
+    @Override
+    public void notifyZoomOut() {
+        if (managementScreen != null) managementScreen.getWorkspacePanel().zoomOut();
+    }
+
+    @Override
+    public void notifyZoomReset() {
+        if (managementScreen != null) managementScreen.getWorkspacePanel().resetZoom();
     }
 
     @Override
