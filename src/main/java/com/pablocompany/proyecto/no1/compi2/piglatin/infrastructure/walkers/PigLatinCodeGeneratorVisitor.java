@@ -23,16 +23,9 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.labels.M
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.BinaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.StringConcat;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Move;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.LoadAddress;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.*;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Indirect;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
-import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StackTop;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.*;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
@@ -45,7 +38,6 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
@@ -563,14 +555,22 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(PrintStatementNodePigLatin node) {
-        if (node.getExpressionList() != null) {
-            for (ExpressionNodePigLatin expr : node.getExpressionList()) {
-                Value val = eval(expr);
-                Register reg = Register.ax(val.type());
-                values.load(val, reg);
-                ir.emit(new Print(reg, true));
-            }
+        if (node.getExpressionList() == null || node.getExpressionList().isEmpty()) {
+            Register empty = Register.cx(ValueType.STRING);
+            ir.emit(new Move(new StringRef(ir.intern("")), empty));
+            ir.emit(new Print(empty, true));
+            return null;
         }
+
+        Value accumulated = null;
+        for (ExpressionNodePigLatin expr : node.getExpressionList()) {
+            Value v = eval(expr);
+            accumulated = (accumulated == null) ? v : concat(accumulated, v);
+        }
+
+        Register reg = Register.ax(ValueType.STRING);
+        values.load(accumulated, reg);
+        ir.emit(new Print(reg, true));
         return null;
     }
 

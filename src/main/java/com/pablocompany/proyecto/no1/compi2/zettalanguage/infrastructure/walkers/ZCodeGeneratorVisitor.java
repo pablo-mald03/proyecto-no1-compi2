@@ -368,7 +368,7 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         Value value = eval(node.getExpression());
         Register reg = Register.ax(value.type());
         values.loadCoerced(value, reg);
-        ir.emit(new Print(reg, true));
+        ir.emit(new Print(reg, node.isEndless()));
         return null;
     }
 
