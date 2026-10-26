@@ -26,8 +26,10 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operatio
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Move;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Indirect;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StackTop;
@@ -330,27 +332,49 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         return null;
     }
 
+    private void handleIncDec(ExpressionNodeZ target, BinaryOperations op, boolean isPrefix) {
+        Value currentVal = eval(target);
+        ValueType type = currentVal.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
+        Register a = Register.ax(type);
+        Register b = Register.bx(type);
+        Register c = Register.cx(type);
+        values.loadCoerced(currentVal, a);
+
+        Cell prevVal = null;
+        if (!isPrefix) {
+            prevVal = values.spill(a);
+        }
+
+        ir.emit(new Move(new Immediate("1", type), b));
+        ir.emit(new BinaryOperation(op, a, b, c));
+        Cell newVal = values.spill(c);
+
+        assign(target, newVal);
+
+        last = isPrefix ? newVal : prevVal;
+    }
+
     @Override
     public Void visit(IncrementStatementNodeZ node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.ADD, false);
         return null;
     }
 
     @Override
     public Void visit(DecrementStatementNodeZ node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.SUB, false);
         return null;
     }
 
     @Override
     public Void visit(IncrementPrevStatementNodeZ node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.ADD, true);
         return null;
     }
 
     @Override
     public Void visit(DecrementPrevStatementNodeZ node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.SUB, true);
         return null;
     }
 
@@ -516,12 +540,11 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ForUpdateNodeZ node) {
-        Value target = eval(node.getTarget());
         switch (node.getOperator()) {
-            case INCREMENT, PREFIX_INCREMENT -> values.incDec(target, BinaryOperations.ADD);
-            case DECREMENT, PREFIX_DECREMENT -> values.incDec(target, BinaryOperations.SUB);
+            case INCREMENT, PREFIX_INCREMENT -> handleIncDec(node.getTarget(), BinaryOperations.ADD, false);
+            case DECREMENT, PREFIX_DECREMENT -> handleIncDec(node.getTarget(), BinaryOperations.SUB, false);
             case ASSIGN -> {
-                if (node.getValue() != null) values.store(eval(node.getValue()), values.requireCell(target));
+                if (node.getValue() != null) assign(node.getTarget(), eval(node.getValue()));
             }
         }
         return null;
