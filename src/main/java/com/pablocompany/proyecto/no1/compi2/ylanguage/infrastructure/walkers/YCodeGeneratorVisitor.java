@@ -49,6 +49,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeY;
@@ -685,6 +686,18 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         if (node.getTarget() instanceof PropertyAccessExpressionNodeY prop) {
             FieldReference field = resolveField(prop);
             ValueType type = valueTypeOf(node);
+            if (type == ValueType.INT && field.getInfo().getStructTypeName() != null) {
+                Symbol structSym = table.getAllSymbols().stream()
+                        .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(field.getInfo().getStructTypeName()))
+                        .findFirst().orElse(null);
+                Symbol memberSym = (structSym != null && structSym.getMembers() != null)
+                        ? structSym.getMembers().stream().filter(m -> m.getName().equals(prop.getPropertyName())).findFirst().orElse(null)
+                        : null;
+                if (memberSym != null && memberSym.getType() != null) {
+                    ValueType symType = paramValueType(memberSym.getType());
+                    if (symType != null) type = symType;
+                }
+            }
             Value index = eval(node.getIndex());
             Register idx = Register.ax(ValueType.INT);
             Register result = Register.cx(type);
@@ -695,7 +708,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
                 ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
                 if (field.getOffset() > 0) {
                     Register offsetReg = Register.ax(ValueType.INT);
-                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset()), ValueType.INT), offsetReg));
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
                     ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
                     values.loadCoerced(index, idx);
                 }
@@ -809,6 +822,18 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         if (node.getTarget() instanceof PropertyAccessExpressionNodeY prop) {
             FieldReference field = resolveField(prop);
             ValueType type = valueTypeOf(node);
+            if (type == ValueType.INT && field.getInfo().getStructTypeName() != null) {
+                Symbol structSym = table.getAllSymbols().stream()
+                        .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(field.getInfo().getStructTypeName()))
+                        .findFirst().orElse(null);
+                Symbol memberSym = (structSym != null && structSym.getMembers() != null)
+                        ? structSym.getMembers().stream().filter(m -> m.getName().equals(prop.getPropertyName())).findFirst().orElse(null)
+                        : null;
+                if (memberSym != null && memberSym.getType() != null) {
+                    ValueType symType = paramValueType(memberSym.getType());
+                    if (symType != null) type = symType;
+                }
+            }
             Value index = eval(node.getIndex());
             Register idx = Register.ax(ValueType.INT);
             Register source = Register.cx(type);
@@ -820,7 +845,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
                 ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
                 if (field.getOffset() > 0) {
                     Register offsetReg = Register.ax(ValueType.INT);
-                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset()), ValueType.INT), offsetReg));
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
                     ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
                     values.loadCoerced(index, idx);
                 }
@@ -889,16 +914,32 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
 
     private FieldReference resolveField(PropertyAccessExpressionNodeY node) {
-        if (!(node.getTarget() instanceof IdentifierExpressionNodeY id)) {
-            throw new IllegalStateException("Solo se soporta acceso a propiedades de una variable (línea " + node.getLine() + ")");
+        if (node.getTarget() instanceof IdentifierExpressionNodeY id) {
+            StructInfo info = frame.structOf(id.getIdentifier());
+            if (info == null) throw new IllegalStateException("'" + id.getIdentifier() + "' no es un struct conocido");
+            List<String> layout = symbols.structFields(info.getStructTypeName());
+            int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
+            if (offset < 0)
+                throw new IllegalStateException("El struct " + info.getStructTypeName() + " no tiene el campo '" + node.getPropertyName() + "'");
+            return new FieldReference(info, offset);
+        } else if (node.getTarget() instanceof PropertyAccessExpressionNodeY parentProp) {
+            FieldReference parentRef = resolveField(parentProp);
+            String parentStructType = parentRef.getInfo().getStructTypeName();
+            Symbol structSym = table.getAllSymbols().stream()
+                    .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(parentStructType))
+                    .findFirst().orElse(null);
+            Symbol memberSym = (structSym != null && structSym.getMembers() != null)
+                    ? structSym.getMembers().stream().filter(m -> m.getName().equals(parentProp.getPropertyName())).findFirst().orElse(null)
+                    : null;
+            String memberType = memberSym != null ? memberSym.getType() : null;
+            List<String> layout = memberType != null ? symbols.structFields(memberType) : null;
+            int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
+            if (offset < 0)
+                throw new IllegalStateException("El struct " + memberType + " no tiene el campo '" + node.getPropertyName() + "'");
+            StructInfo nestedInfo = new StructInfo(memberType, parentRef.getInfo().getBaseOffset(), parentRef.getInfo().isReference());
+            return new FieldReference(nestedInfo, parentRef.getOffset() + offset);
         }
-        StructInfo info = frame.structOf(id.getIdentifier());
-        if (info == null) throw new IllegalStateException("'" + id.getIdentifier() + "' no es un struct conocido");
-        List<String> layout = symbols.structFields(info.getStructTypeName());
-        int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
-        if (offset < 0)
-            throw new IllegalStateException("El struct " + info.getStructTypeName() + " no tiene el campo '" + node.getPropertyName() + "'");
-        return new FieldReference(info, offset);
+        throw new IllegalStateException("Solo se soporta acceso a propiedades de una variable (línea " + node.getLine() + ")");
     }
 
     private Value eval(ExpressionNodeY node) {

@@ -5,6 +5,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.UnaryOperations
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Cell;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Constant;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.FieldReference;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Text;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.generatePort.Value;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.IndexAddress;
@@ -424,17 +425,19 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         ExpressionNodePigLatin targetExpr = prop.getTarget();
         String propName = prop.getPropertyName();
 
-        if (targetExpr instanceof IdentifierExpressionNodePigLatin id) {
-            StructInfo sinfo = frame.structOf(id.getIdentifier());
-            if (sinfo != null) {
-                List<String> layout = structFields(sinfo.getStructTypeName());
-                int offset = layout != null ? layout.indexOf(propName) : -1;
-                if (offset >= 0) {
-                    Cell cell = new Cell(value.type(), new Frame(sinfo.getBaseOffset() + offset));
-                    values.store(value, cell);
-                    return;
-                }
+        FieldReference structField = resolveField(prop);
+        if (structField != null) {
+            if (structField.getInfo().isReference()) {
+                Register pointer = Register.bx(ValueType.INT);
+                Register reg = Register.cx(value.type());
+                ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
+                values.loadCoerced(value, reg);
+                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, structField.getOffset()), reg));
+            } else {
+                Cell cell = new Cell(value.type(), new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
+                values.store(value, cell);
             }
+            return;
         }
 
         Value objVal = eval(targetExpr);
@@ -457,36 +460,30 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             }
         }
         if (target instanceof PropertyAccessExpressionNodePigLatin prop) {
-            if (prop.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
-                StructInfo sinfo = frame.structOf(id.getIdentifier());
-                if (sinfo != null) {
-                    List<String> layout = structFields(sinfo.getStructTypeName());
-                    int offset = layout != null ? layout.indexOf(prop.getPropertyName()) : -1;
-                    if (offset >= 0) {
-                        Value indexVal = eval(indexExpr);
-                        Register idx = Register.ax(ValueType.INT);
-                        values.loadCoerced(indexVal, idx);
-                        Register regValue = Register.cx(value.type());
-                        values.loadCoerced(value, regValue);
+            FieldReference field = resolveField(prop);
+            if (field != null) {
+                Value indexVal = eval(indexExpr);
+                Register idx = Register.ax(ValueType.INT);
+                values.loadCoerced(indexVal, idx);
+                Register regValue = Register.cx(value.type());
+                values.loadCoerced(value, regValue);
 
-                        if (sinfo.isReference()) {
-                            Register ptr = Register.bx(ValueType.INT);
-                            ir.emit(new Load(MemorySpace.STACK, new Frame(sinfo.getBaseOffset()), ptr));
-                            if (offset > 0) {
-                                Register offsetReg = Register.ax(ValueType.INT);
-                                ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(offset), ValueType.INT), offsetReg));
-                                ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
-                                values.loadCoerced(indexVal, idx);
-                            }
-                            ir.emit(new IndexAddress(ptr, idx, ptr));
-                            ir.emit(new Store(MemorySpace.STACK, new Indirect(ptr, 0), regValue));
-                        } else {
-                            int base = sinfo.getBaseOffset() + offset;
-                            ir.emit(new StoreIndexed(new Frame(base), idx, regValue));
-                        }
-                        return;
+                if (field.getInfo().isReference()) {
+                    Register ptr = Register.bx(ValueType.INT);
+                    ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), ptr));
+                    if (field.getOffset() > 0) {
+                        Register offsetReg = Register.ax(ValueType.INT);
+                        ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
+                        ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
+                        values.loadCoerced(indexVal, idx);
                     }
+                    ir.emit(new IndexAddress(ptr, idx, ptr));
+                    ir.emit(new Store(MemorySpace.STACK, new Indirect(ptr, 0), regValue));
+                } else {
+                    int base = field.getInfo().getBaseOffset() + field.getOffset();
+                    ir.emit(new StoreIndexed(new Frame(base), idx, regValue));
                 }
+                return;
             }
         }
         throw new IllegalStateException("Asignación a arreglo no soportada para: " + target);
@@ -1041,26 +1038,20 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
     public Void visit(PropertyAccessExpressionNodePigLatin node) {
         String prop = node.getPropertyName();
 
-        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
-            StructInfo sinfo = frame.structOf(id.getIdentifier());
-            if (sinfo != null) {
-                List<String> layout = structFields(sinfo.getStructTypeName());
-                int offset = layout != null ? layout.indexOf(prop) : -1;
-                if (offset >= 0) {
-                    Type fieldType = typeAnnotations.get(node);
-                    ValueType vType = fieldType != null ? declaredValueType(fieldType) : ValueType.INT;
-                    if (sinfo.isReference()) {
-                        Register pointer = Register.ax(ValueType.INT);
-                        Register result = Register.cx(vType);
-                        ir.emit(new Load(MemorySpace.STACK, new Frame(sinfo.getBaseOffset()), pointer));
-                        ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, offset), result));
-                        last = values.spill(result);
-                    } else {
-                        last = new Cell(vType, new Frame(sinfo.getBaseOffset() + offset));
-                    }
-                    return null;
-                }
+        FieldReference structField = resolveField(node);
+        if (structField != null) {
+            Type fieldType = typeAnnotations.get(node);
+            ValueType vType = fieldType != null ? declaredValueType(fieldType) : ValueType.INT;
+            if (structField.getInfo().isReference()) {
+                Register pointer = Register.ax(ValueType.INT);
+                Register result = Register.cx(vType);
+                ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
+                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, structField.getOffset()), result));
+                last = values.spill(result);
+            } else {
+                last = new Cell(vType, new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
             }
+            return null;
         }
 
         Value targetVal = eval(node.getTarget());
@@ -1080,37 +1071,38 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             }
         }
         if (node.getTarget() instanceof PropertyAccessExpressionNodePigLatin prop) {
-            if (prop.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
-                StructInfo sinfo = frame.structOf(id.getIdentifier());
-                if (sinfo != null) {
-                    List<String> layout = structFields(sinfo.getStructTypeName());
-                    int offset = layout != null ? layout.indexOf(prop.getPropertyName()) : -1;
-                    if (offset >= 0) {
-                        ValueType elemType = ValueType.INT;
-                        Value indexVal = eval(node.getIndex());
-                        Register idx = Register.ax(ValueType.INT);
-                        values.loadCoerced(indexVal, idx);
-                        Register result = Register.cx(elemType);
+            FieldReference field = resolveField(prop);
+            if (field != null) {
+                Symbol structSym = table.getAllSymbols().stream()
+                        .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(field.getInfo().getStructTypeName()))
+                        .findFirst().orElse(null);
+                Symbol memberSym = (structSym != null && structSym.getMembers() != null)
+                        ? structSym.getMembers().stream().filter(m -> m.getName().equals(prop.getPropertyName())).findFirst().orElse(null)
+                        : null;
+                ValueType elemType = memberSym != null ? declaredType(memberSym.getType()) : ValueType.INT;
 
-                        if (sinfo.isReference()) {
-                            Register ptr = Register.bx(ValueType.INT);
-                            ir.emit(new Load(MemorySpace.STACK, new Frame(sinfo.getBaseOffset()), ptr));
-                            if (offset > 0) {
-                                Register offsetReg = Register.ax(ValueType.INT);
-                                ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(offset), ValueType.INT), offsetReg));
-                                ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
-                                values.loadCoerced(indexVal, idx);
-                            }
-                            ir.emit(new IndexAddress(ptr, idx, ptr));
-                            ir.emit(new Load(MemorySpace.STACK, new Indirect(ptr, 0), result));
-                        } else {
-                            int base = sinfo.getBaseOffset() + offset;
-                            ir.emit(new LoadIndexed(new Frame(base), idx, result));
-                        }
-                        last = values.spill(result);
-                        return null;
+                Value indexVal = eval(node.getIndex());
+                Register idx = Register.ax(ValueType.INT);
+                values.loadCoerced(indexVal, idx);
+                Register result = Register.cx(elemType);
+
+                if (field.getInfo().isReference()) {
+                    Register ptr = Register.bx(ValueType.INT);
+                    ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), ptr));
+                    if (field.getOffset() > 0) {
+                        Register offsetReg = Register.ax(ValueType.INT);
+                        ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffset() * 4), ValueType.INT), offsetReg));
+                        ir.emit(new BinaryOperation(BinaryOperations.ADD, ptr, offsetReg, ptr));
+                        values.loadCoerced(indexVal, idx);
                     }
+                    ir.emit(new IndexAddress(ptr, idx, ptr));
+                    ir.emit(new Load(MemorySpace.STACK, new Indirect(ptr, 0), result));
+                } else {
+                    int base = field.getInfo().getBaseOffset() + field.getOffset();
+                    ir.emit(new LoadIndexed(new Frame(base), idx, result));
                 }
+                last = values.spill(result);
+                return null;
             }
         }
         last = new Constant("0", ValueType.INT);
@@ -1373,6 +1365,34 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             }
         }
         return structFieldLayouts.get(structName);
+    }
+
+    private FieldReference resolveField(PropertyAccessExpressionNodePigLatin node) {
+        if (node.getTarget() instanceof IdentifierExpressionNodePigLatin id) {
+            StructInfo info = frame.structOf(id.getIdentifier());
+            if (info == null) return null;
+            List<String> layout = structFields(info.getStructTypeName());
+            int offset = layout != null ? layout.indexOf(node.getPropertyName()) : -1;
+            if (offset < 0) return null;
+            return new FieldReference(info, offset);
+        } else if (node.getTarget() instanceof PropertyAccessExpressionNodePigLatin parentProp) {
+            FieldReference parentRef = resolveField(parentProp);
+            if (parentRef == null) return null;
+            String parentStructType = parentRef.getInfo().getStructTypeName();
+            Symbol structSym = table.getAllSymbols().stream()
+                    .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(parentStructType))
+                    .findFirst().orElse(null);
+            Symbol memberSym = (structSym != null && structSym.getMembers() != null)
+                    ? structSym.getMembers().stream().filter(m -> m.getName().equals(parentProp.getPropertyName())).findFirst().orElse(null)
+                    : null;
+            String memberType = memberSym != null ? memberSym.getType() : null;
+            List<String> layout = memberType != null ? structFields(memberType) : null;
+            int offset = layout != null ? layout.indexOf(node.getPropertyName()) : -1;
+            if (offset < 0) return null;
+            StructInfo nestedInfo = new StructInfo(memberType, parentRef.getInfo().getBaseOffset(), parentRef.getInfo().isReference());
+            return new FieldReference(nestedInfo, parentRef.getOffset() + offset);
+        }
+        return null;
     }
 
     private Type mapTypeNodeToType(TypeNodePigLatin typeNode) {
