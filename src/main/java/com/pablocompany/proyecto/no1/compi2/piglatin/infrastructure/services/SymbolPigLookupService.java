@@ -75,7 +75,6 @@ public class SymbolPigLookupService {
      */
     public boolean isPubliclyAccessible(Symbol member) {
         if (member == null) return false;
-        // null modifier means "default" access, which in this project behaves like private
         if (member.getAccessModifier() == null) return false;
         return "PUBLIC".equals(member.getAccessModifier().name());
     }
@@ -85,7 +84,7 @@ public class SymbolPigLookupService {
      *
      */
     public String accessLabel(Symbol member) {
-        if (member == null || member.getAccessModifier() == null) return "default (private)";
+        if (member == null || member.getAccessModifier() == null) return "default";
         return member.getAccessModifier().name().toLowerCase();
     }
 

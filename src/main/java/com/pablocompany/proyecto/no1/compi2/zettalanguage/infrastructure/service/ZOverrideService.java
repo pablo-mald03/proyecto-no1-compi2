@@ -210,7 +210,7 @@ public class ZOverrideService {
 
 
     private boolean isPrivate(Symbol m) {
-        return m.getAccessModifier() != null && "PRIVATE".equals(m.getAccessModifier().name());
+        return ZAccessControlService.isPrivateLike(m.getAccessModifier());
     }
 
     /**

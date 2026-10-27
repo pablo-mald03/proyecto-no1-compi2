@@ -22,9 +22,6 @@ public class SymbolInheritanceLinkerService {
         this.typeResolver = typeResolver;
     }
 
-    // ------------------------------------------------------------------
-    // PUBLIC API
-    // ------------------------------------------------------------------
 
     /**
      * Method to links `cls` and every ancestor. Returns true when the hierarchy is valid.
@@ -189,7 +186,7 @@ public class SymbolInheritanceLinkerService {
      *
      */
     private boolean isPrivate(Symbol m) {
-        return m.getAccessModifier() != null && "PRIVATE".equals(m.getAccessModifier().name());
+        return m.getAccessModifier() == null || "PRIVATE".equals(m.getAccessModifier().name());
     }
 
     /**
