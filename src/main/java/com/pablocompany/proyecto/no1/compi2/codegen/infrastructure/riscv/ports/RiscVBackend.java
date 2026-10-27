@@ -106,17 +106,24 @@ public class RiscVBackend extends AbstractBackend {
         }
         out.raw("__rt_fbuf: .space 64");
         out.raw(".align 2");
-        out.raw("stack_mem: .space " + (long) options.getStackSlots() * RvMemory.CELL);
-        out.raw("heap_mem: .space " + (long) options.getHeapSlots() * RvMemory.CELL);
         out.blank();
         out.raw(".text");
         if (options.isEmitEntryPoint()) {
             out.raw(".globl __start");
             out.raw("__start:");
-            out.line("la " + RvRegisters.STACK_TOP + ", stack_mem");
+
+            out.line("li a0, " + ((long) options.getStackSlots() * RvMemory.CELL));
+            out.line("li a7, 9");
+            out.line("ecall");
+            out.line("mv " + RvRegisters.STACK_TOP + ", a0");
             RvMemory.addSlots(out, RvRegisters.STACK_TOP, RvRegisters.STACK_TOP, options.getReservedSlots(), RvRegisters.SCRATCH);
             out.line("mv " + RvRegisters.FP + ", " + RvRegisters.STACK_TOP);
-            out.line("la " + RvRegisters.HEAP_TOP + ", heap_mem");
+
+            out.line("li a0, " + ((long) options.getHeapSlots() * RvMemory.CELL));
+            out.line("li a7, 9");
+            out.line("ecall");
+            out.line("mv " + RvRegisters.HEAP_TOP + ", a0");
+
             program.entryPoint().ifPresent(name -> out.line("jal ra, " + name));
             out.line("li a7, 10");
             out.line("ecall");
@@ -126,7 +133,8 @@ public class RiscVBackend extends AbstractBackend {
 
     /**
      * Method to emit the funciton start
-     * */
+     *
+     */
     @Override
     protected void emitFunctionStart(IntermediateFunction function, CodeWriter out) {
         out.raw(function.getName() + ":");
@@ -136,7 +144,8 @@ public class RiscVBackend extends AbstractBackend {
 
     /**
      * Method to emit the function end
-     * */
+     *
+     */
     @Override
     protected void emitFunctionEnd(IntermediateFunction function, CodeWriter out) {
         out.blank();
@@ -144,7 +153,8 @@ public class RiscVBackend extends AbstractBackend {
 
     /**
      * Method to emit the program end
-     * */
+     *
+     */
     @Override
     protected void emitProgramEnd(IntermediateProgram program, CodeWriter out) {
         RiscVRuntime.emit(out);
@@ -152,7 +162,8 @@ public class RiscVBackend extends AbstractBackend {
 
     /**
      * Method to escape the action
-     * */
+     *
+     */
     private static String escape(String string) {
         return com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil.escape(string);
     }

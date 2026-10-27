@@ -37,7 +37,7 @@ public class ZAccessControlService {
             return true;
         }
 
-        if (member.getAccessModifier() == null) return true;
+        if (member.getAccessModifier() == null) return false;
 
         switch (member.getAccessModifier().name()) {
             case "PUBLIC":
@@ -94,7 +94,7 @@ public class ZAccessControlService {
      * Human readable modifier name for error messages.
      */
     public static String label(Object modifier) {
-        if (modifier == null) return "public";
+        if (modifier == null) return "default (private)";
         String n = modifier instanceof Enum<?> e ? e.name() : modifier.toString();
         return n.toLowerCase();
     }
