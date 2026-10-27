@@ -178,17 +178,14 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
-        Symbol ctorSymbol = findCallableSymbol(node.getName(), node.getLine(), node.getColumn());
-        if (ctorSymbol == null) {
-            ctorSymbol = findConstructorByParams(currentClassSymbol, node.getParams());
-        }
+        Symbol ctorSymbol = findConstructorInClass(currentClassSymbol, node);
         generateCallable(ctorSymbol, node.getParams(), node.getBody(), true);
         return null;
     }
 
     @Override
     public Void visit(MethodDeclarationNodeZ node) {
-        Symbol methodSymbol = findCallableSymbol(node.getName(), node.getLine(), node.getColumn());
+        Symbol methodSymbol = findMethodInClass(currentClassSymbol, node);
         generateCallable(methodSymbol, node.getParams(), node.getBody(), false);
         return null;
     }
@@ -1269,6 +1266,141 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             if (s.isCallable() && s.getName().equals(name) && s.getLine() == line && s.getColumn() == column) return s;
         }
         return null;
+    }
+
+    private Symbol findMethodInClass(Symbol cls, MethodDeclarationNodeZ node) {
+        if (cls == null || node == null) return null;
+        inheritance.link(cls);
+        List<String> targetParams = extractParamTypes(node.getParams());
+        int targetArity = node.getParams() != null ? node.getParams().size() : 0;
+
+        if (cls.getMembers() != null) {
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(node.getName())) {
+                    if (cls.getName().equals(m.getDeclaringClass())) {
+                        if (m.getParameterTypes() != null && m.getParameterTypes().equals(targetParams)) {
+                            return m;
+                        }
+                    }
+                }
+            }
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(node.getName())) {
+                    if (cls.getName().equals(m.getDeclaringClass())) {
+                        if (m.getLine() == node.getLine() && m.getColumn() == node.getColumn()) {
+                            return m;
+                        }
+                    }
+                }
+            }
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(node.getName())) {
+                    if (cls.getName().equals(m.getDeclaringClass())) {
+                        if (m.getParameterTypes() != null && m.getParameterTypes().size() == targetArity) {
+                            return m;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (Symbol s : table.getAllSymbols()) {
+            if (s.getKind() == SymbolKind.METHOD && s.getName().equals(node.getName())) {
+                if (cls.getName().equals(s.getDeclaringClass())) {
+                    if (s.getParameterTypes() != null && s.getParameterTypes().equals(targetParams)) {
+                        return s;
+                    }
+                    if (s.getLine() == node.getLine() && s.getColumn() == node.getColumn()) {
+                        return s;
+                    }
+                }
+            }
+        }
+
+        Symbol fallback = new Symbol();
+        fallback.setName(node.getName());
+        fallback.setKind(SymbolKind.METHOD);
+        fallback.setLine(node.getLine());
+        fallback.setColumn(node.getColumn());
+        fallback.setDeclaringClass(cls.getName());
+        fallback.getParameterTypes().addAll(targetParams);
+        String label = NameMangler.codeLabel(fallback);
+        fallback.setCodeLabel(label);
+        return fallback;
+    }
+
+    private Symbol findConstructorInClass(Symbol cls, ConstructorDeclarationNodeZ node) {
+        if (cls == null || node == null) return null;
+        inheritance.link(cls);
+        List<String> targetParams = extractParamTypes(node.getParams());
+        int targetArity = node.getParams() != null ? node.getParams().size() : 0;
+
+        if (cls.getMembers() != null) {
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR && cls.getName().equals(m.getDeclaringClass())) {
+                    if (m.getParameterTypes() != null && m.getParameterTypes().equals(targetParams)) {
+                        return m;
+                    }
+                }
+            }
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR && cls.getName().equals(m.getDeclaringClass())) {
+                    if (m.getParameterTypes() != null && m.getParameterTypes().size() == targetArity) {
+                        return m;
+                    }
+                }
+            }
+        }
+
+        for (Symbol s : table.getAllSymbols()) {
+            if (s.getKind() == SymbolKind.CONSTRUCTOR && cls.getName().equals(s.getDeclaringClass())) {
+                if (s.getParameterTypes() != null && s.getParameterTypes().equals(targetParams)) {
+                    return s;
+                }
+            }
+        }
+
+        Symbol fallback = new Symbol();
+        fallback.setName(cls.getName());
+        fallback.setKind(SymbolKind.CONSTRUCTOR);
+        fallback.setLine(node.getLine());
+        fallback.setColumn(node.getColumn());
+        fallback.setDeclaringClass(cls.getName());
+        fallback.getParameterTypes().addAll(targetParams);
+        String label = NameMangler.codeLabel(fallback);
+        fallback.setCodeLabel(label);
+        return fallback;
+    }
+
+    private List<String> extractParamTypes(List<ParameterNodeZ> params) {
+        List<String> result = new ArrayList<>();
+        if (params != null) {
+            for (ParameterNodeZ p : params) {
+                if (p == null) continue;
+                String t = canonicalTypeName(p.getType());
+                if (t == null) t = "?";
+                if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    private String canonicalTypeName(TypeNodeZ typeNode) {
+        if (typeNode == null) return null;
+        if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
+        var dt = typeNode.getDataType();
+        if (dt == null) return null;
+        return switch (dt) {
+            case INT -> "int";
+            case DOUBLE -> "float";
+            case STRING -> "string";
+            case CHAR -> "char";
+            case BOOLEAN -> "boolean";
+            case VOID -> "void";
+            case NULL -> "null";
+            case CLASS -> null;
+        };
     }
 
     private Symbol findFieldSymbol(Symbol cls, String fieldName) {
