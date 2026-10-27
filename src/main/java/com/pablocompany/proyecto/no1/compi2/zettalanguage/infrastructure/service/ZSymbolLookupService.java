@@ -35,9 +35,7 @@ public class ZSymbolLookupService {
     }
 
     /**
-     * Global (context-less) constructor for use when there is no single file context,
-     * e.g. in the orchestrator when building VTables across all linked classes.
-     * findType will skip the per-file lookup and go straight to the global scan.
+     * Method for the global constructor for use when there is no single file context,
      */
     public ZSymbolLookupService(GlobalSymbolTable table) {
         this.table = table;
