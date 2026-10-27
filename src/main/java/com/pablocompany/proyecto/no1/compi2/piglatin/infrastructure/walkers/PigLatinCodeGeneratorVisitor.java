@@ -45,6 +45,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOp
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
@@ -452,14 +453,16 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
         FieldReference structField = resolveField(prop);
         if (structField != null) {
+            Type fieldType = typeAnnotations.get(prop);
+            ValueType type = fieldType != null ? declaredValueType(fieldType) : value.type();
             if (structField.getInfo().isReference()) {
                 Register pointer = Register.bx(ValueType.INT);
-                Register reg = Register.cx(value.type());
+                Register reg = Register.cx(type);
                 ir.emit(new Load(MemorySpace.STACK, new Frame(structField.getInfo().getBaseOffset()), pointer));
                 values.loadCoerced(value, reg);
                 ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, structField.getOffset()), reg));
             } else {
-                Cell cell = new Cell(value.type(), new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
+                Cell cell = new Cell(type, new Frame(structField.getInfo().getBaseOffset() + structField.getOffset()));
                 values.store(value, cell);
             }
             return;
@@ -533,15 +536,25 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(ShortlyOperationNodePigLatin node) {
-        Value target = eval(node.getTarget());
+        Value targetVal = eval(node.getTarget());
         Value operand = eval(node.getValue());
-        Cell cell = values.requireCell(target);
-        ValueType type = cell.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
-        Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
-        values.loadCoerced(cell, a);
-        values.loadCoerced(operand, b);
-        ir.emit(new BinaryOperation(IntermediateTypes.shortly(node.getOperator()), a, b, c));
-        ir.emit(new Store(MemorySpace.STACK, cell.getAddress(), c));
+        Value newVal;
+        Type targetAnn = typeAnnotations.get(node.getTarget());
+        ValueType targetType = targetAnn != null ? declaredValueType(targetAnn) : null;
+        if (node.getOperator() == ShortlyOperator.PLUS_ASSIGN &&
+                (targetType == ValueType.STRING || targetVal.type() == ValueType.STRING || operand.type() == ValueType.STRING)) {
+            newVal = concat(targetVal, operand);
+        } else {
+            BinaryOperations op = IntermediateTypes.shortly(node.getOperator());
+            ValueType type = operandTypeOf(targetVal, operand);
+            Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
+            values.loadCoerced(targetVal, a);
+            values.loadCoerced(operand, b);
+            ir.emit(new BinaryOperation(op, a, b, c));
+            newVal = values.spill(c);
+        }
+        assign(node.getTarget(), newVal);
+        last = newVal;
         return null;
     }
 

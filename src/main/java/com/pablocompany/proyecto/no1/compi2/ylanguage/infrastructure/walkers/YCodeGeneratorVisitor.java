@@ -48,6 +48,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
@@ -344,15 +345,24 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
     @Override
     public Void visit(ShortlyOperationNodeY node) {
-        Value target = eval(node.getTarget());
+        Value targetVal = eval(node.getTarget());
         Value operand = eval(node.getValue());
-        Cell cell = values.requireCell(target);
-        ValueType type = cell.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
-        Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
-        values.loadCoerced(cell, a);
-        values.loadCoerced(operand, b);
-        ir.emit(new BinaryOperation(IntermediateTypes.shortly(node.getOperator()), a, b, c));
-        ir.emit(new Store(MemorySpace.STACK, cell.getAddress(), c));
+        Value newVal;
+        ValueType targetAnn = typeAnnotations.containsKey(node.getTarget()) ? valueTypeOf(node.getTarget()) : null;
+        if (node.getOperator() == ShortlyOperator.PLUS_ASSIGN &&
+                (targetAnn == ValueType.STRING || targetVal.type() == ValueType.STRING || operand.type() == ValueType.STRING)) {
+            newVal = concat(targetVal, operand);
+        } else {
+            BinaryOperations op = IntermediateTypes.shortly(node.getOperator());
+            ValueType type = operandTypeOf(targetVal, operand);
+            Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
+            values.loadCoerced(targetVal, a);
+            values.loadCoerced(operand, b);
+            ir.emit(new BinaryOperation(op, a, b, c));
+            newVal = values.spill(c);
+        }
+        assign(node.getTarget(), newVal);
+        last = newVal;
         return null;
     }
 
