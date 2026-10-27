@@ -27,23 +27,15 @@ public class TopPanel extends JPanel {
     private final Runnable onExecuteRisc;
     private final Runnable onExit;
     private final Runnable onSaveAll;
+    private final Runnable onOpenRars;
 
     private final JMenuBar menuBar;
     private final JToolBar toolBar;
     private final JLabel mainClassLabel;
 
-    public TopPanel(
-            WorkspaceNotifier notifier,
-            Runnable onNewProject,
-            Runnable onOpenProject,
-            Runnable onCloseProject,
-            Runnable onSave,
-            Runnable onCompile,
-            Runnable onExecuteC,
-            Runnable onExecuteRisc,
-            Runnable onExit,
-            Runnable onSaveAll
-    ) {
+    public TopPanel(WorkspaceNotifier notifier, Runnable onNewProject, Runnable onOpenProject,
+                    Runnable onCloseProject, Runnable onSave, Runnable onCompile, Runnable onExecuteC,
+                    Runnable onExecuteRisc, Runnable onOpenRars, Runnable onExit, Runnable onSaveAll) {
         this.onSaveAll = onSaveAll;
         this.notifier = notifier;
         this.onNewProject = onNewProject;
@@ -52,6 +44,7 @@ public class TopPanel extends JPanel {
         this.onSave = onSave;
         this.onCompile = onCompile;
         this.onExecuteC = onExecuteC;
+        this.onOpenRars = onOpenRars;
         this.onExecuteRisc = onExecuteRisc;
         this.onExit = onExit;
 
@@ -103,40 +96,22 @@ public class TopPanel extends JPanel {
         // ==========================================
 
         // Save button
-        toolBar.add(createToolbarButton(
-                "Guardar",
-                e -> onSave(),
-                UIColors.ACCEPT_ACCENT_BUTTON.getColorSet(),
-                UIColors.ACCEPT_ACCENT_HOVER_BUTTON.getColorSet()
-        ));
+        toolBar.add(createToolbarButton("Guardar", e -> onSave(), UIColors.ACCEPT_ACCENT_BUTTON.getColorSet(), UIColors.ACCEPT_ACCENT_HOVER_BUTTON.getColorSet()));
 
         toolBar.addSeparator(new Dimension(8, 0));
 
         // Compile button
-        toolBar.add(createToolbarButton(
-                "Compilar",
-                e -> onCompile(),
-                UIColors.INFO_BACKGROUND.getColorSet(),
-                new Color(54, 147, 241).brighter()
-        ));
+        toolBar.add(createToolbarButton("Compilar", e -> onCompile(), UIColors.INFO_BACKGROUND.getColorSet(), new Color(54, 147, 241).brighter()));
 
         toolBar.addSeparator(new Dimension(8, 0));
 
         // Execute button
-        toolBar.add(createToolbarButton(
-                "Ejecutar en C",
-                e -> onExecuteC(),
-                UIColors.ACCENT.getColorSet(),
-                new Color(152, 89, 7).brighter()
-        ));
+        toolBar.add(createToolbarButton("Ejecutar en C", e -> onExecuteC(), UIColors.ACCENT.getColorSet(), new Color(152, 89, 7).brighter()));
 
         // Execute button
-        toolBar.add(createToolbarButton(
-                "Ejecutar en Risc V",
-                e -> onExecuteRisc(),
-                UIColors.BORDER.getColorSet(),
-                new Color(121, 6, 114).brighter()
-        ));
+        toolBar.add(createToolbarButton("Ejecutar en Risc V", e -> onExecuteRisc(), UIColors.BORDER.getColorSet(), new Color(121, 6, 114).brighter()));
+
+        toolBar.add(createToolbarButton("Abrir en RARS", e -> onOpenRars(), new Color(30, 110, 90), new Color(30, 110, 90).brighter()));
     }
 
     /**
@@ -170,29 +145,20 @@ public class TopPanel extends JPanel {
         fileMenu.addSeparator();
         fileMenu.add(createMenuItem("Cerrar Proyecto", KeyEvent.VK_C, e -> onCloseProject()));
         fileMenu.addSeparator();
-        fileMenu.add(createMenuItem("Guardar", KeyEvent.VK_S,
-                e -> onSave(), KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK)));
-        fileMenu.add(createMenuItem("Guardar Todo", KeyEvent.VK_T,
-                e -> {
-                    if (onSaveAll != null) onSaveAll.run();
-                },
-                KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)));
+        fileMenu.add(createMenuItem("Guardar", KeyEvent.VK_S, e -> onSave(), KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK)));
+        fileMenu.add(createMenuItem("Guardar Todo", KeyEvent.VK_T, e -> {
+            if (onSaveAll != null) onSaveAll.run();
+        }, KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)));
         fileMenu.addSeparator();
         fileMenu.add(createMenuItem("Salir", KeyEvent.VK_X, e -> onExit()));
         menuBar.add(fileMenu);
 
-        // Edit Menu - Now with compiled code actions
+        // Edit Menu
         JMenu editMenu = createMenu("Editar", KeyEvent.VK_E);
-        editMenu.add(createMenuItem("Exportar Proyecto", KeyEvent.VK_D,
-                e -> notifier.notifyDownloadCompiledCode(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.add(createMenuItem("Exportar Proyecto", KeyEvent.VK_D, e -> notifier.notifyDownloadCompiledCode(), KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK)));
         editMenu.addSeparator();
-        editMenu.add(createMenuItem("Ejecutar Compilado en C", KeyEvent.VK_R,
-                e -> notifier.notifyExecuteCompiledCodeC(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
-        editMenu.add(createMenuItem("Ejecutar Compilado en Risc V", KeyEvent.VK_T,
-                e -> notifier.notifyExecuteCompiledCodeRisc(),
-                KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.add(createMenuItem("Ejecutar Compilado en C", KeyEvent.VK_R, e -> notifier.notifyExecuteCompiledCodeC(), KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
+        editMenu.add(createMenuItem("Ejecutar Compilado en Risc V", KeyEvent.VK_T, e -> notifier.notifyExecuteCompiledCodeRisc(), KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.CTRL_DOWN_MASK)));
 
         menuBar.add(editMenu);
 
@@ -202,6 +168,10 @@ public class TopPanel extends JPanel {
         viewMenu.add(createMenuItem("Errores", 0, e -> notifier.focusErrors()));
         viewMenu.add(createMenuItem("Tabla de Símbolos", 0, e -> notifier.focusSymbolsTable()));
         viewMenu.add(createMenuItem("Tabla de Tipos", 0, e -> notifier.focusTypesTable()));
+        viewMenu.addSeparator();
+        viewMenu.add(createMenuItem("Acercar", 0, e -> notifier.notifyZoomIn(), KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK)));
+        viewMenu.add(createMenuItem("Alejar", 0, e -> notifier.notifyZoomOut(), KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK)));
+        viewMenu.add(createMenuItem("Restablecer Zoom", 0, e -> notifier.notifyZoomReset(), KeyStroke.getKeyStroke(KeyEvent.VK_0, KeyEvent.CTRL_DOWN_MASK)));
         menuBar.add(viewMenu);
 
         // Tools Menu
@@ -209,6 +179,7 @@ public class TopPanel extends JPanel {
         toolsMenu.add(createMenuItem("Compilar", KeyEvent.VK_C, e -> onCompile(), KeyStroke.getKeyStroke(KeyEvent.VK_B, KeyEvent.CTRL_DOWN_MASK)));
         toolsMenu.add(createMenuItem("Ejecutar C", KeyEvent.VK_E, e -> onExecuteC(), KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)));
         toolsMenu.add(createMenuItem("Ejecutar Risc V", KeyEvent.VK_R, e -> onExecuteRisc(), KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK)));
+        toolsMenu.add(createMenuItem("Abrir en RARS", KeyEvent.VK_A, e -> onOpenRars(), KeyStroke.getKeyStroke(KeyEvent.VK_R, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK)));
         menuBar.add(toolsMenu);
 
         // Help Menu
@@ -271,10 +242,7 @@ public class TopPanel extends JPanel {
         toolbar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UIColors.DECLINE_ACCENT_BUTTON.getColorSet()));
         toolbar.setLayout(new FlowLayout(FlowLayout.RIGHT, 10, 5));
 
-        toolbar.setBorder(BorderFactory.createCompoundBorder(
-                toolbar.getBorder(),
-                BorderFactory.createEmptyBorder(0, 0, 0, 15)
-        ));
+        toolbar.setBorder(BorderFactory.createCompoundBorder(toolbar.getBorder(), BorderFactory.createEmptyBorder(0, 0, 0, 15)));
 
         return toolbar;
     }
@@ -293,8 +261,7 @@ public class TopPanel extends JPanel {
         // Rounded corners
         button.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(bgColor.darker(), 1, true),
-                BorderFactory.createEmptyBorder(8, 16, 8, 16)
-        ));
+                BorderFactory.createEmptyBorder(8, 16, 8, 16)));
 
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -311,8 +278,7 @@ public class TopPanel extends JPanel {
                 button.setBackground(hoverColor);
                 button.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(hoverColor.darker(), 1, true),
-                        BorderFactory.createEmptyBorder(8, 16, 8, 16)
-                ));
+                        BorderFactory.createEmptyBorder(8, 16, 8, 16)));
             }
 
             @Override
@@ -320,8 +286,7 @@ public class TopPanel extends JPanel {
                 button.setBackground(bgColor);
                 button.setBorder(BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(bgColor.darker(), 1, true),
-                        BorderFactory.createEmptyBorder(8, 16, 8, 16)
-                ));
+                        BorderFactory.createEmptyBorder(8, 16, 8, 16)));
             }
         });
 
@@ -331,6 +296,10 @@ public class TopPanel extends JPanel {
     // ==========================================
     // ACTION METHODS
     // ==========================================
+
+    private void onOpenRars() {
+        if (onOpenRars != null) onOpenRars.run();
+    }
 
     private void onNewProject() {
         if (onNewProject != null) onNewProject.run();
@@ -368,11 +337,6 @@ public class TopPanel extends JPanel {
      * Show about dialog
      */
     private void showAboutDialog() {
-        JOptionPane.showMessageDialog(
-                this,
-                "3xtrat3rr3str3D Compiler\nVersion 1.0.0\n\nCompilador para el lenguaje 3xtrat3rr3str3D",
-                "Acerca de 3xtrat3rr3str3D Compiler",
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        JOptionPane.showMessageDialog(this, "3xtrat3rr3str3D Compiler\nVersion 1.0.0\n\nCompilador para el lenguaje 3xtrat3rr3str3D", "Acerca de 3xtrat3rr3str3D Compiler", JOptionPane.INFORMATION_MESSAGE);
     }
 }

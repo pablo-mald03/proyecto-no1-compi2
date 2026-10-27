@@ -23,6 +23,6 @@ public class ZCodeGenerator implements CodeGenerator {
                          Map<AstNode, Symbol> resolvedCalls, IntermediateBuilder intermediate, CodeGenContext labels) {
 
         if (!(context.getAstNode() instanceof ZAstNode pigAst)) return;
-        pigAst.accept(new ZCodeGeneratorVisitor(table, context, typeAnnotations, intermediate, labels));
+        pigAst.accept(new ZCodeGeneratorVisitor(table, context, typeAnnotations, resolvedCalls, intermediate, labels));
     }
 }

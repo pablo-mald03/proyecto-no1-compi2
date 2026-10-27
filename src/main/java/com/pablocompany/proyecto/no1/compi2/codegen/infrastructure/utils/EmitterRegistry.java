@@ -46,7 +46,12 @@ public class EmitterRegistry {
      * Method to verification if the code generation was succeeded.
      */
     public EmitterRegistry verifyComplete() {
-        Set<Class<?>> missing = new LinkedHashSet<>(Arrays.asList(Instruction.class.getPermittedSubclasses()));
+        Class<?>[] permitted = Instruction.class.getPermittedSubclasses();
+        if (permitted == null) {
+            // Instruction is not sealed – nothing to verify exhaustively
+            return this;
+        }
+        Set<Class<?>> missing = new LinkedHashSet<>(Arrays.asList(permitted));
         missing.removeAll(emitters.keySet());
         if (!missing.isEmpty()) {
             throw new IllegalStateException(backendName + " no implementa: "

@@ -1,18 +1,52 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.walkers;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.MemorySpace;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.UnaryOperations;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Cell;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Constant;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generateModels.Text;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.generatePort.Value;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.IndexAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.assingation.Store;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.enums.BinaryOperations;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.Call;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.CallIndirect;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.functions.Jump;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.FramePop;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.FramePush;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.FrameRebase;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.heap.HeapAlloc;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.io.Print;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.io.Read;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.labels.LoadLabelAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.labels.MarkLabel;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.BinaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.StringConcat;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Move;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Indirect;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.ValueEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.ArrayInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGeneratorOutput;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StringPool;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
-import com.pablocompany.proyecto.no1.compi2.common.domain.factory.ObjectInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
@@ -53,6 +87,8 @@ import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parent
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.parents.ExpressionNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.visitor.ZAstVisitor;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZInheritanceService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZSymbolLookupService;
 
 import java.util.*;
 
@@ -62,62 +98,44 @@ import java.util.*;
  */
 public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
+    private static final int CALL_AREA = 200;
+
     private final GlobalSymbolTable table;
     private final EditorContext context;
     private final Map<AstNode, Type> typeAnnotations;
-    private final CodeGeneratorOutput output;
-    private final CodeGenContext ctx;
-    private final StringPool stringPool;
-
-    private int nextOffset = 1;
-
-    private final Map<String, Integer> localOffsets = new HashMap<>();
-    private final Map<String, Integer> paramOffsets = new HashMap<>();
-    private final Map<String, TypeKind> localTypes = new HashMap<>();
+    private final Map<AstNode, Symbol> resolvedCalls;
+    private final IntermediateBuilder ir;
+    private final CodeGenContext labels;
 
     private final Deque<String> breakLabels = new ArrayDeque<>();
     private final Deque<String> continueLabels = new ArrayDeque<>();
 
-    private String lastExpr;
+    private FunctionFrame frame = new FunctionFrame();
+    private ValueEmitter values;
+    private Value last;
 
-    private final Map<String, ObjectInfo> objectVariables = new HashMap<>();
-    private final Map<String, ArrayInfo> arrayInfos = new HashMap<>();
+    private Symbol currentClassSymbol;
+    private Symbol currentCallableSymbol;
+    private ClassDeclarationNodeZ currentClassNode;
 
-    private String currentClassName = null;
-    private String currentSelfSlot = null;
-
-    private final Map<String, List<String>> classLayouts;
-
-    public ZCodeGeneratorVisitor(GlobalSymbolTable table,
-                                 EditorContext context,
-                                 Map<AstNode, Type> typeAnnotations,
-                                 CodeGeneratorOutput output,
-                                 CodeGenContext ctx,
-                                 StringPool stringPool,
-                                 Map<String, List<String>> classLayouts) {
-        this.table = table;
-        this.context = context;
-        this.typeAnnotations = typeAnnotations;
-        this.output = output;
-        this.ctx = ctx;
-        this.stringPool = stringPool;
-        this.classLayouts = classLayouts;
-    }
+    private final ZInheritanceService inheritance;
 
     public ZCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
-                                 Map<AstNode, Type> typeAnnotations, IntermediateBuilder ir, CodeGenContext labels) {
-        //TODO:::::::::::
+                                 Map<AstNode, Type> typeAnnotations,
+                                 Map<AstNode, Symbol> resolvedCalls,
+                                 IntermediateBuilder ir, CodeGenContext labels) {
         this.table = table;
         this.context = context;
-        this.typeAnnotations = typeAnnotations;
-        this.output = null;
-        this.ctx = null;
-        this.stringPool = null;
-        this.classLayouts = new HashMap<>();
+        this.typeAnnotations = typeAnnotations != null ? typeAnnotations : Map.of();
+        this.resolvedCalls = resolvedCalls != null ? resolvedCalls : Map.of();
+        this.ir = ir;
+        this.labels = labels != null ? labels : new CodeGenContext();
+        this.values = new ValueEmitter(ir, frame);
+        this.inheritance = new ZInheritanceService(new ZSymbolLookupService(table, context));
     }
 
     // ============================================================
-    // TOP-LEVEL
+    // TOP-LEVEL & CLASSES
     // ============================================================
 
     @Override
@@ -130,19 +148,24 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ClassDeclarationNodeZ node) {
-        String previousClass = currentClassName;
-        currentClassName = node.getClassName();
+        this.currentClassNode = node;
+        this.currentClassSymbol = findClassSymbol(node.getClassName());
+        if (this.currentClassSymbol != null) {
+            inheritance.link(this.currentClassSymbol);
+        }
 
         if (node.getMembers() != null) {
             for (ZAstNode member : node.getMembers()) {
-                if (member != null) member.accept(this);
+                if (member instanceof ConstructorDeclarationNodeZ || member instanceof MethodDeclarationNodeZ) {
+                    member.accept(this);
+                }
             }
         }
 
-        currentClassName = previousClass;
+        this.currentClassNode = null;
+        this.currentClassSymbol = null;
         return null;
     }
-
 
     @Override
     public Void visit(CodeBodyNodeZ node) {
@@ -154,141 +177,131 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
         return null;
     }
 
-    // ============================================================
-    // METHODS AND CONSTRUCTORS
-    // ============================================================
-
-    @Override
-    public Void visit(MethodDeclarationNodeZ node) {
-        String className = currentClassName != null ? currentClassName : "Unknown";
-        int numArgs = node.getParams() != null ? node.getParams().size() : 0;
-        String funcName = className + "_" + node.getName() + "_" + numArgs;
-        output.getFunctionNames().add(funcName);
-        output.emit("function_start", funcName, null, null);
-
-
-        emitPrologue(numArgs + 1);
-        resetFunctionState();
-
-        currentSelfSlot = "fp + 1";
-        localTypes.put("self", TypeKind.INT);
-        paramOffsets.put("self", 1);
-        nextOffset = 2;
-
-        // Then the regular parameters.
-        if (node.getParams() != null) {
-            for (ParameterNodeZ param : node.getParams()) {
-                if (param != null) registerParameter(param);
-            }
-        }
-
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        emitEpilogue();
-        output.emit("return", null, null, null);
-
-        currentSelfSlot = null;
-        return null;
-    }
 
     @Override
     public Void visit(ConstructorDeclarationNodeZ node) {
-        String className = currentClassName != null ? currentClassName : "Unknown";
-
-        int numArgs = node.getParams() != null ? node.getParams().size() : 0;
-        String funcName = className + "_" + node.getName() + "_" + numArgs;
-
-        output.getFunctionNames().add(funcName);
-        output.emit("function_start", funcName, null, null);
-
-
-
-        emitPrologue(numArgs + 1);
-        resetFunctionState();
-
-        currentSelfSlot = "fp + 1";
-        localTypes.put("self", TypeKind.INT);
-        paramOffsets.put("self", 1);
-        nextOffset = 2;
-
-        if (node.getParams() != null) {
-            for (ParameterNodeZ param : node.getParams()) {
-                if (param != null) registerParameter(param);
-            }
-        }
-
-        boolean explicitSuper = node.getBody() != null
-                && !node.getBody().isEmpty()
-                && node.getBody().get(0) instanceof SuperConstructorCallNodeZ;
-        if (!explicitSuper) {
-            emitImplicitSuperCall();
-        }
-
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        emitEpilogue();
-        output.emit("return", null, null, null);
-
-        currentSelfSlot = null;
+        Symbol ctorSymbol = findConstructorInClass(currentClassSymbol, node);
+        generateCallable(ctorSymbol, node.getParams(), node.getBody(), true);
         return null;
     }
 
-    private void emitPrologue(int numArgs) {
-        output.emit("fp_push", null, null, null);
-        output.emit("fp_set_offset", String.valueOf(numArgs + 1), null, null);
+    @Override
+    public Void visit(MethodDeclarationNodeZ node) {
+        Symbol methodSymbol = findMethodInClass(currentClassSymbol, node);
+        generateCallable(methodSymbol, node.getParams(), node.getBody(), false);
+        return null;
     }
 
-    private void emitEpilogue() {
-        output.emit("fp_pop", null, null, null);
+    private void generateCallable(Symbol callableSymbol,
+                                  List<ParameterNodeZ> params,
+                                  List<ZAstNode> body,
+                                  boolean isConstructor) {
+        this.currentCallableSymbol = callableSymbol;
+        String functionName = callableSymbol != null ? NameMangler.codeLabel(callableSymbol) : "anon_func";
+
+        ir.beginFunction(functionName);
+        frame = new FunctionFrame();
+        values = new ValueEmitter(ir, frame);
+        breakLabels.clear();
+        continueLabels.clear();
+
+        int declaredParams = params != null ? params.size() : 0;
+        int numArgs = 1 + declaredParams;
+
+        ir.emit(new FramePush());
+        ir.emit(new FrameRebase(numArgs + 1));
+
+        frame.declare("this", ValueType.INT);
+
+        if (params != null) {
+            for (ParameterNodeZ p : params) {
+                if (p != null) registerParameter(p);
+            }
+        }
+
+        if (isConstructor) {
+            emitConstructorPrologue(body);
+        }
+
+        if (body != null) {
+            for (ZAstNode stmt : body) {
+                if (stmt == null) continue;
+                if (isConstructor && stmt instanceof SuperConstructorCallNodeZ) continue;
+                stmt.accept(this);
+            }
+        }
+
+        ir.emit(new FramePop());
+        ir.emit(new Return());
+
+        this.currentCallableSymbol = null;
     }
 
-    private void resetFunctionState() {
-        localOffsets.clear();
-        paramOffsets.clear();
-        localTypes.clear();
-        objectVariables.clear();
-        arrayInfos.clear();
-        nextOffset = 1;
+    /**
+     * Prólogo de un constructor de Z:
+     * 1. super(...) explícito o super() implícito si la clase tiene padre
+     * 2. Inicializadores de campos propios declarados en esta clase
+     */
+    private void emitConstructorPrologue(List<ZAstNode> body) {
+        SuperConstructorCallNodeZ explicitSuper = null;
+        if (body != null && !body.isEmpty() && body.get(0) instanceof SuperConstructorCallNodeZ sc) {
+            explicitSuper = sc;
+        }
+
+        Symbol parentClass = currentClassSymbol != null ? currentClassSymbol.getParentSymbol() : null;
+
+        if (explicitSuper != null) {
+            explicitSuper.accept(this);
+        } else if (parentClass != null) {
+            Symbol emptyParentCtor = findEmptyConstructor(parentClass);
+            if (emptyParentCtor != null) {
+                emitSuperConstructorCall(emptyParentCtor, List.of());
+            }
+        }
+
+        if (currentClassNode != null && currentClassNode.getMembers() != null) {
+            for (ZAstNode m : currentClassNode.getMembers()) {
+                if (m instanceof FieldDeclarationNodeZ field && field.getInitializer() != null) {
+                    emitFieldInitializer(field);
+                }
+            }
+        }
+    }
+
+    private void emitFieldInitializer(FieldDeclarationNodeZ field) {
+        Symbol fieldSym = findFieldSymbol(currentClassSymbol, field.getName());
+        if (fieldSym == null) return;
+
+        Value initVal = eval(field.getInitializer());
+        int slot = fieldSym.getFieldIndex() + 1; // +1 por el __vptr
+
+        Register thisReg = Register.ax(ValueType.INT);
+        values.load(frame.lookup("this"), thisReg);
+
+        ValueType fType = declaredType(field.getType());
+        Register scratch = Register.cx(fType);
+        values.loadCoerced(initVal, scratch);
+        ir.emit(new Store(MemorySpace.HEAP, new Indirect(thisReg, slot), scratch));
+    }
+
+    private void registerParameter(ParameterNodeZ param) {
+        ValueType type = declaredType(param.getType());
+        frame.declare(param.getName(), type);
     }
 
     // ============================================================
-    // DECLARATIONS
+    // STATEMENTS AND CONTROL STATEMENTS
     // ============================================================
 
     @Override
     public Void visit(VariableDeclarationNodeZ node) {
-        String localName = node.getIdentifier();
-
-        Type declaredType = mapTypeNodeToType(node.getDataType());
-        boolean isObject = declaredType != null
-                && declaredType.isCustom()
-                && !"String".equals(declaredType.getCustomName());
-
-        int offset = allocateLocal(localName, node);
-
-        if (isObject) {
-            objectVariables.put(localName,
-                    new ObjectInfo(declaredType.getCustomName(), offset));
-        }
-
+        Cell cell = frame.declare(node.getIdentifier(), declaredType(node.getDataType()));
         if (node.getInitializer() != null) {
-            if (node.getInitializer() instanceof ReadStatementNodeZ read) {
-                read.accept(this);
-                String dest = getStackRefByName(localName);
-                storeValueTo(lastExpr, dest);
+            if (node.getInitializer() instanceof ReadStatementNodeZ) {
+                ir.emit(new Read(cell.type(), cell.getAddress()));
                 return null;
             }
-            String valueRef = exprToString(node.getInitializer());
-            String dest = getStackRefByName(localName);
-            storeValueTo(valueRef, dest);
+            values.store(eval(node.getInitializer()), cell);
         }
         return null;
     }
@@ -299,358 +312,163 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     }
 
     @Override
-    public Void visit(ThisExpressionNodeZ node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(SuperExpressionNodeZ node) {
-        return null;   // only meaningful as the target of a member access (see evalObjectPointerToReg)
-    }
-
-    /**
-     * super(args); -> call to the parent constructor with the SAME object pointer as 'this'.
-     */
-    @Override
-    public Void visit(SuperConstructorCallNodeZ node) {
-        if (currentSelfSlot == null) return null;
-
-        String parent = node.getParentClass();
-        if (parent == null) {
-            Symbol p = findParentOf(currentClassName);
-            parent = p != null ? p.getName() : null;
-        }
-        if (parent == null) return null;
-
-        List<ExpressionNodeZ> args = node.getArguments() != null ? node.getArguments() : new ArrayList<>();
-
-        // Parent without declared constructors: its implicit default constructor does nothing.
-        if (args.isEmpty() && !declaresConstructors(parent)) return null;
-
-        emitSuperConstructorCall(parent, args);
-        return null;
-    }
-
-    @Override
-    public Void visit(ArrayDeclarationNodeZ node) {
-        int totalSize = 1;
-        boolean allLiteral = true;
-        if (node.getDimensions() != null) {
-            for (ExpressionNodeZ dim : node.getDimensions()) {
-                Integer size = tryExtractIntLiteral(dim);
-                if (size == null) {
-                    allLiteral = false;
-                    break;
-                }
-                totalSize *= size;
-            }
-        }
-        if (!allLiteral) totalSize = 1;
-
-        int base = nextOffset;
-        nextOffset += totalSize;
-
-        TypeKind elementKind = mapTypeNodeToType(node.getDataType()).getKind();
-        arrayInfos.put(node.getIdentifier(),
-                new ArrayInfo(base, elementKind, totalSize, false));
-
-        if (node.getInitializer() != null
-                && node.getInitializer() instanceof ArrayInitExpressionNodeZ init
-                && init.getElements() != null) {
-            List<ExpressionNodeZ> values = init.getElements();
-            String suffix = kindToSuffix(elementKind);
-            String cxReg = "CX_" + suffix.toUpperCase();
-            for (int i = 0; i < values.size() && i < totalSize; i++) {
-                String valueRef = exprToString(values.get(i));
-                loadRegister(valueRef, cxReg);
-                output.emit("store_" + suffix, "fp + " + (base + i), null, cxReg);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(ForInitDeclarationNodeZ node) {
-        String localName = node.getId();
-        allocateLocal(localName, node);
-
-        if (node.getExpr() != null) {
-            String valueRef = exprToString(node.getExpr());
-            String dest = getStackRefByName(localName);
-            storeValueTo(valueRef, dest);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(ForInitAssignmentNodeZ node) {
-        if (node.getId() != null && node.getExpr() != null) {
-            String targetRef = exprToString(node.getId());
-            String valueRef = exprToString(node.getExpr());
-            storeValueTo(valueRef, targetRef);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(ForUpdateNodeZ node) {
-        String targetRef = exprToString(node.getTarget());
-        switch (node.getOperator()) {
-            case INCREMENT:
-            case PREFIX_INCREMENT:
-                emitIncDec(targetRef, "+");
-                break;
-            case DECREMENT:
-            case PREFIX_DECREMENT:
-                emitIncDec(targetRef, "-");
-                break;
-            case ASSIGN:
-                if (node.getValue() != null) {
-                    String valueRef = exprToString(node.getValue());
-                    storeValueTo(valueRef, targetRef);
-                }
-                break;
-        }
-        return null;
-    }
-
-    @Override
-    public Void visit(ParameterNodeZ node) {
-        return null;
-    }
-
-    // ============================================================
-    // STATEMENTS
-    // ============================================================
-
-    @Override
     public Void visit(VariableAssignmentNodeZ node) {
-        if (node.getIdentifier() instanceof IdentifierExpressionNodeZ id) {
-            String name = id.getIdentifier();
-            if (!localOffsets.containsKey(name) && !paramOffsets.containsKey(name)
-                    && currentClassName != null && currentSelfSlot != null) {
-                List<String> layout = classLayouts.get(currentClassName);
-                if (layout != null) {
-                    int fieldOffset = layout.indexOf(name);
-                    if (fieldOffset >= 0) {
-                        String valueRef = exprToString(node.getExpressionNode());
-                        Type valueType = typeAnnotations.get(node.getExpressionNode());
-                        TypeKind kind = valueType != null ? valueType.getKind() : TypeKind.INT;
-                        if (kind == TypeKind.NULL) kind = TypeKind.INT;
-                        String suffix = kindToSuffix(kind);
-                        String axReg = "AX_" + suffix.toUpperCase();
-
-                        loadRegister(valueRef, axReg);
-                        output.emit("load_int", currentSelfSlot, null, "BX_INT");
-                        emitHeapFieldStore("BX_INT", fieldOffset, kind, axReg);
-                        return null;
-                    }
-                }
-            }
-        }
-
-        if (node.getIdentifier() instanceof PropertyAccessExpressionNodeZ prop
-                && tryEmitPropertyStore(prop, node.getExpressionNode())) {
-            return null;
-        }
-
-        String valueRef = exprToString(node.getExpressionNode());
-        String targetRef = exprToString(node.getIdentifier());
-        storeValueTo(valueRef, targetRef);
+        Value val = eval(node.getExpressionNode());
+        assign(node.getIdentifier(), val);
         return null;
     }
 
     @Override
     public Void visit(ShortlyOperationNodeZ node) {
-        String op = shortlyOpToBinary(node.getOperator());
-
-        if (node.getTarget() instanceof IdentifierExpressionNodeZ id) {
-            String name = id.getIdentifier();
-            if (!localOffsets.containsKey(name) && !paramOffsets.containsKey(name)
-                    && currentClassName != null && currentSelfSlot != null) {
-                List<String> layout = classLayouts.get(currentClassName);
-                if (layout != null) {
-                    int fieldOffset = layout.indexOf(name);
-                    if (fieldOffset >= 0) {
-                        Type t = typeAnnotations.get(node.getTarget());
-                        TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-                        String suffix = kindToSuffix(kind);
-                        String axReg = "AX_" + suffix.toUpperCase();
-                        String cxReg = "CX_" + suffix.toUpperCase();
-
-                        String valueRef = exprToString(node.getValue());
-                        Type valueType = typeAnnotations.get(node.getValue());
-                        TypeKind valueKind = valueType != null ? valueType.getKind() : TypeKind.INT;
-                        String valueSuffix = kindToSuffix(valueKind);
-                        String valueReg = "CX_" + valueSuffix.toUpperCase();
-
-                        loadRegister(valueRef, valueReg);
-
-                        output.emit("load_int", currentSelfSlot, null, "BX_INT");
-                        emitHeapFieldLoad("BX_INT", fieldOffset, kind, axReg);   // FIX: heap, no stack
-                        output.emit(op, axReg, valueReg, cxReg);
-                        emitHeapFieldStore("BX_INT", fieldOffset, kind, cxReg);
-                        return null;
-                    }
-                }
-            }
+        Value targetVal = eval(node.getTarget());
+        Value operand = eval(node.getValue());
+        Value newVal;
+        ValueType targetAnn = typeAnnotations.containsKey(node.getTarget()) ? valueTypeOf(node.getTarget()) : null;
+        if (node.getOperator() == ShortlyOperator.PLUS_ASSIGN &&
+                (targetAnn == ValueType.STRING || targetVal.type() == ValueType.STRING || operand.type() == ValueType.STRING)) {
+            newVal = concat(targetVal, operand);
+        } else {
+            BinaryOperations op = IntermediateTypes.shortly(node.getOperator());
+            ValueType type = operandTypeOf(targetVal, operand);
+            Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
+            values.loadCoerced(targetVal, a);
+            values.loadCoerced(operand, b);
+            ir.emit(new BinaryOperation(op, a, b, c));
+            newVal = values.spill(c);
         }
-
-        String targetRef = exprToString(node.getTarget());
-        String valueRef = exprToString(node.getValue());
-
-        loadRegister(targetRef, "AX_INT");
-        loadRegister(valueRef, "BX_INT");
-
-        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
+        assign(node.getTarget(), newVal);
+        last = newVal;
         return null;
     }
 
+    private void handleIncDec(ExpressionNodeZ target, BinaryOperations op, boolean isPrefix) {
+        Value currentVal = eval(target);
+        ValueType type = currentVal.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
+        Register a = Register.ax(type);
+        Register b = Register.bx(type);
+        Register c = Register.cx(type);
+        values.loadCoerced(currentVal, a);
+
+        Cell prevVal = null;
+        if (!isPrefix) {
+            prevVal = values.spill(a);
+        }
+
+        ir.emit(new Move(new Immediate("1", type), b));
+        ir.emit(new BinaryOperation(op, a, b, c));
+        Cell newVal = values.spill(c);
+
+        assign(target, newVal);
+
+        last = isPrefix ? newVal : prevVal;
+    }
 
     @Override
     public Void visit(IncrementStatementNodeZ node) {
-        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "+")) {
-            emitIncDec(exprToString(node.getTargetVariable()), "+");
-        }
+        handleIncDec(node.getTargetVariable(), BinaryOperations.ADD, false);
         return null;
     }
 
     @Override
     public Void visit(DecrementStatementNodeZ node) {
-        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "-")) {
-            emitIncDec(exprToString(node.getTargetVariable()), "-");
-        }
+        handleIncDec(node.getTargetVariable(), BinaryOperations.SUB, false);
         return null;
     }
 
     @Override
     public Void visit(IncrementPrevStatementNodeZ node) {
-        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "+")) {
-            emitIncDec(exprToString(node.getTargetVariable()), "+");
-        }
+        handleIncDec(node.getTargetVariable(), BinaryOperations.ADD, true);
         return null;
     }
 
     @Override
     public Void visit(DecrementPrevStatementNodeZ node) {
-        if (!tryEmitAttributeIncDec(node.getTargetVariable(), "-")) {
-            emitIncDec(exprToString(node.getTargetVariable()), "-");
-        }
+        handleIncDec(node.getTargetVariable(), BinaryOperations.SUB, true);
         return null;
     }
 
     @Override
     public Void visit(ExpressionStatementNodeZ node) {
-        if (node.getExpression() != null) node.getExpression().accept(this);
+        if (node.getExpression() != null) {
+            node.getExpression().accept(this);
+        }
         return null;
     }
 
     @Override
     public Void visit(PrintStatementNodeZ node) {
-        if (node.getExpression() != null) {
-            String valueRef = exprToString(node.getExpression());
-            Type t = typeAnnotations.get(node.getExpression());
-            String typeName = typeToString(t);
-            String register = registerFor(typeName);
-            loadRegister(valueRef, register);
-            output.emit(node.isEndless() ? "println" : "print", register, typeName, null);
-        }
+        if (node.getExpression() == null) return null;
+        Value value = eval(node.getExpression());
+        Register reg = Register.ax(value.type());
+        values.loadCoerced(value, reg);
+        ir.emit(new Print(reg, node.isEndless()));
         return null;
     }
 
     @Override
     public Void visit(ReadStatementNodeZ node) {
-        int offset = nextOffset++;
-        Type t = typeAnnotations.get(node);
-        TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-        String arrayName = stackArrayForKind(kind);
-
-        if (kind == TypeKind.STRING) {
-            output.emit("read_string", String.valueOf(offset), null, null);
-        } else {
-            output.emit("read_int", String.valueOf(offset), null, null);
-        }
-
-        lastExpr = arrayName + "[fp + " + offset + "]";
+        ValueType type = valueTypeOf(node);
+        Cell cell = frame.temp(type);
+        ir.emit(new Read(type, cell.getAddress()));
+        last = cell;
         return null;
     }
 
     @Override
     public Void visit(ReturnStatementNodeZ node) {
         if (node.getValue() != null) {
-            String valueRef = exprToString(node.getValue());
-            Type t = typeAnnotations.get(node.getValue());
-            String arrayName = stackArrayForKind(t != null ? t.getKind() : TypeKind.INT);
-            String dest = arrayName + "[fp + 0]";
-            storeValueTo(valueRef, dest);
+            Value val = eval(node.getValue());
+            ValueType retType = currentCallableSymbol != null ? returnTypeOf(currentCallableSymbol) : val.type();
+            Register scratch = Register.ax(retType);
+            values.loadCoerced(val, scratch);
+            ir.emit(new Store(MemorySpace.STACK, new Frame(0), scratch));
         }
-        emitEpilogue();
-        output.emit("return", null, null, null);
+        ir.emit(new FramePop());
+        ir.emit(new Return());
         return null;
     }
 
     @Override
     public Void visit(BreakStatementNodeZ node) {
-        if (!breakLabels.isEmpty()) output.emit("goto", null, null, breakLabels.peek());
+        if (!breakLabels.isEmpty()) ir.emit(new Jump(breakLabels.peek()));
         return null;
     }
 
     @Override
     public Void visit(ContinueStatementNodeZ node) {
-        if (!continueLabels.isEmpty()) output.emit("goto", null, null, continueLabels.peek());
+        if (!continueLabels.isEmpty()) ir.emit(new Jump(continueLabels.peek()));
         return null;
     }
 
-    // ============================================================
-    // CONTROL FLOW
-    // ============================================================
+    @Override
+    public Void visit(ArgumentsNodeZ node) {
+        return null;
+    }
 
     @Override
     public Void visit(IfStatementNodeZ node) {
-        String endLabel = ctx.nextLabel();
+        String end = labels.nextLabel();
+        String next = labels.nextLabel();
 
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-
-        String elseLabel = ctx.nextLabel();
-        output.emit("ifFalse", "AX_INT", null, elseLabel);
-
-        if (node.getThenBody() != null) {
-            for (ZAstNode s : node.getThenBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-        output.emit("goto", null, null, endLabel);
-        output.emit("label", elseLabel, null, null);
+        branch(node.getCondition(), false, next);
+        visitAll(node.getThenBody());
+        ir.emit(new Jump(end));
+        ir.emit(new MarkLabel(next));
 
         if (node.getElseIfs() != null) {
             for (ElseIfNodeZ elseIf : node.getElseIfs()) {
                 if (elseIf == null) continue;
-
-                String condRef2 = exprToString(elseIf.getCondition());
-                loadRegister(condRef2, "AX_INT");
-
-                String nextElse = ctx.nextLabel();
-                output.emit("ifFalse", "AX_INT", null, nextElse);
-
-                if (elseIf.getBody() != null) {
-                    for (ZAstNode s : elseIf.getBody()) {
-                        if (s != null) s.accept(this);
-                    }
-                }
-                output.emit("goto", null, null, endLabel);
-                output.emit("label", nextElse, null, null);
+                String skip = labels.nextLabel();
+                branch(elseIf.getCondition(), false, skip);
+                visitAll(elseIf.getBody());
+                ir.emit(new Jump(end));
+                ir.emit(new MarkLabel(skip));
             }
         }
-
         if (node.getElseBlockNode() != null && node.getElseBlockNode().getBody() != null) {
-            for (ZAstNode s : node.getElseBlockNode().getBody()) {
-                if (s != null) s.accept(this);
-            }
+            visitAll(node.getElseBlockNode().getBody());
         }
-
-        output.emit("label", endLabel, null, null);
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
@@ -671,117 +489,118 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(WhileStatementNodeZ node) {
-        String startLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String start = labels.nextLabel();
+        String end = labels.nextLabel();
 
-        output.emit("label", startLabel, null, null);
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-        output.emit("ifFalse", "AX_INT", null, endLabel);
-
-        breakLabels.push(endLabel);
-        continueLabels.push(startLabel);
-
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        continueLabels.pop();
-        breakLabels.pop();
-
-        output.emit("goto", null, null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new MarkLabel(start));
+        branch(node.getCondition(), false, end);
+        loopBody(node.getBody(), end, start);
+        ir.emit(new Jump(start));
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
     public Void visit(DoWhileStatementNodeZ node) {
-        String startLabel = ctx.nextLabel();
-        String condLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String start = labels.nextLabel();
+        String cond = labels.nextLabel();
+        String end = labels.nextLabel();
 
-        output.emit("label", startLabel, null, null);
-        breakLabels.push(endLabel);
-        continueLabels.push(condLabel);
-
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
-            }
-        }
-
-        continueLabels.pop();
-        breakLabels.pop();
-
-        output.emit("label", condLabel, null, null);
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-        output.emit("ifTrue", "AX_INT", null, startLabel);
-        output.emit("label", endLabel, null, null);
+        ir.emit(new MarkLabel(start));
+        loopBody(node.getBody(), end, cond);
+        ir.emit(new MarkLabel(cond));
+        branch(node.getCondition(), true, start);
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
     public Void visit(ForStatementNodeZ node) {
-        String startLabel = ctx.nextLabel();
-        String continueLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        String start = labels.nextLabel();
+        String update = labels.nextLabel();
+        String end = labels.nextLabel();
 
         if (node.getInit() != null) node.getInit().accept(this);
-        output.emit("label", startLabel, null, null);
+        ir.emit(new MarkLabel(start));
+        if (node.getCondition() != null) branch(node.getCondition(), false, end);
+        loopBody(node.getBody(), end, update);
+        ir.emit(new MarkLabel(update));
+        if (node.getUpdate() != null) node.getUpdate().accept(this);
+        ir.emit(new Jump(start));
+        ir.emit(new MarkLabel(end));
+        return null;
+    }
 
-        if (node.getCondition() != null) {
-            String condRef = exprToString(node.getCondition());
-            loadRegister(condRef, "AX_INT");
-            output.emit("ifFalse", "AX_INT", null, endLabel);
+    @Override
+    public Void visit(ForInitDeclarationNodeZ node) {
+        Cell cell = frame.declare(node.getId(), declaredType(node.getType()));
+        if (node.getExpr() != null) {
+            values.store(eval(node.getExpr()), cell);
         }
+        return null;
+    }
 
-        breakLabels.push(endLabel);
-        continueLabels.push(continueLabel);
+    @Override
+    public Void visit(ForInitAssignmentNodeZ node) {
+        Value val = eval(node.getExpr());
+        assign(node.getId(), val);
+        return null;
+    }
 
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) {
-                if (s != null) s.accept(this);
+    @Override
+    public Void visit(ForUpdateNodeZ node) {
+        switch (node.getOperator()) {
+            case INCREMENT, PREFIX_INCREMENT -> handleIncDec(node.getTarget(), BinaryOperations.ADD, false);
+            case DECREMENT, PREFIX_DECREMENT -> handleIncDec(node.getTarget(), BinaryOperations.SUB, false);
+            case ASSIGN -> {
+                if (node.getValue() != null) assign(node.getTarget(), eval(node.getValue()));
             }
         }
-
-        continueLabels.pop();
-        breakLabels.pop();
-
-        output.emit("label", continueLabel, null, null);
-        if (node.getUpdate() != null) node.getUpdate().accept(this);
-        output.emit("goto", null, null, startLabel);
-        output.emit("label", endLabel, null, null);
         return null;
     }
 
     @Override
     public Void visit(SwitchStatementNodeZ node) {
-        if (node.getSelector() != null) {
-            exprToString(node.getSelector());
+        String end = labels.nextLabel();
+        Value selector = eval(node.getSelector());
+        List<SwitchCaseNodeZ> cases = node.getCases() != null ? node.getCases() : List.of();
+        List<String> bodyLabels = new ArrayList<>();
+
+        for (SwitchCaseNodeZ c : cases) {
+            String bodyLabel = labels.nextLabel();
+            bodyLabels.add(bodyLabel);
+            Value caseValue = eval(c.getValue());
+            ValueType t = operandTypeOf(selector, caseValue);
+            Register a = Register.ax(t), b = Register.bx(t), r = Register.cx(ValueType.BOOLEAN);
+            values.load(selector, a);
+            values.load(caseValue, b);
+            ir.emit(new BinaryOperation(BinaryOperations.EQ, a, b, r));
+            ir.emit(new com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf(r, true, bodyLabel));
         }
-        if (node.getCases() != null) {
-            for (SwitchCaseNodeZ c : node.getCases()) if (c != null) c.accept(this);
+        String defaultLabel = node.getDefaultCase() != null ? labels.nextLabel() : end;
+        ir.emit(new Jump(defaultLabel));
+
+        breakLabels.push(end);
+        for (int i = 0; i < cases.size(); i++) {
+            ir.emit(new MarkLabel(bodyLabels.get(i)));
+            visitAll(cases.get(i).getBody());
         }
-        if (node.getDefaultCase() != null) node.getDefaultCase().accept(this);
+        if (node.getDefaultCase() != null) {
+            ir.emit(new MarkLabel(defaultLabel));
+            visitAll(node.getDefaultCase().getBody());
+        }
+        breakLabels.pop();
+        ir.emit(new MarkLabel(end));
         return null;
     }
 
     @Override
     public Void visit(SwitchCaseNodeZ node) {
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
-        }
         return null;
     }
 
     @Override
     public Void visit(DefaultCaseNodeZ node) {
-        if (node.getBody() != null) {
-            for (ZAstNode s : node.getBody()) if (s != null) s.accept(this);
-        }
         return null;
     }
 
@@ -791,165 +610,139 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(LiteralExpressionNodeZ node) {
-        Type t = typeAnnotations.get(node);
-        Object value = node.getDataValue();
-
-        if (t != null && t.getKind() == TypeKind.STRING) {
-            lastExpr = stringPool.intern(String.valueOf(value));
-        } else if (t != null && t.getKind() == TypeKind.BOOLEAN) {
-            lastExpr = Boolean.TRUE.equals(value) ? "1" : "0";
-        } else if (t != null && t.getKind() == TypeKind.NULL) {
-            lastExpr = "0";
-        } else {
-            lastExpr = String.valueOf(value);
+        ValueType type = valueTypeOf(node);
+        Object v = node.getDataValue();
+        if (v == null) {
+            last = switch (type) {
+                case STRING  -> new Text(ir.intern(""));
+                case FLOAT   -> new Constant("0.0", ValueType.FLOAT);
+                case CHAR    -> new Constant("0",   ValueType.CHAR);
+                case BOOLEAN -> new Constant("0",   ValueType.BOOLEAN);
+                default      -> new Constant("0",   type);
+            };
+            return null;
         }
+        last = switch (type) {
+            case STRING  -> new Text(ir.intern(String.valueOf(v)));
+            case BOOLEAN -> new Constant(Boolean.TRUE.equals(v) ? "1" : "0", ValueType.BOOLEAN);
+            case CHAR    -> new Constant(charCode(v), ValueType.CHAR);
+            default -> {
+                String lit = String.valueOf(v);
+                yield new Constant(lit.equals("null") ? "0" : lit, type);
+            }
+        };
         return null;
     }
 
     @Override
     public Void visit(IdentifierExpressionNodeZ node) {
-        String name = node.getIdentifier();
-
-        if (localOffsets.containsKey(name) || paramOffsets.containsKey(name)) {
-            lastExpr = getStackRefByName(name);
+        String id = node.getIdentifier();
+        // 1. Variable local o parámetro
+        Cell local = frame.lookup(id);
+        if (local != null) {
+            last = local;
             return null;
         }
-
-        if (currentClassName != null && currentSelfSlot != null) {
-            List<String> layout = classLayouts.get(currentClassName);
-            if (layout != null) {
-                int fieldOffset = layout.indexOf(name);
-                if (fieldOffset >= 0) {
-                    Type fieldType = typeAnnotations.get(node);
-                    TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
-                    String suffix = kindToSuffix(kind);
-                    String cxReg = "CX_" + suffix.toUpperCase();
-
-                    output.emit("load_int", currentSelfSlot, null, "AX_INT");
-                    emitHeapFieldLoad("AX_INT", fieldOffset, kind, cxReg);
-                    int dest = nextOffset++;
-                    output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-                    lastExpr = stackArrayForKind(kind) + "[fp + " + dest + "]";
-                    return null;
-                }
+        // 2. Campo de instancia de 'this'
+        if (currentClassSymbol != null) {
+            Symbol field = findFieldSymbol(currentClassSymbol, id);
+            if (field != null) {
+                last = loadFieldFromHeap(frame.lookup("this"), field);
+                return null;
             }
         }
+        throw new IllegalStateException("Identificador no resuelto: '" + id + "' en línea " + node.getLine());
+    }
 
-        lastExpr = "0";
+    @Override
+    public Void visit(ThisExpressionNodeZ node) {
+        Cell thisCell = frame.lookup("this");
+        if (thisCell == null) throw new IllegalStateException("'this' utilizado fuera del contexto de instancia");
+        last = thisCell;
+        return null;
+    }
+
+    @Override
+    public Void visit(SuperExpressionNodeZ node) {
+        Cell thisCell = frame.lookup("this");
+        if (thisCell == null) throw new IllegalStateException("'super' utilizado fuera del contexto de instancia");
+        last = thisCell;
         return null;
     }
 
     @Override
     public Void visit(BinaryExpressionNodeZ node) {
-        Type leftType = typeAnnotations.get(node.getLeft());
-        Type rightType = typeAnnotations.get(node.getRight());
-        Type resultType = typeAnnotations.get(node);
+        if (node.getOperator() == BinaryOperator.AND || node.getOperator() == BinaryOperator.OR) {
+            boolean jumpWhen = (node.getOperator() == BinaryOperator.OR);
+            Cell result = frame.temp(ValueType.BOOLEAN);
+            Value left = eval(node.getLeft());
+            values.store(left, result);
 
-        TypeKind leftKind = leftType != null ? leftType.getKind() : TypeKind.INT;
-        TypeKind rightKind = rightType != null ? rightType.getKind() : TypeKind.INT;
+            String endLabel = labels.nextLabel();
+            Register condReg = Register.ax(ValueType.BOOLEAN);
+            values.load(result, condReg);
+            ir.emit(new BranchIf(condReg, jumpWhen, endLabel));
 
-        TypeKind operandKind;
-        if (leftKind == TypeKind.NULL || leftKind == TypeKind.CUSTOM
-                || rightKind == TypeKind.NULL || rightKind == TypeKind.CUSTOM) {
-            operandKind = TypeKind.INT;
-        } else if (leftKind == TypeKind.STRING || rightKind == TypeKind.STRING) {
-            operandKind = TypeKind.STRING;
-        } else if (leftKind == TypeKind.FLOAT || rightKind == TypeKind.FLOAT) {
-            operandKind = TypeKind.FLOAT;
-        } else {
-            operandKind = TypeKind.INT;
-        }
+            Value right = eval(node.getRight());
+            values.store(right, result);
 
-        TypeKind resultKind = resultType != null ? resultType.getKind() : TypeKind.INT;
-        String resultSuffix = kindToSuffix(resultKind);
-        String cReg = "CX_" + resultSuffix.toUpperCase();
-
-        boolean isStringConcat = (resultKind == TypeKind.STRING
-                && node.getOperator() == BinaryOperator.PLUS);
-
-        String leftRef = exprToString(node.getLeft());
-        String rightRef = exprToString(node.getRight());
-
-        if (isStringConcat) {
-            String leftStr = ensureStringRef(leftRef, leftKind);
-            String rightStr = ensureStringRef(rightRef, rightKind);
-
-            loadRegister(leftStr, "AX_STRING");
-            loadRegister(rightStr, "BX_STRING");
-            output.emit("strcat", "AX_STRING", "BX_STRING", "CX_STRING");
-
-            int offset = nextOffset++;
-            output.emit("store_string", "fp + " + offset, null, "CX_STRING");
-            lastExpr = "stackstring[fp + " + offset + "]";
+            ir.emit(new MarkLabel(endLabel));
+            last = result;
             return null;
         }
 
-        String operandSuffix = kindToSuffix(operandKind);
-        String aReg = "AX_" + operandSuffix.toUpperCase();
-        String bReg = "BX_" + operandSuffix.toUpperCase();
+        Value left = eval(node.getLeft());
+        Value right = eval(node.getRight());
+        BinaryOperations op = IntermediateTypes.binary(node.getOperator());
+        ValueType annotated = typeAnnotations.containsKey(node) ? valueTypeOf(node) : null;
 
-        loadRegister(leftRef, aReg);
-        loadRegister(rightRef, bReg);
+        if ((annotated == ValueType.STRING || left.type() == ValueType.STRING || right.type() == ValueType.STRING) && op == BinaryOperations.ADD) {
+            last = concat(left, right);
+            return null;
+        }
 
-        String op = binaryOpToSymbol(node.getOperator());
-        output.emit(op, aReg, bReg, cReg);
+        ValueType operandType = operandTypeOf(left, right);
+        ValueType resultType = annotated != null ? annotated : (op.isComparison() || op.isLogical() ? ValueType.BOOLEAN : operandType);
 
-        int offset = nextOffset++;
-        String dest = stackArrayForKind(resultKind) + "[fp + " + offset + "]";
-        output.emit("store_" + resultSuffix, "fp + " + offset, null, cReg);
-
-        lastExpr = dest;
+        Register a = Register.ax(operandType), b = Register.bx(operandType), c = Register.cx(resultType);
+        values.loadCoerced(left, a);
+        values.loadCoerced(right, b);
+        ir.emit(new BinaryOperation(op, a, b, c));
+        last = values.spill(c);
         return null;
     }
 
-
     @Override
     public Void visit(UnaryExpressionNodeZ node) {
-        String operandRef = exprToString(node.getExpressionNode());
-        loadRegister(operandRef, "AX_INT");
-
-        String op = unaryOpToSymbol(node.getOperator());
-        output.emit(op, "AX_INT", null, "CX_INT");
-
-        int offset = nextOffset++;
-        String dest = "stackinteger[fp + " + offset + "]";
-        output.emit("store_int", "fp + " + offset, null, "CX_INT");
-
-        lastExpr = dest;
+        Value operand = eval(node.getExpressionNode());
+        UnaryOperations op = IntermediateTypes.unary(node.getOperator());
+        ValueType type = op == UnaryOperations.NOT ? ValueType.BOOLEAN
+                : (op == UnaryOperations.NEG && operand.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT);
+        Register src = Register.ax(operand.type());
+        Register dest = Register.cx(type);
+        values.load(operand, src);
+        ir.emit(new UnaryOperation(op, src, dest));
+        last = values.spill(dest);
         return null;
     }
 
     @Override
     public Void visit(TernaryExpressionNodeZ node) {
-        // result = cond ? then : else
-        Type resultType = typeAnnotations.get(node);
-        TypeKind kind = resultType != null ? resultType.getKind() : TypeKind.INT;
-        String suffix = kindToSuffix(kind);
-        String arrayName = stackArrayForKind(kind);
+        String trueLabel = labels.nextLabel();
+        String endLabel = labels.nextLabel();
 
-        String thenLabel = ctx.nextLabel();
-        String elseLabel = ctx.nextLabel();
-        String endLabel = ctx.nextLabel();
+        branch(node.getCondition(), true, trueLabel);
+        Value falseVal = eval(node.getElseExpr());
+        Cell res = frame.temp(valueTypeOf(node));
+        values.store(falseVal, res);
+        ir.emit(new Jump(endLabel));
 
-        String condRef = exprToString(node.getCondition());
-        loadRegister(condRef, "AX_INT");
-        output.emit("ifFalse", "AX_INT", null, elseLabel);
+        ir.emit(new MarkLabel(trueLabel));
+        Value trueVal = eval(node.getThenExpr());
+        values.store(trueVal, res);
 
-        output.emit("label", thenLabel, null, null);
-        String thenRef = exprToString(node.getThenExpr());
-        String cxReg = "CX_" + suffix.toUpperCase();
-        loadRegister(thenRef, cxReg);
-        int destOffset = nextOffset++;
-        output.emit("store_" + suffix, "fp + " + destOffset, null, cxReg);
-        output.emit("goto", null, null, endLabel);
-
-        output.emit("label", elseLabel, null, null);
-        String elseRef = exprToString(node.getElseExpr());
-        loadRegister(elseRef, cxReg);
-        output.emit("store_" + suffix, "fp + " + destOffset, null, cxReg);
-
-        output.emit("label", endLabel, null, null);
-        lastExpr = arrayName + "[fp + " + destOffset + "]";
+        ir.emit(new MarkLabel(endLabel));
+        last = res;
         return null;
     }
 
@@ -959,201 +752,359 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(ObjectInstantiationNodeZ node) {
-        TypeNodeZ typeNode = node.getType();
-        String className = typeNode != null ? typeNode.getCustomTypeName() : null;
-
-        if ("String".equals(className)) {
+        String className = node.getType() != null
+                ? (node.getType().getCustomTypeName() != null ? node.getType().getCustomTypeName() : (node.getType().getDataType() != null ? node.getType().getDataType().getValue() : null))
+                : null;
+        if ("String".equalsIgnoreCase(className)) {
             if (node.getArguments() != null && !node.getArguments().isEmpty()) {
-                lastExpr = exprToString(node.getArguments().get(0));
+                last = eval(node.getArguments().get(0));
             } else {
-                lastExpr = "\"\"";
+                last = new Text(ir.intern(""));
             }
             return null;
         }
-
-        output.emit("sptr_inc", "200", null, null);
-
-        List<String> fields = classLayouts.get(className);
-        int numFields = fields != null ? fields.size() : 0;
-
-        output.emit("heap_alloc", String.valueOf(numFields), null, "AX_INT");
-
-        int ptrSlot = nextOffset++;
-        output.emit("store_int", "fp + " + ptrSlot, null, "AX_INT");
-
-        List<ExpressionNodeZ> args = node.getArguments();
-        int numArgs = args != null ? args.size() : 0;
-
-        output.emit("sptr_inc", "1", null, null);
-
-        output.emit("load_int", "fp + " + ptrSlot, null, "AX_INT");
-        output.emit("store_int", "sptr", null, "AX_INT");
-        output.emit("sptr_inc", "1", null, null);
-
-        if (args != null) {
-            for (ExpressionNodeZ arg : args) {
-                String argRef = exprToString(arg);
-                Type t = typeAnnotations.get(arg);
-                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-                String suffix = kindToSuffix(kind);
-                String axReg = "AX_" + suffix.toUpperCase();
-                loadRegister(argRef, axReg);
-                output.emit("store_" + suffix, "sptr", null, axReg);
-                output.emit("sptr_inc", "1", null, null);
-            }
-        }
-
-        String ctorName = className + "_" + className + "_" + numArgs;
-        output.emit("call", ctorName, null, null);
-
-        output.emit("sptr_dec", String.valueOf(numArgs + 2 + 200), null, null);
-
-        lastExpr = "stackinteger[fp + " + ptrSlot + "]";
-        return null;
-    }
-
-
-    @Override
-    public Void visit(ArrayInstantiationNodeZ node) {
+        emitObjectCreation(className, node.getArguments(), node);
         return null;
     }
 
     @Override
     public Void visit(InstanceCreationExpressionNodeZ node) {
+        if ("String".equalsIgnoreCase(node.getClassName())) {
+            if (node.getArguments() != null && !node.getArguments().isEmpty()) {
+                last = eval(node.getArguments().get(0));
+            } else {
+                last = new Text(ir.intern(""));
+            }
+            return null;
+        }
+        emitObjectCreation(node.getClassName(), node.getArguments(), node);
         return null;
+    }
+
+    private void emitObjectCreation(String className, List<ExpressionNodeZ> args, AstNode callNode) {
+        Symbol cls = findClassSymbol(className);
+        if (cls == null) throw new IllegalStateException("Clase no encontrada: " + className);
+        inheritance.link(cls);
+
+        int slots = cls.getFieldSlots().size() + 1;
+
+        Register objPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(slots, objPtr));
+
+        Register vptrReg = Register.bx(ValueType.INT);
+        ir.emit(new LoadLabelAddress(cls.getVtableLabel(), vptrReg));
+        ir.emit(new Store(MemorySpace.HEAP, new Indirect(objPtr, 0), vptrReg));
+
+        Value savedObj = values.spill(objPtr);
+
+        Symbol ctor = resolvedCalls.get(callNode);
+        if (ctor == null) {
+            ctor = findConstructorByParams(cls, args != null ? args : List.of());
+        }
+
+        ir.emit(new AdjustStackTop(CALL_AREA));
+        values.load(savedObj, objPtr);
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), objPtr));
+        ir.emit(new AdjustStackTop(1));
+
+        List<String> paramTypes = ctor != null ? ctor.getParameterTypes() : null;
+        if (args != null) {
+            for (int i = 0; i < args.size(); i++) {
+                ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+                pushArgument(args.get(i), expected);
+            }
+        }
+
+        String ctorLabel = NameMangler.codeLabel(ctor);
+        ir.emit(new Call(ctorLabel));
+
+        int totalArgs = 1 + (args != null ? args.size() : 0);
+        ir.emit(new AdjustStackTop(-(totalArgs + CALL_AREA)));
+
+        last = savedObj;
+    }
+
+    @Override
+    public Void visit(SuperConstructorCallNodeZ node) {
+        Symbol parentClass = currentClassSymbol != null ? currentClassSymbol.getParentSymbol() : null;
+        if (parentClass == null) return null;
+
+        Symbol ctor = resolvedCalls.get(node);
+        if (ctor == null) {
+            ctor = findConstructorByParams(parentClass, node.getArguments());
+        }
+        emitSuperConstructorCall(ctor, node.getArguments());
+        return null;
+    }
+
+    private void emitSuperConstructorCall(Symbol ctor, List<ExpressionNodeZ> args) {
+        if (ctor == null) return;
+        ir.emit(new AdjustStackTop(CALL_AREA));
+
+        Register thisReg = Register.ax(ValueType.INT);
+        values.load(frame.lookup("this"), thisReg);
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), thisReg));
+        ir.emit(new AdjustStackTop(1));
+
+        List<String> paramTypes = ctor != null ? ctor.getParameterTypes() : null;
+        if (args != null) {
+            for (int i = 0; i < args.size(); i++) {
+                ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+                pushArgument(args.get(i), expected);
+            }
+        }
+
+        ir.emit(new Call(NameMangler.codeLabel(ctor)));
+        int totalArgs = 1 + (args != null ? args.size() : 0);
+        ir.emit(new AdjustStackTop(-(totalArgs + CALL_AREA)));
     }
 
     @Override
     public Void visit(PropertyAccessExpressionNodeZ node) {
-        Type targetType = typeAnnotations.get(node.getTarget());
-        if (targetType == null || !targetType.isCustom()) return null;
+        String prop = node.getPropertyName();
 
-        List<String> layout = classLayouts.get(targetType.getCustomName());
-        if (layout == null) return null;
-        int fieldOffset = layout.indexOf(node.getPropertyName());
-        if (fieldOffset < 0) return null;
+        if (node.getTarget() instanceof SuperExpressionNodeZ) {
+            Symbol parent = currentClassSymbol != null ? currentClassSymbol.getParentSymbol() : null;
+            Symbol field = findFieldSymbol(parent, prop);
+            last = loadFieldFromHeap(frame.lookup("this"), field);
+            return null;
+        }
 
-        if (!evalObjectPointerToReg(node.getTarget(), "AX_INT")) return null;
+        if (node.getTarget() instanceof ThisExpressionNodeZ || node.getTarget() == null) {
+            Symbol field = findFieldSymbol(currentClassSymbol, prop);
+            last = loadFieldFromHeap(frame.lookup("this"), field);
+            return null;
+        }
 
-        Type fieldType = typeAnnotations.get(node);
-        TypeKind kind = fieldType != null ? fieldType.getKind() : TypeKind.INT;
-        String suffix = kindToSuffix(kind);
-        String cxReg = "CX_" + suffix.toUpperCase();
-
-        emitHeapFieldLoad("AX_INT", fieldOffset, kind, cxReg);
-
-        int dest = nextOffset++;
-        output.emit("store_" + suffix, "fp + " + dest, null, cxReg);
-        lastExpr = stackArrayForKind(kind) + "[fp + " + dest + "]";
-        return null;
-    }
-
-    @Override
-    public Void visit(MemberArrayAccessExpressionNodeZ node) {
+        Value targetVal = eval(node.getTarget());
+        Symbol targetClass = classSymbolOf(node.getTarget());
+        Symbol field = findFieldSymbol(targetClass, prop);
+        last = loadFieldFromHeap(targetVal, field);
         return null;
     }
 
     @Override
     public Void visit(FunctionCallExpressionNodeZ node) {
-        List<ExpressionNodeZ> args = node.getArguments();
-        int numArgs = args != null ? args.size() : 0;
-        String funcName = node.getFunctionName();
+        Symbol targetMethod = resolvedCalls.get(node);
+        if (targetMethod == null) {
+            throw new IllegalStateException("Método no resuelto para la llamada: " + node.getFunctionName() + " en línea " + node.getLine());
+        }
 
-        String targetFunc;
-        boolean isMethodCall = node.getTarget() != null;
+        List<ExpressionNodeZ> args = node.getArguments() != null ? node.getArguments() : List.of();
+        boolean isSuperCall = node.getTarget() instanceof SuperExpressionNodeZ;
 
-        output.emit("sptr_inc", "200", null, null);
-
-        if (isMethodCall) {
-            Type targetType = typeAnnotations.get(node.getTarget());
-            if (targetType == null || !targetType.isCustom()) {
-                output.emit("sptr_dec", "200", null, null);   // rollback
-                return null;
-            }
-
-            String className = targetType.getCustomName();
-
-            if (!evalObjectPointerToReg(node.getTarget(), "AX_INT")) {
-                output.emit("sptr_dec", "200", null, null);   // rollback
-                return null;
-            }
-
-            // super.m(...) must NOT go through the vtable: it calls the superclass implementation directly.
-            targetFunc = (node.getTarget() instanceof SuperExpressionNodeZ)
-                    ? resolveSuperTarget(className, funcName, numArgs)
-                    : className + "_" + funcName + "_" + numArgs;
-
-            output.emit("sptr_inc", "1", null, null);
-            output.emit("store_int", "sptr", null, "AX_INT");
-            output.emit("sptr_inc", "1", null, null);
+        Value selfVal;
+        if (node.getTarget() == null || node.getTarget() instanceof ThisExpressionNodeZ || isSuperCall) {
+            selfVal = frame.lookup("this");
         } else {
-            targetFunc = resolveFunctionName(funcName);
-
-            if (currentSelfSlot != null && currentClassName != null) {
-                targetFunc = currentClassName + "_" + funcName + "_" + numArgs;
-                output.emit("sptr_inc", "1", null, null);
-                output.emit("load_int", currentSelfSlot, null, "AX_INT");
-                output.emit("store_int", "sptr", null, "AX_INT");
-                output.emit("sptr_inc", "1", null, null);
-            } else {
-                output.emit("sptr_inc", "1", null, null);
-            }
+            selfVal = eval(node.getTarget());
         }
 
-        if (args != null) {
-            for (ExpressionNodeZ arg : args) {
-                String argRef = exprToString(arg);
-                Type t = typeAnnotations.get(arg);
-                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-                String suffix = kindToSuffix(kind);
-                String axReg = "AX_" + suffix.toUpperCase();
-                loadRegister(argRef, axReg);
-                output.emit("store_" + suffix, "sptr", null, axReg);
-                output.emit("sptr_inc", "1", null, null);
-            }
+        Cell preservedSelf;
+        if (selfVal instanceof Cell c) {
+            preservedSelf = c;
+        } else {
+            preservedSelf = frame.temp(selfVal.type());
+            values.store(selfVal, preservedSelf);
         }
 
-        output.emit("call", targetFunc, null, null);
+        Register selfReg = Register.ax(ValueType.INT);
+        values.load(preservedSelf, selfReg);
 
-        Type returnType = typeAnnotations.get(node);
-        TypeKind returnKind = returnType != null ? returnType.getKind() : TypeKind.INT;
+        ir.emit(new AdjustStackTop(CALL_AREA));
 
-        int extra = (isMethodCall || currentSelfSlot != null) ? 1 : 0;
-        int cleanup = numArgs + 1 + extra + 200;
-        int retOffset = numArgs + 1 + extra;
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), selfReg));
+        ir.emit(new AdjustStackTop(1));
 
-        if (returnKind == TypeKind.VOID) {
-            output.emit("sptr_dec", String.valueOf(cleanup), null, null);
-            lastExpr = null;
-            return null;
+        List<String> paramTypes = targetMethod != null ? targetMethod.getParameterTypes() : null;
+        for (int i = 0; i < args.size(); i++) {
+            ValueType expected = (paramTypes != null && i < paramTypes.size()) ? declaredType(paramTypes.get(i)) : null;
+            pushArgument(args.get(i), expected);
         }
 
-        String returnSuffix = kindToSuffix(returnKind);
-        String returnArray = stackArrayForKind(returnKind);
-        String cxReg = "CX_" + returnSuffix.toUpperCase();
+        int totalArgs = 1 + args.size();
 
-        output.emit("load_" + returnSuffix, "sptr - " + retOffset, null, cxReg);
-        int destOffset = nextOffset++;
-        output.emit("store_" + returnSuffix, "fp + " + destOffset, null, cxReg);
-        output.emit("sptr_dec", String.valueOf(cleanup), null, null);
+        if (isSuperCall || !targetMethod.isVirtual()) {
+            ir.emit(new Call(NameMangler.codeLabel(targetMethod)));
+        } else {
+            Register vptr = Register.bx(ValueType.INT);
+            Register fnPtr = Register.cx(ValueType.INT);
+            values.load(preservedSelf, selfReg);
+            ir.emit(new Load(MemorySpace.HEAP, new Indirect(selfReg, 0), vptr));
+            ir.emit(new Load(MemorySpace.HEAP, new Indirect(vptr, targetMethod.getVtableIndex()), fnPtr));
+            ir.emit(new CallIndirect(fnPtr));
+        }
 
-        lastExpr = returnArray + "[fp + " + destOffset + "]";
+        if (!"void".equalsIgnoreCase(targetMethod.getReturnType())) {
+            ValueType retType = returnTypeOf(targetMethod);
+            Register result = Register.cx(retType);
+            ir.emit(new Load(MemorySpace.STACK, new StackTop(-(totalArgs + 1)), result));
+            last = values.spill(result);
+        } else {
+            last = null;
+        }
+
+        ir.emit(new AdjustStackTop(-(totalArgs + CALL_AREA)));
         return null;
     }
 
+    // ============================================================
+    // ARRAYS
+    // ============================================================
+
+    @Override
+    public Void visit(ArrayDeclarationNodeZ node) {
+        int total = 1;
+        if (node.getDimensions() != null) {
+            for (ExpressionNodeZ dim : node.getDimensions()) {
+                Integer size = literalInt(dim);
+                if (size != null) total *= size;
+            }
+        }
+        int base = frame.allocate(total);
+        TypeKind elementKind = kindOf(node.getDataType());
+        ValueType elementType = IntermediateTypes.of(elementKind);
+        frame.registerArray(node.getIdentifier(), new ArrayInfo(base, elementKind, total, false));
+        return null;
+    }
 
     @Override
     public Void visit(ArrayInitExpressionNodeZ node) {
+        List<ExpressionNodeZ> elements = node.getElements();
+        int size = elements != null ? elements.size() : 0;
+        Register arrPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(size, arrPtr));
+        Value savedArr = values.spill(arrPtr);
+
+        if (elements != null) {
+            for (int i = 0; i < elements.size(); i++) {
+                Value elemVal = eval(elements.get(i));
+                Register tempArr = Register.bx(ValueType.INT);
+                values.load(savedArr, tempArr);
+                Register valReg = Register.cx(elemVal.type());
+                values.loadCoerced(elemVal, valReg);
+                ir.emit(new Store(MemorySpace.HEAP, new Indirect(tempArr, i), valReg));
+            }
+        }
+        last = savedArr;
         return null;
     }
 
     @Override
     public Void visit(ArrayValuesNodeZ node) {
+        List<ExpressionNodeZ> elements = node.getValues();
+        int size = elements != null ? elements.size() : 0;
+        Register arrPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(size, arrPtr));
+        Value savedArr = values.spill(arrPtr);
+
+        if (elements != null) {
+            for (int i = 0; i < elements.size(); i++) {
+                Value elemVal = eval(elements.get(i));
+                Register tempArr = Register.bx(ValueType.INT);
+                values.load(savedArr, tempArr);
+                Register valReg = Register.cx(elemVal.type());
+                values.loadCoerced(elemVal, valReg);
+                ir.emit(new Store(MemorySpace.HEAP, new Indirect(tempArr, i), valReg));
+            }
+        }
+        last = savedArr;
         return null;
     }
 
     @Override
-    public Void visit(ArgumentsNodeZ node) {
+    public Void visit(ArrayInstantiationNodeZ node) {
+        if (node.getDimensions() == null || node.getDimensions().isEmpty()) {
+            Register zero = Register.ax(ValueType.INT);
+            ir.emit(new HeapAlloc(0, zero));
+            last = values.spill(zero);
+            return null;
+        }
+        last = allocateArrayRecursively(node.getDimensions(), 0);
+        return null;
+    }
+
+    private Value allocateArrayRecursively(List<ExpressionNodeZ> dims, int dimIndex) {
+        ExpressionNodeZ dimExpr = dims.get(dimIndex);
+        Value dimVal = eval(dimExpr);
+        Register dimReg = Register.bx(ValueType.INT);
+        values.loadCoerced(dimVal, dimReg);
+
+        Register arrPtr = Register.ax(ValueType.INT);
+        ir.emit(new HeapAlloc(dimReg, arrPtr));
+        Value savedArr = values.spill(arrPtr);
+
+        if (dimIndex == dims.size() - 1) {
+            return savedArr;
+        }
+
+        Cell loopVar = frame.temp(ValueType.INT);
+        values.store(new Constant("0", ValueType.INT), loopVar);
+
+        Cell sizeCell = frame.temp(ValueType.INT);
+        values.store(dimVal, sizeCell);
+
+        String startLabel = labels.nextLabel();
+        String endLabel = labels.nextLabel();
+
+        ir.emit(new MarkLabel(startLabel));
+
+        Register iReg = Register.ax(ValueType.INT);
+        Register sReg = Register.bx(ValueType.INT);
+        values.load(loopVar, iReg);
+        values.load(sizeCell, sReg);
+        Register condReg = Register.cx(ValueType.BOOLEAN);
+        ir.emit(new BinaryOperation(BinaryOperations.LT, iReg, sReg, condReg));
+        ir.emit(new com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf(condReg, false, endLabel));
+
+        Value subArr = allocateArrayRecursively(dims, dimIndex + 1);
+
+        Register baseReg = Register.bx(ValueType.INT);
+        values.load(savedArr, baseReg);
+        values.load(loopVar, iReg);
+        Register addrReg = Register.ax(ValueType.INT);
+        ir.emit(new IndexAddress(baseReg, iReg, addrReg));
+
+        Register subReg = Register.cx(ValueType.INT);
+        values.load(subArr, subReg);
+        ir.emit(new Store(MemorySpace.HEAP, new Indirect(addrReg, 0), subReg));
+
+        values.incDec(loopVar, BinaryOperations.ADD);
+        ir.emit(new Jump(startLabel));
+
+        ir.emit(new MarkLabel(endLabel));
+        return savedArr;
+    }
+
+    @Override
+    public Void visit(MemberArrayAccessExpressionNodeZ node) {
+        Value targetVal = eval(node.getTarget());
+        Cell preservedTarget;
+        if (targetVal instanceof Cell c) {
+            preservedTarget = c;
+        } else {
+            preservedTarget = frame.temp(targetVal.type());
+            values.store(targetVal, preservedTarget);
+        }
+
+        Value indexVal = eval(node.getIndex());
+
+        Register targetReg = Register.bx(ValueType.INT);
+        Register indexReg = Register.ax(ValueType.INT);
+        values.load(preservedTarget, targetReg);
+        values.load(indexVal, indexReg);
+
+        ValueType element = valueTypeOf(node);
+        Register result = Register.cx(element);
+        Register addr = Register.ax(ValueType.INT);
+        ir.emit(new IndexAddress(targetReg, indexReg, addr));
+        ir.emit(new Load(MemorySpace.HEAP, new Indirect(addr, 0), result));
+        last = values.spill(result);
+        return null;
+    }
+
+    @Override
+    public Void visit(ParameterNodeZ node) {
         return null;
     }
 
@@ -1166,526 +1117,445 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
     // HELPERS
     // ============================================================
 
-    /**
-     * Helper to evaluata a new pointer register
-     */
-    private boolean evalObjectPointerToReg(ExpressionNodeZ target, String reg) {
-        if (target == null) return false;
-
-        // this / super: both are the current object pointer (they only differ in the STATIC type).
-        if (target instanceof ThisExpressionNodeZ || target instanceof SuperExpressionNodeZ) {
-            if (currentSelfSlot == null) return false;
-            output.emit("load_int", currentSelfSlot, null, reg);
-            return true;
+    private void assign(ExpressionNodeZ target, Value value) {
+        if (value == null) {
+            throw new IllegalStateException("Asignación a '" + target + "' produjo un valor nulo (posible llamada void usada como expresión)");
         }
-
-        // Caso 1: identifier local/param que es objeto.
         if (target instanceof IdentifierExpressionNodeZ id) {
-            String idName = id.getIdentifier();
-
-            ObjectInfo info = objectVariables.get(idName);
-            if (info != null) {
-                output.emit("load_int", "fp + " + info.getPtrSlot(), null, reg);
-                return true;
+            Cell cell = frame.lookup(id.getIdentifier());
+            if (cell != null) {
+                values.store(value, cell);
+                return;
             }
-
-            if (currentClassName != null && currentSelfSlot != null) {
-                List<String> layout = classLayouts.get(currentClassName);
-                if (layout != null) {
-                    int fieldOffset = layout.indexOf(idName);
-                    if (fieldOffset >= 0) {
-                        output.emit("load_int", currentSelfSlot, null, "AX_INT");
-                        output.emit("heap_load_int",
-                                "stackinteger[AX_INT] + " + fieldOffset, null, reg);
-                        return true;
-                    }
+            if (currentClassSymbol != null) {
+                Symbol field = findFieldSymbol(currentClassSymbol, id.getIdentifier());
+                if (field != null) {
+                    storeFieldToHeap(frame.lookup("this"), field, value);
+                    return;
                 }
             }
-            return false;
+            throw new IllegalStateException("Destino de asignación no encontrado: " + id.getIdentifier());
         }
 
         if (target instanceof PropertyAccessExpressionNodeZ prop) {
-            Type propTargetType = typeAnnotations.get(prop.getTarget());
-            if (propTargetType == null || !propTargetType.isCustom()) return false;
-
-            List<String> layout = classLayouts.get(propTargetType.getCustomName());
-            if (layout == null) return false;
-
-            int fieldOffset = layout.indexOf(prop.getPropertyName());
-            if (fieldOffset < 0) return false;
-
-            if (!evalObjectPointerToReg(prop.getTarget(), "AX_INT")) return false;
-
-            output.emit("heap_load_int",
-                    "stackinteger[AX_INT] + " + fieldOffset, null, reg);
-            return true;
-        }
-
-        if (target instanceof FunctionCallExpressionNodeZ call) {
-            String ref = exprToString(call);
-            if (ref == null) return false;
-            loadRegister(ref, reg);
-            return true;
-        }
-
-        return false;
-    }
-
-    private String exprToString(ExpressionNodeZ node) {
-        node.accept(this);
-        return lastExpr;
-    }
-
-    private int allocateLocal(String name, ZAstNode node) {
-        int offset = nextOffset++;
-        localOffsets.put(name, offset);
-
-        TypeKind kind = TypeKind.INT;
-        if (node instanceof VariableDeclarationNodeZ decl && decl.getDataType() != null) {
-            Type t = mapTypeNodeToType(decl.getDataType());
-            if (t != null) {
-                kind = (t.getKind() == TypeKind.CUSTOM) ? TypeKind.INT : t.getKind();
+            if (prop.getTarget() instanceof SuperExpressionNodeZ) {
+                Symbol parent = currentClassSymbol != null ? currentClassSymbol.getParentSymbol() : null;
+                Symbol field = findFieldSymbol(parent, prop.getPropertyName());
+                storeFieldToHeap(frame.lookup("this"), field, value);
+                return;
             }
-        } else if (node instanceof ForInitDeclarationNodeZ f && f.getType() != null) {
-            Type t = mapTypeNodeToType(f.getType());
-            if (t != null) {
-                kind = (t.getKind() == TypeKind.CUSTOM) ? TypeKind.INT : t.getKind();
+            if (prop.getTarget() instanceof ThisExpressionNodeZ || prop.getTarget() == null) {
+                Symbol field = findFieldSymbol(currentClassSymbol, prop.getPropertyName());
+                storeFieldToHeap(frame.lookup("this"), field, value);
+                return;
             }
-        } else {
-            Type t = typeAnnotations.get(node);
-            if (t != null) {
-                kind = (t.getKind() == TypeKind.CUSTOM) ? TypeKind.INT : t.getKind();
-            }
-        }
-        localTypes.put(name, kind);
-        return offset;
-    }
-
-    private Type mapTypeNodeToType(TypeNodeZ typeNode) {
-        if (typeNode == null) return null;
-        return switch (typeNode.getDataType()) {
-            case INT -> Type.intType();
-            case DOUBLE -> Type.floatType();
-            case STRING -> Type.stringType();
-            case CHAR -> Type.charType();
-            case BOOLEAN -> Type.booleanType();
-            case VOID -> Type.voidType();
-            case NULL -> Type.nullType();
-            case CLASS -> "String".equals(typeNode.getCustomTypeName())
-                    ? Type.stringType()
-                    : Type.customType(typeNode.getCustomTypeName());
-        };
-    }
-
-    private String getStackRefByName(String name) {
-        Integer offset = localOffsets.get(name);
-        if (offset == null) offset = paramOffsets.get(name);
-        if (offset == null) return "0";
-
-        TypeKind kind = localTypes.get(name);
-        if (kind == null) kind = TypeKind.INT;
-        return stackArrayForKind(kind) + "[fp + " + offset + "]";
-    }
-
-    private void loadRegister(String operandRef, String register) {
-        if (operandRef == null) return;
-
-        if (isRegister(operandRef)) {
-            output.emit("=", operandRef, null, register);
+            Value targetObj = eval(prop.getTarget());
+            Symbol targetClass = classSymbolOf(prop.getTarget());
+            Symbol field = findFieldSymbol(targetClass, prop.getPropertyName());
+            storeFieldToHeap(targetObj, field, value);
             return;
         }
 
-        if (operandRef.startsWith("stack")) {
-            int bs = operandRef.indexOf('[');
-            int be = operandRef.indexOf(']');
-            if (bs >= 0 && be > bs) {
-                String arrayName = operandRef.substring(0, bs);
-                String offsetExpr = operandRef.substring(bs + 1, be);
-                String suffix = suffixForArray(arrayName);
-                output.emit("load_" + suffix, offsetExpr, null, register);
-                return;
+        if (target instanceof MemberArrayAccessExpressionNodeZ arr) {
+            Value targetVal = eval(arr.getTarget());
+            Cell preservedTarget;
+            if (targetVal instanceof Cell c) {
+                preservedTarget = c;
+            } else {
+                preservedTarget = frame.temp(targetVal.type());
+                values.store(targetVal, preservedTarget);
             }
+
+            Value indexVal = eval(arr.getIndex());
+
+            Register targetReg = Register.bx(ValueType.INT);
+            Register indexReg = Register.ax(ValueType.INT);
+            values.load(preservedTarget, targetReg);
+            values.load(indexVal, indexReg);
+
+            Register addr = Register.ax(ValueType.INT);
+            ir.emit(new IndexAddress(targetReg, indexReg, addr));
+
+            ValueType elemType = valueTypeOf(arr);
+            Register valReg = Register.cx(elemType != null ? elemType : value.type());
+            values.loadCoerced(value, valReg);
+            ir.emit(new Store(MemorySpace.HEAP, new Indirect(addr, 0), valReg));
+            return;
         }
 
-        output.emit("=", operandRef, null, register);
+        throw new IllegalStateException("Destino de asignación no soportado: " + target);
     }
 
-    private void storeValueTo(String valueRef, String destRef) {
-        if (destRef == null || !destRef.startsWith("stack")) return;
+    private Value loadFieldFromHeap(Value objRef, Symbol field) {
+        if (field == null) throw new IllegalStateException("Campo nulo al intentar leer de heap");
+        int slot = field.getFieldIndex() + 1;
+        ValueType type = declaredType(field.getType());
+        Register objReg = Register.ax(ValueType.INT);
+        values.load(objRef, objReg);
 
-        int bs = destRef.indexOf('[');
-        int be = destRef.indexOf(']');
-        if (bs < 0 || be <= bs) return;
-
-        String arrayName = destRef.substring(0, bs);
-        String offsetExpr = destRef.substring(bs + 1, be);
-        String suffix = suffixForArray(arrayName);
-        String cxRegister = "CX_" + suffix.toUpperCase();
-
-        if (isRegister(valueRef)) {
-            output.emit("store_" + suffix, offsetExpr, null, valueRef);
-        } else if (valueRef != null && valueRef.startsWith("stack")) {
-            loadRegister(valueRef, cxRegister);
-            output.emit("store_" + suffix, offsetExpr, null, cxRegister);
-        } else {
-            output.emit("=", valueRef, null, destRef);
-        }
+        Register result = Register.cx(type);
+        ir.emit(new Load(MemorySpace.HEAP, new Indirect(objReg, slot), result));
+        return values.spill(result);
     }
 
-    private void storeRegisterBack(String register, String destRef) {
-        if (destRef == null || !destRef.startsWith("stack")) return;
+    private void storeFieldToHeap(Value objRef, Symbol field, Value value) {
+        if (field == null) throw new IllegalStateException("Campo nulo al intentar escribir en heap");
+        int slot = field.getFieldIndex() + 1;
+        ValueType type = declaredType(field.getType());
 
-        int bs = destRef.indexOf('[');
-        int be = destRef.indexOf(']');
-        if (bs < 0 || be <= bs) return;
+        Register objReg = Register.bx(ValueType.INT);
+        values.load(objRef, objReg);
 
-        String arrayName = destRef.substring(0, bs);
-        String offsetExpr = destRef.substring(bs + 1, be);
-        String suffix = suffixForArray(arrayName);
-        output.emit("store_" + suffix, offsetExpr, null, register);
+        Register scratch = Register.cx(type);
+        values.loadCoerced(value, scratch);
+        ir.emit(new Store(MemorySpace.HEAP, new Indirect(objReg, slot), scratch));
     }
 
-    private boolean isRegister(String s) {
-        if (s == null) return false;
-        return s.startsWith("AX_") || s.startsWith("BX_") || s.startsWith("CX_");
-    }
-
-    private String suffixForArray(String arrayName) {
-        return switch (arrayName) {
-            case "stackstring" -> "string";
-            case "stackfloat" -> "float";
-            case "stackchar" -> "char";
-            case "stackboolean" -> "boolean";
-            default -> "int";
-        };
-    }
-
-    private String stackArrayForKind(TypeKind kind) {
-        if (kind == null) return "stackinteger";
-        return switch (kind) {
-            case STRING -> "stackstring";
-            case FLOAT -> "stackfloat";
-            case CHAR -> "stackchar";
-            case BOOLEAN -> "stackboolean";
-            default -> "stackinteger";
-        };
-    }
-
-    private String registerFor(String typeName) {
-        return switch (typeName) {
-            case "string" -> "AX_STRING";
-            case "float" -> "AX_FLOAT";
-            case "char" -> "AX_CHAR";
-            default -> "AX_INT";
-        };
-    }
-
-    private String binaryOpToSymbol(BinaryOperator op) {
-        return switch (op) {
-            case PLUS -> "+";
-            case MINUS -> "-";
-            case MULTIPLICATION -> "*";
-            case DIVIDE -> "/";
-            case MODULE -> "%";
-            case EQUALS -> "==";
-            case DIFFERENT -> "!=";
-            case LESS -> "<";
-            case GREATER -> ">";
-            case LESS_EQUALS -> "<=";
-            case GREATER_EQUALS -> ">=";
-            case AND -> "&&";
-            case OR -> "||";
-        };
-    }
-
-    private String unaryOpToSymbol(UnaryOperator op) {
-        return switch (op) {
-            case NEGATE -> "-";
-            case NOT -> "!";
-        };
-    }
-
-    private String shortlyOpToBinary(ShortlyOperator op) {
-        return switch (op) {
-            case PLUS_ASSIGN -> "+";
-            case MINUS_ASSIGN -> "-";
-            case MULTIPLY_ASSIGN -> "*";
-            case DIVIDE_ASSIGN -> "/";
-            case MODULO_ASSIGN -> "%";
-        };
-    }
-
-    private String typeToString(Type t) {
-        if (t == null) return "int";
-        return switch (t.getKind()) {
-            case STRING -> "string";
-            case FLOAT -> "float";
-            case CHAR -> "char";
-            case BOOLEAN -> "int";
-            default -> "int";
-        };
-    }
-
-    private String kindToSuffix(TypeKind kind) {
-        if (kind == null) return "int";
-        return switch (kind) {
-            case STRING -> "string";
-            case FLOAT -> "float";
-            case CHAR -> "char";
-            case BOOLEAN -> "boolean";
-            default -> "int";
-        };
-    }
-
-    private String resolveFunctionName(String bareName) {
-        for (String fname : output.getFunctionNames()) {
-            if (fname.startsWith(bareName + "_")) return fname;
-        }
-        return bareName;
-    }
-
-    private void emitIncDec(String targetRef, String op) {
-        int oneOffset = nextOffset++;
-        output.emit("=", "1", null, "stackinteger[fp + " + oneOffset + "]");
-        loadRegister(targetRef, "AX_INT");
-        loadRegister("stackinteger[fp + " + oneOffset + "]", "BX_INT");
-        output.emit(op, "AX_INT", "BX_INT", "CX_INT");
-        storeRegisterBack("CX_INT", targetRef);
-    }
-
-    private int registerParameter(ParameterNodeZ param) {
-        String pname = param.getName();
-        TypeKind kind = TypeKind.INT;
-        int slots = 1;
-
-        if (param.getType() != null) {
-            Type t = mapTypeNodeToType(param.getType());
-            if (t != null) {
-                kind = (t.getKind() == TypeKind.CUSTOM) ? TypeKind.INT : t.getKind();
-                if (t.getKind() == TypeKind.CUSTOM && !"String".equals(t.getCustomName())) {
-                    objectVariables.put(pname, new ObjectInfo(t.getCustomName(), nextOffset));
-                }
-            }
-        }
-
-        localTypes.put(pname, kind);
-        paramOffsets.put(pname, nextOffset);
-        nextOffset += slots;
-        return slots;
-    }
-
-    private Integer tryExtractIntLiteral(ExpressionNodeZ expr) {
-        if (expr instanceof LiteralExpressionNodeZ lit) {
-            Object v = lit.getDataValue();
-            if (v instanceof Integer i) return i;
-        }
-        return null;
-    }
-
-
-    private boolean tryEmitAttributeIncDec(ExpressionNodeZ target, String op) {
-        if (!(target instanceof IdentifierExpressionNodeZ id)) return false;
-        String name = id.getIdentifier();
-        if (localOffsets.containsKey(name) || paramOffsets.containsKey(name)) return false;
-        if (currentClassName == null || currentSelfSlot == null) return false;
-
-        List<String> layout = classLayouts.get(currentClassName);
-        if (layout == null) return false;
-
-        int fieldOffset = layout.indexOf(name);
-        if (fieldOffset < 0) return false;
-
-        Type t = typeAnnotations.get(target);
-        TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-        String suffix = kindToSuffix(kind);
-        String axReg = "AX_" + suffix.toUpperCase();
-        String cxReg = "CX_" + suffix.toUpperCase();
-
-        output.emit("load_int", currentSelfSlot, null, "BX_INT");
-        emitHeapFieldLoad("BX_INT", fieldOffset, kind, axReg);
-        output.emit("=", "1", null, cxReg);
-        output.emit(op, axReg, cxReg, cxReg);
-        emitHeapFieldStore("BX_INT", fieldOffset, kind, cxReg);
-        return true;
-    }
-
-
-    private String ensureStringRef(String operandRef, TypeKind operandKind) {
-        if (operandKind == TypeKind.STRING) {
-            return operandRef;
-        }
-
-        String reg;
-        String opName;
-        switch (operandKind) {
-            case FLOAT -> {
-                reg = "AX_FLOAT";
-                opName = "to_string_float";
-            }
-            case CHAR -> {
-                reg = "AX_CHAR";
-                opName = "to_string_char";
-            }
-            case BOOLEAN -> {
-                reg = "AX_BOOLEAN";
-                opName = "to_string_boolean";
-            }
-            default -> {
-                reg = "AX_INT";
-                opName = "to_string_int";
-            }
-        }
-
-        loadRegister(operandRef, reg);
-
-        int bufOffset = nextOffset++;
-        output.emit("alloc_string", null, null, "CX_STRING");
-        output.emit("store_string", "fp + " + bufOffset, null, "CX_STRING");
-
-        output.emit(opName, reg, null, "stackstring[fp + " + bufOffset + "]");
-
-        return "stackstring[fp + " + bufOffset + "]";
-    }
-
-    private void emitHeapFieldLoad(String selfReg, int fieldOffset, TypeKind kind, String destReg) {
-        String suffix = kindToSuffix(kind);
-        output.emit("heap_load_" + suffix, selfReg + " + " + fieldOffset, null, destReg);
-    }
-
-    private void emitHeapFieldStore(String selfReg, int fieldOffset, TypeKind kind, String srcReg) {
-        String suffix = kindToSuffix(kind);
-        output.emit("heap_store_" + suffix, selfReg + " + " + fieldOffset, null, srcReg);
+    private void pushArgument(ExpressionNodeZ arg, ValueType expectedType) {
+        Value val = eval(arg);
+        ValueType targetType = (expectedType != null) ? expectedType : val.type();
+        Register reg = Register.ax(targetType);
+        values.loadCoerced(val, reg);
+        ir.emit(new Store(MemorySpace.STACK, new StackTop(0), reg));
+        ir.emit(new AdjustStackTop(1));
     }
 
     // ============================================================
     // INHERITANCE / SUPER HELPERS
     // ============================================================
 
-    /**
-     * Same call convention as a method call inside the class and as the constructor call of 'new':
-     * [200 scratch][return slot][self][args...]  ->  call  ->  sptr_dec(numArgs + 2 + 200).
-     */
-    private void emitSuperConstructorCall(String parentName, List<ExpressionNodeZ> args) {
-        int numArgs = args != null ? args.size() : 0;
-        String target = parentName + "_" + parentName + "_" + numArgs;
-
-        output.emit("sptr_inc", "200", null, null);
-        output.emit("sptr_inc", "1", null, null);
-        output.emit("load_int", currentSelfSlot, null, "AX_INT");
-        output.emit("store_int", "sptr", null, "AX_INT");
-        output.emit("sptr_inc", "1", null, null);
-
-        if (args != null) {
-            for (ExpressionNodeZ arg : args) {
-                String argRef = exprToString(arg);
-                Type t = typeAnnotations.get(arg);
-                TypeKind kind = t != null ? t.getKind() : TypeKind.INT;
-                String suffix = kindToSuffix(kind);
-                String axReg = "AX_" + suffix.toUpperCase();
-                loadRegister(argRef, axReg);
-                output.emit("store_" + suffix, "sptr", null, axReg);
-                output.emit("sptr_inc", "1", null, null);
-            }
+    private Value eval(ExpressionNodeZ expr) {
+        if (expr == null) return new Constant("0", ValueType.INT);
+        last = null;
+        expr.accept(this);
+        if (last == null) {
+            return new Constant("0", ValueType.INT);
         }
-
-        output.emit("call", target, null, null);
-        output.emit("sptr_dec", String.valueOf(numArgs + 2 + 200), null, null);
+        return last;
     }
 
-    /**
-     * Implicit super(): only emitted when the parent really declares a constructor without parameters.
-     */
-    private void emitImplicitSuperCall() {
-        if (currentSelfSlot == null) return;
-        Symbol parent = findParentOf(currentClassName);
-        if (parent == null) return;
+    private void visitAll(List<? extends ZAstNode> nodes) {
+        if (nodes == null) return;
+        for (ZAstNode n : nodes) if (n != null) n.accept(this);
+    }
 
-        if (parent.getMembers() != null) {
-            for (Symbol m : parent.getMembers()) {
-                if (m.getKind() == SymbolKind.CONSTRUCTOR
-                        && m.getParameterTypes().isEmpty()
-                        && parent.getName().equals(m.getDeclaringClass())) {
-                    emitSuperConstructorCall(parent.getName(), new ArrayList<>());
-                    return;
+    private void loopBody(List<? extends ZAstNode> body, String breakLabel, String continueLabel) {
+        breakLabels.push(breakLabel);
+        continueLabels.push(continueLabel);
+        visitAll(body);
+        continueLabels.pop();
+        breakLabels.pop();
+    }
+
+    private void branch(ExpressionNodeZ condition, boolean jumpWhen, String label) {
+        Register reg = Register.ax(ValueType.BOOLEAN);
+        values.load(eval(condition), reg);
+        ir.emit(new com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf(reg, jumpWhen, label));
+    }
+
+    private Value concat(Value left, Value right) {
+        Value l = values.asString(left);
+        Value r = values.asString(right);
+        Register a = Register.ax(ValueType.STRING), b = Register.bx(ValueType.STRING), c = Register.cx(ValueType.STRING);
+        values.load(l, a);
+        values.load(r, b);
+        ir.emit(new StringConcat(a, b, c));
+        return values.spill(c);
+    }
+
+    private Symbol findClassSymbol(String name) {
+        if (name == null) return null;
+        for (SymbolScope s : table.getFileScopes().values()) {
+            for (Symbol sym : s.resolveLocalByName(name)) {
+                if (sym.getKind() == SymbolKind.CLASS) return sym;
+            }
+        }
+        for (Symbol sym : table.getAllSymbols()) {
+            if (sym.getKind() == SymbolKind.CLASS && name.equals(sym.getName())) return sym;
+        }
+        return null;
+    }
+
+    private Symbol findCallableSymbol(String name, int line, int column) {
+        SymbolScope scope = table.getFileScope(context.getFilePath());
+        if (scope != null) {
+            for (Symbol s : scope.resolveLocalByName(name)) {
+                if (s.isCallable() && s.getLine() == line && s.getColumn() == column) return s;
+            }
+        }
+        for (Symbol s : table.getAllSymbols()) {
+            if (s.isCallable() && s.getName().equals(name) && s.getLine() == line && s.getColumn() == column) return s;
+        }
+        return null;
+    }
+
+    private Symbol findMethodInClass(Symbol cls, MethodDeclarationNodeZ node) {
+        if (cls == null || node == null) return null;
+        inheritance.link(cls);
+        List<String> targetParams = extractParamTypes(node.getParams());
+        int targetArity = node.getParams() != null ? node.getParams().size() : 0;
+
+        if (cls.getMembers() != null) {
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(node.getName())) {
+                    if (cls.getName().equals(m.getDeclaringClass())) {
+                        if (m.getParameterTypes() != null && m.getParameterTypes().equals(targetParams)) {
+                            return m;
+                        }
+                    }
+                }
+            }
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(node.getName())) {
+                    if (cls.getName().equals(m.getDeclaringClass())) {
+                        if (m.getLine() == node.getLine() && m.getColumn() == node.getColumn()) {
+                            return m;
+                        }
+                    }
+                }
+            }
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(node.getName())) {
+                    if (cls.getName().equals(m.getDeclaringClass())) {
+                        if (m.getParameterTypes() != null && m.getParameterTypes().size() == targetArity) {
+                            return m;
+                        }
+                    }
                 }
             }
         }
-    }
 
-    /**
-     * Label of the implementation that super.name(...) must call. The parent's merged member list
-     */
-    private String resolveSuperTarget(String parentClassName, String methodName, int numArgs) {
-        Symbol parent = findClassSymbol(parentClassName);
-        if (parent != null && parent.getMembers() != null) {
-            for (Symbol m : parent.getMembers()) {
-                if (m.getKind() == SymbolKind.METHOD
-                        && m.getName().equals(methodName)
-                        && m.getParameterTypes().size() == numArgs) {
-                    if (m.getCodeLabel() != null) return m.getCodeLabel();
-                    return m.getDeclaringClass() + "_" + methodName + "_" + numArgs;
+        for (Symbol s : table.getAllSymbols()) {
+            if (s.getKind() == SymbolKind.METHOD && s.getName().equals(node.getName())) {
+                if (cls.getName().equals(s.getDeclaringClass())) {
+                    if (s.getParameterTypes() != null && s.getParameterTypes().equals(targetParams)) {
+                        return s;
+                    }
+                    if (s.getLine() == node.getLine() && s.getColumn() == node.getColumn()) {
+                        return s;
+                    }
                 }
             }
         }
-        return parentClassName + "_" + methodName + "_" + numArgs;
+
+        Symbol fallback = new Symbol();
+        fallback.setName(node.getName());
+        fallback.setKind(SymbolKind.METHOD);
+        fallback.setLine(node.getLine());
+        fallback.setColumn(node.getColumn());
+        fallback.setDeclaringClass(cls.getName());
+        fallback.getParameterTypes().addAll(targetParams);
+        String label = NameMangler.codeLabel(fallback);
+        fallback.setCodeLabel(label);
+        return fallback;
     }
 
-    private boolean declaresConstructors(String className) {
-        Symbol cls = findClassSymbol(className);
-        if (cls == null || cls.getMembers() == null) return false;
-        for (Symbol m : cls.getMembers()) {
-            if (m.getKind() == SymbolKind.CONSTRUCTOR && className.equals(m.getDeclaringClass())) return true;
+    private Symbol findConstructorInClass(Symbol cls, ConstructorDeclarationNodeZ node) {
+        if (cls == null || node == null) return null;
+        inheritance.link(cls);
+        List<String> targetParams = extractParamTypes(node.getParams());
+        int targetArity = node.getParams() != null ? node.getParams().size() : 0;
+
+        if (cls.getMembers() != null) {
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR && cls.getName().equals(m.getDeclaringClass())) {
+                    if (m.getParameterTypes() != null && m.getParameterTypes().equals(targetParams)) {
+                        return m;
+                    }
+                }
+            }
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR && cls.getName().equals(m.getDeclaringClass())) {
+                    if (m.getParameterTypes() != null && m.getParameterTypes().size() == targetArity) {
+                        return m;
+                    }
+                }
+            }
         }
-        return false;
+
+        for (Symbol s : table.getAllSymbols()) {
+            if (s.getKind() == SymbolKind.CONSTRUCTOR && cls.getName().equals(s.getDeclaringClass())) {
+                if (s.getParameterTypes() != null && s.getParameterTypes().equals(targetParams)) {
+                    return s;
+                }
+            }
+        }
+
+        Symbol fallback = new Symbol();
+        fallback.setName(cls.getName());
+        fallback.setKind(SymbolKind.CONSTRUCTOR);
+        fallback.setLine(node.getLine());
+        fallback.setColumn(node.getColumn());
+        fallback.setDeclaringClass(cls.getName());
+        fallback.getParameterTypes().addAll(targetParams);
+        String label = NameMangler.codeLabel(fallback);
+        fallback.setCodeLabel(label);
+        return fallback;
     }
 
-    private Symbol findParentOf(String className) {
-        Symbol cls = findClassSymbol(className);
-        if (cls == null || cls.getParentName() == null || cls.getParentName().isBlank()) return null;
-        return findClassSymbol(cls.getParentName());
+    private List<String> extractParamTypes(List<ParameterNodeZ> params) {
+        List<String> result = new ArrayList<>();
+        if (params != null) {
+            for (ParameterNodeZ p : params) {
+                if (p == null) continue;
+                String t = canonicalTypeName(p.getType());
+                if (t == null) t = "?";
+                if (p.isArray()) t = t + "[]".repeat(p.getDimensions());
+                result.add(t);
+            }
+        }
+        return result;
     }
 
-    private Symbol findClassSymbol(String className) {
-        if (className == null) return null;
-        for (SymbolScope fileScope : table.getFileScopes().values()) {
-            for (List<Symbol> bucket : fileScope.getSymbols().values()) {
-                for (Symbol s : bucket) {
-                    if (s.getKind() == SymbolKind.CLASS && className.equals(s.getName())) return s;
+    private String canonicalTypeName(TypeNodeZ typeNode) {
+        if (typeNode == null) return null;
+        if (typeNode.getCustomTypeName() != null) return typeNode.getCustomTypeName();
+        var dt = typeNode.getDataType();
+        if (dt == null) return null;
+        return switch (dt) {
+            case INT -> "int";
+            case DOUBLE -> "float";
+            case STRING -> "string";
+            case CHAR -> "char";
+            case BOOLEAN -> "boolean";
+            case VOID -> "void";
+            case NULL -> "null";
+            case CLASS -> null;
+        };
+    }
+
+    private Symbol findFieldSymbol(Symbol cls, String fieldName) {
+        if (cls == null || fieldName == null) return null;
+        inheritance.link(cls);
+        if (cls.getFieldSlots() != null) {
+            for (Symbol f : cls.getFieldSlots()) {
+                if (fieldName.equals(f.getName())) return f;
+            }
+        }
+        return null;
+    }
+
+    private Symbol findConstructorByParams(Symbol cls, List<?> params) {
+        if (cls == null) return null;
+        inheritance.link(cls);
+        int arity = params != null ? params.size() : 0;
+        if (cls.getMembers() != null) {
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR && m.getParameterTypes() != null && m.getParameterTypes().size() == arity) {
+                    return m;
                 }
             }
         }
         return null;
     }
 
-    /**
-     * obj.x = v, this.x = v, super.x = v: stores into the heap using the field slot of the STATIC type
-     */
-    private boolean tryEmitPropertyStore(PropertyAccessExpressionNodeZ prop, ExpressionNodeZ valueExpr) {
-        Type targetType = typeAnnotations.get(prop.getTarget());
-        if (targetType == null || !targetType.isCustom()) return false;
+    private Symbol findEmptyConstructor(Symbol cls) {
+        if (cls == null) return null;
+        inheritance.link(cls);
+        if (cls.getMembers() != null) {
+            for (Symbol m : cls.getMembers()) {
+                if (m.getKind() == SymbolKind.CONSTRUCTOR && (m.getParameterTypes() == null || m.getParameterTypes().isEmpty())) {
+                    return m;
+                }
+            }
+        }
+        return null;
+    }
 
-        List<String> layout = classLayouts.get(targetType.getCustomName());
-        if (layout == null) return false;
-        int fieldOffset = layout.indexOf(prop.getPropertyName());
-        if (fieldOffset < 0) return false;
+    private Symbol classSymbolOf(ExpressionNodeZ node) {
+        Type t = typeAnnotations.get(node);
+        if (t != null && t.getCustomName() != null) {
+            return findClassSymbol(t.getCustomName());
+        }
+        return null;
+    }
 
-        if (!evalObjectPointerToReg(prop.getTarget(), "BX_INT")) return false;
-        int ptrSlot = nextOffset++;
-        output.emit("store_int", "fp + " + ptrSlot, null, "BX_INT");
+    private ValueType valueTypeOf(AstNode node) {
+        Type t = typeAnnotations.get(node);
+        return t != null ? IntermediateTypes.of(t.getKind()) : ValueType.INT;
+    }
 
-        String valueRef = exprToString(valueExpr);
+    private ValueType returnTypeOf(Symbol s) {
+        if (s == null || s.getReturnType() == null) return ValueType.INT;
+        return declaredType(s.getReturnType());
+    }
 
-        Type fieldType = typeAnnotations.get(prop);
-        Type valueType = typeAnnotations.get(valueExpr);
-        TypeKind kind = fieldType != null ? fieldType.getKind()
-                : (valueType != null ? valueType.getKind() : TypeKind.INT);
-        if (kind == TypeKind.NULL || kind == TypeKind.CUSTOM) kind = TypeKind.INT;
-        String suffix = kindToSuffix(kind);
-        String axReg = "AX_" + suffix.toUpperCase();
+    private ValueType declaredType(String typeName) {
+        if (typeName == null) return ValueType.INT;
+        return switch (typeName.toLowerCase()) {
+            case "int", "entero", "numerus" -> ValueType.INT;
+            case "float", "double", "decimal", "decimalis" -> ValueType.FLOAT;
+            case "boolean", "bool", "booleano" -> ValueType.BOOLEAN;
+            case "char", "caracter" -> ValueType.CHAR;
+            case "string" -> ValueType.STRING;
+            default -> ValueType.INT;
+        };
+    }
 
-        loadRegister(valueRef, axReg);
-        output.emit("load_int", "fp + " + ptrSlot, null, "BX_INT");
-        emitHeapFieldStore("BX_INT", fieldOffset, kind, axReg);
-        return true;
+    private ValueType declaredType(TypeNodeZ typeNode) {
+        if (typeNode == null) return ValueType.INT;
+        if (typeNode.getCustomTypeName() != null) {
+            String custom = typeNode.getCustomTypeName();
+            ValueType customType = declaredType(custom);
+            if (customType != ValueType.INT || "int".equalsIgnoreCase(custom) || "entero".equalsIgnoreCase(custom) || "numerus".equalsIgnoreCase(custom)) {
+                return customType;
+            }
+        }
+        if (typeNode.getDataType() != null) {
+            return switch (typeNode.getDataType()) {
+                case INT -> ValueType.INT;
+                case DOUBLE -> ValueType.FLOAT;
+                case BOOLEAN -> ValueType.BOOLEAN;
+                case CHAR -> ValueType.CHAR;
+                case STRING -> ValueType.STRING;
+                case CLASS -> typeNode.getCustomTypeName() != null ? declaredType(typeNode.getCustomTypeName()) : ValueType.INT;
+                default -> ValueType.INT;
+            };
+        }
+        return ValueType.INT;
+    }
+
+    private TypeKind kindOf(TypeNodeZ typeNode) {
+        if (typeNode == null) return TypeKind.INT;
+        if (typeNode.getCustomTypeName() != null) {
+            String custom = typeNode.getCustomTypeName().toLowerCase();
+            switch (custom) {
+                case "string": return TypeKind.STRING;
+                case "float", "double", "decimal", "decimalis": return TypeKind.FLOAT;
+                case "int", "entero", "numerus": return TypeKind.INT;
+                case "boolean", "bool", "booleano": return TypeKind.BOOLEAN;
+                case "char", "caracter": return TypeKind.CHAR;
+            }
+        }
+        if (typeNode.getDataType() != null) {
+            return switch (typeNode.getDataType()) {
+                case INT -> TypeKind.INT;
+                case DOUBLE -> TypeKind.FLOAT;
+                case BOOLEAN -> TypeKind.BOOLEAN;
+                case CHAR -> TypeKind.CHAR;
+                case STRING -> TypeKind.STRING;
+                default -> TypeKind.CUSTOM;
+            };
+        }
+        return TypeKind.CUSTOM;
+    }
+
+    private static ValueType operandTypeOf(Value left, Value right) {
+        if (left.type() == ValueType.STRING || right.type() == ValueType.STRING) return ValueType.STRING;
+        if (left.type() == ValueType.FLOAT || right.type() == ValueType.FLOAT) return ValueType.FLOAT;
+        return ValueType.INT;
+    }
+
+    private static Integer literalInt(ExpressionNodeZ node) {
+        if (node instanceof LiteralExpressionNodeZ lit && lit.getDataValue() instanceof Number n) {
+            return n.intValue();
+        }
+        return null;
+    }
+
+    private static String charCode(Object literal) {
+        if (literal instanceof Character c) return String.valueOf((int) c);
+        if (literal instanceof String s && !s.isEmpty()) return String.valueOf((int) s.charAt(0));
+        return "0";
     }
 }

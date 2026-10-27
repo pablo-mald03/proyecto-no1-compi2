@@ -11,13 +11,11 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.factory.CodeGeneratorF
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.childs.statements.VariableDeclarationNodeZ;
-import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.principals.ClassDeclarationNodeZ;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZClassLayoutService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZInheritanceService;
+import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service.ZSymbolLookupService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,19 +26,22 @@ import java.util.Map;
 public class CodeGeneratorOrchestrator {
     private IntermediateProgram lastProgram;
 
-    public IntermediateProgram buildProgram(
-            Map<String, EditorContext> allContexts,
-            GlobalSymbolTable table,
-            Map<AstNode, Type> typeAnnotations,
-            Map<AstNode, Symbol> resolvedCalls,
-            String mainClassPath) {
+    public IntermediateProgram buildProgram(Map<String, EditorContext> allContexts, GlobalSymbolTable table, Map<AstNode, Type> typeAnnotations, Map<AstNode, Symbol> resolvedCalls, String mainClassPath) {
 
         IntermediateBuilder intermediate = new IntermediateBuilder("program", "str");
         CodeGenContext labels = new CodeGenContext();
 
+        ZClassLayoutService layoutService = new ZClassLayoutService(table, new ZInheritanceService(new ZSymbolLookupService(table)));
+        for (Symbol cls : layoutService.collectLinkedClasses()) {
+            List<String> entries = new ArrayList<>();
+            for (Symbol m : cls.getVtable()) {
+                entries.add(com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler.codeLabel(m));
+            }
+            intermediate.addVTable(cls.getVtableLabel(), entries);
+        }
+
         for (EditorContext ctx : contextsOf(allContexts, ".y", mainClassPath)) {
-            CodeGeneratorFactory.create(".y").generate(
-                    ctx, table, typeAnnotations, resolvedCalls, intermediate, labels);
+            CodeGeneratorFactory.create(".y").generate(ctx, table, typeAnnotations, resolvedCalls, intermediate, labels);
         }
         for (EditorContext ctx : contextsOf(allContexts, ".z", mainClassPath)) {
             CodeGeneratorFactory.create(".z").generate(ctx, table, typeAnnotations, resolvedCalls, intermediate, labels);
@@ -65,29 +66,6 @@ public class CodeGeneratorOrchestrator {
             if (c != null && c != first && ext.equals(c.getFileExtension())) result.add(c);
         }
         return result;
-    }
-
-    /**
-     * Collect class layouts helper method
-     *
-     */
-    private Map<String, List<String>> collectClassLayouts(Map<String, EditorContext> allContexts) {
-        Map<String, List<String>> layouts = new HashMap<>();
-        for (EditorContext ctx : allContexts.values()) {
-            if (ctx == null || !".z".equals(ctx.getFileExtension())) continue;
-            ZAstNode ast = (ZAstNode) ctx.getAstNode();
-            if (ast instanceof ProgramNodeZ program && program.getClassNode() != null) {
-                ClassDeclarationNodeZ cls = program.getClassNode();
-                List<String> fields = new ArrayList<>();
-                if (cls.getMembers() != null) {
-                    for (ZAstNode member : cls.getMembers()) {
-                        if (member instanceof VariableDeclarationNodeZ attr) fields.add(attr.getIdentifier());
-                    }
-                }
-                layouts.put(cls.getClassName(), fields);
-            }
-        }
-        return layouts;
     }
 
     /**

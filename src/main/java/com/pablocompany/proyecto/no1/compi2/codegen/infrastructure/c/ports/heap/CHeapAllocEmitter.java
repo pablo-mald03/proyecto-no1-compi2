@@ -19,6 +19,10 @@ public class CHeapAllocEmitter implements InstructionEmitter<HeapAlloc> {
     @Override
     public void emit(HeapAlloc instruction, CodeWriter out) {
         out.line(CSyntax.registerTo(instruction.getDestination()) + " = hptr;");
-        out.line("hptr = hptr + " + instruction.getSlots() + ";");
+        if (instruction.getDynamicSlots() != null) {
+            out.line("hptr = hptr + " + CSyntax.operand(instruction.getDynamicSlots()) + ";");
+        } else {
+            out.line("hptr = hptr + " + instruction.getSlots() + ";");
+        }
     }
 }

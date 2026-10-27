@@ -16,12 +16,17 @@ public class IntermediateBuilder {
     private final String stringPrefix;
     private final Map<String, String> literalToId = new LinkedHashMap<>();
     private final List<IntermediateFunction> functions = new ArrayList<>();
+    private final List<com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition> vtables = new ArrayList<>();
     private String currentName;
     private List<Instruction> currentBody;
 
     public IntermediateBuilder(String sourceName, String stringPrefix) {
         this.sourceName = sourceName;
         this.stringPrefix = stringPrefix;
+    }
+
+    public void addVTable(String name, List<String> entries) {
+        vtables.add(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition(name, entries));
     }
 
     /**
@@ -83,7 +88,7 @@ public class IntermediateBuilder {
         closeFunction();
         List<StringConstant> strings = new ArrayList<>();
         literalToId.forEach((value, id) -> strings.add(new StringConstant(id, value)));
-        return new IntermediateProgram(sourceName, strings, functions);
+        return new IntermediateProgram(sourceName, strings, functions, vtables);
     }
 
     /**

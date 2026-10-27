@@ -16,6 +16,7 @@ public class IntermediateFunction {
     private List<Instruction> body;
 
     public IntermediateFunction(String name, List<Instruction> body) {
-        body = List.copyOf(body);
+        this.name = name;
+        this.body = List.copyOf(body);
     }
 }

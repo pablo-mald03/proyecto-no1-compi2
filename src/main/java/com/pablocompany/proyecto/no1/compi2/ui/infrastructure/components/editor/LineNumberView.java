@@ -18,7 +18,7 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 
 /**
- *
+ * Principal line number view class
  * @author pablo03
  */
 public class LineNumberView extends JPanel
@@ -34,7 +34,7 @@ public class LineNumberView extends JPanel
 
     private JTextComponent component;
 
-    private boolean updateFont;
+    private boolean updateFont = true;
     private int borderGap;
     private Color currentLineForeground;
     private float digitAlignment;
@@ -185,8 +185,9 @@ public class LineNumberView extends JPanel
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        //	Determine the width of the space available to draw the line number
-        FontMetrics fontMetrics = component.getFontMetrics(component.getFont());
+        Font editorFont = component.getFont();
+        g.setFont(editorFont);
+        FontMetrics fontMetrics = component.getFontMetrics(editorFont);
         Insets insets = getInsets();
         int availableWidth = getSize().width - insets.left - insets.right;
 
@@ -219,9 +220,9 @@ public class LineNumberView extends JPanel
         }
     }
 
-    /*
-	 *  We need to know if the caret is currently positioned on the line we
-	 *  are about to paint so the line number can be highlighted.
+    /**
+     *  We need to know if the caret is currently positioned on the line we
+     *  are about to paint so the line number can be highlighted.
      */
     private boolean isCurrentLine(int rowStartOffset) {
         int caretPosition = component.getCaretPosition();
@@ -234,9 +235,9 @@ public class LineNumberView extends JPanel
         }
     }
 
-    /*
-	 *	Get the line number to be drawn. The empty string will be returned
-	 *  when a line of text has wrapped.
+    /**
+     *	Get the line number to be drawn. The empty string will be returned
+     *  when a line of text has wrapped.
      */
     protected String getTextLineNumber(int rowStartOffset) {
         Element root = component.getDocument().getDefaultRootElement();
@@ -250,8 +251,8 @@ public class LineNumberView extends JPanel
         }
     }
 
-    /*
-	 *  Determine the X offset to properly align the line number when drawn
+    /**
+     *  Determine the X offset to properly align the line number when drawn
      */
     private int getOffsetX(int availableWidth, int stringWidth) {
         return (int) ((availableWidth - stringWidth) * digitAlignment);
@@ -312,7 +313,7 @@ public class LineNumberView extends JPanel
         int currentLine = root.getElementIndex(caretPosition);
 
         if (lastLine != currentLine) {
-            getParent().repaint();
+            repaintParent();
             lastLine = currentLine;
         }
     }
@@ -332,9 +333,9 @@ public class LineNumberView extends JPanel
         documentChanged();
     }
 
-    /*
-	 *  A document change may affect the number of displayed lines of text.
-	 *  Therefore the lines numbers will also change.
+    /**
+     *  A document change may affect the number of displayed lines of text.
+     *  Therefore the lines numbers will also change.
      */
     private void documentChanged() {
 
@@ -347,7 +348,7 @@ public class LineNumberView extends JPanel
 
                     if (rect != null && rect.y != lastHeight) {
                         setPreferredWidth();
-                        getParent().repaint();
+                        repaintParent();
                         lastHeight = rect.y;
                     }
                 } catch (BadLocationException ex) {
@@ -360,13 +361,35 @@ public class LineNumberView extends JPanel
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getNewValue() instanceof Font) {
             if (updateFont) {
-                Font newFont = (Font) evt.getNewValue();
-                setFont(newFont);
-                lastDigits = 0;
-                setPreferredWidth();
+                syncWithEditorFont();
             } else {
-                getParent().repaint();
+                repaintParent();
             }
+        }
+    }
+
+    /**
+     * Method to copy the editor font into the gutter and recalculates its width.
+     */
+    public void syncWithEditorFont() {
+        setFont(component.getFont());
+        fonts = null;
+        lastDigits = 0;
+        lastHeight = -1;
+        setPreferredWidth();
+        revalidate();
+        repaintParent();
+    }
+
+    /**
+     * Method to repaint the parent
+     *
+     */
+    private void repaintParent() {
+        if (getParent() != null) {
+            getParent().repaint();
+        } else {
+            repaint();
         }
     }
 }

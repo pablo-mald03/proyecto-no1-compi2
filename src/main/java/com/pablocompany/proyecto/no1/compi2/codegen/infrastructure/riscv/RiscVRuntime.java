@@ -10,6 +10,10 @@ public class RiscVRuntime {
     private RiscVRuntime() {
     }
 
+    /**
+     * Principal code writer method
+     *
+     */
     public static void emit(CodeWriter out) {
         out.blank().raw("# ---------------- runtime ----------------");
 

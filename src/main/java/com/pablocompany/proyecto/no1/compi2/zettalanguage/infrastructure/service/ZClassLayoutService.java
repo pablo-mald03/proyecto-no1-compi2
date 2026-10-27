@@ -38,7 +38,7 @@ public class ZClassLayoutService {
     // ------------------------------------------------------------------
 
     /**
-     * Every CLASS symbol of every file, linked, sorted by name (deterministic order).
+     * Method for every CLASS symbol of every file, linked, sorted by name (deterministic order).
      */
     public List<Symbol> collectLinkedClasses() {
         List<Symbol> classes = new ArrayList<>();
@@ -55,26 +55,15 @@ public class ZClassLayoutService {
     }
 
     /**
-     * Gives every class a stable, unique id (position in alphabetical order). Useful for a type
-     * tag in the object header or for an instanceof-style check.
+     * Method to gives every class a stable, unique id
      */
     public void assignClassIds(List<Symbol> classes) {
         int id = 0;
         for (Symbol c : classes) c.setClassId(id++);
     }
 
-    // ------------------------------------------------------------------
-    // OBJECT LAYOUT (compatible with Map<String, List<String>> classLayouts)
-    // ------------------------------------------------------------------
-
     /**
-     * Ordered field names of a class: [__vptr?][inherited...][own...].
-     * The position in the list is the slot used by heap_alloc / heap_load / heap_store, and a
-     * child list always starts with its parent's list, so a Perro can be used as an Animal.
-     * <p>
-     * A parent field hidden by a descendant redeclaration is renamed "Parent::name" so that
-     * indexOf("name") finds the MOST DERIVED one (this.x) and indexOf("Parent::name") finds the
-     * parent's one (super.x).
+     * Method to ordered field names of a class
      */
     public List<String> buildFieldLayout(Symbol cls, boolean includeVptr) {
         inheritance.link(cls);
@@ -101,7 +90,7 @@ public class ZClassLayoutService {
     }
 
     /**
-     * Layouts for all the classes. Drop-in replacement for the classLayouts map of the generator.
+     * Method for layouts for all the classes. Drop-in replacement for the classLayouts map of the generator.
      */
     public Map<String, List<String>> buildAllLayouts(List<Symbol> classes, boolean includeVptr) {
         Map<String, List<String>> result = new LinkedHashMap<>();
@@ -109,13 +98,9 @@ public class ZClassLayoutService {
         return result;
     }
 
-    // ------------------------------------------------------------------
-    // VIRTUAL TABLE
-    // ------------------------------------------------------------------
 
     /**
-     * Rows of the vtable of `cls` in slot order. codeLabel is the function that must be stored in
-     * that slot of the table (already the overriding implementation when the child overrides it).
+     * Method for the rows of the vtable of `cls` in slot order. codeLabel is the function that must be stored in
      */
     public List<VTableEntry> buildVTable(Symbol cls) {
         inheritance.link(cls);
@@ -135,9 +120,7 @@ public class ZClassLayoutService {
     }
 
     /**
-     * Slot to use for a virtual call: the method symbol the checker resolved on the STATIC type
-     * already carries it (an override shares the slot of the method it overrides).
-     * Returns -1 when the call must be static (private method, super.m(), constructor).
+     * Method for slot to use for a virtual call the method symbol type
      */
     public int virtualSlotOf(Symbol resolvedMethod) {
         if (resolvedMethod == null || !resolvedMethod.isVirtual()) return -1;
@@ -145,10 +128,7 @@ public class ZClassLayoutService {
     }
 
     /**
-     * Debug dump, e.g. for a symbol report:
-     * vtable_Perro (classId=2)
-     * [0] hablar()    -> Perro_hablar_0   (overrides)
-     * [1] comer(int)  -> Animal_comer_1
+     * Method for debug dump
      */
     public String describe(Symbol cls) {
         StringBuilder sb = new StringBuilder();

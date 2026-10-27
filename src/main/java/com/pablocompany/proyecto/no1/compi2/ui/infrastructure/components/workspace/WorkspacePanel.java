@@ -15,6 +15,7 @@ import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,15 @@ public class WorkspacePanel extends JPanel {
     private final JTabbedPane tabbedPane;
     private final JSplitPane splitPane;
     private String projectName;
+
+    // Ctrl+Tab switcher and shared zoom level
+    private static final int ZOOM_MIN = 50;
+    private static final int ZOOM_MAX = 300;
+    private static final int ZOOM_STEP = 10;
+    private static final int ZOOM_DEFAULT = 100;
+
+    private final TabSwitcher tabSwitcher;
+    private int zoomPercent = ZOOM_DEFAULT;
 
     //Services
     private final WorkspaceCompilationService compilationService;
@@ -60,6 +70,11 @@ public class WorkspacePanel extends JPanel {
         this.editorService = new WorkspaceEditorService(tabbedPane, fileTreePanel, notifier, compilationService);
         this.compilationService.setEditorService(editorService);
         this.fileService = new WorkspaceFileService(this, fileTreePanel, editorService, notifier, confirmationNotifier);
+
+        this.tabSwitcher = new TabSwitcher(tabbedPane);
+
+        // Editors opened later (or lazily created) pick up the current zoom level
+        tabbedPane.addChangeListener(e -> SwingUtilities.invokeLater(this::applyZoomToAllEditors));
 
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileTreePanel, tabbedPane);
         splitPane.setDividerLocation(290);
@@ -186,6 +201,80 @@ public class WorkspacePanel extends JPanel {
     // PROJECT MANAGEMENT
     // ==========================================
 
+
+    /**
+     * Forward key events here . True = consumed.
+     */
+    public boolean handleTabSwitchKey(KeyEvent e) {
+        return tabSwitcher.handleKeyEvent(e);
+    }
+
+    public boolean isTabSwitcherOpen() {
+        return tabSwitcher.isOpen();
+    }
+
+    // ==========================================
+    // ZOOM (shared by every open editor)
+    // ==========================================
+
+    public void zoomIn() {
+        setZoom(zoomPercent + ZOOM_STEP);
+    }
+
+    public void zoomOut() {
+        setZoom(zoomPercent - ZOOM_STEP);
+    }
+
+    public void resetZoom() {
+        setZoom(ZOOM_DEFAULT);
+    }
+
+    private void setZoom(int percent) {
+        this.zoomPercent = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, percent));
+        applyZoomToAllEditors();
+    }
+
+    private void applyZoomToAllEditors() {
+        Map<String, CodeEditorPanel> editors = editorService.getOpenEditors();
+        if (editors == null) return;
+        for (CodeEditorPanel editor : editors.values()) {
+            editor.setZoomPercent(zoomPercent);
+        }
+    }
+
+    /**
+     * Method to select the next tab
+     *
+     */
+    public void selectNextTab() {
+        int count = tabbedPane.getTabCount();
+        if (count < 2) return;
+        tabbedPane.setSelectedIndex((tabbedPane.getSelectedIndex() + 1) % count);
+        focusSelectedTab();
+    }
+
+    /**
+     * Method to select the previous tab
+     *
+     */
+    public void selectPreviousTab() {
+        int count = tabbedPane.getTabCount();
+        if (count < 2) return;
+        tabbedPane.setSelectedIndex((tabbedPane.getSelectedIndex() - 1 + count) % count);
+        focusSelectedTab();
+    }
+
+    /**
+     * Method to select the focused tab
+     * */
+    private void focusSelectedTab() {
+        Component selected = tabbedPane.getSelectedComponent();
+        if (selected != null) selected.requestFocusInWindow();
+    }
+
+    /**
+     * Method to update the projetct name
+     * */
     public void updateProjectName(String newName) {
         this.projectName = newName;
         fileTreePanel.updateProjectName(newName);

@@ -26,36 +26,46 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operatio
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.UnaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.AdjustStackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Move;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.LoadAddress;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Indirect;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StackTop;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.FunctionFrame;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.IntermediateTypes;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.StructLayout;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.ValueEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.ArrayInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
-import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
+import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.ProgramNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.YAstNode;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.MemberArrayAccessExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.PropertyAccessExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.access.ShortlyOperationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayDeclarationNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.arrays.ArrayInitExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.assignation.*;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.instances.ExpressionStatementNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.StructInstanceNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.declaration.StructDeclarationNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructLiteralExpressionNodeY;
+import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.structs.properties.StructPropertyNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.types.TypeNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.ArrayCallExpressionNodeY;
 import com.pablocompany.proyecto.no1.compi2.ylanguage.domain.semantic.childs.expressions.values.FunctionCallExpressionNodeY;
@@ -104,6 +114,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     private Symbol currentFunctionSymbol;
 
     private final SymbolLookup symbols;
+    private final StructLayout layout;
 
     public YCodeGeneratorVisitor(GlobalSymbolTable table, EditorContext context,
                                  Map<AstNode, Type> typeAnnotations,
@@ -116,6 +127,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         this.labels = labels;
         this.values = new ValueEmitter(ir, frame);
         this.symbols = new SymbolLookup(table, resolvedCalls);
+        this.layout = new StructLayout(table);
     }
     // ============================================================ top level
 
@@ -144,6 +156,62 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     @Override
     public Void visit(StructDeclarationNodeY node) {
         return null;
+    }
+
+    @Override
+    public Void visit(StructInstanceNodeY node) {
+        String name = node.getIdentifier();
+        String structType = node.getStructType();
+        int totalCells = layout.structSizeCells(structType);
+        int base = frame.allocate(totalCells);
+        frame.registerStruct(name, new StructInfo(structType, base, false));
+        frame.declare(name, ValueType.INT);
+
+        if (node.getLiteral() != null) {
+            populateStructLiteral(base, structType, node.getLiteral());
+        }
+        return null;
+    }
+
+    private void populateStructLiteral(int base, String structType, StructLiteralExpressionNodeY lit) {
+        if (lit.getProperties() == null) return;
+        List<Symbol> members = layout.members(structType);
+        List<StructPropertyNodeY> props = lit.getProperties();
+        int count = Math.min(props.size(), members != null ? members.size() : 0);
+        for (int i = 0; i < count; i++) {
+            StructPropertyNodeY prop = props.get(i);
+            if (prop.getValue() == null) continue;
+            Symbol member = members.get(i);
+            int cellOff = layout.fieldOffsetCells(structType, member.getName());
+            if (member.isArray()) {
+                // Embedded array: copy source elements into struct slots
+                int arrayCells = layout.fieldSizeCells(structType, member.getName());
+                ArrayInfo srcInfo = (prop.getValue() instanceof IdentifierExpressionNodeY id)
+                        ? frame.arrayOf(id.getIdentifier()) : null;
+                if (srcInfo != null) {
+                    // copy from source array
+                    ValueType elemType = IntermediateTypes.of(srcInfo.getElementType());
+                    Register idx = Register.ax(ValueType.INT);
+                    Register val = Register.cx(elemType);
+                    for (int j = 0; j < arrayCells; j++) {
+                        ir.emit(new Move(new Immediate(String.valueOf(j), ValueType.INT), idx));
+                        if (srcInfo.isHeap()) {
+                            Register ptr = Register.bx(ValueType.INT);
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(srcInfo.getBaseOffset()), ptr));
+                            ir.emit(new IndexAddress(ptr, idx, ptr));
+                            ir.emit(new Load(MemorySpace.STACK, new Indirect(ptr, 0), val));
+                        } else {
+                            ir.emit(new LoadIndexed(new Frame(srcInfo.getBaseOffset()), idx, val));
+                        }
+                        ir.emit(new Store(MemorySpace.STACK, new Frame(base + cellOff + j), val));
+                    }
+                }
+                // else: source not known at compile time, skip initialization
+            } else {
+                Value val = eval(prop.getValue());
+                values.store(val, new Cell(val.type(), new Frame(base + cellOff)));
+            }
+        }
     }
 
     // ==== Functions ===
@@ -278,39 +346,70 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
     @Override
     public Void visit(ShortlyOperationNodeY node) {
-        Value target = eval(node.getTarget());
+        Value targetVal = eval(node.getTarget());
         Value operand = eval(node.getValue());
-        Cell cell = values.requireCell(target);
-        ValueType type = cell.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
-        Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
-        values.loadCoerced(cell, a);
-        values.loadCoerced(operand, b);
-        ir.emit(new BinaryOperation(IntermediateTypes.shortly(node.getOperator()), a, b, c));
-        ir.emit(new Store(MemorySpace.STACK, cell.getAddress(), c));
+        Value newVal;
+        ValueType targetAnn = typeAnnotations.containsKey(node.getTarget()) ? valueTypeOf(node.getTarget()) : null;
+        if (node.getOperator() == ShortlyOperator.PLUS_ASSIGN &&
+                (targetAnn == ValueType.STRING || targetVal.type() == ValueType.STRING || operand.type() == ValueType.STRING)) {
+            newVal = concat(targetVal, operand);
+        } else {
+            BinaryOperations op = IntermediateTypes.shortly(node.getOperator());
+            ValueType type = operandTypeOf(targetVal, operand);
+            Register a = Register.ax(type), b = Register.bx(type), c = Register.cx(type);
+            values.loadCoerced(targetVal, a);
+            values.loadCoerced(operand, b);
+            ir.emit(new BinaryOperation(op, a, b, c));
+            newVal = values.spill(c);
+        }
+        assign(node.getTarget(), newVal);
+        last = newVal;
         return null;
+    }
+
+    private void handleIncDec(ExpressionNodeY target, BinaryOperations op, boolean isPrefix) {
+        Value currentVal = eval(target);
+        ValueType type = currentVal.type() == ValueType.FLOAT ? ValueType.FLOAT : ValueType.INT;
+        Register a = Register.ax(type);
+        Register b = Register.bx(type);
+        Register c = Register.cx(type);
+        values.loadCoerced(currentVal, a);
+
+        Cell prevVal = null;
+        if (!isPrefix) {
+            prevVal = values.spill(a);
+        }
+
+        ir.emit(new Move(new Immediate("1", type), b));
+        ir.emit(new BinaryOperation(op, a, b, c));
+        Cell newVal = values.spill(c);
+
+        assign(target, newVal);
+
+        last = isPrefix ? newVal : prevVal;
     }
 
     @Override
     public Void visit(IncrementStatementNodeY node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.ADD, false);
         return null;
     }
 
     @Override
     public Void visit(DecrementStatementNodeY node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.SUB, false);
         return null;
     }
 
     @Override
     public Void visit(IncrementPrevStatementNodeY node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.ADD);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.ADD, true);
         return null;
     }
 
     @Override
     public Void visit(DecrementPrevStatementNodeY node) {
-        values.incDec(eval(node.getTargetVariable()), BinaryOperations.SUB);
+        handleIncDec(node.getTargetVariable(), BinaryOperations.SUB, true);
         return null;
     }
 
@@ -344,11 +443,6 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         if (node.getValue() != null) {
 
             Value value = eval(node.getValue());
-            System.out.println("[RET] value.type=" + value.type()
-                    + " | fn=" + currentFunctionSymbol.getName()
-                    + " | returnType=" + currentFunctionSymbol.getReturnType()
-                    + " | line=" + node.getLine());
-
             ValueType returnType = returnTypeOf(currentFunctionSymbol);
             Register scratch = Register.ax(returnType);
             values.loadCoerced(value, scratch);
@@ -444,12 +538,11 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
     @Override
     public Void visit(ForUpdateNodeY node) {
-        Value target = eval(node.getTarget());
         switch (node.getOperator()) {
-            case INCREMENT, PREFIX_INCREMENT -> values.incDec(target, BinaryOperations.ADD);
-            case DECREMENT, PREFIX_DECREMENT -> values.incDec(target, BinaryOperations.SUB);
+            case INCREMENT, PREFIX_INCREMENT -> handleIncDec(node.getTarget(), BinaryOperations.ADD, false);
+            case DECREMENT, PREFIX_DECREMENT -> handleIncDec(node.getTarget(), BinaryOperations.SUB, false);
             case ASSIGN -> {
-                if (node.getValue() != null) values.store(eval(node.getValue()), values.requireCell(target));
+                if (node.getValue() != null) assign(node.getTarget(), eval(node.getValue()));
             }
         }
         return null;
@@ -520,11 +613,24 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
     public Void visit(LiteralExpressionNodeY node) {
         ValueType type = valueTypeOf(node);
         Object v = node.getDataValue();
+        if (v == null) {
+            last = switch (type) {
+                case STRING  -> new Text(ir.intern(""));
+                case FLOAT   -> new Constant("0.0", ValueType.FLOAT);
+                case CHAR    -> new Constant("0",   ValueType.CHAR);
+                case BOOLEAN -> new Constant("0",   ValueType.BOOLEAN);
+                default      -> new Constant("0",   type);
+            };
+            return null;
+        }
         last = switch (type) {
-            case STRING -> new Text(ir.intern(String.valueOf(v)));
+            case STRING  -> new Text(ir.intern(String.valueOf(v)));
             case BOOLEAN -> new Constant(Boolean.TRUE.equals(v) ? "1" : "0", ValueType.BOOLEAN);
-            case CHAR -> new Constant(charCode(v), ValueType.CHAR);
-            default -> new Constant(String.valueOf(v), type);
+            case CHAR    -> new Constant(charCode(v), ValueType.CHAR);
+            default -> {
+                String lit = String.valueOf(v);
+                yield new Constant(lit.equals("null") ? "0" : lit, type);
+            }
         };
         return null;
     }
@@ -542,6 +648,25 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
     @Override
     public Void visit(BinaryExpressionNodeY node) {
+        if (node.getOperator() == BinaryOperator.AND || node.getOperator() == BinaryOperator.OR) {
+            boolean jumpWhen = (node.getOperator() == BinaryOperator.OR);
+            Cell result = frame.temp(ValueType.BOOLEAN);
+            Value left = eval(node.getLeft());
+            values.store(left, result);
+
+            String endLabel = labels.nextLabel();
+            Register condReg = Register.ax(ValueType.BOOLEAN);
+            values.load(result, condReg);
+            ir.emit(new BranchIf(condReg, jumpWhen, endLabel));
+
+            Value right = eval(node.getRight());
+            values.store(right, result);
+
+            ir.emit(new MarkLabel(endLabel));
+            last = result;
+            return null;
+        }
+
         Value left = eval(node.getLeft());
         Value right = eval(node.getRight());
         BinaryOperations op = IntermediateTypes.binary(node.getOperator());
@@ -591,10 +716,18 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         List<ExpressionNodeY> args = node.getArguments() != null ? node.getArguments() : List.of();
         int n = args.size();
 
-        ir.emit(new AdjustStackTop(CALL_AREA));
-        for (ExpressionNodeY arg : args) pushArgument(arg);
-
         Symbol target = symbols.target(node);
+        List<String> paramTypes = target != null ? target.getParameterTypes() : null;
+
+        ir.emit(new AdjustStackTop(CALL_AREA));
+        for (int i = 0; i < n; i++) {
+            ExpressionNodeY arg = args.get(i);
+            ValueType expectedType = (paramTypes != null && i < paramTypes.size())
+                    ? paramValueType(paramTypes.get(i))
+                    : null;
+            pushArgument(arg, expectedType);
+        }
+
         ir.emit(new Call(NameMangler.functionName(target)));
 
         Register result = Register.cx(valueTypeOf(node));
@@ -640,7 +773,72 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         return null;
     }
 
-    // Helpers
+    @Override
+    public Void visit(MemberArrayAccessExpressionNodeY node) {
+        if (node.getTarget() instanceof PropertyAccessExpressionNodeY prop) {
+            FieldReference field = resolveField(prop);
+            ValueType type = valueTypeOf(node);
+            if (type == ValueType.INT && field.getInfo().getStructTypeName() != null) {
+                Symbol structSym = table.getAllSymbols().stream()
+                        .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(field.getInfo().getStructTypeName()))
+                        .findFirst().orElse(null);
+                Symbol memberSym = (structSym != null && structSym.getMembers() != null)
+                        ? structSym.getMembers().stream().filter(m -> m.getName().equals(prop.getPropertyName())).findFirst().orElse(null)
+                        : null;
+                if (memberSym != null && memberSym.getType() != null) {
+                    ValueType symType = paramValueType(memberSym.getType());
+                    if (symType != null) type = symType;
+                }
+            }
+            Value index = eval(node.getIndex());
+            Register idx = Register.ax(ValueType.INT);
+            Register result = Register.cx(type);
+            values.loadCoerced(index, idx);
+
+            if (field.getInfo().isReference()) {
+                Register pointer = Register.bx(ValueType.INT);
+                ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
+                if (field.getOffset() > 0) {
+                    Register offsetReg = Register.ax(ValueType.INT);
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffsetBytes()), ValueType.INT), offsetReg));
+                    ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
+                    values.loadCoerced(index, idx);
+                }
+                ir.emit(new IndexAddress(pointer, idx, pointer));
+                ir.emit(new Load(MemorySpace.STACK, new Indirect(pointer, 0), result));
+            } else {
+                int base = field.getInfo().getBaseOffset() + field.getOffset();
+                ir.emit(new LoadIndexed(new Frame(base), idx, result));
+            }
+            last = values.spill(result);
+            return null;
+        }
+
+        if (node.getTarget() instanceof IdentifierExpressionNodeY id) {
+            ArrayInfo info = frame.arrayOf(id.getIdentifier());
+            if (info != null) {
+                return visit(new ArrayCallExpressionNodeY(node.getLine(), node.getColumn(), id.getIdentifier(), node.getIndex()));
+            }
+        }
+
+        Value targetVal = eval(node.getTarget());
+        Cell preservedTarget = (targetVal instanceof Cell c) ? c : frame.temp(targetVal.type());
+        if (!(targetVal instanceof Cell)) values.store(targetVal, preservedTarget);
+
+        Value indexVal = eval(node.getIndex());
+        Register targetReg = Register.bx(ValueType.INT);
+        Register indexReg = Register.ax(ValueType.INT);
+        values.load(preservedTarget, targetReg);
+        values.load(indexVal, indexReg);
+
+        ValueType element = valueTypeOf(node);
+        Register result = Register.cx(element);
+        Register addr = Register.ax(ValueType.INT);
+        ir.emit(new IndexAddress(targetReg, indexReg, addr));
+        ir.emit(new Load(MemorySpace.STACK, new Indirect(addr, 0), result));
+        last = values.spill(result);
+        return null;
+    }
 
 
     private static ValueType operandTypeOf(Value left, Value right) {
@@ -653,7 +851,7 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
      * Method to push the arguments for the arguments push
      *
      */
-    private void pushArgument(ExpressionNodeY arg) {
+    private void pushArgument(ExpressionNodeY arg, ValueType expectedType) {
         if (arg instanceof IdentifierExpressionNodeY id) {
             ArrayInfo array = frame.arrayOf(id.getIdentifier());
             if (array != null) {
@@ -666,8 +864,41 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
                 return;
             }
         }
+        // Passing an embedded struct array-field as argument: need to pass its address
+        if (arg instanceof PropertyAccessExpressionNodeY prop) {
+            FieldReference field = resolveField(prop);
+            if (field != null) {
+                StructInfo info = field.getInfo();
+                String structType = info.getStructTypeName();
+                String fieldName = prop.getPropertyName();
+                if (structType != null) {
+                    Symbol memberSym = layout.members(structType) == null ? null
+                            : layout.members(structType).stream()
+                                    .filter(m -> m.getName().equals(fieldName)).findFirst().orElse(null);
+                    if (memberSym != null && memberSym.isArray()) {
+                        // Embedded array field: pass address = base_ptr + field_byte_offset
+                        Register addr = Register.ax(ValueType.INT);
+                        if (info.isReference()) {
+                            ir.emit(new Load(MemorySpace.STACK, new Frame(info.getBaseOffset()), addr));
+                            int byteOffset = layout.fieldOffsetBytes(structType, fieldName);
+                            if (byteOffset < 0) byteOffset = field.getOffsetBytes();
+                            if (byteOffset > 0) {
+                                Register off = Register.bx(ValueType.INT);
+                                ir.emit(new Move(new Immediate(String.valueOf(byteOffset), ValueType.INT), off));
+                                ir.emit(new BinaryOperation(BinaryOperations.ADD, addr, off, addr));
+                            }
+                        } else {
+                            ir.emit(new LoadAddress(new Frame(info.getBaseOffset() + layout.fieldOffsetCells(structType, fieldName)), addr));
+                        }
+                        pushRegisterister(addr);
+                        return;
+                    }
+                }
+            }
+        }
         Value value = eval(arg);
-        Register reg = Register.ax(value.type());
+        ValueType targetType = (expectedType != null) ? expectedType : value.type();
+        Register reg = Register.ax(targetType);
         values.loadCoerced(value, reg);
         pushRegisterister(reg);
     }
@@ -697,6 +928,10 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             assignArrayElement(array, value);
             return;
         }
+        if (target instanceof MemberArrayAccessExpressionNodeY memberArr) {
+            assignMemberArrayElement(memberArr, value);
+            return;
+        }
         if (target instanceof PropertyAccessExpressionNodeY prop) {
             FieldReference field = resolveField(prop);
             if (field.getInfo().isReference()) {
@@ -705,6 +940,72 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
             }
         }
         values.store(value, values.requireCell(eval(target)));
+    }
+
+    private void assignMemberArrayElement(MemberArrayAccessExpressionNodeY node, Value value) {
+        if (node.getTarget() instanceof PropertyAccessExpressionNodeY prop) {
+            FieldReference field = resolveField(prop);
+            ValueType type = valueTypeOf(node);
+            if (type == ValueType.INT && field.getInfo().getStructTypeName() != null) {
+                Symbol structSym = table.getAllSymbols().stream()
+                        .filter(s -> s.getKind() == SymbolKind.STRUCT && s.getName().equals(field.getInfo().getStructTypeName()))
+                        .findFirst().orElse(null);
+                Symbol memberSym = (structSym != null && structSym.getMembers() != null)
+                        ? structSym.getMembers().stream().filter(m -> m.getName().equals(prop.getPropertyName())).findFirst().orElse(null)
+                        : null;
+                if (memberSym != null && memberSym.getType() != null) {
+                    ValueType symType = paramValueType(memberSym.getType());
+                    if (symType != null) type = symType;
+                }
+            }
+            Value index = eval(node.getIndex());
+            Register idx = Register.ax(ValueType.INT);
+            Register source = Register.cx(type);
+            values.loadCoerced(index, idx);
+            values.loadCoerced(value, source);
+
+            if (field.getInfo().isReference()) {
+                Register pointer = Register.bx(ValueType.INT);
+                ir.emit(new Load(MemorySpace.STACK, new Frame(field.getInfo().getBaseOffset()), pointer));
+                if (field.getOffset() > 0) {
+                    Register offsetReg = Register.ax(ValueType.INT);
+                    ir.emit(new Move(new com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate(String.valueOf(field.getOffsetBytes()), ValueType.INT), offsetReg));
+                    ir.emit(new BinaryOperation(BinaryOperations.ADD, pointer, offsetReg, pointer));
+                    values.loadCoerced(index, idx);
+                }
+                ir.emit(new IndexAddress(pointer, idx, pointer));
+                ir.emit(new Store(MemorySpace.STACK, new Indirect(pointer, 0), source));
+            } else {
+                int base = field.getInfo().getBaseOffset() + field.getOffset();
+                ir.emit(new StoreIndexed(new Frame(base), idx, source));
+            }
+            return;
+        }
+
+        if (node.getTarget() instanceof IdentifierExpressionNodeY id) {
+            ArrayInfo info = frame.arrayOf(id.getIdentifier());
+            if (info != null) {
+                assignArrayElement(new ArrayCallExpressionNodeY(node.getLine(), node.getColumn(), id.getIdentifier(), node.getIndex()), value);
+                return;
+            }
+        }
+
+        Value targetVal = eval(node.getTarget());
+        Cell preservedTarget = (targetVal instanceof Cell c) ? c : frame.temp(targetVal.type());
+        if (!(targetVal instanceof Cell)) values.store(targetVal, preservedTarget);
+
+        Value indexVal = eval(node.getIndex());
+        Register targetReg = Register.bx(ValueType.INT);
+        Register indexReg = Register.ax(ValueType.INT);
+        values.load(preservedTarget, targetReg);
+        values.load(indexVal, indexReg);
+
+        Register addr = Register.ax(ValueType.INT);
+        ir.emit(new IndexAddress(targetReg, indexReg, addr));
+
+        Register source = Register.cx(value.type());
+        values.loadCoerced(value, source);
+        ir.emit(new Store(MemorySpace.STACK, new Indirect(addr, 0), source));
     }
 
     private void assignArrayElement(ArrayCallExpressionNodeY target, Value value) {
@@ -737,16 +1038,28 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
 
     private FieldReference resolveField(PropertyAccessExpressionNodeY node) {
-        if (!(node.getTarget() instanceof IdentifierExpressionNodeY id)) {
-            throw new IllegalStateException("Solo se soporta acceso a propiedades de una variable (línea " + node.getLine() + ")");
+        if (node.getTarget() instanceof IdentifierExpressionNodeY id) {
+            StructInfo info = frame.structOf(id.getIdentifier());
+            if (info == null) throw new IllegalStateException("'" + id.getIdentifier() + "' no es un struct conocido");
+            int offsetCells = layout.fieldOffsetCells(info.getStructTypeName(), node.getPropertyName());
+            if (offsetCells < 0)
+                throw new IllegalStateException("El struct " + info.getStructTypeName() + " no tiene el campo '" + node.getPropertyName() + "'");
+            return new FieldReference(info, offsetCells);
+        } else if (node.getTarget() instanceof PropertyAccessExpressionNodeY parentProp) {
+            FieldReference parentRef = resolveField(parentProp);
+            String parentStructType = parentRef.getInfo().getStructTypeName();
+            List<Symbol> parentMembers = layout.members(parentStructType);
+            Symbol memberSym = (parentMembers != null)
+                    ? parentMembers.stream().filter(m -> m.getName().equals(parentProp.getPropertyName())).findFirst().orElse(null)
+                    : null;
+            String memberType = memberSym != null ? memberSym.getType() : null;
+            int innerOffsetCells = memberType != null ? layout.fieldOffsetCells(memberType, node.getPropertyName()) : -1;
+            if (innerOffsetCells < 0)
+                throw new IllegalStateException("El struct " + memberType + " no tiene el campo '" + node.getPropertyName() + "'");
+            StructInfo nestedInfo = new StructInfo(memberType, parentRef.getInfo().getBaseOffset(), parentRef.getInfo().isReference());
+            return new FieldReference(nestedInfo, parentRef.getOffset() + innerOffsetCells);
         }
-        StructInfo info = frame.structOf(id.getIdentifier());
-        if (info == null) throw new IllegalStateException("'" + id.getIdentifier() + "' no es un struct conocido");
-        List<String> layout = symbols.structFields(info.getStructTypeName());
-        int offset = layout == null ? -1 : layout.indexOf(node.getPropertyName());
-        if (offset < 0)
-            throw new IllegalStateException("El struct " + info.getStructTypeName() + " no tiene el campo '" + node.getPropertyName() + "'");
-        return new FieldReference(info, offset);
+        throw new IllegalStateException("Solo se soporta acceso a propiedades de una variable (línea " + node.getLine() + ")");
     }
 
     private Value eval(ExpressionNodeY node) {
@@ -815,18 +1128,30 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         return (s.length() == 1 && !Character.isDigit(s.charAt(0))) ? Integer.toString(s.charAt(0)) : s;
     }
 
+    private static ValueType paramValueType(String typeName) {
+        if (typeName == null) return null;
+        return switch (typeName.toLowerCase()) {
+            case "float", "flotante", "double", "decimal", "decimalis" -> ValueType.FLOAT;
+            case "string", "cadena" -> ValueType.STRING;
+            case "boolean", "bool", "booleano" -> ValueType.BOOLEAN;
+            case "char", "caracter" -> ValueType.CHAR;
+            case "int", "entero", "numerus" -> ValueType.INT;
+            default -> ValueType.INT;
+        };
+    }
+
     /**
      * Helper resolver for the return type
      */
     private static ValueType returnTypeOf(Symbol fn) {
         if (fn == null || fn.getReturnType() == null)
             throw new IllegalStateException("Función sin tipo de retorno en la tabla: " + fn);
-        return switch (fn.getReturnType()) {
-            case "int" -> ValueType.INT;
-            case "float" -> ValueType.FLOAT;
-            case "char" -> ValueType.CHAR;
-            case "boolean" -> ValueType.BOOLEAN;
-            case "string" -> ValueType.STRING;
+        return switch (fn.getReturnType().toLowerCase()) {
+            case "int", "entero", "numerus" -> ValueType.INT;
+            case "float", "flotante", "double", "decimal", "decimalis" -> ValueType.FLOAT;
+            case "char", "caracter" -> ValueType.CHAR;
+            case "boolean", "bool", "booleano" -> ValueType.BOOLEAN;
+            case "string", "cadena" -> ValueType.STRING;
             case "void" -> throw new IllegalStateException(
                     "return con valor en función void: " + fn.getName());
             default -> ValueType.INT;

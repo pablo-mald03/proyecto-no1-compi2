@@ -105,7 +105,7 @@ public class CSyntax {
             case STRING -> "%s";
             case FLOAT -> "%f";
             case CHAR -> "%c";
-            case INT, BOOLEAN -> "%d";
+            case INT, BOOLEAN -> "%ld";
         };
     }
 
@@ -114,9 +114,6 @@ public class CSyntax {
      *
      */
     public static String escape(String s) {
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\t", "\\t");
+        return com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil.escape(s);
     }
 }

@@ -57,6 +57,12 @@ public interface WorkspaceNotifier {
     void notifyDownloadCompiledCode();
 
     /**
+     * Notify the open compiled code in RARS
+     *
+     */
+    void notifyOpenCompiledInRars();
+
+    /**
      * Notify that the compiled code needs to be executed/run
      */
     void notifyExecuteCompiledCodeC();
@@ -78,4 +84,21 @@ public interface WorkspaceNotifier {
      */
     String getMainClassName();
 
+    /**
+     * Notifier for the zoom in
+     *
+     */
+    void notifyZoomIn();
+
+    /**
+     * Notifier for the zoom out
+     *
+     */
+    void notifyZoomOut();
+
+    /**
+     * Notifier to reset the zoom to the default config
+     *
+     */
+    void notifyZoomReset();
 }

@@ -31,6 +31,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.state
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.statements.CReturnEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stores.CStoreEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.stores.CStoreIndexedEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.convertions.CConvertEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.strings.CNewStringEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.EmitterRegistry;
@@ -80,7 +81,10 @@ public class CBackend extends AbstractBackend {
                 .register(new CHeapAllocEmitter())
                 .register(new CStringConcatEmitter())
                 .register(new CNewStringEmitter())
-                .register(new CConvertToStringEmitter());
+                .register(new CConvertToStringEmitter())
+                .register(new CConvertEmitter())
+                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.functions.CCallIndirectEmitter(callSites))
+                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.c.ports.labels.CLoadLabelAddressEmitter());
     }
 
     @Override
@@ -107,7 +111,7 @@ public class CBackend extends AbstractBackend {
         out.raw("char* tp;").blank();
         for (String space : new String[]{"stack", "heap"}) {
             int size = space.equals("stack") ? stack : h;
-            out.raw("int " + space + "integer[" + size + "];");
+            out.raw("long " + space + "integer[" + size + "];");
             out.raw("char* " + space + "string[" + size + "];");
             out.raw("float " + space + "float[" + size + "];").blank();
         }
@@ -115,7 +119,7 @@ public class CBackend extends AbstractBackend {
             String names = Stream.of("AX", "BX", "CX")
                     .map(r -> (type == ValueType.STRING ? "*" : "") + r + "_" + type.name())
                     .collect(Collectors.joining(", "));
-            String base = type == ValueType.STRING ? "char " : CSyntax.cType(type) + " ";
+            String base = type == ValueType.STRING ? "char " : (type == ValueType.INT || type == ValueType.BOOLEAN ? "long " : CSyntax.cType(type) + " ");
             out.raw(base + names + ";");
         }
         out.blank();
@@ -124,7 +128,24 @@ public class CBackend extends AbstractBackend {
         }
         if (!program.getStrings().isEmpty()) out.blank();
 
+        int vtableOffset = 0;
+        for (com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition vt : program.getVtables()) {
+            out.raw("int " + vt.getName() + " = " + vtableOffset + ";");
+            vtableOffset += vt.getEntries().size();
+        }
+        if (!program.getVtables().isEmpty()) out.blank();
+
         out.raw("int main() {");
+        int vtOffset = 0;
+        for (com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition vt : program.getVtables()) {
+            for (String entry : vt.getEntries()) {
+                out.line("heapinteger[" + vtOffset + "] = (long)&&" + entry + ";");
+                vtOffset++;
+            }
+        }
+        if (vtOffset > 0) {
+            out.line("hptr = " + vtOffset + ";");
+        }
         out.line("rastack[rasp] = 0;");
         out.line("rasp = rasp + 1;");
         out.line("goto " + program.entryPoint().orElse("halt") + ";");

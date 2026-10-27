@@ -80,8 +80,39 @@ public class CodeTextPane extends JTextPane {
         });
     }
 
+    // ==========================================
+    // FONT (ZOOM SUPPORT)
+    // ==========================================
+
     /**
-     * Setup custom tab key handling (4 spaces instead of tab character)
+     * Method for JTextPane renders text with the font of its document styles
+     */
+    @Override
+    public void setFont(Font font) {
+        super.setFont(font);
+        syncDocumentFont(font);
+    }
+
+    /**
+     * Method to sync the document font with the screen zoom
+     *
+     */
+    private void syncDocumentFont(Font font) {
+        if (font == null) return;
+        Document doc = getDocument();
+        if (!(doc instanceof StyledDocument styled)) return;
+
+        Style defaultStyle = styled.getStyle(StyleContext.DEFAULT_STYLE);
+        if (defaultStyle == null) return;
+
+        StyleConstants.setFontFamily(defaultStyle, font.getFamily());
+        StyleConstants.setFontSize(defaultStyle, font.getSize());
+        StyleConstants.setBold(defaultStyle, font.isBold());
+        StyleConstants.setItalic(defaultStyle, font.isItalic());
+    }
+
+    /**
+     * Method to setup custom tab key handling
      */
     private void setupCustomTabHandling() {
 
@@ -105,7 +136,7 @@ public class CodeTextPane extends JTextPane {
     }
 
     /**
-     * Insert 4 spaces at the current caret position
+     * Method to insert 4 spaces at the current caret position
      */
     private void insertTabSpaces() {
         int caretPosition = getCaretPosition();
@@ -119,7 +150,7 @@ public class CodeTextPane extends JTextPane {
     }
 
     /**
-     * Unindent selected lines (remove 4 spaces from start of each selected line)
+     * Method to unindent selected lines
      */
     private void unindentSelection() {
         try {
@@ -152,7 +183,7 @@ public class CodeTextPane extends JTextPane {
     }
 
     /**
-     * Remove indent from a single line
+     * Method to remove indent from a single line
      */
     private void removeIndentFromLine(int lineStart) throws BadLocationException {
         String line = getText(lineStart, getLineLength(lineStart));
@@ -162,7 +193,7 @@ public class CodeTextPane extends JTextPane {
     }
 
     /**
-     * Get the start offset of a line
+     * Method to get the start offset of a line
      */
     private int getLineStartOffset(int offset) throws BadLocationException {
         return getDocument().getDefaultRootElement().getElement(
@@ -171,7 +202,7 @@ public class CodeTextPane extends JTextPane {
     }
 
     /**
-     * Get the length of a line
+     * Method to get the length of a line
      */
     private int getLineLength(int lineStart) throws BadLocationException {
         int lineEnd = getDocument().getDefaultRootElement().getElement(
@@ -185,13 +216,12 @@ public class CodeTextPane extends JTextPane {
     // ==========================================
 
     /**
-     * Convert tabs to spaces in a text string
+     * Method to convert tabs to spaces in a text string
      */
     private String convertTabsToSpaces(String text) {
         if (text == null || text.isEmpty()) {
             return text;
         }
-        // Replace each tab character with 4 spaces
         return text.replace("\t", " ".repeat(TAB_SIZE));
     }
 

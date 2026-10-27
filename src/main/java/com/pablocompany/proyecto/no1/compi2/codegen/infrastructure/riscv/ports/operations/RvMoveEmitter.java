@@ -51,6 +51,9 @@ public class RvMoveEmitter implements InstructionEmitter<Move> {
      *
      */
     private static long integerValue(String literal) {
+        if (literal == null || literal.equals("null")) {
+            throw new IllegalStateException("Literal de entero es null — probablemente un nodo sin valor inicializado correctamente");
+        }
         try {
             return Long.parseLong(literal);
         } catch (NumberFormatException e) {

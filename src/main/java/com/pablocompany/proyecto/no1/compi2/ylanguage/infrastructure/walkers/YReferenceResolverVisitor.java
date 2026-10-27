@@ -513,7 +513,7 @@ public class YReferenceResolverVisitor implements YAstVisitor<Void> {
             node.getCondition().accept(this);
         }
         if (node.getThenBody() != null) {
-            for (StatementNodeY statement : node.getThenBody()) {
+            for (YAstNode statement : node.getThenBody()) {
                 if (statement != null) {
                     statement.accept(this);
                 }

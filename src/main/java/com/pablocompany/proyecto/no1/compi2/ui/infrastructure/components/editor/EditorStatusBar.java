@@ -1,14 +1,10 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.FlowLayout;
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
+import java.awt.*;
 
 /**
- *
+ * Principal status bar for the editor class
  * @author pablo03
  */
 public class EditorStatusBar extends JPanel {
@@ -20,6 +16,8 @@ public class EditorStatusBar extends JPanel {
     private final JLabel encoding;
 
     private final JLabel language;
+
+    private final JLabel zoom;
 
     public EditorStatusBar() {
 
@@ -42,16 +40,21 @@ public class EditorStatusBar extends JPanel {
 
         language = new JLabel("ANTLR4");
 
+        zoom = new JLabel("100%");
+        zoom.setToolTipText("Zoom: Ctrl + rueda del mouse, Ctrl +/-, Ctrl 0 para restablecer");
+
         Color color = Color.WHITE;
 
         line.setForeground(color);
         column.setForeground(color);
         encoding.setForeground(color);
         language.setForeground(color);
+        zoom.setForeground(color);
 
         left.add(line);
         left.add(column);
 
+        right.add(zoom);
         right.add(language);
         right.add(encoding);
 
@@ -68,6 +71,13 @@ public class EditorStatusBar extends JPanel {
         line.setText("Ln: " + ln);
 
         column.setText("Col: " + col);
+
+    }
+
+
+    public void updateZoom(int percent) {
+
+        zoom.setText(percent + "%");
 
     }
 

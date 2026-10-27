@@ -19,6 +19,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.h
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.io.RvPrintEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.io.RvReadEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvBinaryOperationEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvConvertEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvMoveEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations.RvUnaryOperationEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.stack.*;
@@ -70,7 +71,10 @@ public class RiscVBackend extends AbstractBackend {
                 .register(new RvHeapAllocEmitter())
                 .register(new RvStringConcatEmitter())
                 .register(new RvNewStringEmitter())
-                .register(new RvConvertToStringEmitter());
+                .register(new RvConvertToStringEmitter())
+                .register(new RvConvertEmitter())
+                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.functions.RvCallIndirectEmitter())
+                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.brands.RvLoadLabelAddressEmitter());
     }
 
     /**
@@ -92,6 +96,13 @@ public class RiscVBackend extends AbstractBackend {
         out.raw(".data");
         for (StringConstant constant : program.getStrings()) {
             out.raw(constant.getId() + ": .asciz \"" + escape(constant.getValue()) + "\"");
+        }
+        for (com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition vt : program.getVtables()) {
+            out.raw(".align 2");
+            out.raw(vt.getName() + ":");
+            for (String entry : vt.getEntries()) {
+                out.line(".word " + entry);
+            }
         }
         out.raw("__rt_fbuf: .space 64");
         out.raw(".align 2");
@@ -143,6 +154,6 @@ public class RiscVBackend extends AbstractBackend {
      * Method to escape the action
      * */
     private static String escape(String string) {
-        return string.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\t", "\\t");
+        return com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil.escape(string);
     }
 }

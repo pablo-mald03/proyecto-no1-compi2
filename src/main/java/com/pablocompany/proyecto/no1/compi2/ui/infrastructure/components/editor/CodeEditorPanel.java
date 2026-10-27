@@ -7,6 +7,9 @@ import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseWheelListener;
 
 
 /**
@@ -24,6 +27,9 @@ public class CodeEditorPanel extends JPanel {
     private String currentExtension = "";
 
     private boolean editable;
+
+    private Font baseFont;
+    private int zoomPercent = 100;
 
     public CodeEditorPanel(WorkspaceNotifier notifierReference) {
         setLayout(new BorderLayout());
@@ -48,11 +54,112 @@ public class CodeEditorPanel extends JPanel {
 
         editor.setCaretColor(Theme.FOREGROUND_DARK.getColorSet());
         editor.addCaretListener(e -> updateCaretPosition());
+
+        this.baseFont = editor.getFont();
+        installZoomShortcuts();
+        installZoomWheel();
     }
 
-    // ==========================================
-    // EXTENSION MANAGEMENT
-    // ==========================================
+
+    /**
+     * Method for applies a zoom level
+     */
+    public void setZoomPercent(int percent) {
+        if (percent == zoomPercent || baseFont == null) return;
+        this.zoomPercent = percent;
+
+        float size = Math.max(6f, Math.round(baseFont.getSize2D() * percent / 100f));
+        editor.setFont(baseFont.deriveFont(size));
+
+        lineNumbers.syncWithEditorFont();
+        statusBar.updateZoom(percent);
+
+        scroll.revalidate();
+        scroll.repaint();
+    }
+
+    /**
+     * Change the 100% font (e.g. a font picker) while keeping the current zoom level
+     */
+    public void setBaseFont(Font font) {
+        if (font == null) return;
+        this.baseFont = font;
+        int current = zoomPercent;
+        this.zoomPercent = -1;
+        setZoomPercent(current);
+    }
+
+    private void installZoomShortcuts() {
+        int ctrl = KeyEvent.CTRL_DOWN_MASK;
+        bindZoom("zoom-in", this::zoomIn,
+                KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, ctrl),
+                KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, ctrl | KeyEvent.SHIFT_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, ctrl),
+                KeyStroke.getKeyStroke(KeyEvent.VK_ADD, ctrl));
+        bindZoom("zoom-out", this::zoomOut,
+                KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, ctrl),
+                KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, ctrl));
+        bindZoom("zoom-reset", this::zoomReset,
+                KeyStroke.getKeyStroke(KeyEvent.VK_0, ctrl),
+                KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD0, ctrl));
+    }
+
+    private void bindZoom(String name, Runnable action, KeyStroke... keys) {
+        for (KeyStroke key : keys) {
+            editor.getInputMap(JComponent.WHEN_FOCUSED).put(key, name);
+        }
+        editor.getActionMap().put(name, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action.run();
+            }
+        });
+    }
+
+    /**
+     * Method for the Ctrl + mouse wheel zooms. Without Ctrl the original scroll
+     */
+    private void installZoomWheel() {
+        MouseWheelListener[] original = scroll.getMouseWheelListeners();
+        for (MouseWheelListener l : original) {
+            scroll.removeMouseWheelListener(l);
+        }
+        scroll.addMouseWheelListener(e -> {
+            if (e.isControlDown()) {
+                if (e.getWheelRotation() < 0) {
+                    zoomIn();
+                } else if (e.getWheelRotation() > 0) {
+                    zoomOut();
+                }
+                e.consume();
+            } else {
+                for (MouseWheelListener l : original) {
+                    l.mouseWheelMoved(e);
+                }
+            }
+        });
+    }
+
+    /**
+     * Method for zoom in
+     *
+     */
+    private void zoomIn() {
+        if (notifierReference != null) notifierReference.notifyZoomIn();
+    }
+
+    /**
+     * Method for zoom out
+     *
+     */
+    private void zoomOut() {
+        if (notifierReference != null) notifierReference.notifyZoomOut();
+    }
+
+    private void zoomReset() {
+        if (notifierReference != null) notifierReference.notifyZoomReset();
+    }
+
 
     /**
      * Set the file extension and update the editor
@@ -122,66 +229,5 @@ public class CodeEditorPanel extends JPanel {
     public String getCode() {
         return editor.getText();
     }
-
-
-    //This method is the principal to compile the code
-   /* public boolean compile(WorkspaceNotifier notifier) {
-       /* if (getCode().isBlank()) {
-            notifier.logError("El codigo fuente esta vacio");
-            return false;
-        }
-
-        this.editor.clearCompiledCode();
-        this.editor.clearStackView();
-        this.editor.clearAll();
-
-        try {
-
-            this.editor.getEditorContext().clearParsingErrors();
-            this.editor.getEditorContext().setSourceCode(getCode());
-
-            //Parsing delegated
-            CodexSyntaxAnalizer analyzer = new CodexSyntaxAnalizer();
-            boolean isSyntaxValid = analyzer.executeParsingPhase(this.editor.getEditorContext(), notifier);
-
-            this.notifierReference.notifyAstRepresentation(getAst());
-            this.notifierReference.notifyStackView(getStackList());
-
-            if (!isSyntaxValid) {
-                notifier.notifyErrorsUpdated(this.editor.getEditorContext().getCompilerErrors());
-                notifier.logError("Se encontraron errores Sintacticos");
-                return false;
-            }
-
-            // --- SEMANTIC PART ---
-            //Semantic delegated
-            CodexSemanticAnalyzer semanticAnalyzer = new CodexSemanticAnalyzer();
-            boolean isSemanticValid = semanticAnalyzer.executeSemanticPhase(this.editor.getEditorContext(), notifier);
-
-            notifier.notifySymbolUpdated(this.editor.getEditorContext().getGlobalEnvironment().getAllSymbolsForUI());
-            notifier.notifyTypesUpdated(this.editor.getEditorContext().getGlobalEnvironment().getAllStructsForUI());
-
-            if (!isSemanticValid) {
-                notifier.notifyErrorsUpdated(this.editor.getEditorContext().getCompilerErrors());
-                notifier.logError("Se encontraron errores Semanticos");
-                return false;
-            }
-
-            this.notifierReference.notifyCompiledCode(getCompiledCode());
-
-            notifier.logSuccess("Compilación exitosa.");
-            return true;
-
-        } catch (Exception e) {
-            notifier.logError("Fallo crítico del compilador: " + e.getMessage());
-            return false;
-        }
-
-    }*/
-
-    //This method indicate if the code is compiled
-    /*public String getCompiledCode() {
-        return this.editor.getEditorContext().getCompiledCode();
-    }*/
 
 }

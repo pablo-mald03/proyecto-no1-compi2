@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.ylanguage.infrastructure.builder;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.parsing.AstBuilder;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AbreviationOperator;
@@ -344,9 +345,9 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
 
         ExpressionNodeY condition = (ExpressionNodeY) ctx.expression().accept(this);
 
-        List<StatementNodeY> thenBody = new ArrayList<>();
+        List<YAstNode> thenBody = new ArrayList<>();
         for (YParser.StatementContext sCtx : ctx.statement()) {
-            thenBody.add((StatementNodeY) sCtx.accept(this));
+            thenBody.add( sCtx.accept(this));
         }
 
         List<ElseIfNodeY> elseIfs = new ArrayList<>();
@@ -1044,7 +1045,8 @@ public class YAstBuilder extends YParserBaseVisitor<YAstNode> implements AstBuil
     public YAstNode visitValueChar(YParser.ValueCharContext ctx) {
         int line = ctx.getStart().getLine();
         int column = ctx.getStart().getCharPositionInLine();
-        return new LiteralExpressionNodeY(line, column, YDataType.CHAR, ctx.CHAR().getText().charAt(0));
+        return new LiteralExpressionNodeY(line, column, YDataType.CHAR,
+                StringEscapeUtil.parseCharLiteral(ctx.CHAR().getText()));
     }
 
     @Override

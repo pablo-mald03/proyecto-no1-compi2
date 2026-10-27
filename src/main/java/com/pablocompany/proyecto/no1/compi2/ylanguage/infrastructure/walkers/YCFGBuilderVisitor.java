@@ -463,7 +463,7 @@ public class YCFGBuilderVisitor implements YAstVisitor<Void> {
         if (node.getThenBody() != null) {
             currentPendingExits = new ArrayList<>();
             currentPendingExits.add(cond);
-            for (StatementNodeY s : node.getThenBody()) {
+            for (YAstNode s : node.getThenBody()) {
                 if (s != null) s.accept(this);
             }
             thenExits = new ArrayList<>(currentPendingExits);
