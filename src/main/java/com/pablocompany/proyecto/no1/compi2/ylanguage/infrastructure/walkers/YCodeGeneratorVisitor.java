@@ -48,6 +48,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
@@ -647,6 +648,25 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
 
     @Override
     public Void visit(BinaryExpressionNodeY node) {
+        if (node.getOperator() == BinaryOperator.AND || node.getOperator() == BinaryOperator.OR) {
+            boolean jumpWhen = (node.getOperator() == BinaryOperator.OR);
+            Cell result = frame.temp(ValueType.BOOLEAN);
+            Value left = eval(node.getLeft());
+            values.store(left, result);
+
+            String endLabel = labels.nextLabel();
+            Register condReg = Register.ax(ValueType.BOOLEAN);
+            values.load(result, condReg);
+            ir.emit(new BranchIf(condReg, jumpWhen, endLabel));
+
+            Value right = eval(node.getRight());
+            values.store(right, result);
+
+            ir.emit(new MarkLabel(endLabel));
+            last = result;
+            return null;
+        }
+
         Value left = eval(node.getLeft());
         Value right = eval(node.getRight());
         BinaryOperations op = IntermediateTypes.binary(node.getOperator());

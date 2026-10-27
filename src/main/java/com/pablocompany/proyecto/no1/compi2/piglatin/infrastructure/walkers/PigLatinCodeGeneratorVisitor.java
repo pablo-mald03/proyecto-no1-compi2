@@ -863,6 +863,25 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
 
     @Override
     public Void visit(BinaryExpressionNodePigLatin node) {
+        if (node.getOperator() == BinaryOperator.AND || node.getOperator() == BinaryOperator.OR) {
+            boolean jumpWhen = (node.getOperator() == BinaryOperator.OR);
+            Cell result = frame.temp(ValueType.BOOLEAN);
+            Value left = eval(node.getLeft());
+            values.store(left, result);
+
+            String endLabel = labels.nextLabel();
+            Register condReg = Register.ax(ValueType.BOOLEAN);
+            values.load(result, condReg);
+            ir.emit(new BranchIf(condReg, jumpWhen, endLabel));
+
+            Value right = eval(node.getRight());
+            values.store(right, result);
+
+            ir.emit(new MarkLabel(endLabel));
+            last = result;
+            return null;
+        }
+
         Value left = eval(node.getLeft());
         Value right = eval(node.getRight());
         BinaryOperations op = binaryOpToIntermediate(node.getOperator());

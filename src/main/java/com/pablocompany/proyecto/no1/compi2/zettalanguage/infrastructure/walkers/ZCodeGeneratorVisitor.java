@@ -28,6 +28,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Ad
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Move;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Return;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.statements.BranchIf;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Indirect;
@@ -44,10 +45,11 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ProgramNodeZ;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.domain.semantic.ZAstNode;
@@ -670,6 +672,25 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
 
     @Override
     public Void visit(BinaryExpressionNodeZ node) {
+        if (node.getOperator() == BinaryOperator.AND || node.getOperator() == BinaryOperator.OR) {
+            boolean jumpWhen = (node.getOperator() == BinaryOperator.OR);
+            Cell result = frame.temp(ValueType.BOOLEAN);
+            Value left = eval(node.getLeft());
+            values.store(left, result);
+
+            String endLabel = labels.nextLabel();
+            Register condReg = Register.ax(ValueType.BOOLEAN);
+            values.load(result, condReg);
+            ir.emit(new BranchIf(condReg, jumpWhen, endLabel));
+
+            Value right = eval(node.getRight());
+            values.store(right, result);
+
+            ir.emit(new MarkLabel(endLabel));
+            last = result;
+            return null;
+        }
+
         Value left = eval(node.getLeft());
         Value right = eval(node.getRight());
         BinaryOperations op = IntermediateTypes.binary(node.getOperator());

@@ -145,10 +145,7 @@ public class ZClassLayoutService {
     }
 
     /**
-     * Debug dump, e.g. for a symbol report:
-     * vtable_Perro (classId=2)
-     * [0] hablar()    -> Perro_hablar_0   (overrides)
-     * [1] comer(int)  -> Animal_comer_1
+     * Method for debug dump
      */
     public String describe(Symbol cls) {
         StringBuilder sb = new StringBuilder();
