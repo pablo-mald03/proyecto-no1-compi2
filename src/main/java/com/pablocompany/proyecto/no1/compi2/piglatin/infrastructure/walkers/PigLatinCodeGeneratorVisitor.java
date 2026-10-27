@@ -625,6 +625,10 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             accumulated = (accumulated == null) ? v : concat(accumulated, v);
         }
 
+        if (accumulated != null) {
+            accumulated = values.asString(accumulated);
+        }
+
         Register reg = Register.ax(ValueType.STRING);
         values.load(accumulated, reg);
         ir.emit(new Print(reg, true));
