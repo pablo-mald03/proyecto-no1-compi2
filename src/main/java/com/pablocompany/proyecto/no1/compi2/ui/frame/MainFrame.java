@@ -9,6 +9,7 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.common.ConfirmationCallback;
+import com.pablocompany.proyecto.no1.compi2.ui.application.common.DiskOperation;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors.ErrorsPanel;
@@ -149,6 +150,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             projectService.createProject(projectName, projectsDir);
             this.currentProjectDir = projectDir;
 
+            stopDiskSync();
+
             // Create management screen with callbacks
             managementScreen = createManagementScreen(projectName);
             contentPanel.remove(managementScreen);
@@ -161,6 +164,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             projectService.loadProjectFromDirectory(projectDir,
                     managementScreen.getWorkspacePanel().getFileTreePanel(),
                     projectName);
+
+            managementScreen.getWorkspacePanel().startDiskSync(projectDir, projectService);
 
             alertToast("Proyecto '" + projectName + "' creado exitosamente", false);
         } catch (IOException e) {
@@ -182,6 +187,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         this.currentProjectName = projectDir.getName();
         this.currentProjectDir = projectDir;
 
+        stopDiskSync();
+
         // Create management screen with callbacks
         managementScreen = createManagementScreen(currentProjectName);
         contentPanel.remove(managementScreen);
@@ -191,6 +198,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         projectService.loadProjectFromDirectory(projectDir,
                 managementScreen.getWorkspacePanel().getFileTreePanel(),
                 currentProjectName);
+
+        managementScreen.getWorkspacePanel().startDiskSync(projectDir, projectService);
 
         // Show management screen
         cardLayout.show(contentPanel, "MANAGEMENT");
@@ -203,6 +212,8 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     // ==========================================
 
     private void onNewProject() {
+        stopDiskSync();
+
         // Show welcome screen to create new project
         cardLayout.show(contentPanel, "WELCOME");
         if (welcomeScreen != null) {
@@ -231,6 +242,7 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
                             "Los cambios no guardados se perderán.",
                     confirmed -> {
                         if (confirmed) {
+                            stopDiskSync();
                             managementScreen = null;
                             currentProjectName = "Project";
                             cardLayout.show(contentPanel, "WELCOME");
@@ -239,7 +251,6 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
             );
         }
     }
-
     private void onSave() {
         if (managementScreen != null) {
             CodeEditorPanel editor = managementScreen.getWorkspacePanel().getCurrentEditor();
@@ -697,6 +708,30 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         return null;
     }
 
+    @Override
+    public boolean notifyCreateFile(String filePath) {
+        return runDiskOperation("crear el archivo",
+                () -> projectService.createFile(filePath, currentProjectDir));
+    }
+
+    @Override
+    public boolean notifyCreateFolder(String folderPath) {
+        return runDiskOperation("crear la carpeta",
+                () -> projectService.createFolder(folderPath, currentProjectDir));
+    }
+
+    @Override
+    public boolean notifyRenamePath(String oldPath, String newPath) {
+        return runDiskOperation("renombrar",
+                () -> projectService.renamePath(oldPath, newPath, currentProjectDir));
+    }
+
+    @Override
+    public boolean notifyDeletePath(String path) {
+        return runDiskOperation("eliminar",
+                () -> projectService.deletePath(path, currentProjectDir));
+    }
+
 
     // ==========================================
     // CONFIRMATION NOTIFIER IMPLEMENTATION
@@ -704,6 +739,26 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     @Override
     public void confirm(ModalType type, String title, String message, ConfirmationCallback callback) {
         confirmationManager.confirm(type, title, message, callback);
+    }
+
+    private boolean runDiskOperation(String action, DiskOperation operation) {
+        if (currentProjectDir == null) {
+            alertToast("No hay ningún proyecto abierto", true);
+            return false;
+        }
+        try {
+            operation.run();
+            return true;
+        } catch (IOException e) {
+            alertToast("Error al " + action + ": " + e.getMessage(), true);
+            return false;
+        }
+    }
+
+    private void stopDiskSync() {
+        if (managementScreen != null) {
+            managementScreen.getWorkspacePanel().stopDiskSync();
+        }
     }
     /**
      * This method is called from within the constructor to initialize the form.

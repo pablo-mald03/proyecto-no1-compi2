@@ -22,6 +22,7 @@ import com.pablocompany.proyecto.no1.compi2.piglatin.infrastructure.importResolv
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileNode;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileTreePanel;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.utils.WorkspacePaths;
 import com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.validator.ClassFileNameValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -549,6 +550,34 @@ public class WorkspaceCompilationService {
 
         } catch (Exception e) {
             notifier.logError("Error al generar el archivo compilado: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Method to re-key contexts and Main Class path after a file/folder rename.
+     */
+    public void handlePathRenamed(String oldPath, String newPath) {
+        for (String key : new ArrayList<>(fileContexts.keySet())) {
+            if (WorkspacePaths.isSameOrInside(key, oldPath)) {
+                fileContexts.put(WorkspacePaths.replacePrefix(key, oldPath, newPath), fileContexts.remove(key));
+            }
+        }
+
+        if (mainClassPath != null && WorkspacePaths.isSameOrInside(mainClassPath, oldPath)) {
+            mainClassPath = WorkspacePaths.replacePrefix(mainClassPath, oldPath, newPath);
+            notifier.notifyMainClassChanged(mainClassNode.getName());
+        }
+    }
+
+    /**
+     * Method to drop contexts after a file/folder removal.
+     */
+    public void handlePathRemoved(String path) {
+        fileContexts.keySet().removeIf(key -> WorkspacePaths.isSameOrInside(key, path));
+
+        if (mainClassPath != null && WorkspacePaths.isSameOrInside(mainClassPath, path)) {
+            clearMainClass();
+            notifier.logWarning("Se elimino la Main Class. Selecciona otra antes de compilar.");
         }
     }
 }

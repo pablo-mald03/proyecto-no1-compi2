@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.worksp
 
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.utils.WorkspacePaths;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -13,8 +14,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Panel that contains the file tree with all its functionality
@@ -361,5 +361,136 @@ public class FileTreePanel extends JPanel {
         treeModel.reload(rootNode);
     }
 
+
+    /**
+     * Method to rename a node keeping its FileNode (content, context) and re-key all descendants.
+     */
+    public void renamePathPrefix(String oldPath, String newPath, String newName) {
+        DefaultMutableTreeNode node = fileNodes.get(oldPath);
+        if (node == null || !(node.getUserObject() instanceof FileNode fileNode)) {
+            return;
+        }
+
+        Set<String> expanded = captureExpandedPaths();
+        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+        treeModel.removeNodeFromParent(node);
+
+        fileNode.setName(newName);
+        rekeySubtree(node, oldPath, newPath);
+
+        treeModel.insertNodeInto(node, parent, sortedIndex(parent, fileNode));
+        restoreExpandedPaths(expanded, oldPath, newPath);
+        fileTree.setSelectionPath(new TreePath(node.getPath()));
+    }
+
+    /**
+     * Method to remove a node and every descendant from the tree and from the path map.
+     */
+    public void removeSubtree(String path) {
+        DefaultMutableTreeNode node = fileNodes.get(path);
+        if (node == null || node == rootNode) {
+            return;
+        }
+        unregisterSubtree(node);
+        treeModel.removeNodeFromParent(node);
+    }
+
+    /**
+     * Method to add a node discovered on disk (sorted, without expanding folders). Parent must already exist.
+     */
+    public FileNode addNodeFromDisk(String path, boolean isDirectory) {
+        int slash = path.lastIndexOf('/');
+        String parentPath = slash == -1 ? "" : path.substring(0, slash);
+        DefaultMutableTreeNode parentNode = parentPath.isEmpty() ? rootNode : fileNodes.get(parentPath);
+        if (parentNode == null) {
+            return null;
+        }
+
+        FileNode fileNode = new FileNode(WorkspacePaths.nameOf(path), isDirectory);
+        fileNode.setFilePath(path);
+
+        DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(fileNode);
+        treeModel.insertNodeInto(treeNode, parentNode, sortedIndex(parentNode, fileNode));
+        fileNodes.put(path, treeNode);
+        return fileNode;
+    }
+
+    /**
+     * Method to rekey the subtree
+     *
+     */
+    private void rekeySubtree(DefaultMutableTreeNode node, String oldBase, String newBase) {
+        if (node.getUserObject() instanceof FileNode fileNode) {
+            String oldPath = fileNode.getFilePath();
+            String updated = WorkspacePaths.replacePrefix(oldPath, oldBase, newBase);
+            fileNodes.remove(oldPath);
+            fileNode.setFilePath(updated);
+            fileNodes.put(updated, node);
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            rekeySubtree((DefaultMutableTreeNode) node.getChildAt(i), oldBase, newBase);
+        }
+    }
+
+    /**
+     * Helper method for unregistered subtrees
+     *
+     */
+    private void unregisterSubtree(DefaultMutableTreeNode node) {
+        if (node.getUserObject() instanceof FileNode fileNode) {
+            fileNodes.remove(fileNode.getFilePath());
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            unregisterSubtree((DefaultMutableTreeNode) node.getChildAt(i));
+        }
+    }
+
+    /**
+     * Method for folders first, then alphabetical (same order used when loading from disk).
+     */
+    private int sortedIndex(DefaultMutableTreeNode parent, FileNode newNode) {
+        int index = 0;
+        for (; index < parent.getChildCount(); index++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) parent.getChildAt(index);
+            FileNode sibling = (FileNode) child.getUserObject();
+            boolean before = newNode.isDirectory() != sibling.isDirectory()
+                    ? newNode.isDirectory()
+                    : newNode.getName().compareToIgnoreCase(sibling.getName()) < 0;
+            if (before) break;
+        }
+        return index;
+    }
+
+    /**
+     * Method to capture the expanded paths
+     *
+     */
+    private Set<String> captureExpandedPaths() {
+        Set<String> paths = new HashSet<>();
+        Enumeration<TreePath> expanded = fileTree.getExpandedDescendants(new TreePath(rootNode.getPath()));
+        while (expanded != null && expanded.hasMoreElements()) {
+            Object last = expanded.nextElement().getLastPathComponent();
+            if (last instanceof DefaultMutableTreeNode n && n.getUserObject() instanceof FileNode f) {
+                paths.add(f.getFilePath());
+            }
+        }
+        return paths;
+    }
+
+    /**
+     * Method to restore the expanded paths
+     *
+     */
+    private void restoreExpandedPaths(Set<String> expanded, String oldPath, String newPath) {
+        for (String path : expanded) {
+            String current = WorkspacePaths.isSameOrInside(path, oldPath)
+                    ? WorkspacePaths.replacePrefix(path, oldPath, newPath)
+                    : path;
+            DefaultMutableTreeNode node = fileNodes.get(current);
+            if (node != null) {
+                fileTree.expandPath(new TreePath(node.getPath()));
+            }
+        }
+    }
 
 }
