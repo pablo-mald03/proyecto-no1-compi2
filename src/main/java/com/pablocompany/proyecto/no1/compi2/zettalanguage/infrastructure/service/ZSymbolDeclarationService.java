@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.zettalanguage.infrastructure.service;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
@@ -63,7 +64,7 @@ public class ZSymbolDeclarationService {
         symbol.setAccessModifier(node.getModifier());
         symbol.setOverriding(node.isOverride());
         symbol.setDeclaringClass(currentClassName());
-        symbol.setCodeLabel(com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler.codeLabel(symbol));
+        symbol.setCodeLabel(NameMangler.codeLabel(symbol));
 
         if (!table.declare(symbol)) {
             reporter.reportDuplicate(node.getName(), "metodo", node);
@@ -103,7 +104,7 @@ public class ZSymbolDeclarationService {
         symbol.getParameterTypes().addAll(parameterTypes);
         symbol.setAccessModifier(node.getModifier());
         symbol.setDeclaringClass(currentClassName());
-        symbol.setCodeLabel(com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler.codeLabel(symbol));
+        symbol.setCodeLabel(NameMangler.codeLabel(symbol));
 
         if (!table.declare(symbol)) {
             reporter.reportDuplicate(name, "constructor", node);

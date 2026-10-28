@@ -1,8 +1,10 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.operations;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.ValueType;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.operations.BinaryOperation;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.InstructionEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.models.RvRegisters;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.strings.RvStringEq;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 
 /**
@@ -38,12 +40,20 @@ public class RvBinaryOperationEmitter implements InstructionEmitter<BinaryOperat
             case DIV -> out.line("div " + d + ", " + l + ", " + r);
             case MOD -> out.line("rem " + d + ", " + l + ", " + r);
             case EQ -> {
-                out.line("sub " + d + ", " + l + ", " + r);
-                out.line("seqz " + d + ", " + d);
+                if (isStringComparison(instruction)) {
+                    RvStringEq.emitStringEquals(out, l, r, d, false);
+                } else {
+                    out.line("sub " + d + ", " + l + ", " + r);
+                    out.line("seqz " + d + ", " + d);
+                }
             }
             case NE -> {
-                out.line("sub " + d + ", " + l + ", " + r);
-                out.line("snez " + d + ", " + d);
+                if (isStringComparison(instruction)) {
+                    RvStringEq.emitStringEquals(out, l, r, d, true);
+                } else {
+                    out.line("sub " + d + ", " + l + ", " + r);
+                    out.line("snez " + d + ", " + d);
+                }
             }
             case LT -> out.line("slt " + d + ", " + l + ", " + r);
             case GT -> out.line("slt " + d + ", " + r + ", " + l);
@@ -93,5 +103,10 @@ public class RvBinaryOperationEmitter implements InstructionEmitter<BinaryOperat
             case MOD, AND, OR ->
                     throw new UnsupportedOperationException(instruction.getOperator() + " no está definido para float");
         }
+    }
+
+    private boolean isStringComparison(BinaryOperation instruction) {
+        return instruction.getLeft().getType() == ValueType.STRING
+                && instruction.getRight().getType() == ValueType.STRING;
     }
 }

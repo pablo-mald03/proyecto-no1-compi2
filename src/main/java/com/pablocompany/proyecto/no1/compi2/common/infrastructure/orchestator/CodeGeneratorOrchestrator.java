@@ -4,6 +4,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Inst
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateBuilder;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateFunction;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler;
 import com.pablocompany.proyecto.no1.compi2.common.domain.checker.Type;
 import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.CodeGenContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
@@ -35,7 +36,7 @@ public class CodeGeneratorOrchestrator {
         for (Symbol cls : layoutService.collectLinkedClasses()) {
             List<String> entries = new ArrayList<>();
             for (Symbol m : cls.getVtable()) {
-                entries.add(com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.naming.NameMangler.codeLabel(m));
+                entries.add(NameMangler.codeLabel(m));
             }
             intermediate.addVTable(cls.getVtableLabel(), entries);
         }
