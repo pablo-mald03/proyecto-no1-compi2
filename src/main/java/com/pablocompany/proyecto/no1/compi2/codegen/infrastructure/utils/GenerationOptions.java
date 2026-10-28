@@ -28,6 +28,6 @@ public class GenerationOptions {
      *
      */
     public static GenerationOptions defaults() {
-        return new GenerationOptions(65536, 65536, 8, true);
+        return new GenerationOptions(393216, 524288, 8, true);
     }
 }

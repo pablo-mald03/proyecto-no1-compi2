@@ -2,6 +2,7 @@ package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Target;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StringConstant;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateFunction;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.port.AbstractBackend;
@@ -10,8 +11,10 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.models.
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.models.RvRegisters;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.arrays.RvIndexAddressEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.arrays.RvStoreIndexedEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.brands.RvLoadLabelAddressEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.brands.RvMarkLabelEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.functions.RvCallEmitter;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.functions.RvCallIndirectEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.functions.RvReturnEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.heap.RvFramePopEmitter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.heap.RvFramePushEmitter;
@@ -31,6 +34,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.s
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.EmitterRegistry;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.GenerationOptions;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil;
 
 /**
  * Principal backend port code generation for Risc V class
@@ -73,8 +77,8 @@ public class RiscVBackend extends AbstractBackend {
                 .register(new RvNewStringEmitter())
                 .register(new RvConvertToStringEmitter())
                 .register(new RvConvertEmitter())
-                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.functions.RvCallIndirectEmitter())
-                .register(new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports.brands.RvLoadLabelAddressEmitter());
+                .register(new RvCallIndirectEmitter())
+                .register(new RvLoadLabelAddressEmitter());
     }
 
     /**
@@ -92,12 +96,13 @@ public class RiscVBackend extends AbstractBackend {
      */
     @Override
     protected void emitProgramStart(IntermediateProgram program, CodeWriter out) {
-        out.raw("# RISC-V RV32IMF para RARS  |  s0=fp  s1=sptr  s2=hptr  |  celda = 4 bytes");
+        out.raw("# RISC-V RV32IMF para RARS  |  s0=fp  s1=sptr  s2=hptr  s3=hlimit  |  celda = 4 bytes");
         out.raw(".data");
         for (StringConstant constant : program.getStrings()) {
             out.raw(constant.getId() + ": .asciz \"" + escape(constant.getValue()) + "\"");
         }
-        for (com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition vt : program.getVtables()) {
+        out.raw("__rt_msg_oom: .asciz \"Error: heap agotado\\n\"");
+        for (VTableDefinition vt : program.getVtables()) {
             out.raw(".align 2");
             out.raw(vt.getName() + ":");
             for (String entry : vt.getEntries()) {
@@ -106,23 +111,20 @@ public class RiscVBackend extends AbstractBackend {
         }
         out.raw("__rt_fbuf: .space 64");
         out.raw(".align 2");
+        out.raw("heap_mem: .space " + ((long) options.getHeapSlots() * RvMemory.CELL));
+        out.raw("heap_end:");
+        out.raw("stack_mem: .space " + ((long) options.getStackSlots() * RvMemory.CELL));
         out.blank();
         out.raw(".text");
         if (options.isEmitEntryPoint()) {
             out.raw(".globl __start");
             out.raw("__start:");
 
-            out.line("li a0, " + ((long) options.getStackSlots() * RvMemory.CELL));
-            out.line("li a7, 9");
-            out.line("ecall");
-            out.line("mv " + RvRegisters.STACK_TOP + ", a0");
+            out.line("la " + RvRegisters.STACK_TOP + ", stack_mem");
             RvMemory.addSlots(out, RvRegisters.STACK_TOP, RvRegisters.STACK_TOP, options.getReservedSlots(), RvRegisters.SCRATCH);
             out.line("mv " + RvRegisters.FP + ", " + RvRegisters.STACK_TOP);
-
-            out.line("li a0, " + ((long) options.getHeapSlots() * RvMemory.CELL));
-            out.line("li a7, 9");
-            out.line("ecall");
-            out.line("mv " + RvRegisters.HEAP_TOP + ", a0");
+            out.line("la " + RvRegisters.HEAP_TOP + ", heap_mem");
+            out.line("la " + RvRegisters.HEAP_LIMIT + ", heap_end");
 
             program.entryPoint().ifPresent(name -> out.line("jal ra, " + name));
             out.line("li a7, 10");
@@ -165,6 +167,6 @@ public class RiscVBackend extends AbstractBackend {
      *
      */
     private static String escape(String string) {
-        return com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.StringEscapeUtil.escape(string);
+        return StringEscapeUtil.escape(string);
     }
 }
