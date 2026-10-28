@@ -331,6 +331,7 @@ public class WorkspaceCompilationService {
         }
 
         generateQuadruplesFile(orchestrator.dumpInstructions());
+        this.notifier.loadQuadruplesTable(program);
 
         this.isCompiled = true;
         notifier.logSuccess("Generacion de codigo 3D completado");
