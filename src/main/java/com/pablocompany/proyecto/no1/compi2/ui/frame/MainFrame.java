@@ -425,6 +425,13 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
     }
 
     @Override
+    public void loadQuadruplesTable(com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram program) {
+        if (this.managementScreen != null) {
+            this.managementScreen.getBottomPanel().setQuadruples(program);
+        }
+    }
+
+    @Override
     public void alertToast(String message, boolean isError) {
         ToastNotification.show(this, message, isError);
     }
@@ -457,12 +464,19 @@ public class MainFrame extends JFrame implements WorkspaceNotifier, Confirmation
         }
     }
 
+    @Override
+    public void focusQuadruplesTable() {
+        if (managementScreen != null) {
+            managementScreen.getBottomPanel().showQuadruplesTable();
+        }
+    }
 
     @Override
     public void clearLogs() {
         if (managementScreen != null) {
             managementScreen.getBottomPanel().getConsole().clear();
             managementScreen.getBottomPanel().getErrors().clear();
+            managementScreen.getBottomPanel().getQuadruples().clear();
         }
     }
 

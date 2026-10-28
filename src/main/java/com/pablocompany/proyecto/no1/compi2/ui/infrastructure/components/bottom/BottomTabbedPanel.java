@@ -1,10 +1,12 @@
 package com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.errors.CompilerError;
 import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.console.ConsolePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.errors.ErrorsPanel;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.quadruples.QuadruplesPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.symbols.SymbolTablePanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.bottom.panels.types.TypesTablePanel;
 
@@ -23,6 +25,7 @@ public class BottomTabbedPanel extends JPanel {
     private final ErrorsPanel errorsTable;
     private final SymbolTablePanel symbolTablePanel;
     private final TypesTablePanel typesTablePanel;
+    private final QuadruplesPanel quadruplesPanel;
 
     public BottomTabbedPanel() {
         setLayout(new BorderLayout());
@@ -38,6 +41,7 @@ public class BottomTabbedPanel extends JPanel {
         errorsTable = new ErrorsPanel();
         symbolTablePanel = new SymbolTablePanel();
         typesTablePanel = new TypesTablePanel();
+        quadruplesPanel = new QuadruplesPanel();
 
         tabs.setForeground(Theme.FOREGROUND_DARK.getColorSet());
         tabs.setBackground(Theme.SIDEBAR_DARKT.getColorSet());
@@ -46,6 +50,7 @@ public class BottomTabbedPanel extends JPanel {
         tabs.addTab("Errores", errorsTable);
         tabs.addTab("Tabla de Simbolos", symbolTablePanel);
         tabs.addTab("Tabla de Tipos", typesTablePanel);
+        tabs.addTab("Tabla de Cuartetas", quadruplesPanel);
 
         add(tabs, BorderLayout.CENTER);
     }
@@ -72,6 +77,13 @@ public class BottomTabbedPanel extends JPanel {
     }
 
     /*
+     * Focus to the Quadruples Table panel
+     */
+    public void showQuadruplesTable() {
+        tabs.setSelectedComponent(quadruplesPanel);
+    }
+
+    /*
      * Focus to the Error panel
      */
     public void showErrors() {
@@ -95,6 +107,10 @@ public class BottomTabbedPanel extends JPanel {
         return errorsTable;
     }
 
+    public QuadruplesPanel getQuadruples() {
+        return quadruplesPanel;
+    }
+
     /**
      * SECTION OF METHODS TO SET THE ERRORS TO THE ERROR PANEL
      */
@@ -114,5 +130,12 @@ public class BottomTabbedPanel extends JPanel {
      */
     public void setTypes(List<Symbol> symbols) {
         typesTablePanel.loadSymbols(symbols);
+    }
+
+    /**
+     * SECTION OF METHODS TO SET THE TABLE TO THE QUADRUPLES TABLE
+     */
+    public void setQuadruples(IntermediateProgram program) {
+        quadruplesPanel.loadProgram(program);
     }
 }

@@ -33,6 +33,8 @@ public interface WorkspaceNotifier {
 
     void loadTypesTable(List<Symbol> symbols);
 
+    void loadQuadruplesTable(com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateProgram program);
+
     /*SECTION OF ALERTS*/
     
     void alertToast(String message, boolean isError);
@@ -46,6 +48,8 @@ public interface WorkspaceNotifier {
     void focusSymbolsTable();
 
     void focusTypesTable();
+
+    void focusQuadruplesTable();
 
     /*SECTION OF CLEAR METHODS OR RESET DATA*/
 

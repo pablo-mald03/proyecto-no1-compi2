@@ -168,6 +168,7 @@ public class TopPanel extends JPanel {
         viewMenu.add(createMenuItem("Errores", 0, e -> notifier.focusErrors()));
         viewMenu.add(createMenuItem("Tabla de Símbolos", 0, e -> notifier.focusSymbolsTable()));
         viewMenu.add(createMenuItem("Tabla de Tipos", 0, e -> notifier.focusTypesTable()));
+        viewMenu.add(createMenuItem("Tabla de Cuartetas", 0, e -> notifier.focusQuadruplesTable()));
         viewMenu.addSeparator();
         viewMenu.add(createMenuItem("Acercar", 0, e -> notifier.notifyZoomIn(), KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, KeyEvent.CTRL_DOWN_MASK)));
         viewMenu.add(createMenuItem("Alejar", 0, e -> notifier.notifyZoomOut(), KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, KeyEvent.CTRL_DOWN_MASK)));
