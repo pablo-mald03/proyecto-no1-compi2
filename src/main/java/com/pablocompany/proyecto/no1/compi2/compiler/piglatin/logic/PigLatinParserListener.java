@@ -664,6 +664,18 @@ public interface PigLatinParserListener extends ParseTreeListener {
 	 */
 	void exitStructAssignment(PigLatinParser.StructAssignmentContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code ObjectAssignment}
+	 * labeled alternative in {@link PigLatinParser#assignment}.
+	 * @param ctx the parse tree
+	 */
+	void enterObjectAssignment(PigLatinParser.ObjectAssignmentContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code ObjectAssignment}
+	 * labeled alternative in {@link PigLatinParser#assignment}.
+	 * @param ctx the parse tree
+	 */
+	void exitObjectAssignment(PigLatinParser.ObjectAssignmentContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code CompoundAddAssignment}
 	 * labeled alternative in {@link PigLatinParser#compound_assignment}.
 	 * @param ctx the parse tree

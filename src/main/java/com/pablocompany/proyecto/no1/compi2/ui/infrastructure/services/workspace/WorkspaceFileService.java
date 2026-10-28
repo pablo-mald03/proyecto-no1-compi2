@@ -22,6 +22,7 @@ public class WorkspaceFileService {
     private final Component parentComponent;
     private final FileTreePanel fileTreePanel;
     private final WorkspaceEditorService editorService;
+    private final WorkspaceCompilationService compilationService;
     private final WorkspaceNotifier notifier;
     private final ConfirmationNotifier confirmationNotifier;
 
@@ -29,12 +30,14 @@ public class WorkspaceFileService {
             Component parentComponent,
             FileTreePanel fileTreePanel,
             WorkspaceEditorService editorService,
+            WorkspaceCompilationService compilationService,
             WorkspaceNotifier notifier,
             ConfirmationNotifier confirmationNotifier
     ) {
         this.parentComponent = parentComponent;
         this.fileTreePanel = fileTreePanel;
         this.editorService = editorService;
+        this.compilationService = compilationService;
         this.notifier = notifier;
         this.confirmationNotifier = confirmationNotifier;
     }
@@ -57,7 +60,6 @@ public class WorkspaceFileService {
 
         baseName = baseName.trim();
 
-        // Check if user tried to add extension manually
         if (baseName.contains(".")) {
             notifier.alertToast("Porfavor no escribas la extension. Esta se coloca automatica.", true);
             return;
@@ -66,7 +68,6 @@ public class WorkspaceFileService {
         String fullName = baseName + extension;
         String finalPath = parentPath.isEmpty() ? fullName : parentPath + "/" + fullName;
 
-        // Check if file exists and generate unique name
         int counter = 1;
         String originalName = baseName;
         while (fileTreePanel.getFileNodes().containsKey(finalPath)) {
@@ -77,13 +78,16 @@ public class WorkspaceFileService {
             if (counter > 100) break;
         }
 
-        // Create the file in the tree
+        if (!notifier.notifyCreateFile(finalPath)) {
+            return;
+        }
+
         fileTreePanel.createNewFile(fullName, false, parentPath.isEmpty() ? null : parentPath);
 
-        // Open the new file in an editor tab
-        FileNode fileNode = new FileNode(fullName, false);
-        fileNode.setFilePath(finalPath);
-        editorService.openFileInTab(fileNode);
+        DefaultMutableTreeNode created = fileTreePanel.getFileNodes().get(finalPath);
+        if (created != null && created.getUserObject() instanceof FileNode fileNode) {
+            editorService.openFileInTab(fileNode);
+        }
     }
 
     /**
@@ -121,11 +125,15 @@ public class WorkspaceFileService {
             if (counter > 100) break;
         }
 
+        if (!notifier.notifyCreateFolder(finalPath)) {
+            return;
+        }
+
         fileTreePanel.createNewFile(folderName, true, parentPath.isEmpty() ? null : parentPath);
     }
 
     /**
-     * Rename the selected node in the file tree
+     * Rename the selected node on disk and in the file tree
      */
     public void renameSelectedNode() {
         DefaultMutableTreeNode node = fileTreePanel.getSelectedNode();
@@ -135,6 +143,11 @@ public class WorkspaceFileService {
 
         Object userObj = node.getUserObject();
         if (!(userObj instanceof FileNode fileNode)) {
+            return;
+        }
+
+        if (node == fileTreePanel.getRootNode()) {
+            notifier.alertToast("No se puede renombrar la carpeta raiz del proyecto desde el explorador.", true);
             return;
         }
 
@@ -154,7 +167,6 @@ public class WorkspaceFileService {
 
         newName = newName.trim();
 
-        // For files, check if extension is included
         if (!fileNode.isDirectory()) {
             String currentExtension = "";
             int dotIndex = currentName.lastIndexOf('.');
@@ -190,19 +202,13 @@ public class WorkspaceFileService {
             return;
         }
 
-        // Update the file node
-        FileNode newFileNode = new FileNode(newName, fileNode.isDirectory());
-        newFileNode.setFilePath(newPath);
-        node.setUserObject(newFileNode);
+        if (!notifier.notifyRenamePath(oldPath, newPath)) {
+            return;
+        }
 
-        // Update maps in tree
-        fileTreePanel.getFileNodes().remove(oldPath);
-        fileTreePanel.getFileNodes().put(newPath, node);
-
-        // Update tabs if file is open
-        editorService.handleFileRenamed(oldPath, newPath, newName);
-
-        fileTreePanel.reloadTree();
+        fileTreePanel.renamePathPrefix(oldPath, newPath, newName);
+        editorService.handlePathRenamed(oldPath, newPath);
+        compilationService.handlePathRenamed(oldPath, newPath);
     }
 
     /**
@@ -229,22 +235,21 @@ public class WorkspaceFileService {
         confirmationNotifier.confirm(
                 ModalType.WARNING,
                 "Confirmar eliminacion",
-                "Estas seguro que quieres eliminar el " + type + ": " + fileNode.getName() + " ?",
+                "Estas seguro que quieres eliminar el " + type + ": " + fileNode.getName() + " ?\n"
+                        + "Tambien se eliminara del disco (a la papelera si el sistema lo permite).",
                 confirmed -> {
-                    if (confirmed) {
-                        String filePath = fileNode.getFilePath();
-
-                        if (!fileNode.isDirectory() && editorService.isOpen(filePath)) {
-                            editorService.closeTab(filePath);
-                        }
-
-                        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-                        if (parent != null) {
-                            parent.remove(node);
-                            fileTreePanel.getFileNodes().remove(filePath);
-                            fileTreePanel.reloadTree();
-                        }
+                    if (!confirmed) {
+                        return;
                     }
+
+                    String filePath = fileNode.getFilePath();
+                    if (!notifier.notifyDeletePath(filePath)) {
+                        return;
+                    }
+
+                    editorService.closeTabsUnder(filePath);
+                    compilationService.handlePathRemoved(filePath);
+                    fileTreePanel.removeSubtree(filePath);
                 }
         );
     }

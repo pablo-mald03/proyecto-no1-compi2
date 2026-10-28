@@ -262,6 +262,23 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
         if (!assignability.isAssignable(valueType, targetType)) {
             reporter.reportTypeError(targetType + " = " + valueType, "No se puede asignar " + valueType + " a " + targetType, node);
         }
+
+        if (node instanceof TypedObjectAssignmentNodePigLatin typed && typed.getAnnotatedType() != null) {
+            String typeName = typed.getAnnotatedType().getCustomTypeName();
+            Symbol typeSym = lookup.findTypeSymbolGlobal(context.getFilePath(), typeName);
+
+            if (typeSym == null) {
+                reporter.reportTypeError(typeName, "El tipo '" + typeName + "' no existe", node);
+            } else {
+                Type annotated = Type.customType(typeName);
+                if (!assignability.isAssignable(valueType, annotated)) {
+                    reporter.reportTypeError(typeName, "No se puede asignar " + valueType + " al tipo declarado " + annotated, node);
+                }
+                if (!assignability.isAssignable(annotated, targetType)) {
+                    reporter.reportTypeError(typeName, "El tipo '" + typeName + "' no es compatible con la variable de tipo " + targetType, node);
+                }
+            }
+        }
         return Type.voidType();
     }
 

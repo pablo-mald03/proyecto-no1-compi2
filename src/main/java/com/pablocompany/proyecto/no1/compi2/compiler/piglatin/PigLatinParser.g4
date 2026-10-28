@@ -177,7 +177,8 @@ object_initializer
 /*-----ASSIGNMENT PRODUCTIONS-----*/
 
 assignment
-    : nest_variable EQUAL expression DOT_COMMA # StructAssignment
+    : nest_variable EQUAL expression DOT_COMMA                                   # StructAssignment
+    | nest_variable EQUAL object_initializer TWO_POINTS ID DOT_COMMA             # ObjectAssignment
     ;
 
 /*------ COMPOUND ASSIGNMENT PRODUCTIONS ------*/

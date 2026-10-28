@@ -951,6 +951,23 @@ public class PigAstBuilder extends PigLatinParserBaseVisitor<PigLatinAstNode> im
     // TYPED OBJECT DECLARATION:
     //========================
 
+
+    @Override
+    public PigLatinAstNode visitObjectAssignment(PigLatinParser.ObjectAssignmentContext ctx) {
+        int line = ctx.getStart().getLine();
+        int column = ctx.getStart().getCharPositionInLine();
+
+        ExpressionNodePigLatin target = (ExpressionNodePigLatin) ctx.nest_variable().accept(this);
+        ExpressionNodePigLatin value = (ExpressionNodePigLatin) ctx.object_initializer().accept(this);
+
+        Token typeToken = ctx.ID().getSymbol();
+        TypeNodePigLatin annotated = new TypeNodePigLatin(
+                typeToken.getLine(), typeToken.getCharPositionInLine(),
+                DataType.CUSTOM, typeToken.getText());
+
+        return new TypedObjectAssignmentNodePigLatin(line, column, target, value, annotated);
+    }
+
     @Override
     public PigLatinAstNode visitObjectDeclaration(PigLatinParser.ObjectDeclarationContext ctx) {
         int line = ctx.getStart().getLine();

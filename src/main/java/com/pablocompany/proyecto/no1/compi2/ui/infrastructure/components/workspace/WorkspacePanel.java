@@ -8,7 +8,9 @@ import com.pablocompany.proyecto.no1.compi2.common.infrastructure.theme.Theme;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.ConfirmationNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.application.mediator.WorkspaceNotifier;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.io.ProjectService;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.workspace.WorkspaceCompilationService;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.workspace.WorkspaceDiskSyncService;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.workspace.WorkspaceEditorService;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.services.workspace.WorkspaceFileService;
 import lombok.Getter;
@@ -16,6 +18,7 @@ import lombok.Getter;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +49,7 @@ public class WorkspacePanel extends JPanel {
     private final WorkspaceCompilationService compilationService;
     private final WorkspaceEditorService editorService;
     private final WorkspaceFileService fileService;
+    private final WorkspaceDiskSyncService diskSyncService;
 
     /**
      * Constructor with custom project name
@@ -69,8 +73,8 @@ public class WorkspacePanel extends JPanel {
         this.compilationService = new WorkspaceCompilationService(notifier, fileTreePanel);
         this.editorService = new WorkspaceEditorService(tabbedPane, fileTreePanel, notifier, compilationService);
         this.compilationService.setEditorService(editorService);
-        this.fileService = new WorkspaceFileService(this, fileTreePanel, editorService, notifier, confirmationNotifier);
-
+        this.fileService = new WorkspaceFileService(this, fileTreePanel, editorService, compilationService, notifier, confirmationNotifier);
+        this.diskSyncService = new WorkspaceDiskSyncService(fileTreePanel, editorService, compilationService, notifier);
         this.tabSwitcher = new TabSwitcher(tabbedPane);
 
         // Editors opened later (or lazily created) pick up the current zoom level
@@ -105,6 +109,14 @@ public class WorkspacePanel extends JPanel {
         fileService.deleteSelectedNode();
     }
 
+    public void startDiskSync(File projectDir, ProjectService projectService) {
+        diskSyncService.start(projectDir, projectService);
+    }
+
+    public void stopDiskSync() {
+        diskSyncService.stop();
+    }
+    
     // ==========================================
     // DELEGATION: TAB AND EDITOR OPERATIONS
     // ==========================================

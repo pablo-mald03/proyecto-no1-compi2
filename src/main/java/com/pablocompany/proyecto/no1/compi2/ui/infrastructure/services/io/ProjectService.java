@@ -4,11 +4,15 @@ import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspa
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileTreePanel;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Service for managing projects (create, open, save, import, export)
@@ -128,7 +132,7 @@ public class ProjectService {
 
         for (File file : files) {
             // Skip hidden files (optional)
-            if (file.getName().startsWith(".")) continue;
+            if (isIgnored(file)) continue;
 
             String fileName = file.getName();
             String filePath = parentPath.isEmpty() ? fileName : parentPath + "/" + fileName;
@@ -160,6 +164,131 @@ public class ProjectService {
                 fileTreePanel.getFileNodes().put(filePath, treeNode);
             }
         }
+    }
+
+
+    /**
+     * Method rule by the loader and the scanner to skip files.
+     */
+    private boolean isIgnored(File file) {
+        return file.getName().startsWith(".");
+    }
+
+    /**
+     * Method to create an empty file. Fails if it already exists.
+     */
+    public void createFile(String filePath, File projectDir) throws IOException {
+        Path target = resolveInside(projectDir, filePath);
+        Files.createDirectories(target.getParent());
+        Files.createFile(target);
+    }
+
+    /**
+     * Method to create a folder. Fails if it already exists.
+     */
+    public void createFolder(String folderPath, File projectDir) throws IOException {
+        Path target = resolveInside(projectDir, folderPath);
+        if (Files.exists(target)) {
+            throw new FileAlreadyExistsException(folderPath);
+        }
+        Files.createDirectories(target);
+    }
+
+    /**
+     * Method to rename or move a file/folder inside the project.
+     */
+    public void renamePath(String oldPath, String newPath, File projectDir) throws IOException {
+        Path source = resolveInside(projectDir, oldPath);
+        Path target = resolveInside(projectDir, newPath);
+
+        if (Files.notExists(source)) {
+            throw new NoSuchFileException(oldPath);
+        }
+        if (Files.exists(target) && !Files.isSameFile(source, target)) {
+            throw new FileAlreadyExistsException(newPath);
+        }
+        Files.move(source, target);
+    }
+
+    /**
+     * Method to delete a file/folder. Uses the system trash when available, otherwise deletes recursively.
+     */
+    public void deletePath(String path, File projectDir) throws IOException {
+        Path target = resolveInside(projectDir, path);
+        if (Files.notExists(target)) {
+            return;
+        }
+        if (moveToTrash(target.toFile())) {
+            return;
+        }
+        Files.walkFileTree(target, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    /**
+     * Method to list every relative path (files and folders) currently on disk, using the loader's skip rule.
+     */
+    public Set<String> scanStructure(File projectDir) {
+        Set<String> paths = new LinkedHashSet<>();
+        scanDirectory(projectDir, "", paths);
+        return paths;
+    }
+
+    /**
+     * Method to scan the directory
+     *
+     */
+    private void scanDirectory(File dir, String parentPath, Set<String> paths) {
+        File[] files = dir.listFiles();
+        if (files == null) return;
+
+        for (File file : files) {
+            if (isIgnored(file)) continue;
+
+            String path = parentPath.isEmpty() ? file.getName() : parentPath + "/" + file.getName();
+            paths.add(path);
+            if (file.isDirectory()) {
+                scanDirectory(file, path, paths);
+            }
+        }
+    }
+
+    /**
+     * Method to resolve a relative path and make sure it stays inside the project (and is not the root itself).
+     */
+    private Path resolveInside(File projectDir, String relativePath) throws IOException {
+        Path root = projectDir.toPath().toAbsolutePath().normalize();
+        Path resolved = root.resolve(relativePath).normalize();
+        if (resolved.equals(root) || !resolved.startsWith(root)) {
+            throw new IOException("Ruta fuera del proyecto: " + relativePath);
+        }
+        return resolved;
+    }
+
+    /**
+     * Method to move to trash the file or folder
+     *
+     */
+    private boolean moveToTrash(File file) {
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.MOVE_TO_TRASH)) {
+                return Desktop.getDesktop().moveToTrash(file);
+            }
+        } catch (RuntimeException ignored) {
+            // fall back to permanent deletion
+        }
+        return false;
     }
 
     /**

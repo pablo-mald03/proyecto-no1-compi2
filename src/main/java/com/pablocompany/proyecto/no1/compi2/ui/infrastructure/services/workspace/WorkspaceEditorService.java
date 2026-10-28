@@ -7,6 +7,7 @@ import com.pablocompany.proyecto.no1.compi2.ui.domain.lexical.analyzers.SyntaxHi
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.editor.CodeEditorPanel;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileNode;
 import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.components.workspace.FileTreePanel;
+import com.pablocompany.proyecto.no1.compi2.ui.infrastructure.utils.WorkspacePaths;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -14,6 +15,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -121,16 +123,41 @@ public class WorkspaceEditorService {
     }
 
     /**
-     * Handle updating open editor references when a file is renamed
+     * Method to re-key open editors (the file or everything under a renamed folder) and refresh their tabs.
      */
-    public void handleFileRenamed(String oldPath, String newPath, String newName) {
-        if (openEditors.containsKey(oldPath)) {
-            CodeEditorPanel editor = openEditors.remove(oldPath);
-            openEditors.put(newPath, editor);
+    public void handlePathRenamed(String oldPath, String newPath) {
+        for (String openPath : new ArrayList<>(openEditors.keySet())) {
+            if (!WorkspacePaths.isSameOrInside(openPath, oldPath)) continue;
+
+            String updatedPath = WorkspacePaths.replacePrefix(openPath, oldPath, newPath);
+            String updatedName = WorkspacePaths.nameOf(updatedPath);
+
+            CodeEditorPanel editor = openEditors.remove(openPath);
+            openEditors.put(updatedPath, editor);
+
+            DefaultMutableTreeNode treeNode = fileTreePanel.getFileNodes().get(updatedPath);
+            if (treeNode != null && treeNode.getUserObject() instanceof FileNode fileNode) {
+                editor.setFileExtension(fileNode.getExtension(), updatedPath, updatedName);
+                editor.getEditor().setSyntaxHighlightListener(
+                        SyntaxHighlightListenerFactory.createListener(fileNode.getExtension(), updatedPath, updatedName)
+                );
+            }
 
             int index = tabbedPane.indexOfComponent(editor);
             if (index != -1) {
-                tabbedPane.setTabComponentAt(index, createTabComponent(newName, newPath));
+                tabbedPane.setTitleAt(index, updatedName);
+                tabbedPane.setTabComponentAt(index, createTabComponent(updatedName, updatedPath));
+            }
+        }
+    }
+
+    /**
+     * Method to close the tab of a file, or every tab under a folder.
+     */
+    public void closeTabsUnder(String path) {
+        for (String openPath : new ArrayList<>(openEditors.keySet())) {
+            if (WorkspacePaths.isSameOrInside(openPath, path)) {
+                closeTab(openPath);
             }
         }
     }

@@ -403,6 +403,13 @@ public class PigLatinParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
+	@Override public T visitObjectAssignment(PigLatinParser.ObjectAssignmentContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
 	@Override public T visitCompoundAddAssignment(PigLatinParser.CompoundAddAssignmentContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

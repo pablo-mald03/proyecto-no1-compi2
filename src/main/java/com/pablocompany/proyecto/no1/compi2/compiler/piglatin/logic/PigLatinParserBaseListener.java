@@ -677,6 +677,18 @@ public class PigLatinParserBaseListener implements PigLatinParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterObjectAssignment(PigLatinParser.ObjectAssignmentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitObjectAssignment(PigLatinParser.ObjectAssignmentContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterCompoundAddAssignment(PigLatinParser.CompoundAddAssignmentContext ctx) { }
 	/**
 	 * {@inheritDoc}

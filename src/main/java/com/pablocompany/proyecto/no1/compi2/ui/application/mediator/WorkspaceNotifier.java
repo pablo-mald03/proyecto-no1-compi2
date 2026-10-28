@@ -101,4 +101,25 @@ public interface WorkspaceNotifier {
      *
      */
     void notifyZoomReset();
+
+
+    /**
+     * Method to create an empty file on disk. Returns true if it was created.
+     */
+    boolean notifyCreateFile(String filePath);
+
+    /**
+     * Method to create a folder on disk. Returns true if it was created.
+     */
+    boolean notifyCreateFolder(String folderPath);
+
+    /**
+     * Method to rename/move a file or folder on disk. Returns true if it was renamed.
+     */
+    boolean notifyRenamePath(String oldPath, String newPath);
+
+    /**
+     * Method to delete a file or folder on disk. Returns true if it is gone.
+     */
+    boolean notifyDeletePath(String path);
 }
