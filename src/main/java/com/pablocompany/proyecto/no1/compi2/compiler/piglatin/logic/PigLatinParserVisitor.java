@@ -394,6 +394,13 @@ public interface PigLatinParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStructAssignment(PigLatinParser.StructAssignmentContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code ObjectAssignment}
+	 * labeled alternative in {@link PigLatinParser#assignment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitObjectAssignment(PigLatinParser.ObjectAssignmentContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code CompoundAddAssignment}
 	 * labeled alternative in {@link PigLatinParser#compound_assignment}.
 	 * @param ctx the parse tree
