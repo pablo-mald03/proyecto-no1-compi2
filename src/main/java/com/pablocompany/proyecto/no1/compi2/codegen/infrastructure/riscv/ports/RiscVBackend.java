@@ -1,6 +1,14 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.ports;
 
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.enums.Target;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.LoadIndexed;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.arrays.StoreIndexed;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.assingation.Store;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.io.Read;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.Load;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.instructions.stack.LoadAddress;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Instruction;
+import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Frame;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.StringConstant;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.parents.IntermediateFunction;
@@ -133,12 +141,23 @@ public class RiscVBackend extends AbstractBackend {
         }
     }
 
+    public static final java.util.List<String> ANOMALIES = new java.util.ArrayList<>();
+
     /**
      * Method to emit the funciton start
      *
      */
     @Override
     protected void emitFunctionStart(IntermediateFunction function, CodeWriter out) {
+        int maxInstructionOffset = calculateMaxFrameOffset(function);
+        int frameSlots = function.getFrameSlots();
+        if (frameSlots > 0 && frameSlots < maxInstructionOffset) {
+            ANOMALIES.add(function.getName() + ": frameSlots=" + frameSlots + " < maxInstructionOffset=" + maxInstructionOffset);
+        }
+        int m = Math.max(frameSlots, maxInstructionOffset);
+        int w = Math.max(200, m + 1);
+        RvAdjustStackTopEmitter.setCurrentWindow(w);
+
         out.raw(function.getName() + ":");
         out.line("addi sp, sp, -4");
         out.line("sw ra, 0(sp)");
@@ -150,7 +169,40 @@ public class RiscVBackend extends AbstractBackend {
      */
     @Override
     protected void emitFunctionEnd(IntermediateFunction function, CodeWriter out) {
+        RvAdjustStackTopEmitter.reset();
         out.blank();
+    }
+
+    private static int calculateMaxFrameOffset(IntermediateFunction function) {
+        int max = 0;
+        if (function.getBody() == null) return 0;
+        for (Instruction inst : function.getBody()) {
+            int off = extractFrameOffset(inst);
+            if (off > max) max = off;
+        }
+        return max;
+    }
+
+    private static int extractFrameOffset(Instruction inst) {
+        if (inst instanceof Load load && load.getAddress() instanceof Frame f) {
+            return f.getOffset();
+        }
+        if (inst instanceof Store store && store.getAddress() instanceof Frame f) {
+            return f.getOffset();
+        }
+        if (inst instanceof LoadAddress la && la.getAddress() instanceof Frame f) {
+            return f.getOffset();
+        }
+        if (inst instanceof LoadIndexed li && li.getBase() instanceof Frame f) {
+            return f.getOffset();
+        }
+        if (inst instanceof StoreIndexed si && si.getBase() instanceof Frame f) {
+            return f.getOffset();
+        }
+        if (inst instanceof Read read && read.getTarget() instanceof Frame f) {
+            return f.getOffset();
+        }
+        return 0;
     }
 
     /**

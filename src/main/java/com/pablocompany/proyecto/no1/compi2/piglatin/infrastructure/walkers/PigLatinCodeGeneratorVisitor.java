@@ -171,6 +171,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
             node.getMaiorSection().accept(this);
         }
 
+        ir.setFrameSlots(frame.peekOffset() - 1);
+
         ir.emit(new Return());
         return null;
     }
