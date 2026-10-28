@@ -5,6 +5,7 @@ import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Inst
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.intermediateCode.Operand;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Immediate;
 import com.pablocompany.proyecto.no1.compi2.codegen.domain.models.Register;
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.models.RvAlloc;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.models.RvMemory;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.models.RvRegisters;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
@@ -37,5 +38,6 @@ public class RvHeapAllocEmitter implements InstructionEmitter<HeapAlloc> {
         } else {
             RvMemory.addSlots(out, RvRegisters.HEAP_TOP, RvRegisters.HEAP_TOP, instruction.getSlots(), RvRegisters.SCRATCH);
         }
+        RvAlloc.emitLimitCheck(out);
     }
 }

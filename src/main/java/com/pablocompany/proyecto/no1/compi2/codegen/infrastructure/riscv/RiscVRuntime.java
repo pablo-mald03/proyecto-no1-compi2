@@ -1,5 +1,6 @@
 package com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv;
 
+import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.riscv.models.RvAlloc;
 import com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.utils.CodeWriter;
 
 /**
@@ -67,8 +68,10 @@ public class RiscVRuntime {
         for (String l : new String[]{"lb a6, 0(a5)", "beqz a6, __cc_len2_done", "addi a5, a5, 1", "j __cc_len2"})
             out.line(l);
         out.raw("__cc_len2_done:");
-        for (String l : new String[]{"sub a5, a5, a3", "add a0, a4, a5", "addi a0, a0, 1", "li a7, 9", "ecall", "mv a6, a0"})
+        for (String l : new String[]{"sub a5, a5, a3", "add a0, a4, a5", "addi a0, a0, 1"})
             out.line(l);
+        RvAlloc.emitAlloc(out);
+        out.line("mv a6, a0");
         out.raw("__cc_copy1:");
         for (String l : new String[]{"lb t6, 0(a2)", "beqz t6, __cc_copy2", "sb t6, 0(a6)", "addi a2, a2, 1", "addi a6, a6, 1", "j __cc_copy1"})
             out.line(l);
@@ -87,5 +90,10 @@ public class RiscVRuntime {
         out.line("sb zero, 0(a2)");
         out.raw("__rl_done:");
         out.line("ret");
+
+        out.blank();
+        out.raw("__rt_oom:");
+        for (String l : new String[]{"la a0, __rt_msg_oom", "li a7, 4", "ecall", "li a7, 10", "ecall"})
+            out.line(l);
     }
 }

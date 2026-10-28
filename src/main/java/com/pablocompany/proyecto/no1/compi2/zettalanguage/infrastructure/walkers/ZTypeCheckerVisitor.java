@@ -1023,7 +1023,18 @@ public class ZTypeCheckerVisitor implements ZAstVisitor<Type> {
             }
         }
 
-        List<Symbol> constructors = lookup.findConstructors(classSymbol);
+        List<Symbol> allConstructors = lookup.findConstructors(classSymbol);
+        List<Symbol> constructors = new ArrayList<>();
+        for (Symbol c : allConstructors) {
+            if (access.isAccessible(c, currentClass)) constructors.add(c);
+        }
+        if (constructors.isEmpty() && !allConstructors.isEmpty()) {
+            reporter.reportTypeError(className,
+                    "Ningun constructor de la clase '" + className + "' es accesible desde '"
+                            + (currentClass != null ? currentClass.getName() : "?")
+                            + "' (un constructor sin modificador es private)", node);
+            return Type.unknown();
+        }
         Symbol chosen = calls.resolveOverload(constructors, argTypes, className, node);
         if (chosen == null) return Type.unknown();
         resolvedCalls.put(node, chosen);

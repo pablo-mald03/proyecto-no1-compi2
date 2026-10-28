@@ -37,7 +37,7 @@ public class ZAccessControlService {
             return true;
         }
 
-        if (member.getAccessModifier() == null) return true;
+        if (member.getAccessModifier() == null) return false;
 
         switch (member.getAccessModifier().name()) {
             case "PUBLIC":
@@ -71,10 +71,19 @@ public class ZAccessControlService {
     }
 
     /**
+     * True when the modifier doesnt exists
+     */
+    public static boolean isPrivateLike(Object modifier) {
+        if (modifier == null) return true;
+        String n = modifier instanceof Enum<?> e ? e.name() : modifier.toString();
+        return "PRIVATE".equals(n);
+    }
+
+    /**
      * Method to resolve the visibility ranking used by the override rule
      */
     public static int accessLevel(Object modifier) {
-        if (modifier == null) return 2;
+        if (modifier == null) return 0;
         String n = modifier instanceof Enum<?> e ? e.name() : modifier.toString();
         return switch (n) {
             case "PRIVATE" -> 0;
@@ -94,7 +103,7 @@ public class ZAccessControlService {
      * Human readable modifier name for error messages.
      */
     public static String label(Object modifier) {
-        if (modifier == null) return "public";
+        if (modifier == null) return "default";
         String n = modifier instanceof Enum<?> e ? e.name() : modifier.toString();
         return n.toLowerCase();
     }

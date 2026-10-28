@@ -9,7 +9,9 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolS
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Symbol look up helper service class
@@ -109,15 +111,7 @@ public class ZSymbolLookupService {
         Symbol owner = findType(type.getCustomName());
         if (owner == null) return MemberLookupResult.notFound();
 
-        Symbol member = null;
-        if (owner.getMembers() != null) {
-            for (Symbol m : owner.getMembers()) {
-                if (memberName.equals(m.getName())) {
-                    member = m;
-                    break;
-                }
-            }
-        }
+        Symbol member = findMemberInHierarchy(owner, memberName);
         if (member == null) return MemberLookupResult.notFound();
 
         if (!access.isAccessible(member, accessingClass)) {
@@ -135,11 +129,35 @@ public class ZSymbolLookupService {
         Symbol owner = findType(type.getCustomName());
         if (owner == null) return null;
 
-        List<Symbol> members = owner.getMembers();
-        if (members == null) return null;
+        return findMemberInHierarchy(owner, memberName);
+    }
 
-        for (Symbol m : members) {
-            if (memberName.equals(m.getName())) return m;
+    /**
+     * Method to look up at the class first
+     */
+    private List<Symbol> classChain(Symbol cls) {
+        List<Symbol> chain = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        Symbol current = cls;
+        while (current != null && current.getName() != null && seen.add(current.getName())) {
+            chain.add(current);
+            if (current.getParentName() == null || current.getParentName().isBlank()) break;
+            Symbol next = getParentClass(current);
+            if (next == null) next = current.getParentSymbol();
+            current = next;
+        }
+        return chain;
+    }
+
+    /**
+     * Find a member by name at the class and its ancestors
+     */
+    private Symbol findMemberInHierarchy(Symbol cls, String memberName) {
+        for (Symbol c : classChain(cls)) {
+            if (c.getMembers() == null) continue;
+            for (Symbol m : c.getMembers()) {
+                if (memberName.equals(m.getName())) return m;
+            }
         }
         return null;
     }
@@ -149,10 +167,16 @@ public class ZSymbolLookupService {
      */
     public List<Symbol> findMethodsInClass(Symbol classSymbol, String methodName) {
         List<Symbol> result = new ArrayList<>();
-        if (classSymbol == null || classSymbol.getMembers() == null) return result;
-        for (Symbol m : classSymbol.getMembers()) {
-            if (m.getKind() == SymbolKind.METHOD && m.getName().equals(methodName)) {
-                result.add(m);
+        if (classSymbol == null) return result;
+
+        Set<String> seenSignatures = new HashSet<>();
+        for (Symbol c : classChain(classSymbol)) {
+            if (c.getMembers() == null) continue;
+            for (Symbol m : c.getMembers()) {
+                if (m.getKind() == SymbolKind.METHOD && m.getName().equals(methodName)) {
+                    String key = m.getName() + "(" + String.valueOf(m.getParameterTypes()) + ")";
+                    if (seenSignatures.add(key)) result.add(m);
+                }
             }
         }
         return result;

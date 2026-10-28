@@ -19,6 +19,7 @@ public class IntermediateBuilder {
     private final List<com.pablocompany.proyecto.no1.compi2.codegen.domain.models.VTableDefinition> vtables = new ArrayList<>();
     private String currentName;
     private List<Instruction> currentBody;
+    private int currentFrameSlots = 0;
 
     public IntermediateBuilder(String sourceName, String stringPrefix) {
         this.sourceName = sourceName;
@@ -91,13 +92,20 @@ public class IntermediateBuilder {
         return new IntermediateProgram(sourceName, strings, functions, vtables);
     }
 
+    public void setFrameSlots(int slots) {
+        this.currentFrameSlots = slots;
+    }
+
     /**
      * Method to mark as closed the function
      *
      */
     private void closeFunction() {
-        if (currentName != null) functions.add(new IntermediateFunction(currentName, currentBody));
+        if (currentName != null) {
+            functions.add(new IntermediateFunction(currentName, currentBody, currentFrameSlots));
+        }
         currentName = null;
         currentBody = null;
+        currentFrameSlots = 0;
     }
 }

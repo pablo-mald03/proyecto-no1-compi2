@@ -40,12 +40,12 @@ import com.pablocompany.proyecto.no1.compi2.common.domain.code3D.StructInfo;
 import com.pablocompany.proyecto.no1.compi2.common.domain.contex.EditorContext;
 import com.pablocompany.proyecto.no1.compi2.common.domain.enums.TypeKind;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.AstNode;
+import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.BinaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.enums.UnaryOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.GlobalSymbolTable;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.Symbol;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.entity.SymbolScope;
-import com.pablocompany.proyecto.no1.compi2.common.domain.semantic.ShortlyOperator;
 import com.pablocompany.proyecto.no1.compi2.common.domain.symbols.enums.SymbolKind;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.PigLatinAstNode;
 import com.pablocompany.proyecto.no1.compi2.piglatin.domain.semantic.ProgramNodePigLatin;
@@ -136,7 +136,7 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         this.values = new ValueEmitter(ir, frame);
         this.inheritance = new ZInheritanceService(new ZSymbolLookupService(table, context));
         this.layoutService = new ZClassLayoutService(table, inheritance);
-        this.structLayout = new com.pablocompany.proyecto.no1.compi2.codegen.infrastructure.generator.StructLayout(table);
+        this.structLayout = new StructLayout(table);
     }
 
     public PigLatinCodeGeneratorVisitor(GlobalSymbolTable table,
@@ -170,6 +170,8 @@ public class PigLatinCodeGeneratorVisitor implements PigLatinAstVisitor<Void> {
         if (node.getMaiorSection() != null) {
             node.getMaiorSection().accept(this);
         }
+
+        ir.setFrameSlots(frame.peekOffset() - 1);
 
         ir.emit(new Return());
         return null;

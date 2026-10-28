@@ -1240,13 +1240,11 @@ public class ZettarianAstBuilder extends ZParserBaseVisitor<ZAstNode> implements
      *
      */
     private AccessModifierZ toModifier(ZParser.Access_modifierContext ctx) {
-        if (ctx instanceof ZParser.ModifierPrivateContext) {
-            return AccessModifierZ.PRIVATE;
-        }
-        if (ctx instanceof ZParser.ModifierProtectedContext) {
-            return AccessModifierZ.PROTECTED;
-        }
-        return AccessModifierZ.PUBLIC;
+        if (ctx == null) return null;
+        if (ctx instanceof ZParser.ModifierPrivateContext) return AccessModifierZ.PRIVATE;
+        if (ctx instanceof ZParser.ModifierProtectedContext) return AccessModifierZ.PROTECTED;
+        if (ctx instanceof ZParser.ModifierPublicContext) return AccessModifierZ.PUBLIC;
+        return null;
     }
 
     /**

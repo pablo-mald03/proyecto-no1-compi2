@@ -701,7 +701,9 @@ public class PigLatinTypeCheckerVisitor implements PigLatinAstVisitor<Type> {
             return Type.unknown();
         }
 
-        if (!lookup.isPubliclyAccessible(member)) {
+        Symbol ownerType = lookup.findLinkedType(context.getFilePath(), targetType.getCustomName());
+        boolean ownerIsStruct = ownerType != null && ownerType.getKind() == SymbolKind.STRUCT;
+        if (!ownerIsStruct && !lookup.isPubliclyAccessible(member)) {
             reporter.reportTypeError(node.getPropertyName(), "El atributo '" + node.getPropertyName() + "' de " + targetType.getCustomName() + " es " + lookup.accessLabel(member) + " y no es accesible desde aqui", node);
             return Type.unknown();
         }

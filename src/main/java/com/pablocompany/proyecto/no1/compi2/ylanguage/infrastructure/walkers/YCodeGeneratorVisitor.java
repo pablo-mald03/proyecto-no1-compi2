@@ -261,6 +261,8 @@ public class YCodeGeneratorVisitor extends YNoOperatorVisitor {
         }
         visitAll(body);
 
+        ir.setFrameSlots(frame.peekOffset() - 1);
+
         ir.emit(new FramePop());
         ir.emit(new Return());
 

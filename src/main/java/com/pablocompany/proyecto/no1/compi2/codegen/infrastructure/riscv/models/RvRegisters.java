@@ -9,6 +9,7 @@ public class RvRegisters {
     public static final String FP = "s0";
     public static final String STACK_TOP = "s1";
     public static final String HEAP_TOP = "s2";
+    public static final String HEAP_LIMIT = "s3";
     public static final String SCRATCH = "t6";
     public static final String SCRATCH2 = "a1";
 

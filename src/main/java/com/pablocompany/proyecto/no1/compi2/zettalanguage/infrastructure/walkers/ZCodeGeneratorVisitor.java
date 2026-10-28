@@ -231,6 +231,8 @@ public class ZCodeGeneratorVisitor implements ZAstVisitor<Void> {
             }
         }
 
+        ir.setFrameSlots(frame.peekOffset() - 1);
+
         ir.emit(new FramePop());
         ir.emit(new Return());
 
